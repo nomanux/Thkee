@@ -1,0 +1,177 @@
+@import "tailwindcss";
+
+@font-face {
+  font-family: "Instrument Sans:Bold";
+  src: url("https://static.figma.com/font/InstrumentSans_wdth_wght__1")
+    format("woff2");
+  font-style: normal;
+  font-weight: 700;
+}
+
+@font-face {
+  font-family: "Instrument Sans:Medium";
+  src: url("https://static.figma.com/font/InstrumentSans_wdth_wght__1")
+    format("woff2");
+  font-style: normal;
+  font-weight: 500;
+}
+
+@font-face {
+  font-family: "Instrument Sans:Regular";
+  src: url("https://static.figma.com/font/InstrumentSans_wdth_wght__1")
+    format("woff2");
+  font-style: normal;
+  font-weight: 400;
+}
+
+@font-face {
+  font-family: "Inter:Bold";
+  src: url("https://static.figma.com/font/Inter_1") format("woff2");
+  font-style: normal;
+  font-weight: 700;
+}
+
+@font-face {
+  font-family: "Inter:Medium";
+  src: url("https://static.figma.com/font/Inter_1") format("woff2");
+  font-style: normal;
+  font-weight: 500;
+}
+
+@font-face {
+  font-family: "Inter:Regular";
+  src: url("https://static.figma.com/font/Inter_1") format("woff2");
+  font-style: normal;
+  font-weight: 400;
+}
+
+@font-face {
+  font-family: "Inter:Semi Bold";
+  src: url("https://static.figma.com/font/Inter_1") format("woff2");
+  font-style: normal;
+  font-weight: 600;
+}
+
+:root {
+  color: #0f172a;
+  background: #ffffff;
+  font-family: "Inter:Regular", Inter, sans-serif;
+  font-synthesis: none;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100dvh;
+  overflow-x: hidden;
+}
+
+#root {
+  min-height: 100dvh;
+}
+
+button,
+a,
+input {
+  font: inherit;
+}
+
+@keyframes pl-progress {
+  from { transform: scaleY(0); }
+  to { transform: scaleY(1); }
+}
+
+@keyframes wave-drift {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+
+@keyframes live-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+
+@keyframes live-pulse {
+  0%, 100% { opacity: 0.45; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.06); }
+}
+
+@keyframes live-dot {
+  0%, 100% { transform: scale(1); opacity: 0.9; }
+  50% { transform: scale(1.8); opacity: 0.35; }
+}
+
+@keyframes live-orbit {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes live-ring {
+  0% { transform: scale(0.6); opacity: 0.5; }
+  100% { transform: scale(1.5); opacity: 0; }
+}
+
+.pl-fill {
+  transform-origin: top;
+  animation: pl-progress 3s linear forwards;
+}
+
+
+
+.live-float { animation: live-float 5s ease-in-out infinite; }
+.live-pulse { animation: live-pulse 4s ease-in-out infinite; }
+.live-dot { animation: live-dot 2.4s ease-in-out infinite; }
+.live-orbit { animation: live-orbit 14s linear infinite; }
+.live-orbit-rev { animation: live-orbit 22s linear infinite reverse; }
+.live-ring { animation: live-ring 3.2s ease-out infinite; }
+
+@media (prefers-reduced-motion: reduce) {
+  .live-float, .live-pulse, .live-dot,
+  .live-orbit, .live-orbit-rev, .live-ring { animation: none; }
+}
+
+::selection {
+  background: #12b981;
+  color: #04201a;
+}
+
+@keyframes neon-pulse {
+  0%, 100% { box-shadow: 0 0 0 rgba(146, 227, 169, 0); }
+  50% { box-shadow: 0 0 22px rgba(146, 227, 169, 0.45); }
+}
+
+@keyframes btn-glow {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(255, 178, 13, 0.0); }
+  50% { box-shadow: 0 0 28px 2px rgba(255, 178, 13, 0.45); }
+}
+
+.neon-badge { animation: neon-pulse 3.5s ease-in-out infinite; }
+.neon-btn { animation: btn-glow 3s ease-in-out infinite; }
+.neon-btn:hover { transform: translateY(-2px); }
+
+.glass-card {
+  transition: transform 0.35s ease, border-color 0.35s ease, box-shadow 0.35s ease;
+}
+.glass-card:hover {
+  transform: translateY(-6px);
+  border-color: rgba(18, 185, 129, 0.6);
+  box-shadow: 0 0 0 1px rgba(18, 185, 129, 0.25), 0 18px 50px rgba(12, 252, 185, 0.18);
+}
+
+@keyframes overlay-fade { from { opacity: 0; } }
+@keyframes modal-in { from { opacity: 0; transform: translateY(16px) scale(0.98); } }
+@keyframes drawer-in { from { transform: translateX(100%); } }
+@keyframes toast-in { from { opacity: 0; transform: translateY(12px); } }
+@keyframes pop-in { from { opacity: 0; transform: translateY(-6px); } }
+.overlay-fade { animation: overlay-fade 0.2s ease-out; }
+.modal-in { animation: modal-in 0.25s cubic-bezier(0.2, 0.8, 0.2, 1); }
+.drawer-in { animation: drawer-in 0.3s cubic-bezier(0.2, 0.8, 0.2, 1); }
+.toast-in { animation: toast-in 0.25s ease-out; }
+.pop-in { animation: pop-in 0.18s ease-out; }
+
+@media (prefers-reduced-motion: reduce) {
+  .neon-badge, .neon-btn, .overlay-fade, .modal-in, .drawer-in, .toast-in, .pop-in { animation: none; }
+}
