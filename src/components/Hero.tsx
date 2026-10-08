@@ -1,12 +1,19 @@
+import { useEffect, useRef, type CSSProperties } from "react";
 import { useApp } from "../store";
 
+// depth: px moved per px scrolled; mouse: max px shift following the pointer
+const layer = (depth: number, mouse = 0): CSSProperties => ({
+  transform: `translate3d(calc(var(--mx, 0) * ${mouse}px), calc(var(--sy, 0) * ${depth}px + var(--my, 0) * ${mouse}px), 0)`,
+  willChange: "transform",
+});
+
 const sparkles = [
-  { top: "150px", left: "8%", size: 22, color: "#7ff0c0", duration: 3.2, delay: 0 },
-  { top: "260px", left: "20%", size: 16, color: "#ffffff", duration: 4.1, delay: 0.8 },
-  { top: "190px", right: "12%", size: 24, color: "#ffd166", duration: 3.6, delay: 0.3 },
-  { top: "420px", right: "6%", size: 18, color: "#7ff0c0", duration: 4.4, delay: 1.4 },
-  { top: "470px", left: "5%", size: 20, color: "#ffffff", duration: 3.9, delay: 2 },
-  { top: "110px", left: "46%", size: 14, color: "#ffd166", duration: 5, delay: 1 },
+  { top: "150px", left: "8%", size: 22, color: "#7ff0c0", duration: 3.2, delay: 0, depth: 0.55, mouse: 28 },
+  { top: "260px", left: "20%", size: 16, color: "#ffffff", duration: 4.1, delay: 0.8, depth: 0.25, mouse: 12 },
+  { top: "190px", right: "12%", size: 24, color: "#ffd166", duration: 3.6, delay: 0.3, depth: 0.6, mouse: 32 },
+  { top: "420px", right: "6%", size: 18, color: "#7ff0c0", duration: 4.4, delay: 1.4, depth: 0.35, mouse: 18 },
+  { top: "470px", left: "5%", size: 20, color: "#ffffff", duration: 3.9, delay: 2, depth: 0.45, mouse: 22 },
+  { top: "110px", left: "46%", size: 14, color: "#ffd166", duration: 5, delay: 1, depth: 0.2, mouse: 10 },
 ];
 
 const tickerTopics: { label: string; category?: string }[] = [
@@ -27,37 +34,85 @@ const avatarGradients = [
 
 export default function Hero() {
   const { setOverlay } = useApp();
+  const rootRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const el = rootRef.current;
+    if (!el || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    let raf = 0;
+    const target = { x: 0, y: 0 };
+    const current = { x: 0, y: 0 };
+    const tick = () => {
+      current.x += (target.x - current.x) * 0.08;
+      current.y += (target.y - current.y) * 0.08;
+      el.style.setProperty("--sy", Math.min(window.scrollY, el.offsetHeight).toFixed(1));
+      el.style.setProperty("--mx", current.x.toFixed(4));
+      el.style.setProperty("--my", current.y.toFixed(4));
+      const settling = Math.abs(target.x - current.x) > 0.001 || Math.abs(target.y - current.y) > 0.001;
+      raf = settling ? requestAnimationFrame(tick) : 0;
+    };
+    const kick = () => {
+      if (!raf) raf = requestAnimationFrame(tick);
+    };
+    const onPointer = (e: PointerEvent) => {
+      if (e.pointerType !== "mouse") return;
+      target.x = (e.clientX / window.innerWidth - 0.5) * 2;
+      target.y = (e.clientY / window.innerHeight - 0.5) * 2;
+      kick();
+    };
+    const onLeave = () => {
+      target.x = 0;
+      target.y = 0;
+      kick();
+    };
+    kick();
+    window.addEventListener("scroll", kick, { passive: true });
+    el.addEventListener("pointermove", onPointer);
+    el.addEventListener("pointerleave", onLeave);
+    return () => {
+      window.removeEventListener("scroll", kick);
+      el.removeEventListener("pointermove", onPointer);
+      el.removeEventListener("pointerleave", onLeave);
+      cancelAnimationFrame(raf);
+    };
+  }, []);
 
   return (
     <div
+      ref={rootRef}
       id="top"
       className="relative w-full overflow-hidden pt-[72px] font-['Plus_Jakarta_Sans',sans-serif] text-white"
       style={{ background: "radial-gradient(ellipse 90% 70% at 50% 0%, #0b9c70 0%, #065c43 42%, #03281d 100%)" }}
     >
       <div
         aria-hidden="true"
-        className="absolute inset-0"
+        className="absolute inset-x-0 -bottom-[160px] -top-[40px]"
         style={{
+          ...layer(0.12, 8),
           backgroundImage: "linear-gradient(rgba(255,255,255,0.06) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.06) 1px, transparent 1px)",
           backgroundSize: "56px 56px",
           maskImage: "radial-gradient(ellipse 75% 65% at 50% 35%, #000 25%, transparent 80%)",
           WebkitMaskImage: "radial-gradient(ellipse 75% 65% at 50% 35%, #000 25%, transparent 80%)",
         }}
       />
-      <div aria-hidden="true" className="hero-drift absolute -left-[120px] -top-[160px] size-[460px] rounded-full" style={{ background: "radial-gradient(circle, rgba(255,180,0,0.32), rgba(255,180,0,0) 70%)", animationDuration: "16s" }} />
-      <div aria-hidden="true" className="hero-drift absolute -right-[180px] top-[120px] size-[520px] rounded-full" style={{ background: "radial-gradient(circle, rgba(60,230,170,0.30), rgba(60,230,170,0) 70%)", animationDuration: "20s", animationDirection: "reverse" }} />
+      <div aria-hidden="true" className="absolute -left-[120px] -top-[160px]" style={layer(0.4, -36)}>
+        <div className="hero-drift size-[460px] rounded-full" style={{ background: "radial-gradient(circle, rgba(255,180,0,0.32), rgba(255,180,0,0) 70%)", animationDuration: "16s" }} />
+      </div>
+      <div aria-hidden="true" className="absolute -right-[180px] top-[120px]" style={layer(0.25, 44)}>
+        <div className="hero-drift size-[520px] rounded-full" style={{ background: "radial-gradient(circle, rgba(60,230,170,0.30), rgba(60,230,170,0) 70%)", animationDuration: "20s", animationDirection: "reverse" }} />
+      </div>
       {sparkles.map((s, i) => (
-        <div
-          key={i}
-          aria-hidden="true"
-          className="hero-twinkle absolute leading-none"
-          style={{ top: s.top, left: s.left, right: s.right, fontSize: s.size, color: s.color, animationDuration: `${s.duration}s`, animationDelay: `${s.delay}s` }}
-        >
-          +
+        <div key={i} aria-hidden="true" className="absolute" style={{ top: s.top, left: s.left, right: s.right, ...layer(s.depth, s.mouse) }}>
+          <div className="hero-twinkle leading-none" style={{ fontSize: s.size, color: s.color, animationDuration: `${s.duration}s`, animationDelay: `${s.delay}s` }}>
+            +
+          </div>
         </div>
       ))}
 
-      <section className="relative z-[1] mx-auto flex max-w-[1200px] flex-col items-center gap-7 px-6 py-[72px] text-center sm:py-24">
+      <section
+        className="relative z-[1] mx-auto flex max-w-[1200px] flex-col items-center gap-7 px-6 py-[72px] text-center sm:py-24"
+        style={{ ...layer(0.25, -6), opacity: "calc(1 - var(--sy, 0) / 650)" }}
+      >
         <div className="hero-rise inline-flex items-center gap-2.5 rounded-full border border-white/[0.28] bg-white/[0.07] px-[18px] py-[9px] text-[12px] font-bold uppercase tracking-[1.6px]">
           <span className="hero-pulse size-2 rounded-full bg-[#ffb400]" />
           AI-powered learning platform
@@ -114,7 +169,7 @@ export default function Hero() {
         </div>
       </section>
 
-      <div className="group relative z-[1] overflow-hidden border-t border-white/[0.14] bg-[rgba(3,40,29,0.55)] py-[18px]">
+      <div className="group relative z-[1] overflow-hidden border-t border-white/[0.14] bg-[rgba(3,40,29,0.92)] py-[18px] backdrop-blur-md">
         <div className="hero-marquee flex w-max group-hover:[animation-play-state:paused]">
           {[0, 1].map((copy) => (
             <div key={copy} aria-hidden={copy === 1 || undefined} className="flex flex-none items-center">

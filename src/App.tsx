@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, type FormEvent } from "react";
 import Hero from "./components/Hero";
 import Navbar from "./components/Navbar";
 import Overlays from "./components/Overlays";
+import Parallax from "./components/Parallax";
 import { faqs } from "./data";
 import { fontHeading, fontRegular, fontSemi } from "./fonts";
 import { AppProvider, scrollToId, useApp } from "./store";
@@ -196,16 +197,18 @@ function PersonalizedLearning() {
             })}
           </div>
         </div>
-        <div className="relative h-[360px] sm:h-[480px] xl:h-[640px] w-full max-w-[533px] xl:w-[533px] shrink-0 overflow-hidden rounded-[20px] border-[6px] border-solid border-white bg-white shadow-[0_20px_50px_rgba(15,23,42,0.1)]">
-          {personalizedItems.map((item, i) => (
-            <img
-              key={item.title}
-              alt={item.alt}
-              src={item.image}
-              className={`pointer-events-none absolute inset-0 size-full max-w-none object-cover transition-all duration-700 ease-out ${i === active ? "scale-100 opacity-100" : "scale-105 opacity-0"}`}
-            />
-          ))}
-        </div>
+        <Parallax speed={-0.06} className="w-full max-w-[533px] xl:w-[533px] shrink-0">
+          <div className="relative h-[360px] sm:h-[480px] xl:h-[640px] w-full overflow-hidden rounded-[20px] border-[6px] border-solid border-white bg-white shadow-[0_20px_50px_rgba(15,23,42,0.1)]">
+            {personalizedItems.map((item, i) => (
+              <img
+                key={item.title}
+                alt={item.alt}
+                src={item.image}
+                className={`pointer-events-none absolute inset-0 size-full max-w-none object-cover transition-all duration-700 ease-out ${i === active ? "scale-100 opacity-100" : "scale-105 opacity-0"}`}
+              />
+            ))}
+          </div>
+        </Parallax>
       </div>
     </div>
   );
@@ -542,7 +545,9 @@ function LandingPage() {
         <div aria-hidden className="absolute inset-0 pointer-events-none">
           <div className="absolute bg-[#0c211d] inset-0" />
           <div className="absolute inset-0 overflow-hidden">
-            <img alt="" className="absolute h-full left-[-33.06%] max-w-none top-0 w-[166.11%]" src={imgFrame1618874388} />
+            <Parallax speed={0.18} className="absolute inset-0">
+              <img alt="" className="absolute h-[130%] left-[-33.06%] max-w-none top-[-15%] w-[166.11%]" src={imgFrame1618874388} />
+            </Parallax>
           </div>
         </div>
         <div className="content-stretch flex flex-col items-start relative shrink-0 w-full max-w-[1320px]">
@@ -624,9 +629,11 @@ function LandingPage() {
       <div className="content-stretch flex flex-col gap-[40px] items-center justify-center py-[96px] relative shrink-0 w-full">
         <ScrollHighlight />
         <div className="content-stretch flex flex-col gap-[90px] items-center overflow-clip pb-12 md:pb-[64px] pt-10 md:pt-[56px] px-6 md:px-[56px] relative rounded-[16px] shrink-0 w-[calc(100%-32px)] md:w-[calc(100%-64px)] max-w-[1320px]" style={{ backgroundImage: "linear-gradient(76.37165893145583deg, rgb(0, 35, 71) 2.0811%, rgb(23, 0, 92) 93.886%)" }}>
-          <div className="absolute hidden xl:block h-[411.094px] left-[1076px] top-[356.51px] w-[290.726px]">
-            <img alt="" className="absolute block inset-0 max-w-none size-full" src={imgVector2} />
-          </div>
+          <Parallax speed={-0.12} className="pointer-events-none absolute inset-0 hidden xl:block">
+            <div className="absolute hidden xl:block h-[411.094px] left-[1076px] top-[356.51px] w-[290.726px]">
+              <img alt="" className="absolute block inset-0 max-w-none size-full" src={imgVector2} />
+            </div>
+          </Parallax>
           <div className="absolute inset-0">
             <div aria-hidden className="absolute bg-size-[157.99999237060547px_157.99999237060547px] bg-top-left inset-0 opacity-60 pointer-events-none" style={{ backgroundImage: `url("${imgPaper}")` }} />
           </div>
@@ -739,131 +746,133 @@ function LandingPage() {
       <div className="bg-[#f8fafc] content-stretch flex flex-col gap-[60px] items-center justify-center px-4 md:px-8 py-[64px] xl:py-[96px] relative shrink-0 w-full">
         <div className="absolute bg-[#3a5c55] blur-[79.05px] h-[416px] left-1/2 -translate-x-1/2 opacity-4 top-[124.21px] w-full max-w-[1385px]" />
         <div className="content-stretch flex flex-col xl:flex-row gap-10 xl:gap-[60px] items-center relative shrink-0 w-full max-w-[1320px]">
-          <div className="bg-white content-stretch flex flex-col items-start overflow-clip relative rounded-[20px] md:rounded-[32px] shrink-0 w-full max-w-[673px]">
-            <div className="bg-[#0e172a] border border-[rgba(255,255,255,0.13)] border-solid content-stretch flex gap-4 justify-between items-center px-4 sm:px-[25px] py-[17px] relative shrink-0 w-full">
-              <div className="content-stretch flex flex-[1_0_0] gap-[11px] items-center min-w-px relative">
-                <div className="content-stretch flex gap-[10px] sm:gap-[17px] items-center relative min-w-0 sm:shrink-0">
-                  <div className="relative shrink-0 size-[12px]">
-                    <img alt="" className="absolute block inset-0 max-w-none size-full" src={imgEllipse21583} />
+          <Parallax speed={-0.05} className="w-full max-w-[673px] shrink-0">
+            <div className="bg-white content-stretch flex flex-col items-start overflow-clip relative rounded-[20px] md:rounded-[32px] w-full">
+              <div className="bg-[#0e172a] border border-[rgba(255,255,255,0.13)] border-solid content-stretch flex gap-4 justify-between items-center px-4 sm:px-[25px] py-[17px] relative shrink-0 w-full">
+                <div className="content-stretch flex flex-[1_0_0] gap-[11px] items-center min-w-px relative">
+                  <div className="content-stretch flex gap-[10px] sm:gap-[17px] items-center relative min-w-0 sm:shrink-0">
+                    <div className="relative shrink-0 size-[12px]">
+                      <img alt="" className="absolute block inset-0 max-w-none size-full" src={imgEllipse21583} />
+                    </div>
+                    <p className="font-['Inter:Semi_Bold'] font-semibold leading-[24px] not-italic relative min-w-0 truncate sm:shrink-0 text-[14px] sm:text-[16px] text-white tracking-[-0.01px] whitespace-nowrap">
+                      Color Theory 101 - Live
+                    </p>
                   </div>
-                  <p className="font-['Inter:Semi_Bold'] font-semibold leading-[24px] not-italic relative min-w-0 truncate sm:shrink-0 text-[14px] sm:text-[16px] text-white tracking-[-0.01px] whitespace-nowrap">
-                    Color Theory 101 - Live
-                  </p>
-                </div>
-                <div className="content-stretch hidden sm:flex gap-[11px] items-center relative shrink-0">
-                  <div className="relative shrink-0 size-[4px]">
-                    <img alt="" className="absolute block inset-0 max-w-none size-full" src={imgEllipse21584} />
+                  <div className="content-stretch hidden sm:flex gap-[11px] items-center relative shrink-0">
+                    <div className="relative shrink-0 size-[4px]">
+                      <img alt="" className="absolute block inset-0 max-w-none size-full" src={imgEllipse21584} />
+                    </div>
+                    <p className="[word-break:break-word] font-['Inter:Medium'] font-medium leading-[24px] not-italic relative shrink-0 text-[14px] text-[rgba(255,255,255,0.56)] text-center tracking-[-0.01px] whitespace-nowrap">
+                      42 Learners
+                    </p>
                   </div>
-                  <p className="[word-break:break-word] font-['Inter:Medium'] font-medium leading-[24px] not-italic relative shrink-0 text-[14px] text-[rgba(255,255,255,0.56)] text-center tracking-[-0.01px] whitespace-nowrap">
-                    42 Learners
-                  </p>
                 </div>
-              </div>
-              <div className="content-stretch flex gap-[6px] items-center relative shrink-0">
-                <div className="bg-[#1c2537] content-stretch flex items-center overflow-clip p-[8px] relative rounded-[7px] shrink-0">
-                  <div className="relative shrink-0 size-[16px]">
-                    <div className="absolute inset-[8.33%_16.67%]">
-                      <div className="absolute inset-[-3.75%_-4.69%]">
-                        <img alt="" className="block max-w-none size-full" src={imgElements1} />
+                <div className="content-stretch flex gap-[6px] items-center relative shrink-0">
+                  <div className="bg-[#1c2537] content-stretch flex items-center overflow-clip p-[8px] relative rounded-[7px] shrink-0">
+                    <div className="relative shrink-0 size-[16px]">
+                      <div className="absolute inset-[8.33%_16.67%]">
+                        <div className="absolute inset-[-3.75%_-4.69%]">
+                          <img alt="" className="block max-w-none size-full" src={imgElements1} />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="bg-[#1c2537] content-stretch flex items-center overflow-clip p-[8px] relative rounded-[7px] shrink-0">
+                    <div className="relative shrink-0 size-[16px]">
+                      <img alt="" className="absolute block inset-0 max-w-none size-full" src={imgHeroiconsOutlineVideoCamera} />
+                    </div>
+                  </div>
+                  <div className="bg-[#1c2537] content-stretch flex items-center overflow-clip p-[8px] relative rounded-[7px] shrink-0">
+                    <div className="relative shrink-0 size-[16px]">
+                      <div className="absolute inset-[8.33%_12.5%]">
+                        <div className="absolute inset-[-3.75%_-4.17%]">
+                          <img alt="" className="block max-w-none size-full" src={imgElements2} />
+                        </div>
                       </div>
                     </div>
                   </div>
                 </div>
-                <div className="bg-[#1c2537] content-stretch flex items-center overflow-clip p-[8px] relative rounded-[7px] shrink-0">
-                  <div className="relative shrink-0 size-[16px]">
-                    <img alt="" className="absolute block inset-0 max-w-none size-full" src={imgHeroiconsOutlineVideoCamera} />
-                  </div>
-                </div>
-                <div className="bg-[#1c2537] content-stretch flex items-center overflow-clip p-[8px] relative rounded-[7px] shrink-0">
-                  <div className="relative shrink-0 size-[16px]">
-                    <div className="absolute inset-[8.33%_12.5%]">
-                      <div className="absolute inset-[-3.75%_-4.17%]">
-                        <img alt="" className="block max-w-none size-full" src={imgElements2} />
-                      </div>
+              </div>
+              <div className="content-stretch flex items-start relative shrink-0 w-full">
+                <div className="bg-gradient-to-b content-stretch flex flex-[1_0_0] flex-col from-[#073329] from-[55.86%] gap-[11px] h-[320px] sm:h-[407px] items-center justify-center min-w-px p-[16px] relative to-[#0e1729]">
+                  <div className="absolute bottom-[24px] content-stretch flex gap-[8px] items-center left-[16px] sm:left-[32px]">
+                    <div className="bg-[#0c5c4b] border border-[rgba(255,255,255,0.5)] border-solid content-stretch flex items-center justify-center p-[10px] relative rounded-[10px] shrink-0 size-[40px]">
+                      <p className="[word-break:break-word] font-['Inter:Bold'] font-bold leading-[20px] not-italic relative shrink-0 text-[#eff4f2] text-[14px] tracking-[-0.01px] whitespace-nowrap">
+                        MK
+                      </p>
+                    </div>
+                    <div className="bg-[#39aeeb] border border-[rgba(255,255,255,0.5)] border-solid content-stretch flex items-center justify-center p-[10px] relative rounded-[10px] shrink-0 size-[40px]">
+                      <p className="[word-break:break-word] font-['Inter:Bold'] font-bold leading-[20px] not-italic relative shrink-0 text-[#eff4f2] text-[14px] tracking-[-0.01px] whitespace-nowrap">
+                        MK
+                      </p>
+                    </div>
+                    <div className="bg-[#12b981] border border-[rgba(255,255,255,0.5)] border-solid content-stretch flex items-center justify-center p-[10px] relative rounded-[10px] shrink-0 size-[40px]">
+                      <p className="[word-break:break-word] font-['Inter:Bold'] font-bold leading-[20px] not-italic relative shrink-0 text-[#eff4f2] text-[14px] tracking-[-0.01px] whitespace-nowrap">
+                        MK
+                      </p>
+                    </div>
+                    <div className="bg-[#ef4444] border border-[rgba(255,255,255,0.5)] border-solid content-stretch flex items-center justify-center p-[10px] relative rounded-[10px] shrink-0 size-[40px]">
+                      <p className="[word-break:break-word] font-['Inter:Bold'] font-bold leading-[20px] not-italic relative shrink-0 text-[#eff4f2] text-[14px] tracking-[-0.01px] whitespace-nowrap">
+                        MK
+                      </p>
+                    </div>
+                    <div className="bg-[#f59e0c] border border-[rgba(255,255,255,0.5)] border-solid content-stretch flex items-center justify-center p-[10px] relative rounded-[10px] shrink-0 size-[40px]">
+                      <p className="[word-break:break-word] font-['Inter:Bold'] font-bold leading-[20px] not-italic relative shrink-0 text-[#eff4f2] text-[14px] tracking-[-0.01px] whitespace-nowrap">
+                        MK
+                      </p>
+                    </div>
+                    <div className="bg-[#273040] border border-[rgba(255,255,255,0.13)] border-solid content-stretch flex items-center justify-center px-[6px] py-[10px] relative rounded-[10px] shrink-0 size-[40px]">
+                      <p className="[word-break:break-word] font-['Inter:Bold'] font-bold leading-[20px] not-italic relative shrink-0 text-[#eff4f2] text-[14px] tracking-[-0.01px] whitespace-nowrap">
+                        38+
+                      </p>
                     </div>
                   </div>
+                  <div className="absolute h-[99.267px] left-1/2 -translate-x-1/2 top-[25.7%] w-[217.997px]">
+                    <img alt="" className="absolute block inset-0 max-w-none size-full" src={imgFrame1618874422} />
+                  </div>
+                </div>
+                <div className="bg-[#0a1325] content-stretch hidden md:flex flex-col gap-[11px] h-[407px] items-start p-[16px] relative shrink-0 w-[279px]">
+                  <p className="[word-break:break-word] font-['Inter:Semi_Bold'] font-semibold leading-[20px] min-w-full not-italic relative shrink-0 text-[16px] text-white tracking-[-0.01px] w-[min-content]">
+                    Chat
+                  </p>
+                  <div className="[word-break:break-word] bg-[#182132] content-stretch flex flex-col items-start not-italic px-[16px] py-[8px] relative rounded-[11px] shrink-0 w-[205px]">
+                    <p className="font-['Inter:Semi_Bold'] font-semibold leading-[17.572px] relative shrink-0 text-[#64748b] text-[12.301px] tracking-[-0.0088px] w-[152px]">
+                      Aman
+                    </p>
+                    <p className="font-['Inter:Regular'] font-normal leading-[20px] min-w-full relative shrink-0 text-[#f1f5f9] text-[14px] tracking-[-0.01px] w-[min-content]">{`Can you please repeat the topic again ? `}</p>
+                  </div>
+                  <div className="[word-break:break-word] bg-[#182132] content-stretch flex flex-col items-start not-italic px-[16px] py-[8px] relative rounded-[11px] shrink-0 w-[205px]">
+                    <p className="font-['Inter:Semi_Bold'] font-semibold leading-[17.572px] relative shrink-0 text-[#64748b] text-[12.301px] tracking-[-0.0088px] w-[152px]">
+                      Junko
+                    </p>
+                    <p className="font-['Inter:Regular'] font-normal leading-[20px] min-w-full relative shrink-0 text-[#f1f5f9] text-[14px] tracking-[-0.01px] w-[min-content]">
+                      Yes, it will be better
+                    </p>
+                  </div>
+                  <div className="[word-break:break-word] bg-[#182132] content-stretch flex flex-col items-start not-italic px-[16px] py-[8px] relative rounded-[11px] shrink-0 w-[205px]">
+                    <p className="font-['Inter:Semi_Bold'] font-semibold leading-[17.572px] relative shrink-0 text-[#64748b] text-[12.301px] tracking-[-0.0088px] w-[152px]">
+                      Sofia
+                    </p>
+                    <p className="font-['Inter:Regular'] font-normal leading-[20px] min-w-full relative shrink-0 text-[#f1f5f9] text-[14px] tracking-[-0.01px] w-[min-content]">
+                      Can we get the recording after the class?
+                    </p>
+                  </div>
+                  <div className="content-stretch flex flex-col items-end justify-center relative shrink-0 w-full">
+                    <div className="bg-gradient-to-r content-stretch flex flex-col from-[#0d5c4b] items-start px-[16px] py-[8px] relative rounded-[11px] shrink-0 to-[#0f7a65] w-[205px]">
+                      <p className="[word-break:break-word] font-['Inter:Regular'] font-normal leading-[20px] not-italic relative shrink-0 text-[#f1f5f9] text-[14px] tracking-[-0.01px] w-full">
+                        Recording goes out tonight :)
+                      </p>
+                    </div>
+                  </div>
+                  <div className="bg-[#182132] content-stretch flex flex-col items-start px-[16px] py-[8px] relative rounded-[11px] shrink-0 w-full">
+                    <p className="[word-break:break-word] font-['Inter:Regular'] font-normal leading-[20px] not-italic relative shrink-0 text-[#64748b] text-[14px] tracking-[-0.01px] whitespace-nowrap">
+                      Send a message....
+                    </p>
+                  </div>
                 </div>
               </div>
             </div>
-            <div className="content-stretch flex items-start relative shrink-0 w-full">
-              <div className="bg-gradient-to-b content-stretch flex flex-[1_0_0] flex-col from-[#073329] from-[55.86%] gap-[11px] h-[320px] sm:h-[407px] items-center justify-center min-w-px p-[16px] relative to-[#0e1729]">
-                <div className="absolute bottom-[24px] content-stretch flex gap-[8px] items-center left-[16px] sm:left-[32px]">
-                  <div className="bg-[#0c5c4b] border border-[rgba(255,255,255,0.5)] border-solid content-stretch flex items-center justify-center p-[10px] relative rounded-[10px] shrink-0 size-[40px]">
-                    <p className="[word-break:break-word] font-['Inter:Bold'] font-bold leading-[20px] not-italic relative shrink-0 text-[#eff4f2] text-[14px] tracking-[-0.01px] whitespace-nowrap">
-                      MK
-                    </p>
-                  </div>
-                  <div className="bg-[#39aeeb] border border-[rgba(255,255,255,0.5)] border-solid content-stretch flex items-center justify-center p-[10px] relative rounded-[10px] shrink-0 size-[40px]">
-                    <p className="[word-break:break-word] font-['Inter:Bold'] font-bold leading-[20px] not-italic relative shrink-0 text-[#eff4f2] text-[14px] tracking-[-0.01px] whitespace-nowrap">
-                      MK
-                    </p>
-                  </div>
-                  <div className="bg-[#12b981] border border-[rgba(255,255,255,0.5)] border-solid content-stretch flex items-center justify-center p-[10px] relative rounded-[10px] shrink-0 size-[40px]">
-                    <p className="[word-break:break-word] font-['Inter:Bold'] font-bold leading-[20px] not-italic relative shrink-0 text-[#eff4f2] text-[14px] tracking-[-0.01px] whitespace-nowrap">
-                      MK
-                    </p>
-                  </div>
-                  <div className="bg-[#ef4444] border border-[rgba(255,255,255,0.5)] border-solid content-stretch flex items-center justify-center p-[10px] relative rounded-[10px] shrink-0 size-[40px]">
-                    <p className="[word-break:break-word] font-['Inter:Bold'] font-bold leading-[20px] not-italic relative shrink-0 text-[#eff4f2] text-[14px] tracking-[-0.01px] whitespace-nowrap">
-                      MK
-                    </p>
-                  </div>
-                  <div className="bg-[#f59e0c] border border-[rgba(255,255,255,0.5)] border-solid content-stretch flex items-center justify-center p-[10px] relative rounded-[10px] shrink-0 size-[40px]">
-                    <p className="[word-break:break-word] font-['Inter:Bold'] font-bold leading-[20px] not-italic relative shrink-0 text-[#eff4f2] text-[14px] tracking-[-0.01px] whitespace-nowrap">
-                      MK
-                    </p>
-                  </div>
-                  <div className="bg-[#273040] border border-[rgba(255,255,255,0.13)] border-solid content-stretch flex items-center justify-center px-[6px] py-[10px] relative rounded-[10px] shrink-0 size-[40px]">
-                    <p className="[word-break:break-word] font-['Inter:Bold'] font-bold leading-[20px] not-italic relative shrink-0 text-[#eff4f2] text-[14px] tracking-[-0.01px] whitespace-nowrap">
-                      38+
-                    </p>
-                  </div>
-                </div>
-                <div className="absolute h-[99.267px] left-1/2 -translate-x-1/2 top-[25.7%] w-[217.997px]">
-                  <img alt="" className="absolute block inset-0 max-w-none size-full" src={imgFrame1618874422} />
-                </div>
-              </div>
-              <div className="bg-[#0a1325] content-stretch hidden md:flex flex-col gap-[11px] h-[407px] items-start p-[16px] relative shrink-0 w-[279px]">
-                <p className="[word-break:break-word] font-['Inter:Semi_Bold'] font-semibold leading-[20px] min-w-full not-italic relative shrink-0 text-[16px] text-white tracking-[-0.01px] w-[min-content]">
-                  Chat
-                </p>
-                <div className="[word-break:break-word] bg-[#182132] content-stretch flex flex-col items-start not-italic px-[16px] py-[8px] relative rounded-[11px] shrink-0 w-[205px]">
-                  <p className="font-['Inter:Semi_Bold'] font-semibold leading-[17.572px] relative shrink-0 text-[#64748b] text-[12.301px] tracking-[-0.0088px] w-[152px]">
-                    Aman
-                  </p>
-                  <p className="font-['Inter:Regular'] font-normal leading-[20px] min-w-full relative shrink-0 text-[#f1f5f9] text-[14px] tracking-[-0.01px] w-[min-content]">{`Can you please repeat the topic again ? `}</p>
-                </div>
-                <div className="[word-break:break-word] bg-[#182132] content-stretch flex flex-col items-start not-italic px-[16px] py-[8px] relative rounded-[11px] shrink-0 w-[205px]">
-                  <p className="font-['Inter:Semi_Bold'] font-semibold leading-[17.572px] relative shrink-0 text-[#64748b] text-[12.301px] tracking-[-0.0088px] w-[152px]">
-                    Junko
-                  </p>
-                  <p className="font-['Inter:Regular'] font-normal leading-[20px] min-w-full relative shrink-0 text-[#f1f5f9] text-[14px] tracking-[-0.01px] w-[min-content]">
-                    Yes, it will be better
-                  </p>
-                </div>
-                <div className="[word-break:break-word] bg-[#182132] content-stretch flex flex-col items-start not-italic px-[16px] py-[8px] relative rounded-[11px] shrink-0 w-[205px]">
-                  <p className="font-['Inter:Semi_Bold'] font-semibold leading-[17.572px] relative shrink-0 text-[#64748b] text-[12.301px] tracking-[-0.0088px] w-[152px]">
-                    Sofia
-                  </p>
-                  <p className="font-['Inter:Regular'] font-normal leading-[20px] min-w-full relative shrink-0 text-[#f1f5f9] text-[14px] tracking-[-0.01px] w-[min-content]">
-                    Can we get the recording after the class?
-                  </p>
-                </div>
-                <div className="content-stretch flex flex-col items-end justify-center relative shrink-0 w-full">
-                  <div className="bg-gradient-to-r content-stretch flex flex-col from-[#0d5c4b] items-start px-[16px] py-[8px] relative rounded-[11px] shrink-0 to-[#0f7a65] w-[205px]">
-                    <p className="[word-break:break-word] font-['Inter:Regular'] font-normal leading-[20px] not-italic relative shrink-0 text-[#f1f5f9] text-[14px] tracking-[-0.01px] w-full">
-                      Recording goes out tonight :)
-                    </p>
-                  </div>
-                </div>
-                <div className="bg-[#182132] content-stretch flex flex-col items-start px-[16px] py-[8px] relative rounded-[11px] shrink-0 w-full">
-                  <p className="[word-break:break-word] font-['Inter:Regular'] font-normal leading-[20px] not-italic relative shrink-0 text-[#64748b] text-[14px] tracking-[-0.01px] whitespace-nowrap">
-                    Send a message....
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
+          </Parallax>
           <div className="content-stretch flex flex-[1_0_0] flex-col gap-[32px] items-start min-w-px relative">
             <div className="[word-break:break-word] content-stretch flex flex-col gap-[16px] items-start leading-[0] relative shrink-0 w-full">
               <div className="font-['Instrument_Sans:Bold'] font-bold relative shrink-0 text-[#0f172a] text-[32px] md:text-[40px] xl:text-[48px] xl:text-center tracking-[-0.96px] xl:whitespace-nowrap" style={{ fontVariationSettings: '"wdth" 100' }}>
@@ -944,42 +953,50 @@ function LandingPage() {
             </button>
           </div>
         </div>
-        <div className="absolute flex items-center justify-center left-[-171px] size-[496px] top-[-304.91px]">
-          <div className="flex-none rotate-90">
-            <div className="relative size-[496px]">
-              <div className="absolute bottom-0 left-1/2 right-0 top-0">
-                <img alt="" className="block max-w-none size-full" src={imgEllipse12} />
+        <Parallax speed={0.25} className="pointer-events-none absolute inset-0">
+          <div className="absolute flex items-center justify-center left-[-171px] size-[496px] top-[-304.91px]">
+            <div className="flex-none rotate-90">
+              <div className="relative size-[496px]">
+                <div className="absolute bottom-0 left-1/2 right-0 top-0">
+                  <img alt="" className="block max-w-none size-full" src={imgEllipse12} />
+                </div>
               </div>
             </div>
           </div>
-        </div>
-        <div className="absolute flex items-center justify-center left-[236px] size-[276px] top-[389px]">
-          <div className="-rotate-90 flex-none">
-            <div className="relative size-[276px]">
-              <div className="absolute bottom-0 left-1/2 right-0 top-0">
-                <img alt="" className="block max-w-none size-full" src={imgEllipse14} />
+        </Parallax>
+        <Parallax speed={-0.15} className="pointer-events-none absolute inset-0">
+          <div className="absolute flex items-center justify-center left-[236px] size-[276px] top-[389px]">
+            <div className="-rotate-90 flex-none">
+              <div className="relative size-[276px]">
+                <div className="absolute bottom-0 left-1/2 right-0 top-0">
+                  <img alt="" className="block max-w-none size-full" src={imgEllipse14} />
+                </div>
               </div>
             </div>
           </div>
-        </div>
-        <div className="absolute flex items-center justify-center left-[944px] size-[262px] top-[-192.24px]">
-          <div className="flex-none rotate-90">
-            <div className="relative size-[262px]">
-              <div className="absolute bottom-0 left-1/2 right-0 top-0">
-                <img alt="" className="block max-w-none size-full" src={imgEllipse15} />
+        </Parallax>
+        <Parallax speed={-0.2} className="pointer-events-none absolute inset-0">
+          <div className="absolute flex items-center justify-center left-[944px] size-[262px] top-[-192.24px]">
+            <div className="flex-none rotate-90">
+              <div className="relative size-[262px]">
+                <div className="absolute bottom-0 left-1/2 right-0 top-0">
+                  <img alt="" className="block max-w-none size-full" src={imgEllipse15} />
+                </div>
               </div>
             </div>
           </div>
-        </div>
-        <div className="absolute flex items-center justify-center left-[1424px] size-[496px] top-[279px]">
-          <div className="-rotate-90 -scale-y-100 flex-none">
-            <div className="relative size-[496px]">
-              <div className="absolute bottom-0 left-1/2 right-0 top-0">
-                <img alt="" className="block max-w-none size-full" src={imgEllipse13} />
+        </Parallax>
+        <Parallax speed={0.15} className="pointer-events-none absolute inset-0">
+          <div className="absolute flex items-center justify-center left-[1424px] size-[496px] top-[279px]">
+            <div className="-rotate-90 -scale-y-100 flex-none">
+              <div className="relative size-[496px]">
+                <div className="absolute bottom-0 left-1/2 right-0 top-0">
+                  <img alt="" className="block max-w-none size-full" src={imgEllipse13} />
+                </div>
               </div>
             </div>
           </div>
-        </div>
+        </Parallax>
       </div>
       <div className="bg-[rgba(244,156,0,0.04)] content-stretch flex flex-col items-center overflow-clip relative shrink-0 w-full">
         <div className="bg-gradient-to-b content-stretch flex flex-col from-[#f7f4ec] gap-[60px] items-center justify-center py-[96px] relative shrink-0 to-white w-full">
@@ -1299,21 +1316,25 @@ function LandingPage() {
       </div>
       <div className="bg-gradient-to-b content-stretch flex flex-col from-[#11012a] xl:h-[426px] items-start relative shrink-0 to-[#0f172a] to-[54.542%] w-full">
         <div className="xl:flex-[1_0_0] min-h-px overflow-clip relative w-full px-4 py-20 xl:p-0">
-          <div className="absolute left-[1279px] size-[68px] top-[358px]">
-            <div className="absolute inset-[-425.15%]">
-              <img alt="" className="block max-w-none size-full" src={imgEllipse1899} />
+          <Parallax speed={-0.3} className="pointer-events-none absolute inset-0">
+            <div className="absolute left-[1279px] size-[68px] top-[358px]">
+              <div className="absolute inset-[-425.15%]">
+                <img alt="" className="block max-w-none size-full" src={imgEllipse1899} />
+              </div>
             </div>
-          </div>
+          </Parallax>
           <div className="absolute bottom-[3.93px] h-[177px] left-0 w-[1764px]">
             <div className="absolute inset-[-0.21%_-0.16%_-0.25%_-0.16%]">
               <img alt="" className="block max-w-none size-full" src={imgVector6} />
             </div>
           </div>
-          <div className="absolute left-[151px] size-[68px] top-[272px]">
-            <div className="absolute inset-[-425.15%]">
-              <img alt="" className="block max-w-none size-full" src={imgEllipse1898} />
+          <Parallax speed={0.3} className="pointer-events-none absolute inset-0">
+            <div className="absolute left-[151px] size-[68px] top-[272px]">
+              <div className="absolute inset-[-425.15%]">
+                <img alt="" className="block max-w-none size-full" src={imgEllipse1898} />
+              </div>
             </div>
-          </div>
+          </Parallax>
           <div className="relative z-10 mx-auto content-stretch flex flex-col items-start w-full max-w-[642px] xl:absolute xl:left-1/2 xl:top-[calc(50%-1.93px)] xl:-translate-x-1/2 xl:-translate-y-1/2">
             <div className="content-stretch flex flex-col gap-[40px] items-center relative shrink-0 w-full">
               <div className="[word-break:break-word] content-stretch flex flex-col gap-[8px] items-center relative shrink-0 text-center w-full">
