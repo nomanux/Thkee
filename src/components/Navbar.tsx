@@ -297,8 +297,8 @@ export default function Navbar() {
 
   return (
     <header
-      className={`fixed inset-x-0 top-0 z-[100] flex h-[72px] items-center justify-center backdrop-blur-[20px] transition-colors duration-300 ${
-        scrolled || menuOpen ? "bg-[rgba(3,36,29,0.92)] shadow-[0_8px_24px_rgba(0,0,0,0.18)]" : "bg-[rgba(255,255,255,0.09)] drop-shadow-[0px_8px_9px_rgba(24,39,75,0.12)]"
+      className={`fixed inset-x-0 top-0 z-[100] flex h-[72px] items-center justify-center border-b border-white/10 backdrop-blur-[20px] transition-colors duration-300 ${
+        scrolled || menuOpen ? "bg-[rgba(3,36,29,0.92)] shadow-[0_8px_24px_rgba(0,0,0,0.18)]" : "bg-[rgba(3,40,29,0.45)]"
       }`}
     >
       <nav className="relative flex w-full max-w-[1272px] items-center px-[16px]" aria-label="Main">

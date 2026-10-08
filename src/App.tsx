@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
+import Hero from "./components/Hero";
 import Navbar from "./components/Navbar";
 import Overlays from "./components/Overlays";
 import { faqs } from "./data";
@@ -10,30 +11,7 @@ const imgFrame40215 = `${assetPathPrefix}/503a2.svg`;
 const imgFrame1618874388 = `${assetPathPrefix}/9f67c.png`;
 const imgPaper = `${assetPathPrefix}/a0b77.png`;
 const imgWeb032 = `${assetPathPrefix}/6f650.png`;
-const imgEllipse676 = `${assetPathPrefix}/6849e.svg`;
-const imgCompoundPath = `${assetPathPrefix}/8160c.svg`;
-const imgFrame1000003865 = `${assetPathPrefix}/62f49.svg`;
-const imgFrame1000003866 = `${assetPathPrefix}/0c4e1.svg`;
-const imgFrame1000003857 = `${assetPathPrefix}/d27a0.svg`;
-const imgFrame1000003858 = `${assetPathPrefix}/1174e.svg`;
-const imgFrame1000003859 = `${assetPathPrefix}/c8853.svg`;
-const imgFrame1000003861 = `${assetPathPrefix}/ad0e8.svg`;
-const imgFrame1000003862 = `${assetPathPrefix}/42f55.svg`;
-const imgContent = `${assetPathPrefix}/72256.svg`;
-const imgVertical = `${assetPathPrefix}/21927.svg`;
-const imgHorizontal = `${assetPathPrefix}/319d8.svg`;
-const imgFrame1000003847 = `${assetPathPrefix}/712ae.svg`;
-const imgFrame1000003854 = `${assetPathPrefix}/dc392.svg`;
-const imgFrame1000003849 = `${assetPathPrefix}/85a4e.svg`;
-const imgEllipse168 = `${assetPathPrefix}/37b9d.svg`;
-const imgEllipse2461 = `${assetPathPrefix}/17517.svg`;
-const imgFrame = `${assetPathPrefix}/86db7.svg`;
-const imgMortarboard02 = `${assetPathPrefix}/85dd9.svg`;
-const imgHeroiconsMiniArrowRight = `${assetPathPrefix}/ae9fa.svg`;
-const imgElements = `${assetPathPrefix}/8da4a.svg`;
-const imgFrame1000003850 = `${assetPathPrefix}/d5325.svg`;
 const imgGlobe02 = `${assetPathPrefix}/28db3.svg`;
-const imgFrame1000003856 = `${assetPathPrefix}/b5d79.svg`;
 const imgGroup = `${assetPathPrefix}/1ff1d.svg`;
 const imgVector = `${assetPathPrefix}/94755.svg`;
 const imgVector1 = `${assetPathPrefix}/b085b.svg`;
@@ -75,9 +53,6 @@ const imgEllipse12 = `${assetPathPrefix}/6a6fb.svg`;
 const imgEllipse14 = `${assetPathPrefix}/c9d6e.svg`;
 const imgEllipse15 = `${assetPathPrefix}/c2e01.svg`;
 const imgEllipse13 = `${assetPathPrefix}/46a4c.svg`;
-const imgArrowLeft01 = `${assetPathPrefix}/e30fd.svg`;
-const imgVector3 = `${assetPathPrefix}/7ba7e.svg`;
-const imgArrowLeft2 = `${assetPathPrefix}/72b9f.svg`;
 const imgGroup2 = `${assetPathPrefix}/08e80.svg`;
 const imgGroup3 = `${assetPathPrefix}/2cc84.svg`;
 const imgGroup4 = `${assetPathPrefix}/b52d3.svg`;
@@ -118,7 +93,6 @@ const imgVector7 = `${assetPathPrefix}/23100.svg`;
 const imgG4158 = `${assetPathPrefix}/ccc3d.svg`;
 const imgGroup7368 = `${assetPathPrefix}/feeeb.svg`;
 const imgGroup14 = `${assetPathPrefix}/0b939.svg`;
-const imgGraduationCap = `${assetPathPrefix}/88431.svg`;
 
 type StarProps = {
   className?: string;
@@ -477,135 +451,7 @@ function LandingPage() {
       <ScrollProgress />
       <Navbar />
       <Overlays />
-      <div className="xl:h-[911px] overflow-clip relative shrink-0 w-full" style={{ backgroundImage: "url(\"data:image/svg+xml;utf8,<svg viewBox='0 0 1728 911' xmlns='http://www.w3.org/2000/svg' preserveAspectRatio='none'><rect x='0' y='0' height='100%' width='100%' fill='url(%23grad)' opacity='1'/><defs><radialGradient id='grad' gradientUnits='userSpaceOnUse' cx='0' cy='0' r='10' gradientTransform='matrix(85.45 48.828 -94.834 130.5 840 404.5)'><stop stop-color='rgba(0,109,86,1)' offset='0'/><stop stop-color='rgba(0,81,63,1)' offset='0.16038'/><stop stop-color='rgba(0,60,47,1)' offset='0.40715'/><stop stop-color='rgba(0,40,31,1)' offset='0.65391'/></radialGradient></defs></svg>\")" }}>
-        <div className="absolute contents left-[482.48px] top-[44.03px]">
-          <div className="absolute h-[450px] left-[482.48px] top-[44.03px] w-[475px]">
-            <img alt="" className="absolute block inset-0 max-w-none size-full" src={imgEllipse676} />
-          </div>
-        </div>
-        <div className="-translate-x-1/2 absolute flex h-[1498.004px] items-center justify-center left-[calc(50%-0.49px)] top-[726px] w-[1499.13px]">
-          <div className="flex-none rotate-180">
-            <div className="h-[1498.004px] relative w-[1499.13px]">
-              <img alt="" className="absolute block inset-0 max-w-none size-full" src={imgCompoundPath} />
-            </div>
-          </div>
-        </div>
-        <div className="absolute h-[695px] left-[85px] top-[77px] w-[1573px]">
-          <div className="absolute left-[337px] size-[24px] top-[462px]">
-            <img alt="" className="absolute block inset-0 max-w-none size-full" src={imgFrame1000003865} />
-          </div>
-          <div className="absolute left-[95px] size-[24px] top-[133px]">
-            <img alt="" className="absolute block inset-0 max-w-none size-full" src={imgFrame1000003866} />
-          </div>
-          <div className="absolute left-0 size-[24px] top-[12px]">
-            <img alt="" className="absolute block inset-0 max-w-none size-full" src={imgFrame1000003858} />
-          </div>
-          <div className="absolute left-[1240px] size-[16px] top-[439px]">
-            <img alt="" className="absolute block inset-0 max-w-none size-full" src={imgFrame1000003859} />
-          </div>
-        </div>
-        <div className="-translate-x-1/2 absolute h-[850px] left-1/2 top-[-29px] w-[1440px]">
-          <div className="-translate-x-1/2 absolute left-1/2 mask-alpha mask-intersect mask-no-clip mask-no-repeat mask-size-[768px_768px] size-[768px] top-0" style={{ maskImage: `url("${imgContent}")` }}>
-            <div className="absolute content-stretch flex flex-col items-start left-0 overflow-clip top-0">
-              <div className="relative shrink-0 size-[768px]">
-                <img alt="" className="absolute block inset-0 max-w-none size-full" src={imgVertical} />
-              </div>
-              <div className="absolute left-0 size-[768px] top-0">
-                <img alt="" className="absolute block inset-0 max-w-none size-full" src={imgHorizontal} />
-              </div>
-            </div>
-            <div className="absolute left-[-92px] size-[24px] top-[386px]">
-              <img alt="" className="absolute block inset-0 max-w-none size-full" src={imgFrame1000003847} />
-            </div>
-            <div className="absolute left-[613px] size-[24px] top-[515px]">
-              <img alt="" className="absolute block inset-0 max-w-none size-full" src={imgFrame1000003849} />
-            </div>
-            <div className="absolute left-[565px] size-[24px] top-[228px]">
-              <img alt="" className="absolute block inset-0 max-w-none size-full" src={imgFrame1000003847} />
-            </div>
-            <div className="absolute left-[468px] size-[24px] top-[323px]">
-              <img alt="" className="absolute block inset-0 max-w-none size-full" src={imgFrame1000003847} />
-            </div>
-            <div className="absolute left-[286px] size-[4px] top-[334px]">
-              <img alt="" className="absolute block inset-0 max-w-none size-full" src={imgEllipse168} />
-            </div>
-            <div className="absolute left-[478px] size-[4px] top-[238px]">
-              <img alt="" className="absolute block inset-0 max-w-none size-full" src={imgEllipse168} />
-            </div>
-            <div className="absolute left-[527px] size-[4px] top-[430px]">
-              <img alt="" className="absolute block inset-0 max-w-none size-full" src={imgEllipse168} />
-            </div>
-            <div className="absolute left-[142px] size-[4px] top-[382px]">
-              <img alt="" className="absolute block inset-0 max-w-none size-full" src={imgEllipse168} />
-            </div>
-            <div className="absolute bg-[rgba(11,202,202,0.15)] h-[48px] left-[528px] top-[288px] w-[49px]" />
-            <div className="absolute bg-[rgba(11,202,202,0.15)] h-[48px] left-[96px] top-[432px] w-[49px]" />
-            <div className="absolute bg-[rgba(11,202,202,0.15)] h-[48px] left-[625px] top-[432px] w-[49px]" />
-          </div>
-          <div className="absolute bg-[rgba(211,255,255,0.16)] blur-[9.35px] h-[25px] left-[47px] mask-alpha mask-intersect mask-no-clip mask-no-repeat mask-position-[289px_-555px] mask-size-[768px_768px] top-[555px] w-[129px]" style={{ maskImage: `url("${imgContent}")` }} />
-          <div className="absolute h-[485px] left-[488px] top-[183px] w-[464px]">
-            <div className="absolute inset-[-92.78%_-96.98%]">
-              <img alt="" className="block max-w-none size-full" src={imgEllipse2461} />
-            </div>
-          </div>
-        </div>
-        <div className="absolute h-[850px] left-0 opacity-0 top-0 w-[1440px]" />
-        <div className="relative z-10 mx-auto content-stretch flex flex-col gap-[28px] items-center px-4 pt-[136px] pb-[96px] xl:p-0 xl:absolute xl:left-1/2 xl:top-[calc(50%-30px)] xl:-translate-x-1/2 xl:-translate-y-1/2">
-          <div className="neon-badge bg-[#1d7461] border border-[rgba(146,227,169,0.35)] border-solid content-stretch flex gap-[12px] items-center px-[16px] py-[8px] relative rounded-[100px] shrink-0">
-            <div className="relative shrink-0 size-[16px]">
-              <img alt="" className="absolute block inset-0 max-w-none size-full" src={imgFrame} />
-            </div>
-            <p className="[word-break:break-word] font-['Inter:Medium'] font-medium leading-[24px] not-italic relative shrink-0 text-[14px] text-center text-white tracking-[1px] uppercase whitespace-nowrap">
-              AI-Powered Learning Platform
-            </p>
-          </div>
-          <div className="content-stretch flex flex-col gap-[40px] items-center relative shrink-0">
-            <div className="[word-break:break-word] content-stretch flex flex-col gap-[16px] items-center relative shrink-0 text-center">
-              <p className="bg-clip-text font-['Instrument_Sans:Bold'] font-bold leading-[normal] relative shrink-0 text-[40px] sm:text-[56px] xl:text-[72px] text-[transparent] tracking-[-0.8px] xl:tracking-[-1.44px] w-full max-w-[1024px]" style={{ fontVariationSettings: '"wdth" 100', backgroundImage: "linear-gradient(88.27507450437835deg, rgba(255, 255, 255, 0.4) 1.564%, rgb(255, 255, 255) 37.495%, rgb(255, 255, 255) 73.375%, rgba(255, 255, 255, 0.4) 97.715%)" }}>
-                Connect, Learn, and
-                <br aria-hidden />
-                Grow Together
-              </p>
-              <p className="font-['Instrument_Sans:Regular'] font-normal leading-[28px] md:leading-[32px] relative shrink-0 text-[#e2e8f0] text-[18px] md:text-[24px] w-full max-w-[768px]" style={{ fontVariationSettings: '"wdth" 100' }}>
-                Discover expert-led courses, join live sessions, and learn from instructors around the world.
-              </p>
-            </div>
-            <div className="content-stretch flex flex-col sm:flex-row gap-[16px] items-stretch sm:items-start relative shrink-0 w-full sm:w-auto">
-              <button className="neon-btn bg-[#ffb20d] content-stretch flex gap-[10px] h-[48px] items-center justify-center overflow-clip px-[20px] relative rounded-[8px] shrink-0 transition-colors hover:bg-[#faa104] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white w-full sm:w-[220px]" type="button" onClick={() => setOverlay({ type: "catalog" })}>
-                <span className="relative shrink-0 size-[20px]" aria-hidden="true">
-                  <img alt="" className="absolute block inset-0 size-full" src={imgGraduationCap} />
-                </span>
-                <span className="font-['Inter:Semi_Bold'] font-semibold leading-[24px] text-[#1e293b] text-[16px] tracking-[-0.01px] whitespace-nowrap">
-                  Start Learning
-                </span>
-              </button>
-              <button className="bg-[rgba(255,255,255,0.3)] content-stretch flex gap-[12px] h-[48px] items-center justify-center overflow-clip px-[20px] relative rounded-[8px] shrink-0 transition-colors hover:bg-[rgba(255,255,255,0.4)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white w-full sm:w-[230px]" type="button" onClick={() => setOverlay({ type: "instructor" })}>
-                <span className="font-['Inter:Semi_Bold'] font-semibold leading-[24px] text-[16px] text-white tracking-[-0.01px] whitespace-nowrap">
-                  Become an Instructor
-                </span>
-                <span className="relative shrink-0 size-[20px]" aria-hidden="true">
-                  <img alt="" className="absolute block brightness-0 inset-0 invert size-full" src={imgHeroiconsSolidArrowUpRight} />
-                </span>
-              </button>
-            </div>
-          </div>
-          <div className="content-stretch flex flex-col items-center justify-center relative shrink-0 w-full">
-            <div className="content-stretch flex items-start relative shrink-0">
-              <div className="content-stretch flex flex-col items-start relative shrink-0">
-                <p className="[word-break:break-word] font-['Inter:Regular'] font-normal leading-[28px] not-italic relative shrink-0 text-[#cbd5e1] text-[16px] sm:text-[18px] text-center max-w-[calc(100vw-32px)] sm:max-w-none sm:whitespace-nowrap">
-                  ⭐ Trusted by 1000+ learners and 50+ expert instructors
-                </p>
-              </div>
-            </div>
-          </div>
-          <div className="absolute hidden xl:block left-[45px] size-[24px] top-[11px]">
-            <img alt="" className="absolute block inset-0 max-w-none size-full" src={imgFrame1000003850} />
-          </div>
-        </div>
-        <div className="absolute left-[1517px] size-[24px] top-[383px]">
-          <img alt="" className="absolute block inset-0 max-w-none size-full" src={imgFrame1000003856} />
-        </div>
-      </div>
+      <Hero />
       <div className="bg-[#fafbfc] content-stretch flex flex-col items-center overflow-clip px-4 md:px-8 xl:px-[100px] py-[64px] xl:py-[96px] relative shrink-0 w-full">
         <div className="content-stretch flex flex-col gap-[40px] items-start relative shrink-0 w-full max-w-[1320px]">
           <div className="content-stretch flex items-center justify-center relative shrink-0 w-full">
