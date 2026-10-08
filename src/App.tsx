@@ -497,20 +497,11 @@ function LandingPage() {
           <div className="absolute left-[95px] size-[24px] top-[133px]">
             <img alt="" className="absolute block inset-0 max-w-none size-full" src={imgFrame1000003866} />
           </div>
-          <div className="absolute left-[103px] size-[16px] top-[330px]">
-            <img alt="" className="absolute block inset-0 max-w-none size-full" src={imgFrame1000003857} />
-          </div>
           <div className="absolute left-0 size-[24px] top-[12px]">
             <img alt="" className="absolute block inset-0 max-w-none size-full" src={imgFrame1000003858} />
           </div>
           <div className="absolute left-[1240px] size-[16px] top-[439px]">
             <img alt="" className="absolute block inset-0 max-w-none size-full" src={imgFrame1000003859} />
-          </div>
-          <div className="absolute left-[836px] size-[24px] top-[525px]">
-            <img alt="" className="absolute block inset-0 max-w-none size-full" src={imgFrame1000003861} />
-          </div>
-          <div className="absolute left-[271px] size-[16px] top-[679px]">
-            <img alt="" className="absolute block inset-0 max-w-none size-full" src={imgFrame1000003862} />
           </div>
         </div>
         <div className="-translate-x-1/2 absolute h-[850px] left-1/2 top-[-29px] w-[1440px]">
@@ -526,13 +517,7 @@ function LandingPage() {
             <div className="absolute left-[-92px] size-[24px] top-[386px]">
               <img alt="" className="absolute block inset-0 max-w-none size-full" src={imgFrame1000003847} />
             </div>
-            <div className="absolute h-[16px] left-[-74px] top-[516px] w-[24px]">
-              <img alt="" className="absolute block inset-0 max-w-none size-full" src={imgFrame1000003854} />
-            </div>
             <div className="absolute left-[613px] size-[24px] top-[515px]">
-              <img alt="" className="absolute block inset-0 max-w-none size-full" src={imgFrame1000003849} />
-            </div>
-            <div className="absolute left-[-85px] size-[24px] top-[362px]">
               <img alt="" className="absolute block inset-0 max-w-none size-full" src={imgFrame1000003849} />
             </div>
             <div className="absolute left-[565px] size-[24px] top-[228px]">
