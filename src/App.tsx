@@ -1,8 +1,12 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
+import Experts from "./components/Experts";
 import Hero from "./components/Hero";
+import HowItWorks from "./components/HowItWorks";
 import Navbar from "./components/Navbar";
 import Overlays from "./components/Overlays";
 import Parallax from "./components/Parallax";
+import PopularCourses from "./components/PopularCourses";
+import StartingSoon from "./components/StartingSoon";
 import { faqs } from "./data";
 import { fontHeading, fontRegular, fontSemi } from "./fonts";
 import { AppProvider, scrollToId, useApp } from "./store";
@@ -541,6 +545,8 @@ function LandingPage() {
           </div>
         </div>
       </div>
+      <PopularCourses />
+      <StartingSoon />
       <div className="content-stretch flex flex-col gap-[40px] items-center overflow-clip px-4 md:px-8 xl:px-[204px] py-[64px] xl:py-[96px] relative shrink-0 w-full">
         <div aria-hidden className="absolute inset-0 pointer-events-none">
           <div className="absolute bg-[#0c211d] inset-0" />
@@ -743,6 +749,7 @@ function LandingPage() {
         </div>
       </div>
       <PersonalizedLearning />
+      <HowItWorks />
       <div className="bg-[#f8fafc] content-stretch flex flex-col gap-[60px] items-center justify-center px-4 md:px-8 py-[64px] xl:py-[96px] relative shrink-0 w-full">
         <div className="absolute bg-[#3a5c55] blur-[79.05px] h-[416px] left-1/2 -translate-x-1/2 opacity-4 top-[124.21px] w-full max-w-[1385px]" />
         <div className="content-stretch flex flex-col xl:flex-row gap-10 xl:gap-[60px] items-center relative shrink-0 w-full max-w-[1320px]">
@@ -924,6 +931,7 @@ function LandingPage() {
           </div>
         </div>
       </div>
+      <Experts />
       <div className="xl:h-[406px] overflow-clip relative shrink-0 w-full px-4 md:px-8 py-16 xl:p-0" style={{ backgroundImage: "linear-gradient(145.1440091350974deg, rgb(0, 142, 111) 24.443%, rgb(0, 81, 63) 4.7981%, rgb(0, 40, 31) 55.653%)" }}>
         <div className="relative z-10 mx-auto content-stretch flex flex-col xl:flex-row gap-8 items-start xl:items-center justify-between w-full max-w-[1216px] xl:absolute xl:left-1/2 xl:top-[calc(50%-0.16px)] xl:-translate-x-1/2 xl:-translate-y-1/2">
           <div className="[word-break:break-word] content-stretch flex flex-col gap-[24px] items-start relative shrink-0 w-full xl:w-[643px]">

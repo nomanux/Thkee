@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState, type KeyboardEvent as ReactKeyboardEvent } from "react";
 import { categories, courses } from "../data";
-import { fontMedium, fontRegular, fontSemi } from "../fonts";
+import { fontFor, fontMedium, fontRegular, fontSemi } from "../fonts";
 import { formatPrice, useApp, type Lang } from "../store";
 
 const imgLogo = "/assets/820a1.svg";
@@ -104,7 +104,7 @@ function SearchBox({ onDone, autoFocus = false }: { onDone?: () => void; autoFoc
                 }}
               >
                 <span className="min-w-0">
-                  <span className="block truncate">{c.title}</span>
+                  <span dir="auto" className={`block truncate text-left ${fontFor(c.title, fontMedium, "font-medium")}`}>{c.title}</span>
                   <span className={`block text-[13px] text-[#64748b] ${fontRegular}`}>
                     {c.category} · {c.instructor}
                   </span>

@@ -13,8 +13,10 @@ export type Overlay =
   | { type: "cart" }
   | { type: "instructor" }
   | { type: "info"; page: string }
+  | { type: "booking"; expertId: string }
   | null;
 type Toast = { id: number; message: string };
+export type Booking = { expertId: string; date: string; time: string };
 
 function load<T>(key: string, fallback: T): T {
   try {
@@ -43,6 +45,8 @@ function useAppState() {
   const [enrolledIds, setEnrolledIds] = useStoredState<string[]>("thkee.enrolled", []);
   const [lang, setLang] = useStoredState<Lang>("thkee.lang", "EN");
   const [overlay, setOverlay] = useState<Overlay>(null);
+  const [reservations, setReservations] = useStoredState<string[]>("thkee.reservations", []);
+  const [bookings, setBookings] = useStoredState<Booking[]>("thkee.bookings", []);
   const [toasts, setToasts] = useState<Toast[]>([]);
 
   const notify = useCallback((message: string) => {
@@ -100,6 +104,31 @@ function useAppState() {
     [accounts, setAccounts, setUser],
   );
 
+  const reserveSeat = useCallback(
+    (sessionId: string, title: string) => {
+      if (!user) {
+        setOverlay({ type: "auth", mode: "login" });
+        return notify("Log in to reserve your seat");
+      }
+      if (reservations.includes(sessionId)) {
+        setReservations((ids) => ids.filter((id) => id !== sessionId));
+        return notify("Reservation cancelled");
+      }
+      setReservations((ids) => [...ids, sessionId]);
+      notify(`Seat reserved for "${title}" ✓`);
+    },
+    [notify, reservations, setReservations, user],
+  );
+
+  const bookExpert = useCallback(
+    (booking: Booking) => {
+      setBookings((list) => [...list.filter((b) => b.expertId !== booking.expertId), booking]);
+      setOverlay(null);
+      notify(`Session booked for ${booking.date} at ${booking.time} ✓`);
+    },
+    [notify, setBookings],
+  );
+
   const logout = useCallback(() => {
     setUser(null);
     notify("You've been logged out");
@@ -109,7 +138,7 @@ function useAppState() {
     document.documentElement.lang = lang === "AR" ? "ar" : "en";
   }, [lang]);
 
-  return { user, login, register, logout, cart, addToCart, removeFromCart, checkout, enrolledIds, lang, setLang, overlay, setOverlay, toasts, notify };
+  return { user, login, register, logout, reservations, reserveSeat, bookings, bookExpert, cart, addToCart, removeFromCart, checkout, enrolledIds, lang, setLang, overlay, setOverlay, toasts, notify };
 }
 
 const AppContext = createContext<ReturnType<typeof useAppState> | null>(null);

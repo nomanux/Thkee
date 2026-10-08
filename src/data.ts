@@ -12,6 +12,8 @@ export type Course = {
   live: boolean;
   description: string;
   outcomes: string[];
+  duration?: string;
+  launched?: string;
 };
 
 export const categories = [
@@ -207,7 +209,117 @@ export const courses: Course[] = [
     description: "Read, write and hold everyday conversations in Modern Standard Arabic.",
     outcomes: ["Read the Arabic alphabet", "Introduce yourself and others", "Handle everyday conversations"],
   },
+  {
+    id: "3g-networks",
+    title: "شبكات الجيل الثالث للهاتف النقال من البداية وحتى الأحتراف",
+    instructor: "Waleed Elsafoury",
+    category: "Development",
+    level: "Intermediate",
+    hours: 15,
+    duration: "15h 21m",
+    lessons: 46,
+    price: 149,
+    rating: 5.0,
+    students: 320,
+    live: false,
+    launched: "2026-09-20",
+    description: "A complete Arabic course on 3G mobile networks, from the radio interface to core network architecture.",
+    outcomes: ["Understand 3G network architecture", "Trace a call through the network", "Troubleshoot common radio issues"],
+  },
+  {
+    id: "ai-marketing",
+    title: "التسويق بالذكاء الاصطناعي",
+    instructor: "شهاب رشاد",
+    category: "Marketing",
+    level: "Beginner",
+    hours: 2,
+    duration: "2h 24m",
+    lessons: 12,
+    price: 99,
+    rating: 4.8,
+    students: 640,
+    live: false,
+    launched: "2026-09-28",
+    description: "Use AI tools to research audiences, write campaigns and analyse results faster — taught in Arabic.",
+    outcomes: ["Generate campaign ideas with AI", "Write ad copy in minutes", "Measure campaign performance"],
+  },
+  {
+    id: "logo-illustrator",
+    title: "احترف تصميم الشعارات باستخدام Illustrator وأبدأ رحلتك المهنية",
+    instructor: "شركة لانج فارا للتدريب",
+    category: "Design",
+    level: "Beginner",
+    hours: 19,
+    duration: "19h 41m",
+    lessons: 58,
+    price: 249,
+    rating: 4.7,
+    students: 890,
+    live: false,
+    launched: "2026-08-15",
+    description: "Learn professional logo design in Adobe Illustrator and build a portfolio to start your design career.",
+    outcomes: ["Master the Illustrator toolset", "Design logos from brief to delivery", "Build a client-ready portfolio"],
+  },
+  {
+    id: "leadership-keys",
+    title: "مفاتيح القيادة الناجحة في بيئة العمل الحديثة",
+    instructor: "مصطفى عطية",
+    category: "Business",
+    level: "Beginner",
+    hours: 1,
+    duration: "1h 17m",
+    lessons: 8,
+    price: 0,
+    rating: 4.6,
+    students: 1430,
+    live: false,
+    launched: "2026-09-05",
+    description: "The essential habits of effective leaders in today’s hybrid and fast-moving workplaces.",
+    outcomes: ["Lead hybrid teams with confidence", "Give feedback that lands", "Make faster, clearer decisions"],
+  },
 ];
+
+export type LiveSession = {
+  id: string;
+  title: string;
+  host: string;
+  format: string;
+  dayOffset: number;
+  hour: number;
+  minutes: number;
+  price: number;
+  seatsLeft: number | null;
+};
+
+export const liveSessions: LiveSession[] = [
+  { id: "sales-300", title: "تعلم مضاعفة المبيعات في 300 دقيقة", host: "محمد ابو رحال", format: "Cohort", dayOffset: 0, hour: 18, minutes: 300, price: 199, seatsLeft: null },
+  { id: "clinical-case", title: "صياغة الحالة الإكلينيكية: من التقييم إلى الخطة العلاجية", host: "Omnia Nabil", format: "Cohort", dayOffset: 1, hour: 16, minutes: 120, price: 149, seatsLeft: 4 },
+  { id: "sovereign-cognition", title: "الإدراك السيادي: برنامج تدريبي في بناء المعنى والانتباه والقيادة المعرفية للقرار", host: "أ.د.خالد دقروق", format: "Cohort", dayOffset: 2, hour: 18, minutes: 180, price: 249, seatsLeft: null },
+];
+
+export type Expert = {
+  id: string;
+  name: string;
+  field: string;
+  format: string;
+  headline: string;
+  detail: string;
+  minutes: number;
+  price: number;
+  rating: number;
+  sessions: number;
+  colors: [string, string];
+};
+
+export const experts: Expert[] = [
+  { id: "salama", name: "د. سلامة العنزي", field: "Teaching & Training", format: "Group", headline: "القدرات اللفظي تدريب مباشر", detail: "1h 30m live session with practice questions", minutes: 90, price: 120, rating: 4.9, sessions: 214, colors: ["#0d5c4b", "#12b981"] },
+  { id: "m-abdulqader", name: "محمد عبدالقادر", field: "Information Technology", format: "1:1", headline: "أُحوّل الأفكار إلى منتجات رقمية قابلة للتوسع", detail: "1h with a tech lead, 8+ years building SaaS platforms", minutes: 60, price: 350, rating: 5.0, sessions: 96, colors: ["#1d4ed8", "#39aeeb"] },
+  { id: "m-aburahal", name: "محمد ابو رحال", field: "Personal & Professional Growth", format: "1:1 · Jeddah", headline: "إستعد للتغيير، ساعة واحدة تغير مسارك", detail: "1h 1:1 session", minutes: 60, price: 250, rating: 4.8, sessions: 158, colors: ["#b45309", "#ffb20d"] },
+  { id: "sara-q", name: "Dr. Sara Al-Qahtani", field: "AI & Data", format: "1:1", headline: "Plan your first AI project", detail: "45-minute strategy call to scope an AI use case for your team", minutes: 45, price: 300, rating: 4.9, sessions: 132, colors: ["#0d5c4b", "#39aeeb"] },
+  { id: "layla-h", name: "Layla Hassan", field: "Product Management", format: "1:1", headline: "Mock product manager interview", detail: "1h realistic interview with detailed written feedback", minutes: 60, price: 280, rating: 4.9, sessions: 87, colors: ["#be123c", "#fb7185"] },
+  { id: "thomas-g", name: "Thomas Greene", field: "Design", format: "1:1", headline: "Portfolio review for designers", detail: "45-minute review of your portfolio with a senior designer", minutes: 45, price: 200, rating: 4.7, sessions: 175, colors: ["#7c3aed", "#ec4899"] },
+];
+
 
 export type FaqItem = { q: string; a: string };
 

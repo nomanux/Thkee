@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState, type FormEvent, type ReactNode } from "react";
-import { categories, categoryColors, courses, infoPages, type Course } from "../data";
-import { fontBold, fontHeading, fontMedium, fontRegular, fontSemi } from "../fonts";
+import { categories, categoryColors, courses, experts, infoPages, type Course } from "../data";
+import { fontBold, fontFor, fontHeading, fontMedium, fontRegular, fontSemi } from "../fonts";
+import { ExpertAvatar } from "./Experts";
 import { formatPrice, useApp } from "../store";
 
 const inputClass = `w-full rounded-[10px] border border-[#cbd5e1] bg-white px-4 py-3 text-[16px] text-[#0f172a] outline-none transition focus:border-[#0d5c4b] focus:ring-2 focus:ring-[#0d5c4b]/20 ${fontRegular}`;
@@ -61,7 +62,7 @@ function Shell({ title, onClose, children, variant = "modal", width = "max-w-[52
   );
 }
 
-export function CourseThumb({ course, className = "" }: { course: Course; className?: string }) {
+export function CourseThumb({ course, className = "", showTitle = true }: { course: Course; className?: string; showTitle?: boolean }) {
   const [from, to] = categoryColors(course.category);
   return (
     <div className={`relative overflow-hidden ${className}`} style={{ backgroundImage: `linear-gradient(135deg, ${from}, ${to})` }}>
@@ -73,7 +74,7 @@ export function CourseThumb({ course, className = "" }: { course: Course; classN
           <span className="size-[6px] animate-pulse rounded-full bg-white" /> Live
         </span>
       )}
-      <span className={`absolute bottom-3 left-3 right-3 line-clamp-2 text-[17px] leading-[22px] text-white ${fontHeading}`}>{course.title}</span>
+      {showTitle && <span dir="auto" className={`absolute bottom-3 left-3 right-3 line-clamp-2 text-left text-[17px] leading-[24px] text-white ${fontFor(course.title, fontHeading, "font-bold")}`}>{course.title}</span>}
     </div>
   );
 }
@@ -96,11 +97,11 @@ function CourseCard({ course }: { course: Course }) {
         <CourseThumb course={course} className="h-[130px]" />
       </button>
       <div className="flex flex-1 flex-col gap-2 p-4">
-        <p className={`text-[13px] text-[#64748b] ${fontRegular}`}>{course.instructor}</p>
+        <p dir="auto" className={`text-left text-[13px] text-[#64748b] ${fontFor(course.instructor, fontRegular, "font-normal")}`}>{course.instructor}</p>
         <div className={`flex flex-wrap items-center gap-x-3 gap-y-1 text-[12px] text-[#64748b] ${fontRegular}`}>
           <Stars rating={course.rating} />
           <span>{course.students.toLocaleString()} learners</span>
-          <span>{course.hours}h · {course.level}</span>
+          <span>{course.duration ?? `${course.hours}h`} · {course.level}</span>
         </div>
         <div className="mt-auto flex items-center justify-between gap-2 pt-2">
           <span className={`text-[17px] text-[#0f172a] ${fontBold}`}>{formatPrice(course.price)}</span>
@@ -222,7 +223,7 @@ function CourseDetail({ id }: { id: string }) {
           </ul>
         </div>
         <p className={`text-[14px] text-[#64748b] ${fontRegular}`}>
-          Instructor: <span className={`text-[#0f172a] ${fontSemi}`}>{course.instructor}</span>
+          Instructor: <span dir="auto" className={`text-[#0f172a] ${fontFor(course.instructor, fontSemi)}`}>{course.instructor}</span>
         </p>
         <div className="flex flex-col gap-3 border-t border-[#e2e8f0] pt-5 sm:flex-row sm:items-center sm:justify-between">
           <span className={`text-[24px] text-[#0f172a] ${fontBold}`}>{formatPrice(course.price)}</span>
@@ -274,7 +275,7 @@ function Cart() {
               <li key={c.id} className="flex gap-3 py-4">
                 <CourseThumb course={c} className="h-[64px] w-[88px] shrink-0 rounded-[8px] [&>span]:hidden" />
                 <div className="flex min-w-0 flex-1 flex-col gap-1">
-                  <p className={`truncate text-[15px] text-[#0f172a] ${fontSemi}`}>{c.title}</p>
+                  <p dir="auto" className={`truncate text-left text-[15px] text-[#0f172a] ${fontFor(c.title, fontSemi)}`}>{c.title}</p>
                   <p className={`text-[13px] text-[#64748b] ${fontRegular}`}>{c.instructor}</p>
                   <div className="flex items-center justify-between">
                     <span className={`text-[15px] ${fontBold}`}>{formatPrice(c.price)}</span>
@@ -466,6 +467,112 @@ function InstructorApply() {
   );
 }
 
+function nextDays(count: number) {
+  return Array.from({ length: count }, (_, i) => {
+    const d = new Date();
+    d.setDate(d.getDate() + i + 1);
+    return d;
+  });
+}
+
+const timeSlots = ["10:00 AM", "12:00 PM", "3:00 PM", "6:00 PM", "8:00 PM"];
+
+function BookingModal({ expertId }: { expertId: string }) {
+  const { setOverlay, user, bookExpert, bookings, notify } = useApp();
+  const expert = experts.find((e) => e.id === expertId);
+  const days = nextDays(7);
+  const [dayIndex, setDayIndex] = useState(0);
+  const [time, setTime] = useState<string | null>(null);
+  if (!expert) return null;
+  const existing = bookings.find((b) => b.expertId === expert.id);
+  const dayText = (d: Date) => d.toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short" });
+  // Deterministic "already taken" slots so the demo feels realistic.
+  const taken = (di: number, ti: number) => (di * 3 + ti + expert.id.length) % 4 === 0;
+
+  const confirm = () => {
+    if (!time) return notify("Choose a time first");
+    if (!user) {
+      notify("Log in to confirm your booking");
+      return setOverlay({ type: "auth", mode: "login" });
+    }
+    bookExpert({ expertId: expert.id, date: dayText(days[dayIndex]), time });
+  };
+
+  return (
+    <Shell title="Book a session" onClose={() => setOverlay(null)} width="max-w-[560px]">
+      <div className="flex flex-col gap-5 p-5 sm:p-6">
+        <div className="flex items-center gap-3.5">
+          <ExpertAvatar expert={expert} size={52} />
+          <div className="min-w-0">
+            <p dir="auto" className={`truncate text-left text-[17px] text-[#0f172a] ${fontFor(expert.name, fontSemi)}`}>{expert.name}</p>
+            <p className={`text-[13px] text-[#64748b] ${fontRegular}`}>
+              {expert.field} · {expert.minutes} min · {formatPrice(expert.price)}
+            </p>
+          </div>
+        </div>
+        <p dir="auto" className={`rounded-[12px] bg-[#f8fafc] px-4 py-3 text-left text-[15px] text-[#0f172a] ${fontFor(expert.headline, fontMedium, "font-medium")}`}>{expert.headline}</p>
+        {existing && (
+          <p className={`rounded-[12px] bg-[#e7f5f1] px-4 py-3 text-[14px] text-[#0d5c4b] ${fontMedium}`}>
+            You already have a session on {existing.date} at {existing.time}. Booking again will reschedule it.
+          </p>
+        )}
+        <div className="flex flex-col gap-2">
+          <span className={`text-[14px] text-[#334155] ${fontSemi}`}>Choose a day</span>
+          <div className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1">
+            {days.map((d, i) => (
+              <button
+                key={i}
+                type="button"
+                onClick={() => {
+                  setDayIndex(i);
+                  setTime(null);
+                }}
+                className={`flex w-[64px] shrink-0 flex-col items-center rounded-[12px] border py-2 transition ${dayIndex === i ? "border-[#0d5c4b] bg-[#0d5c4b] text-white" : "border-[#e2e8f0] text-[#0f172a] hover:border-[#0d5c4b]"}`}
+              >
+                <span className={`text-[12px] uppercase opacity-80 ${fontMedium}`}>{d.toLocaleDateString("en-GB", { weekday: "short" })}</span>
+                <span className={`text-[20px] ${fontBold}`}>{d.getDate()}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+        <div className="flex flex-col gap-2">
+          <span className={`text-[14px] text-[#334155] ${fontSemi}`}>Choose a time</span>
+          <div className="grid grid-cols-3 gap-2 sm:grid-cols-5">
+            {timeSlots.map((t, ti) => {
+              const unavailable = taken(dayIndex, ti);
+              return (
+                <button
+                  key={t}
+                  type="button"
+                  disabled={unavailable}
+                  onClick={() => setTime(t)}
+                  className={`rounded-[10px] border py-2.5 text-[14px] transition ${fontMedium} ${unavailable ? "cursor-not-allowed border-[#f1f5f9] text-[#cbd5e1] line-through" : time === t ? "border-[#0d5c4b] bg-[#e7f5f1] text-[#0d5c4b]" : "border-[#e2e8f0] text-[#0f172a] hover:border-[#0d5c4b]"}`}
+                >
+                  {t}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+        <div className="flex flex-col gap-3 border-t border-[#e2e8f0] pt-5 sm:flex-row sm:items-center sm:justify-between">
+          <p className={`text-[14px] text-[#475569] ${fontRegular}`}>
+            {time ? (
+              <>
+                <span className={`text-[#0f172a] ${fontSemi}`}>{dayText(days[dayIndex])}</span> at <span className={`text-[#0f172a] ${fontSemi}`}>{time}</span>
+              </>
+            ) : (
+              "Pick a day and time"
+            )}
+          </p>
+          <button type="button" className={primaryBtn} onClick={confirm} disabled={!time}>
+            Confirm booking · {formatPrice(expert.price)}
+          </button>
+        </div>
+      </div>
+    </Shell>
+  );
+}
+
 function Info({ page }: { page: string }) {
   const { setOverlay } = useApp();
   const info = infoPages[page];
@@ -504,6 +611,7 @@ export default function Overlays() {
       {overlay?.type === "auth" && <Auth key={overlay.mode} mode={overlay.mode} />}
       {overlay?.type === "instructor" && <InstructorApply />}
       {overlay?.type === "info" && <Info page={overlay.page} />}
+      {overlay?.type === "booking" && <BookingModal key={overlay.expertId} expertId={overlay.expertId} />}
       <Toasts />
     </>
   );
