@@ -20,10 +20,10 @@ function CourseTile({ course }: { course: Course }) {
   return (
     <article className="group flex flex-col overflow-hidden rounded-[18px] border border-[#e2e8f0] bg-white transition duration-300 hover:-translate-y-1.5 hover:border-[#0d5c4b]/30 hover:shadow-[0_24px_50px_rgba(15,23,42,0.12)]">
       <button type="button" onClick={() => setOverlay({ type: "course", id: course.id })} className="relative block overflow-hidden text-left" aria-label={`View ${course.title}`}>
-        <CourseThumb course={course} showTitle={false} className="h-[168px] transition-transform duration-500 group-hover:scale-[1.04]" />
-        <span className={`absolute bottom-3 right-3 rounded-full bg-white/95 px-2.5 py-1 text-[12px] text-[#0f172a] shadow-sm ${fontSemi}`}>
+        <CourseThumb course={course} showTitle={false} className="aspect-video transition-transform duration-500 group-hover:scale-[1.04]" />
+        {!course.bannerBadges && <span className={`absolute bottom-3 right-3 rounded-full bg-white/95 px-2.5 py-1 text-[12px] text-[#0f172a] shadow-sm ${fontSemi}`}>
           {course.live ? "Live cohort" : "Recorded"} · {course.duration ?? `${course.hours}h`}
-        </span>
+        </span>}
         {isNew && <span className={`absolute bottom-3 left-3 rounded-full bg-[#ffb20d] px-2.5 py-1 text-[11px] uppercase text-[#1e293b] ${fontSemi}`}>New</span>}
       </button>
       <div className="flex flex-1 flex-col gap-2 p-5">

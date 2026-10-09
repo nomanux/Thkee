@@ -64,6 +64,21 @@ function Shell({ title, onClose, children, variant = "modal", width = "max-w-[52
 
 export function CourseThumb({ course, className = "", showTitle = true }: { course: Course; className?: string; showTitle?: boolean }) {
   const [from, to] = categoryColors(course.category);
+  if (course.image) {
+    return (
+      <div className={`relative overflow-hidden bg-[#0f172a] ${className}`}>
+        {/* Blurred copy fills the frame so banners of any shape show in full without cropping. */}
+        <img src={course.image} alt="" aria-hidden loading="lazy" className="absolute inset-0 size-full scale-110 object-cover opacity-80 blur-xl" />
+        <img src={course.image} alt={course.title} loading="lazy" className="absolute inset-0 size-full object-contain" />
+        {!course.bannerBadges && <div className="absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-black/30 to-transparent" />}
+        {course.live && !course.bannerBadges && (
+          <span className={`absolute right-3 top-3 flex items-center gap-1.5 rounded-full bg-[#ef4444] px-2.5 py-1 text-[11px] uppercase text-white ${fontSemi}`}>
+            <span className="size-[6px] animate-pulse rounded-full bg-white" /> Live
+          </span>
+        )}
+      </div>
+    );
+  }
   return (
     <div className={`relative overflow-hidden ${className}`} style={{ backgroundImage: `linear-gradient(135deg, ${from}, ${to})` }}>
       <div className="absolute -right-6 -top-6 size-[110px] rounded-full bg-white/10" />
@@ -94,9 +109,10 @@ function CourseCard({ course }: { course: Course }) {
   return (
     <div className="group flex flex-col overflow-hidden rounded-[14px] border border-[#e2e8f0] bg-white transition hover:-translate-y-0.5 hover:shadow-[0_12px_30px_rgba(15,23,42,0.1)]">
       <button type="button" className="text-left" onClick={() => setOverlay({ type: "course", id: course.id })}>
-        <CourseThumb course={course} className="h-[130px]" />
+        <CourseThumb course={course} className="aspect-video" />
       </button>
       <div className="flex flex-1 flex-col gap-2 p-4">
+        {course.image && <p dir="auto" className={`line-clamp-2 text-left text-[15px] leading-[1.45] text-[#0f172a] ${fontFor(course.title, fontSemi)}`}>{course.title}</p>}
         <p dir="auto" className={`text-left text-[13px] text-[#64748b] ${fontFor(course.instructor, fontRegular, "font-normal")}`}>{course.instructor}</p>
         <div className={`flex flex-wrap items-center gap-x-3 gap-y-1 text-[12px] text-[#64748b] ${fontRegular}`}>
           <Stars rating={course.rating} />
@@ -202,7 +218,7 @@ function CourseDetail({ id }: { id: string }) {
 
   return (
     <Shell title="Course details" onClose={() => setOverlay(null)} width="max-w-[640px]">
-      <CourseThumb course={course} className="h-[170px]" />
+      <CourseThumb course={course} className="aspect-video" />
       <div className="flex flex-col gap-5 p-5 sm:p-6">
         <div className={`flex flex-wrap items-center gap-x-4 gap-y-1 text-[14px] text-[#64748b] ${fontRegular}`}>
           <Stars rating={course.rating} />

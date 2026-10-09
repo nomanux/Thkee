@@ -14,6 +14,9 @@ export type Course = {
   outcomes: string[];
   duration?: string;
   launched?: string;
+  image?: string;
+  // Banner already shows its own LIVE / category / duration badges.
+  bannerBadges?: boolean;
 };
 
 export const categories = [
@@ -31,6 +34,7 @@ export const categoryColors = (category: string) =>
 export const courses: Course[] = [
   {
     id: "ai-foundations",
+    image: "/assets/courses/ai-foundations-sara.jpg",
     title: "AI Foundations for Everyone",
     instructor: "Dr. Sara Al-Qahtani",
     category: "AI & Data",
@@ -46,18 +50,19 @@ export const courses: Course[] = [
   },
   {
     id: "python-data",
-    title: "Python for Data Analysis",
+    title: "Python Programming: From Zero to Hero",
+    image: "/assets/courses/python-programming.jpg",
     instructor: "Omar Al-Harbi",
     category: "AI & Data",
-    level: "Intermediate",
+    level: "Beginner",
     hours: 14,
     lessons: 48,
     price: 349,
     rating: 4.8,
     students: 2210,
     live: false,
-    description: "Clean, explore and visualise real datasets with pandas and matplotlib, finishing with a portfolio project.",
-    outcomes: ["Load and clean messy data", "Build charts that tell a story", "Ship a data analysis portfolio piece"],
+    description: "Master the fundamentals of Python step by step, then use it to clean, explore and visualise real data.",
+    outcomes: ["Write clean Python from scratch", "Work with files, data and libraries", "Build a small portfolio project"],
   },
   {
     id: "prompt-engineering",
@@ -91,6 +96,7 @@ export const courses: Course[] = [
   },
   {
     id: "ui-ux-figma",
+    image: "/assets/courses/ui-ux-figma.jpg",
     title: "UI/UX Design with Figma",
     instructor: "Ava Lee",
     category: "Design",
@@ -106,6 +112,7 @@ export const courses: Course[] = [
   },
   {
     id: "react-modern",
+    image: "/assets/courses/react-web-apps-v2.jpg",
     title: "Modern Web Apps with React",
     instructor: "Daniel Okafor",
     category: "Development",
@@ -151,6 +158,7 @@ export const courses: Course[] = [
   },
   {
     id: "entrepreneurship",
+    image: "/assets/courses/launch-startup-saudi.jpg",
     title: "Launch Your Startup in Saudi Arabia",
     instructor: "Faisal Al-Mutairi",
     category: "Business",
@@ -197,6 +205,7 @@ export const courses: Course[] = [
   {
     id: "arabic-beginners",
     title: "Arabic for Beginners",
+    image: "/assets/courses/arabic-instructor.jpg",
     instructor: "Noura Al-Saud",
     category: "Languages",
     level: "Beginner",
@@ -211,6 +220,7 @@ export const courses: Course[] = [
   },
   {
     id: "3g-networks",
+    image: "/assets/courses/3g-networks.jpg",
     title: "شبكات الجيل الثالث للهاتف النقال من البداية وحتى الأحتراف",
     instructor: "Waleed Elsafoury",
     category: "Development",
@@ -262,6 +272,7 @@ export const courses: Course[] = [
   },
   {
     id: "leadership-keys",
+    image: "/assets/courses/leadership-essentials.jpg",
     title: "مفاتيح القيادة الناجحة في بيئة العمل الحديثة",
     instructor: "مصطفى عطية",
     category: "Business",
@@ -276,6 +287,42 @@ export const courses: Course[] = [
     launched: "2026-09-05",
     description: "The essential habits of effective leaders in today’s hybrid and fast-moving workplaces.",
     outcomes: ["Lead hybrid teams with confidence", "Give feedback that lands", "Make faster, clearer decisions"],
+  },
+  {
+    id: "4g-networks",
+    title: "شبكات الجيل الرابع للهاتف النقال من البداية وحتى الاحتراف",
+    image: "/assets/courses/4g-networks.jpg",
+    instructor: "Waleed Elsafoury",
+    category: "Development",
+    level: "Intermediate",
+    hours: 17,
+    duration: "17h 05m",
+    lessons: 52,
+    price: 179,
+    rating: 4.9,
+    students: 410,
+    live: false,
+    launched: "2026-10-01",
+    description: "The follow-up to the 3G course: LTE architecture, radio planning and optimisation, explained in Arabic.",
+    outcomes: ["Understand LTE network architecture", "Plan and optimise radio coverage", "Analyse 4G performance KPIs"],
+  },
+  {
+    id: "bank-insurance",
+    title: "احتراف التأمين البنكي",
+    image: "/assets/courses/bank-insurance.jpg",
+    instructor: "كريم منصور",
+    category: "Business",
+    level: "Intermediate",
+    hours: 3,
+    duration: "3h 40m",
+    lessons: 18,
+    price: 199,
+    rating: 4.8,
+    students: 760,
+    live: false,
+    launched: "2026-09-15",
+    description: "Learn how bancassurance works and how to sell and manage insurance products through banks.",
+    outcomes: ["Explain bancassurance products clearly", "Assess customer needs and risk", "Grow insurance sales through the bank channel"],
   },
 ];
 
