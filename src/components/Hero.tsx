@@ -17,12 +17,12 @@ const sparkles = [
 ];
 
 const tickerTopics: { label: string; category?: string }[] = [
-  { label: "Personal & Professional Growth" },
+  { label: "Personal & Professional Growth", category: "Personal & Professional Growth" },
   { label: "Business", category: "Business" },
-  { label: "Information Technology", category: "Development" },
+  { label: "Information Technology", category: "Information Technology" },
   { label: "Design", category: "Design" },
-  { label: "Teaching & Training" },
-  { label: "Language", category: "Languages" },
+  { label: "Teaching & Training", category: "Teaching & Training" },
+  { label: "Language", category: "Language" },
 ];
 
 const avatarGradients = [
@@ -33,7 +33,7 @@ const avatarGradients = [
 ];
 
 export default function Hero() {
-  const { setOverlay } = useApp();
+  const { setOverlay, openSearch } = useApp();
   const rootRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -178,7 +178,7 @@ export default function Hero() {
                   key={t.label}
                   type="button"
                   tabIndex={copy === 1 ? -1 : undefined}
-                  onClick={() => setOverlay(t.category ? { type: "catalog", category: t.category } : { type: "catalog" })}
+                  onClick={() => openSearch({ category: t.category })}
                   className="inline-flex items-center gap-3.5 pr-11 text-[15px] font-semibold text-white/[0.88] transition-colors hover:text-[#ffd166]"
                 >
                   <span className="size-[7px] rounded-full bg-[#ffb400]" />

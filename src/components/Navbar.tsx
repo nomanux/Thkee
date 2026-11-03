@@ -33,12 +33,30 @@ function useDismiss(open: boolean, close: () => void) {
 const menuPanel = "pop-in absolute top-[calc(100%+8px)] z-40 overflow-hidden rounded-[12px] border border-[#e2e8f0] bg-white p-2 shadow-[0_16px_40px_rgba(15,23,42,0.18)]";
 const menuItem = `flex w-full items-center justify-between gap-3 rounded-[8px] px-3 py-2.5 text-left text-[15px] text-[#1e293b] transition hover:bg-[#f1f5f9] ${fontMedium}`;
 
-function SearchBox({ onDone, autoFocus = false }: { onDone?: () => void; autoFocus?: boolean }) {
-  const { setOverlay } = useApp();
-  const [query, setQuery] = useState("");
+function SearchBox({ onDone, autoFocus = false, shortcut = false }: { onDone?: () => void; autoFocus?: boolean; shortcut?: boolean }) {
+  const { setOverlay, openSearch, route } = useApp();
+  const [query, setQuery] = useState(route.page === "search" ? (route.q ?? "") : "");
   const [open, setOpen] = useState(false);
   const [active, setActive] = useState(0);
   const ref = useDismiss(open, () => setOpen(false));
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    setQuery(route.page === "search" ? (route.q ?? "") : "");
+  }, [route]);
+
+  useEffect(() => {
+    if (!shortcut) return;
+    const onKey = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
+        e.preventDefault();
+        inputRef.current?.focus();
+        inputRef.current?.select();
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [shortcut]);
 
   const matches = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -48,7 +66,6 @@ function SearchBox({ onDone, autoFocus = false }: { onDone?: () => void; autoFoc
 
   const finish = () => {
     setOpen(false);
-    setQuery("");
     onDone?.();
   };
 
@@ -62,7 +79,7 @@ function SearchBox({ onDone, autoFocus = false }: { onDone?: () => void; autoFoc
     } else if (e.key === "Enter") {
       e.preventDefault();
       if (active > 0 && matches[active - 1]) setOverlay({ type: "course", id: matches[active - 1].id });
-      else setOverlay({ type: "catalog", query });
+      else openSearch({ q: query });
       finish();
     }
   };
@@ -72,6 +89,7 @@ function SearchBox({ onDone, autoFocus = false }: { onDone?: () => void; autoFoc
       <div className="flex h-[44px] w-full items-center gap-[8px] rounded-[12px] border border-[rgba(255,255,255,0.05)] bg-[#041f1a] px-[16px] focus-within:border-[#12b981]/60">
         <img alt="" className="size-[20px] shrink-0" src={imgSearch} />
         <input
+          ref={inputRef}
           type="search"
           value={query}
           autoFocus={autoFocus}
@@ -82,10 +100,14 @@ function SearchBox({ onDone, autoFocus = false }: { onDone?: () => void; autoFoc
           }}
           onFocus={() => setOpen(true)}
           onKeyDown={onKeyDown}
-          placeholder="Search topics here"
+          placeholder="Search courses…"
           aria-label="Search courses"
-          className={`min-w-0 flex-1 bg-transparent text-[16px] leading-[20px] tracking-[-0.01px] text-[#f1f5f9] placeholder:text-[#f1f5f9] focus:outline-none ${fontRegular}`}
+          aria-keyshortcuts={shortcut ? "Meta+K" : undefined}
+          className={`min-w-0 flex-1 bg-transparent text-[16px] leading-[20px] tracking-[-0.01px] text-[#f1f5f9] placeholder:text-[#cbd5e1] focus:outline-none ${fontRegular}`}
         />
+        {shortcut && !query && (
+          <kbd className={`hidden shrink-0 rounded-[8px] border border-white/15 bg-white/5 px-2 py-0.5 text-[12px] text-white/70 lg:block ${fontMedium}`}>⌘K</kbd>
+        )}
       </div>
       {open && query.trim() && (
         <div className={`${menuPanel} left-0 right-0`} role="listbox">
@@ -119,7 +141,7 @@ function SearchBox({ onDone, autoFocus = false }: { onDone?: () => void; autoFoc
             type="button"
             className={`${menuItem} mt-1 border-t border-[#e2e8f0] text-[#0d5c4b]`}
             onClick={() => {
-              setOverlay({ type: "catalog", query });
+              openSearch({ q: query });
               finish();
             }}
           >
@@ -131,46 +153,86 @@ function SearchBox({ onDone, autoFocus = false }: { onDone?: () => void; autoFoc
   );
 }
 
-function CoursesMenu() {
-  const { setOverlay } = useApp();
+function ExploreMenu() {
+  const { openSearch } = useApp();
   const [open, setOpen] = useState(false);
+  const [active, setActive] = useState(0);
   const ref = useDismiss(open, () => setOpen(false));
-  const go = (o: Parameters<typeof setOverlay>[0]) => {
-    setOverlay(o);
+  const go = (params: Parameters<typeof openSearch>[0]) => {
+    openSearch(params);
     setOpen(false);
   };
+  const current = categories[active];
   return (
     <div ref={ref} className="relative hidden lg:block">
       <button
         type="button"
         aria-expanded={open}
+        aria-haspopup="true"
         onClick={() => setOpen((o) => !o)}
-        className="flex h-[36px] items-center justify-center gap-[4px] rounded-[8px] px-[12px] py-[6px] transition hover:bg-white/10"
+        className={`flex h-[40px] items-center justify-center gap-2 rounded-[10px] px-3 transition hover:bg-white/10 ${open ? "bg-white/10" : ""}`}
       >
-        <span className={`text-[16px] leading-[20px] tracking-[-0.01px] text-white ${fontMedium}`}>Courses</span>
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.8" aria-hidden="true">
+          <rect x="3.5" y="3.5" width="17" height="17" rx="2.5" />
+          <path d="M3.5 9.2h17M3.5 14.8h17M9.2 3.5v17M14.8 3.5v17" />
+        </svg>
+        <span className={`text-[16px] leading-[20px] tracking-[-0.01px] text-white ${fontSemi}`}>Explore</span>
         <img alt="" className={`size-[18px] transition-transform ${open ? "rotate-180" : ""}`} src={imgChevronDown} />
       </button>
       {open && (
-        <div className={`${menuPanel} left-0 w-[280px]`}>
-          <button type="button" className={menuItem} onClick={() => go({ type: "catalog" })}>
-            All courses <span className="text-[13px] text-[#64748b]">{courses.length}</span>
-          </button>
-          <button type="button" className={menuItem} onClick={() => go({ type: "catalog", liveOnly: true })}>
-            <span className="flex items-center gap-2">
-              <span className="size-[8px] rounded-full bg-[#ef4444]" /> Live classes
-            </span>
-            <span className="text-[13px] text-[#64748b]">{courses.filter((c) => c.live).length}</span>
-          </button>
-          <div className="my-1 border-t border-[#e2e8f0]" />
-          {categories.map((cat) => (
-            <button key={cat.name} type="button" className={menuItem} onClick={() => go({ type: "catalog", category: cat.name })}>
-              <span className="flex items-center gap-2">
-                <span className="size-[10px] rounded-full" style={{ background: cat.colors[1] }} />
-                {cat.name}
-              </span>
-              <span className="text-[13px] text-[#64748b]">{courses.filter((c) => c.category === cat.name).length}</span>
+        <div className="pop-in absolute left-0 top-[calc(100%+14px)] z-40 flex w-[min(880px,calc(100vw-48px))] overflow-hidden rounded-[18px] border border-[#e2e8f0] bg-white shadow-[0_24px_60px_rgba(15,23,42,0.22)]">
+          <ul className="flex w-[300px] shrink-0 flex-col gap-1 border-r border-[#e2e8f0] bg-[#f8fafc] p-3" role="menu">
+            {categories.map((cat, i) => (
+              <li key={cat.name}>
+                <button
+                  type="button"
+                  role="menuitem"
+                  aria-expanded={i === active}
+                  onMouseEnter={() => setActive(i)}
+                  onFocus={() => setActive(i)}
+                  onClick={() => go({ category: cat.name })}
+                  className={`flex w-full items-center justify-between gap-3 rounded-[12px] px-4 py-3 text-left text-[16px] leading-[22px] transition-colors ${fontMedium} ${i === active ? "bg-[#e7f5f1] text-[#0d5c4b]" : "text-[#0f172a] hover:bg-[#f1f5f9]"}`}
+                >
+                  {cat.name}
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true" className="shrink-0">
+                    <path d="M9 6l6 6-6 6" />
+                  </svg>
+                </button>
+              </li>
+            ))}
+          </ul>
+          <div key={current.name} className="fade-up flex min-w-0 flex-1 flex-col gap-6 p-7">
+            <button type="button" onClick={() => go({ category: current.name })} className={`group flex items-center justify-between gap-3 text-left text-[17px] text-[#0d5c4b] ${fontSemi}`}>
+              All {current.name}
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" className="transition-transform group-hover:translate-x-1">
+                <path d="M5 12h14M13 6l6 6-6 6" />
+              </svg>
             </button>
-          ))}
+            <div className="grid grid-cols-2 gap-x-8 gap-y-1">
+              {current.subs.map((sub) => {
+                const count = courses.filter((c) => c.subcategory === sub).length;
+                return (
+                  <button
+                    key={sub}
+                    type="button"
+                    onClick={() => go({ category: current.name, sub })}
+                    className={`flex items-baseline justify-between gap-2 rounded-[8px] py-2.5 text-left text-[16px] text-[#334155] transition-colors hover:text-[#0d5c4b] ${fontRegular}`}
+                  >
+                    {sub}
+                    <span className="text-[12px] text-[#94a3b8]">{count}</span>
+                  </button>
+                );
+              })}
+            </div>
+            <div className="mt-auto flex flex-wrap items-center gap-3 border-t border-[#e2e8f0] pt-5">
+              <button type="button" onClick={() => go({})} className={`rounded-full bg-[#0f172a] px-4 py-2 text-[14px] text-white transition hover:bg-[#0d5c4b] ${fontMedium}`}>
+                Browse all {courses.length} courses
+              </button>
+              <button type="button" onClick={() => go({ live: true })} className={`flex items-center gap-2 rounded-full border border-[#e2e8f0] px-4 py-2 text-[14px] text-[#0f172a] transition hover:border-[#0d5c4b] hover:text-[#0d5c4b] ${fontMedium}`}>
+                <span className="size-2 rounded-full bg-[#ef4444]" /> Live classes
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>
@@ -211,7 +273,7 @@ function LanguageMenu() {
 }
 
 function UserMenu() {
-  const { user, logout, setOverlay, enrolledIds } = useApp();
+  const { user, logout, setOverlay, enrolledIds, openSearch } = useApp();
   const [open, setOpen] = useState(false);
   const ref = useDismiss(open, () => setOpen(false));
   if (!user) return null;
@@ -239,7 +301,7 @@ function UserMenu() {
             <p className={`truncate text-[13px] text-[#64748b] ${fontRegular}`}>{user.email}</p>
           </div>
           <div className="my-1 border-t border-[#e2e8f0]" />
-          <button type="button" className={menuItem} onClick={() => (setOverlay({ type: "catalog" }), setOpen(false))}>
+          <button type="button" className={menuItem} onClick={() => (openSearch({}), setOpen(false))}>
             My learning <span className="text-[13px] text-[#64748b]">{enrolledIds.length} enrolled</span>
           </button>
           <button type="button" className={menuItem} onClick={() => (setOverlay({ type: "cart" }), setOpen(false))}>
@@ -270,8 +332,8 @@ function CartButton({ className = "" }: { className?: string }) {
   );
 }
 
-export default function Navbar() {
-  const { user, setOverlay, lang, setLang, cart, logout } = useApp();
+export default function Navbar({ solid = false }: { solid?: boolean }) {
+  const { user, setOverlay, lang, setLang, cart, logout, openSearch, goHome, openAuth } = useApp();
   const [menuOpen, setMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
 
@@ -298,18 +360,18 @@ export default function Navbar() {
   return (
     <header
       className={`fixed inset-x-0 top-0 z-[100] flex h-[72px] items-center justify-center border-b border-white/10 backdrop-blur-[20px] transition-colors duration-300 ${
-        scrolled || menuOpen ? "bg-[rgba(3,36,29,0.92)] shadow-[0_8px_24px_rgba(0,0,0,0.18)]" : "bg-[rgba(3,40,29,0.45)]"
+        solid || scrolled || menuOpen ? "bg-[rgba(3,36,29,0.92)] shadow-[0_8px_24px_rgba(0,0,0,0.18)]" : "bg-[rgba(3,40,29,0.45)]"
       }`}
     >
       <nav className="relative flex w-full max-w-[1272px] items-center px-[16px]" aria-label="Main">
         <div className="flex shrink-0 items-center gap-[32px]">
-          <button type="button" aria-label="Thkee home" onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })} className="py-[2px]">
+          <button type="button" aria-label="Thkee home" onClick={goHome} className="py-[2px]">
             <img alt="Thkee" className="h-[28px] w-[94.839px]" src={imgLogo} />
           </button>
-          <CoursesMenu />
+          <ExploreMenu />
         </div>
-        <div className="hidden min-w-px flex-[1_0_0] pl-[32px] pr-[8px] md:flex">
-          <SearchBox />
+        <div className="hidden min-w-px flex-[1_0_0] pl-[24px] pr-[8px] md:flex">
+          <SearchBox shortcut />
         </div>
         <div className="ml-auto flex shrink-0 items-center gap-[8px] sm:gap-[16px]">
           <button type="button" onClick={() => open({ type: "instructor" })} className={`hidden h-[36px] items-center justify-center whitespace-nowrap rounded-[8px] px-[12px] py-[6px] text-[16px] leading-[20px] tracking-[-0.01px] text-white transition hover:bg-white/10 xl:flex ${fontMedium}`}>
@@ -324,10 +386,10 @@ export default function Navbar() {
             <UserMenu />
           ) : (
             <div className="flex items-center gap-[8px] sm:gap-[16px]">
-              <button type="button" onClick={() => open({ type: "auth", mode: "login" })} className={`hidden h-[44px] items-center justify-center rounded-[8px] bg-[#f1f5f9] px-[16px] py-[10px] text-[16px] leading-[20px] tracking-[-0.01px] text-[#1e293b] transition hover:bg-white sm:flex ${fontMedium}`}>
+              <button type="button" onClick={() => (openAuth(), setMenuOpen(false))} className={`hidden h-[44px] items-center justify-center rounded-[8px] bg-[#f1f5f9] px-[16px] py-[10px] text-[16px] leading-[20px] tracking-[-0.01px] text-[#1e293b] transition hover:bg-white sm:flex ${fontMedium}`}>
                 Log in
               </button>
-              <button type="button" onClick={() => open({ type: "auth", mode: "signup" })} className={`flex h-[40px] items-center justify-center whitespace-nowrap rounded-[8px] bg-[#ffb20d] px-[16px] py-[10px] text-[16px] leading-[20px] tracking-[-0.01px] text-[#1e293b] transition hover:bg-[#faa104] sm:h-[44px] sm:px-[20px] ${fontMedium}`}>
+              <button type="button" onClick={() => (openAuth(), setMenuOpen(false))} className={`flex h-[40px] items-center justify-center whitespace-nowrap rounded-[8px] bg-[#ffb20d] px-[16px] py-[10px] text-[16px] leading-[20px] tracking-[-0.01px] text-[#1e293b] transition hover:bg-[#faa104] sm:h-[44px] sm:px-[20px] ${fontMedium}`}>
                 Sign up
               </button>
             </div>
@@ -351,19 +413,35 @@ export default function Navbar() {
           <div className="mb-2 md:hidden">
             <SearchBox onDone={() => setMenuOpen(false)} />
           </div>
-          <button type="button" className={`${mobileItem} lg:hidden`} onClick={() => open({ type: "catalog" })}>
+          <button type="button" className={`${mobileItem} lg:hidden`} onClick={() => (openSearch({}), setMenuOpen(false))}>
             All courses <span className="text-[14px] text-white/60">{courses.length}</span>
           </button>
-          <button type="button" className={`${mobileItem} lg:hidden`} onClick={() => open({ type: "catalog", liveOnly: true })}>
+          <button type="button" className={`${mobileItem} lg:hidden`} onClick={() => (openSearch({ live: true }), setMenuOpen(false))}>
             <span className="flex items-center gap-2">
               <span className="size-[8px] rounded-full bg-[#ef4444]" /> Live classes
             </span>
           </button>
-          <div className="-mx-1 flex gap-2 overflow-x-auto px-1 py-1 lg:hidden">
+          <div className="flex flex-col lg:hidden">
+            <p className={`px-4 pb-1 pt-3 text-[12px] uppercase tracking-[1px] text-white/50 ${fontSemi}`}>Explore</p>
             {categories.map((cat) => (
-              <button key={cat.name} type="button" onClick={() => open({ type: "catalog", category: cat.name })} className={`shrink-0 rounded-full border border-white/15 px-3 py-1.5 text-[14px] text-white/90 hover:bg-white/10 ${fontMedium}`}>
-                {cat.name}
-              </button>
+              <details key={cat.name} className="group rounded-[8px] open:bg-white/5">
+                <summary className={`${mobileItem} cursor-pointer list-none [&::-webkit-details-marker]:hidden`}>
+                  {cat.name}
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true" className="shrink-0 transition-transform group-open:rotate-90">
+                    <path d="M9 6l6 6-6 6" />
+                  </svg>
+                </summary>
+                <div className="flex flex-col pb-2 pl-4">
+                  <button type="button" onClick={() => (openSearch({ category: cat.name }), setMenuOpen(false))} className={`px-4 py-2 text-left text-[15px] text-[#7ff0c0] ${fontMedium}`}>
+                    All {cat.name} →
+                  </button>
+                  {cat.subs.map((sub) => (
+                    <button key={sub} type="button" onClick={() => (openSearch({ category: cat.name, sub }), setMenuOpen(false))} className={`px-4 py-2 text-left text-[15px] text-white/80 hover:text-white ${fontRegular}`}>
+                      {sub}
+                    </button>
+                  ))}
+                </div>
+              </details>
             ))}
           </div>
           <button type="button" className={mobileItem} onClick={() => open({ type: "instructor" })}>
@@ -390,7 +468,7 @@ export default function Navbar() {
               Log out ({user.name})
             </button>
           ) : (
-            <button type="button" className={`mt-2 rounded-[8px] bg-[#f1f5f9] px-4 py-3 text-center text-[16px] text-[#1e293b] sm:hidden ${fontMedium}`} onClick={() => open({ type: "auth", mode: "login" })}>
+            <button type="button" className={`mt-2 rounded-[8px] bg-[#f1f5f9] px-4 py-3 text-center text-[16px] text-[#1e293b] sm:hidden ${fontMedium}`} onClick={() => (openAuth(), setMenuOpen(false))}>
               Log in
             </button>
           )}

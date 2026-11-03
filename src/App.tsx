@@ -1,6 +1,12 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import Experts from "./components/Experts";
+import AuthPage from "./components/AuthPage";
+import CartPage from "./components/CartPage";
+import CheckoutPage from "./components/CheckoutPage";
 import Hero from "./components/Hero";
+import LearnPage from "./components/LearnPage";
+import SearchPage from "./components/SearchPage";
+import CourseDetailsPage from "./components/CourseDetailsPage";
 import HowItWorks from "./components/HowItWorks";
 import Navbar from "./components/Navbar";
 import Overlays from "./components/Overlays";
@@ -426,13 +432,217 @@ function FooterLanguage() {
 export default function App() {
   return (
     <AppProvider>
-      <LandingPage />
+      <Site />
     </AppProvider>
   );
 }
 
+function Site() {
+  const { route } = useApp();
+  if (route.page === "learn")
+    return (
+      <>
+        <LearnPage key={route.id} id={route.id} />
+        <Overlays />
+      </>
+    );
+  if (route.page === "login")
+    return (
+      <>
+        <AuthPage />
+        <Overlays />
+      </>
+    );
+  return (
+    <div className="flex w-full flex-col items-center overflow-x-clip bg-white">
+      <ScrollProgress />
+      <Navbar solid={route.page !== "home"} />
+      <Overlays />
+      {route.page === "search" ? (
+        <SearchPage key={JSON.stringify(route)} params={route} />
+      ) : route.page === "checkout" ? (
+        <CheckoutPage />
+      ) : route.page === "cart" ? (
+        <CartPage />
+      ) : route.page === "course" ? (
+        <CourseDetailsPage key={route.id} id={route.id} />
+      ) : (
+        <LandingPage />
+      )}
+      <SiteFooter />
+    </div>
+  );
+}
+
+function SiteFooter() {
+  const { setOverlay } = useApp();
+  return (
+    <div className="bg-[#0f172a] content-stretch flex flex-col gap-16 xl:gap-[100px] items-center pt-16 xl:pt-[100px] relative shrink-0 w-full">
+      <div className="content-stretch flex flex-col lg:flex-row gap-12 lg:gap-0 items-start relative shrink-0 w-full max-w-[1280px] px-4 md:px-8 xl:px-0">
+        <div className="content-stretch flex flex-col gap-[20px] items-start relative shrink-0 w-full lg:w-[467px]">
+          <div className="h-[36px] relative shrink-0 w-[134.453px]">
+            <img alt="" className="absolute block inset-0 max-w-none size-full" src={imgFrame2} />
+          </div>
+          <div className="content-stretch flex flex-col gap-[40px] items-start relative shrink-0 w-full">
+            <div className="content-stretch flex items-start p-[4px] relative shrink-0 w-full">
+              <p className="[word-break:break-word] font-['Inter:Regular'] font-normal leading-[24px] not-italic relative shrink-0 text-[#e2e8f0] text-[16px] tracking-[-0.01px] w-full max-w-[354px]">
+                Founded to Innovate: Thkee transforms e-learning with personalized paths and interactive content, aiming to make quality education accessible worldwide.
+              </p>
+            </div>
+            <FooterLanguage />
+          </div>
+        </div>
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-10 w-full lg:w-auto lg:flex lg:flex-[1_0_0] lg:gap-[100px] items-start min-w-px relative">
+          <div className="[word-break:break-word] content-stretch flex flex-[1_0_0] flex-col gap-[24px] items-start min-w-px relative">
+            <p className="font-['Instrument_Sans:Medium'] font-medium leading-[32px] relative shrink-0 text-[#e2e8f0] text-[20px] tracking-[0.15px] w-full" style={{ fontVariationSettings: '"wdth" 100' }}>
+              Company
+            </p>
+            <div className="content-stretch flex flex-col font-['Inter:Regular'] font-normal gap-[16px] items-start leading-[24px] not-italic relative shrink-0 text-[16px] text-[#e2e8f0] tracking-[-0.01px] w-full whitespace-nowrap">
+              <button type="button" className="relative shrink-0 text-left transition-colors hover:text-[#faa104]" onClick={() => setOverlay({ type: "info", page: "About us" })}>
+                {"About us"}
+              </button>
+              <button type="button" className="relative shrink-0 text-left transition-colors hover:text-[#faa104]" onClick={() => setOverlay({ type: "info", page: "Our Vision" })}>
+                {"Our Vision"}
+              </button>
+              <button type="button" className="relative shrink-0 text-left transition-colors hover:text-[#faa104]" onClick={() => setOverlay({ type: "info", page: "Career" })}>
+                {"Career"}
+              </button>
+              <button type="button" className="relative shrink-0 text-left transition-colors hover:text-[#faa104]" onClick={() => setOverlay({ type: "info", page: "Company" })}>
+                {"Company"}
+              </button>
+            </div>
+          </div>
+          <div className="[word-break:break-word] content-stretch flex flex-[1_0_0] flex-col gap-[24px] items-start min-w-px relative text-[#e2e8f0]">
+            <p className="font-['Instrument_Sans:Medium'] font-medium leading-[32px] relative shrink-0 text-[20px] tracking-[0.15px] w-full" style={{ fontVariationSettings: '"wdth" 100' }}>
+              Services
+            </p>
+            <div className="content-stretch flex flex-col font-['Inter:Regular'] font-normal gap-[16px] items-start leading-[24px] not-italic relative shrink-0 text-[16px] tracking-[-0.01px] w-full whitespace-nowrap">
+              <button type="button" className="relative shrink-0 text-left transition-colors hover:text-[#faa104]" onClick={() => scrollToId("faq")}>
+                {"Help & support"}
+              </button>
+              <button type="button" className="relative shrink-0 text-left transition-colors hover:text-[#faa104]" onClick={() => setOverlay({ type: "instructor" })}>
+                {"Teach on Thkee"}
+              </button>
+              <button type="button" className="relative shrink-0 text-left transition-colors hover:text-[#faa104]" onClick={() => setOverlay({ type: "info", page: "Blog" })}>
+                {"Blog"}
+              </button>
+            </div>
+          </div>
+          <div className="content-stretch flex flex-col gap-[48px] items-start relative shrink-0 col-span-2 sm:col-span-1 w-full lg:w-[279px]">
+            <div className="content-stretch flex flex-col gap-[24px] items-start relative shrink-0">
+              <p className="[word-break:break-word] font-['Instrument_Sans:Medium'] font-medium leading-[32px] relative shrink-0 text-[#e2e8f0] text-[20px] tracking-[0.15px] w-[230px]" style={{ fontVariationSettings: '"wdth" 100' }}>
+                Follow us on
+              </p>
+              <div className="content-stretch flex gap-[14.4px] items-center relative shrink-0">
+                <a href="https://www.facebook.com" target="_blank" rel="noreferrer" aria-label="Thkee on Facebook" className="relative shrink-0 size-[24px] transition-opacity hover:opacity-70">
+                  <img alt="" className="absolute block inset-0 max-w-none size-full" src={imgFrame3} />
+                </a>
+                <a href="https://x.com" target="_blank" rel="noreferrer" aria-label="Thkee on X" className="relative shrink-0 size-[24px] transition-opacity hover:opacity-70">
+                  <img alt="" className="absolute block inset-0 max-w-none size-full" src={imgFrame4} />
+                </a>
+                <a href="https://www.linkedin.com" target="_blank" rel="noreferrer" aria-label="Thkee on LinkedIn" className="relative shrink-0 size-[24px] transition-opacity hover:opacity-70">
+                  <img alt="" className="absolute block inset-0 max-w-none size-full" src={imgFrame5} />
+                </a>
+                <a href="https://www.youtube.com" target="_blank" rel="noreferrer" aria-label="Thkee on YouTube" className="relative shrink-0 size-[24px] transition-opacity hover:opacity-70">
+                  <img alt="" className="absolute block inset-0 max-w-none size-full" src={imgFrame6} />
+                </a>
+              </div>
+            </div>
+            <div className="h-[96.529px] relative shrink-0 w-[251.841px]">
+              <img alt="" className="absolute block inset-0 max-w-none size-full" src={imgLogoFooterAr1} />
+            </div>
+          </div>
+        </div>
+      </div>
+      <div className="border-[#1e293b] border-solid border-t content-stretch flex flex-col items-center justify-center py-[16px] relative shrink-0 w-full">
+        <div className="content-stretch flex flex-col md:flex-row gap-4 items-center justify-between relative shrink-0 w-full max-w-[1280px] px-4 md:px-8 xl:px-0">
+          <div className="content-stretch flex gap-[5.19px] items-start relative shrink-0">
+            <div className="bg-[#162f6a] content-stretch flex h-[28px] items-center justify-center px-[6.231px] py-[5.997px] relative rounded-[1.808px] shrink-0 w-[43.273px]">
+              <div className="h-[12.727px] relative shrink-0 w-[29.273px]">
+                <img alt="" className="absolute block inset-0 max-w-none size-full" src={imgFrame7} />
+              </div>
+            </div>
+            <div className="bg-[#162f6a] content-stretch flex h-[28px] items-center justify-center px-[6.231px] py-[5.997px] relative rounded-[2.282px] shrink-0 w-[44.545px]">
+              <div className="content-stretch flex h-[12.727px] items-center justify-center overflow-clip relative shrink-0 w-[42px]">
+                <div className="grid-cols-[max-content] grid-rows-[max-content] inline-grid leading-[0] place-items-start relative shrink-0">
+                  <div className="col-1 h-[11.794px] ml-0 mt-0 relative row-1 w-[9.174px]">
+                    <img alt="" className="absolute block inset-0 max-w-none size-full" src={imgGroup7364} />
+                  </div>
+                  <div className="col-1 grid-cols-[max-content] grid-rows-[max-content] inline-grid ml-[10.06px] mt-[1.62px] place-items-start relative row-1">
+                    <div className="col-1 h-[7.112px] ml-[14.91px] mt-0 relative row-1 w-[9.318px]">
+                      <img alt="" className="absolute block inset-0 max-w-none size-full" src={imgGroup11} />
+                    </div>
+                    <div className="col-1 grid-cols-[max-content] grid-rows-[max-content] inline-grid ml-0 mt-0 place-items-start relative row-1">
+                      <div className="col-1 h-[7.111px] ml-0 mt-0 relative row-1 w-[9.326px]">
+                        <img alt="" className="absolute block inset-0 max-w-none size-full" src={imgGroup12} />
+                      </div>
+                      <div className="col-1 h-[5.689px] ml-[9.95px] mt-[2.85px] relative row-1 w-[4.349px]">
+                        <img alt="" className="absolute block inset-0 max-w-none size-full" src={imgGroup13} />
+                      </div>
+                    </div>
+                    <div className="col-1 h-[7.112px] ml-[24.86px] mt-0 relative row-1 w-[2.486px]">
+                      <img alt="" className="absolute block inset-0 max-w-none size-full" src={imgVector7} />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div className="bg-[#162f6a] content-stretch flex h-[28px] items-center justify-center px-[6.359px] py-[5.997px] relative rounded-[1.894px] shrink-0 w-[43.273px]">
+              <div className="h-[10.182px] overflow-clip relative shrink-0 w-[31.818px]">
+                <div className="absolute inset-[-0.01%_0_0.01%_-0.01%]">
+                  <img alt="" className="absolute block inset-0 max-w-none size-full" src={imgG4158} />
+                </div>
+              </div>
+            </div>
+            <div className="bg-[#162f6a] content-stretch flex h-[28px] items-center justify-center px-[6.131px] py-[5.997px] relative rounded-[1.543px] shrink-0 w-[43.273px]">
+              <div className="content-stretch flex flex-col h-[20.364px] items-center justify-center overflow-clip relative shrink-0 w-[35.636px]">
+                <div className="h-[15.537px] relative shrink-0 w-[35.351px]">
+                  <img alt="" className="absolute block inset-0 max-w-none size-full" src={imgGroup7368} />
+                </div>
+              </div>
+            </div>
+            <div className="bg-[#162f6a] content-stretch flex h-[28px] items-center justify-center px-[4.797px] py-[5.997px] relative rounded-[1.395px] shrink-0 w-[43.273px]">
+              <div className="h-[10.415px] overflow-clip relative shrink-0 w-[32.847px]">
+                <div className="absolute inset-[0_0.04%_0_-0.03%]">
+                  <img alt="" className="absolute block inset-0 max-w-none size-full" src={imgGroup14} />
+                </div>
+              </div>
+            </div>
+          </div>
+          <div className="grid-cols-[max-content] grid-rows-[max-content] inline-grid leading-[0] place-items-start relative shrink-0">
+            <div className="[word-break:break-word] col-1 content-stretch flex gap-[4px] items-center leading-[18px] ml-0 mt-0 not-italic relative row-1 text-[#64748b] text-[12px] whitespace-nowrap">
+              <p className="font-['Inter:Medium'] font-medium relative shrink-0 tracking-[0.01px] uppercase">
+                Copyright
+              </p>
+              <p className="font-['Inter:Regular'] font-normal relative shrink-0 tracking-[-0.01px]">
+                ©
+              </p>
+              <p className="font-['Inter:Medium'] font-medium relative shrink-0 tracking-[0.01px] uppercase">
+                2025 Thkee. All rights reserved.
+              </p>
+            </div>
+          </div>
+          <div className="content-stretch flex gap-[8px] items-center relative shrink-0">
+            <button type="button" onClick={() => setOverlay({ type: "info", page: "Terms of Service" })} className="[text-decoration-skip-ink:none] [text-underline-position:from-font] [word-break:break-word] decoration-from-font decoration-solid font-['Inter:Medium'] font-medium leading-[18px] not-italic relative shrink-0 text-[#cbd5e1] text-[12px] tracking-[0.01px] underline whitespace-nowrap transition-colors hover:text-white">
+              Terms of Service
+            </button>
+            <div className="bg-[#cbd5e1] h-[14px] relative shrink-0 w-px" />
+            <button type="button" onClick={() => setOverlay({ type: "info", page: "Privacy Policy" })} className="[text-decoration-skip-ink:none] [text-underline-position:from-font] [word-break:break-word] decoration-from-font decoration-solid font-['Inter:Medium'] font-medium leading-[18px] not-italic relative shrink-0 text-[#cbd5e1] text-[12px] tracking-[0.01px] underline whitespace-nowrap transition-colors hover:text-white">
+              Privacy Policy
+            </button>
+            <div className="bg-[#cbd5e1] h-[14px] relative shrink-0 w-px" />
+            <button type="button" onClick={() => scrollToId("faq")} className="[text-decoration-skip-ink:none] [text-underline-position:from-font] [word-break:break-word] decoration-from-font decoration-solid font-['Inter:Medium'] font-medium leading-[18px] not-italic relative shrink-0 text-[#cbd5e1] text-[12px] tracking-[0.01px] underline whitespace-nowrap transition-colors hover:text-white">
+              FAQ
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function LandingPage() {
-  const { setOverlay, user } = useApp();
+  const { setOverlay, user, openAuth } = useApp();
   const [slide, setSlide] = useState(0);
   const sliderRef = useRef<HTMLDivElement>(null);
   const [slider, setSlider] = useState({ step: testimonialCardWidth + 24, perView: 3 });
@@ -455,9 +665,6 @@ function LandingPage() {
 
   return (
     <div className="bg-white content-stretch flex flex-col items-center justify-center relative w-full overflow-x-clip">
-      <ScrollProgress />
-      <Navbar />
-      <Overlays />
       <Hero />
       <div className="bg-[#fafbfc] content-stretch flex flex-col items-center overflow-clip px-4 md:px-8 xl:px-[100px] py-[64px] xl:py-[96px] relative shrink-0 w-full">
         <div className="content-stretch flex flex-col gap-[40px] items-start relative shrink-0 w-full max-w-[1320px]">
@@ -943,7 +1150,7 @@ function LandingPage() {
             </div>
           </div>
           <div className="content-stretch flex flex-col sm:flex-row gap-[16px] items-stretch sm:items-start relative shrink-0 w-full sm:w-auto">
-            <button type="button" onClick={() => setOverlay(user ? { type: "catalog" } : { type: "auth", mode: "signup" })} className="bg-[#ffb20d] content-stretch flex gap-[8px] h-[56px] items-center justify-center overflow-clip px-[32px] py-[16px] relative rounded-[8px] shrink-0 transition-colors hover:bg-[#faa104]">
+            <button type="button" onClick={() => (user ? setOverlay({ type: "catalog" }) : openAuth())} className="bg-[#ffb20d] content-stretch flex gap-[8px] h-[56px] items-center justify-center overflow-clip px-[32px] py-[16px] relative rounded-[8px] shrink-0 transition-colors hover:bg-[#faa104]">
               <p className="[word-break:break-word] font-['Inter:Medium'] font-medium leading-[20px] not-italic relative shrink-0 text-[#1e293b] text-[16px] text-center tracking-[-0.01px] whitespace-nowrap">
                 Get Started
               </p>
@@ -1364,167 +1571,6 @@ function LandingPage() {
                   </div>
                 </div>
               </div>
-            </div>
-          </div>
-        </div>
-      </div>
-      <div className="bg-[#0f172a] content-stretch flex flex-col gap-16 xl:gap-[100px] items-center pt-16 xl:pt-[100px] relative shrink-0 w-full">
-        <div className="content-stretch flex flex-col lg:flex-row gap-12 lg:gap-0 items-start relative shrink-0 w-full max-w-[1280px] px-4 md:px-8 xl:px-0">
-          <div className="content-stretch flex flex-col gap-[20px] items-start relative shrink-0 w-full lg:w-[467px]">
-            <div className="h-[36px] relative shrink-0 w-[134.453px]">
-              <img alt="" className="absolute block inset-0 max-w-none size-full" src={imgFrame2} />
-            </div>
-            <div className="content-stretch flex flex-col gap-[40px] items-start relative shrink-0 w-full">
-              <div className="content-stretch flex items-start p-[4px] relative shrink-0 w-full">
-                <p className="[word-break:break-word] font-['Inter:Regular'] font-normal leading-[24px] not-italic relative shrink-0 text-[#e2e8f0] text-[16px] tracking-[-0.01px] w-full max-w-[354px]">
-                  Founded to Innovate: Thkee transforms e-learning with personalized paths and interactive content, aiming to make quality education accessible worldwide.
-                </p>
-              </div>
-              <FooterLanguage />
-            </div>
-          </div>
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-10 w-full lg:w-auto lg:flex lg:flex-[1_0_0] lg:gap-[100px] items-start min-w-px relative">
-            <div className="[word-break:break-word] content-stretch flex flex-[1_0_0] flex-col gap-[24px] items-start min-w-px relative">
-              <p className="font-['Instrument_Sans:Medium'] font-medium leading-[32px] relative shrink-0 text-[#e2e8f0] text-[20px] tracking-[0.15px] w-full" style={{ fontVariationSettings: '"wdth" 100' }}>
-                Company
-              </p>
-              <div className="content-stretch flex flex-col font-['Inter:Regular'] font-normal gap-[16px] items-start leading-[24px] not-italic relative shrink-0 text-[16px] text-[#e2e8f0] tracking-[-0.01px] w-full whitespace-nowrap">
-                <button type="button" className="relative shrink-0 text-left transition-colors hover:text-[#faa104]" onClick={() => setOverlay({ type: "info", page: "About us" })}>
-                  {"About us"}
-                </button>
-                <button type="button" className="relative shrink-0 text-left transition-colors hover:text-[#faa104]" onClick={() => setOverlay({ type: "info", page: "Our Vision" })}>
-                  {"Our Vision"}
-                </button>
-                <button type="button" className="relative shrink-0 text-left transition-colors hover:text-[#faa104]" onClick={() => setOverlay({ type: "info", page: "Career" })}>
-                  {"Career"}
-                </button>
-                <button type="button" className="relative shrink-0 text-left transition-colors hover:text-[#faa104]" onClick={() => setOverlay({ type: "info", page: "Company" })}>
-                  {"Company"}
-                </button>
-              </div>
-            </div>
-            <div className="[word-break:break-word] content-stretch flex flex-[1_0_0] flex-col gap-[24px] items-start min-w-px relative text-[#e2e8f0]">
-              <p className="font-['Instrument_Sans:Medium'] font-medium leading-[32px] relative shrink-0 text-[20px] tracking-[0.15px] w-full" style={{ fontVariationSettings: '"wdth" 100' }}>
-                Services
-              </p>
-              <div className="content-stretch flex flex-col font-['Inter:Regular'] font-normal gap-[16px] items-start leading-[24px] not-italic relative shrink-0 text-[16px] tracking-[-0.01px] w-full whitespace-nowrap">
-                <button type="button" className="relative shrink-0 text-left transition-colors hover:text-[#faa104]" onClick={() => scrollToId("faq")}>
-                  {"Help & support"}
-                </button>
-                <button type="button" className="relative shrink-0 text-left transition-colors hover:text-[#faa104]" onClick={() => setOverlay({ type: "instructor" })}>
-                  {"Teach on Thkee"}
-                </button>
-                <button type="button" className="relative shrink-0 text-left transition-colors hover:text-[#faa104]" onClick={() => setOverlay({ type: "info", page: "Blog" })}>
-                  {"Blog"}
-                </button>
-              </div>
-            </div>
-            <div className="content-stretch flex flex-col gap-[48px] items-start relative shrink-0 col-span-2 sm:col-span-1 w-full lg:w-[279px]">
-              <div className="content-stretch flex flex-col gap-[24px] items-start relative shrink-0">
-                <p className="[word-break:break-word] font-['Instrument_Sans:Medium'] font-medium leading-[32px] relative shrink-0 text-[#e2e8f0] text-[20px] tracking-[0.15px] w-[230px]" style={{ fontVariationSettings: '"wdth" 100' }}>
-                  Follow us on
-                </p>
-                <div className="content-stretch flex gap-[14.4px] items-center relative shrink-0">
-                  <a href="https://www.facebook.com" target="_blank" rel="noreferrer" aria-label="Thkee on Facebook" className="relative shrink-0 size-[24px] transition-opacity hover:opacity-70">
-                    <img alt="" className="absolute block inset-0 max-w-none size-full" src={imgFrame3} />
-                  </a>
-                  <a href="https://x.com" target="_blank" rel="noreferrer" aria-label="Thkee on X" className="relative shrink-0 size-[24px] transition-opacity hover:opacity-70">
-                    <img alt="" className="absolute block inset-0 max-w-none size-full" src={imgFrame4} />
-                  </a>
-                  <a href="https://www.linkedin.com" target="_blank" rel="noreferrer" aria-label="Thkee on LinkedIn" className="relative shrink-0 size-[24px] transition-opacity hover:opacity-70">
-                    <img alt="" className="absolute block inset-0 max-w-none size-full" src={imgFrame5} />
-                  </a>
-                  <a href="https://www.youtube.com" target="_blank" rel="noreferrer" aria-label="Thkee on YouTube" className="relative shrink-0 size-[24px] transition-opacity hover:opacity-70">
-                    <img alt="" className="absolute block inset-0 max-w-none size-full" src={imgFrame6} />
-                  </a>
-                </div>
-              </div>
-              <div className="h-[96.529px] relative shrink-0 w-[251.841px]">
-                <img alt="" className="absolute block inset-0 max-w-none size-full" src={imgLogoFooterAr1} />
-              </div>
-            </div>
-          </div>
-        </div>
-        <div className="border-[#1e293b] border-solid border-t content-stretch flex flex-col items-center justify-center py-[16px] relative shrink-0 w-full">
-          <div className="content-stretch flex flex-col md:flex-row gap-4 items-center justify-between relative shrink-0 w-full max-w-[1280px] px-4 md:px-8 xl:px-0">
-            <div className="content-stretch flex gap-[5.19px] items-start relative shrink-0">
-              <div className="bg-[#162f6a] content-stretch flex h-[28px] items-center justify-center px-[6.231px] py-[5.997px] relative rounded-[1.808px] shrink-0 w-[43.273px]">
-                <div className="h-[12.727px] relative shrink-0 w-[29.273px]">
-                  <img alt="" className="absolute block inset-0 max-w-none size-full" src={imgFrame7} />
-                </div>
-              </div>
-              <div className="bg-[#162f6a] content-stretch flex h-[28px] items-center justify-center px-[6.231px] py-[5.997px] relative rounded-[2.282px] shrink-0 w-[44.545px]">
-                <div className="content-stretch flex h-[12.727px] items-center justify-center overflow-clip relative shrink-0 w-[42px]">
-                  <div className="grid-cols-[max-content] grid-rows-[max-content] inline-grid leading-[0] place-items-start relative shrink-0">
-                    <div className="col-1 h-[11.794px] ml-0 mt-0 relative row-1 w-[9.174px]">
-                      <img alt="" className="absolute block inset-0 max-w-none size-full" src={imgGroup7364} />
-                    </div>
-                    <div className="col-1 grid-cols-[max-content] grid-rows-[max-content] inline-grid ml-[10.06px] mt-[1.62px] place-items-start relative row-1">
-                      <div className="col-1 h-[7.112px] ml-[14.91px] mt-0 relative row-1 w-[9.318px]">
-                        <img alt="" className="absolute block inset-0 max-w-none size-full" src={imgGroup11} />
-                      </div>
-                      <div className="col-1 grid-cols-[max-content] grid-rows-[max-content] inline-grid ml-0 mt-0 place-items-start relative row-1">
-                        <div className="col-1 h-[7.111px] ml-0 mt-0 relative row-1 w-[9.326px]">
-                          <img alt="" className="absolute block inset-0 max-w-none size-full" src={imgGroup12} />
-                        </div>
-                        <div className="col-1 h-[5.689px] ml-[9.95px] mt-[2.85px] relative row-1 w-[4.349px]">
-                          <img alt="" className="absolute block inset-0 max-w-none size-full" src={imgGroup13} />
-                        </div>
-                      </div>
-                      <div className="col-1 h-[7.112px] ml-[24.86px] mt-0 relative row-1 w-[2.486px]">
-                        <img alt="" className="absolute block inset-0 max-w-none size-full" src={imgVector7} />
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <div className="bg-[#162f6a] content-stretch flex h-[28px] items-center justify-center px-[6.359px] py-[5.997px] relative rounded-[1.894px] shrink-0 w-[43.273px]">
-                <div className="h-[10.182px] overflow-clip relative shrink-0 w-[31.818px]">
-                  <div className="absolute inset-[-0.01%_0_0.01%_-0.01%]">
-                    <img alt="" className="absolute block inset-0 max-w-none size-full" src={imgG4158} />
-                  </div>
-                </div>
-              </div>
-              <div className="bg-[#162f6a] content-stretch flex h-[28px] items-center justify-center px-[6.131px] py-[5.997px] relative rounded-[1.543px] shrink-0 w-[43.273px]">
-                <div className="content-stretch flex flex-col h-[20.364px] items-center justify-center overflow-clip relative shrink-0 w-[35.636px]">
-                  <div className="h-[15.537px] relative shrink-0 w-[35.351px]">
-                    <img alt="" className="absolute block inset-0 max-w-none size-full" src={imgGroup7368} />
-                  </div>
-                </div>
-              </div>
-              <div className="bg-[#162f6a] content-stretch flex h-[28px] items-center justify-center px-[4.797px] py-[5.997px] relative rounded-[1.395px] shrink-0 w-[43.273px]">
-                <div className="h-[10.415px] overflow-clip relative shrink-0 w-[32.847px]">
-                  <div className="absolute inset-[0_0.04%_0_-0.03%]">
-                    <img alt="" className="absolute block inset-0 max-w-none size-full" src={imgGroup14} />
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div className="grid-cols-[max-content] grid-rows-[max-content] inline-grid leading-[0] place-items-start relative shrink-0">
-              <div className="[word-break:break-word] col-1 content-stretch flex gap-[4px] items-center leading-[18px] ml-0 mt-0 not-italic relative row-1 text-[#64748b] text-[12px] whitespace-nowrap">
-                <p className="font-['Inter:Medium'] font-medium relative shrink-0 tracking-[0.01px] uppercase">
-                  Copyright
-                </p>
-                <p className="font-['Inter:Regular'] font-normal relative shrink-0 tracking-[-0.01px]">
-                  ©
-                </p>
-                <p className="font-['Inter:Medium'] font-medium relative shrink-0 tracking-[0.01px] uppercase">
-                  2025 Thkee. All rights reserved.
-                </p>
-              </div>
-            </div>
-            <div className="content-stretch flex gap-[8px] items-center relative shrink-0">
-              <button type="button" onClick={() => setOverlay({ type: "info", page: "Terms of Service" })} className="[text-decoration-skip-ink:none] [text-underline-position:from-font] [word-break:break-word] decoration-from-font decoration-solid font-['Inter:Medium'] font-medium leading-[18px] not-italic relative shrink-0 text-[#cbd5e1] text-[12px] tracking-[0.01px] underline whitespace-nowrap transition-colors hover:text-white">
-                Terms of Service
-              </button>
-              <div className="bg-[#cbd5e1] h-[14px] relative shrink-0 w-px" />
-              <button type="button" onClick={() => setOverlay({ type: "info", page: "Privacy Policy" })} className="[text-decoration-skip-ink:none] [text-underline-position:from-font] [word-break:break-word] decoration-from-font decoration-solid font-['Inter:Medium'] font-medium leading-[18px] not-italic relative shrink-0 text-[#cbd5e1] text-[12px] tracking-[0.01px] underline whitespace-nowrap transition-colors hover:text-white">
-                Privacy Policy
-              </button>
-              <div className="bg-[#cbd5e1] h-[14px] relative shrink-0 w-px" />
-              <button type="button" onClick={() => scrollToId("faq")} className="[text-decoration-skip-ink:none] [text-underline-position:from-font] [word-break:break-word] decoration-from-font decoration-solid font-['Inter:Medium'] font-medium leading-[18px] not-italic relative shrink-0 text-[#cbd5e1] text-[12px] tracking-[0.01px] underline whitespace-nowrap transition-colors hover:text-white">
-                FAQ
-              </button>
             </div>
           </div>
         </div>

@@ -2,12 +2,8 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useState, t
 import { courses, type Course } from "./data";
 
 export type User = { name: string; email: string };
-type Account = User & { username: string; password: string };
-
-const demoAccount: Account = { name: "Noman", username: "noman", email: "noman@thkee.demo", password: "12345" };
 export type Lang = "EN" | "AR";
 export type Overlay =
-  | { type: "auth"; mode: "login" | "signup" }
   | { type: "catalog"; category?: string; query?: string; liveOnly?: boolean }
   | { type: "course"; id: string }
   | { type: "cart" }
@@ -16,6 +12,46 @@ export type Overlay =
   | { type: "booking"; expertId: string }
   | null;
 type Toast = { id: number; message: string };
+export type SearchParams = { q?: string; category?: string; sub?: string; live?: boolean };
+export type Route = { page: "home" } | { page: "login" } | { page: "cart" } | { page: "checkout" } | { page: "learn"; id: string } | { page: "course"; id: string } | ({ page: "search" } & SearchParams);
+
+function parseRoute(): Route {
+  const hash = window.location.hash;
+  if (hash.startsWith("#/login")) return { page: "login" };
+  if (hash.startsWith("#/cart")) return { page: "cart" };
+  if (hash.startsWith("#/checkout")) return { page: "checkout" };
+  if (hash.startsWith("#/learn/")) return { page: "learn", id: decodeURIComponent(hash.slice("#/learn/".length).split("?")[0]) };
+  if (hash.startsWith("#/course/")) return { page: "course", id: decodeURIComponent(hash.slice("#/course/".length).split("?")[0]) };
+  if (!hash.startsWith("#/search")) return { page: "home" };
+  const p = new URLSearchParams(hash.split("?")[1] ?? "");
+  return { page: "search", q: p.get("q") ?? undefined, category: p.get("category") ?? undefined, sub: p.get("sub") ?? undefined, live: p.get("live") === "1" };
+}
+
+export function searchHash(params: SearchParams) {
+  const p = new URLSearchParams();
+  if (params.q?.trim()) p.set("q", params.q.trim());
+  if (params.category) p.set("category", params.category);
+  if (params.sub) p.set("sub", params.sub);
+  if (params.live) p.set("live", "1");
+  const qs = p.toString();
+  return `#/search${qs ? `?${qs}` : ""}`;
+}
+
+export const AVAILABLE_CREDIT = 173;
+// Demo coupon codes and the percentage each one takes off.
+export const COUPONS: Record<string, number> = { THKEE10: 10, WELCOME20: 20, LEARN15: 15 };
+
+export function orderTotals(cart: Course[], promo: string | null, credit: number) {
+  const subtotal = cart.reduce((sum, c) => sum + (c.originalPrice ?? c.price), 0);
+  const afterSale = cart.reduce((sum, c) => sum + c.price, 0);
+  const saleDiscount = subtotal - afterSale;
+  const salePercent = subtotal ? Math.round((saleDiscount / subtotal) * 100) : 0;
+  const promoDiscount = promo ? Math.round((afterSale * (COUPONS[promo] ?? 0)) / 100) : 0;
+  const creditUsed = Math.min(credit, Math.max(0, afterSale - promoDiscount));
+  const total = Math.max(0, afterSale - promoDiscount - creditUsed);
+  return { subtotal, saleDiscount, salePercent, promoDiscount, creditUsed, total };
+}
+
 export type Booking = { expertId: string; date: string; time: string };
 
 function load<T>(key: string, fallback: T): T {
@@ -43,11 +79,46 @@ function useAppState() {
   const [user, setUser] = useStoredState<User | null>("thkee.user", null);
   const [cartIds, setCartIds] = useStoredState<string[]>("thkee.cart", []);
   const [enrolledIds, setEnrolledIds] = useStoredState<string[]>("thkee.enrolled", []);
+  const [wishlistIds, setWishlistIds] = useStoredState<string[]>("thkee.wishlist", []);
+  const [promo, setPromo] = useStoredState<string | null>("thkee.promo", null);
+  const [credit, setCredit] = useStoredState<number>("thkee.credit", 0);
   const [lang, setLang] = useStoredState<Lang>("thkee.lang", "EN");
-  const [overlay, setOverlay] = useState<Overlay>(null);
+  const [overlay, setOverlayState] = useState<Overlay>(null);
+  // Course details and the cart live on their own pages, so those overlay requests open the page instead.
+  const setOverlay = useCallback((next: Overlay) => {
+    if (next?.type === "course") {
+      window.location.hash = `#/course/${encodeURIComponent(next.id)}`;
+      return;
+    }
+    if (next?.type === "cart") {
+      window.location.hash = "#/cart";
+      return;
+    }
+    setOverlayState(next);
+  }, []);
   const [reservations, setReservations] = useStoredState<string[]>("thkee.reservations", []);
   const [bookings, setBookings] = useStoredState<Booking[]>("thkee.bookings", []);
   const [toasts, setToasts] = useState<Toast[]>([]);
+  const [route, setRoute] = useState<Route>(parseRoute);
+
+  useEffect(() => {
+    const onHash = () => {
+      setRoute(parseRoute());
+      setOverlay(null);
+      window.scrollTo({ top: 0, behavior: "instant" });
+    };
+    window.addEventListener("hashchange", onHash);
+    return () => window.removeEventListener("hashchange", onHash);
+  }, []);
+
+  const openSearch = useCallback((params: SearchParams = {}) => {
+    window.location.hash = searchHash(params);
+  }, []);
+
+  const goHome = useCallback(() => {
+    if (window.location.hash) window.location.hash = "";
+    else window.scrollTo({ top: 0, behavior: "smooth" });
+  }, []);
 
   const notify = useCallback((message: string) => {
     const id = Date.now() + Math.random();
@@ -69,45 +140,61 @@ function useAppState() {
 
   const removeFromCart = useCallback((id: string) => setCartIds((ids) => ids.filter((x) => x !== id)), [setCartIds]);
 
-  const checkout = useCallback(() => {
-    if (!user) {
-      setOverlay({ type: "auth", mode: "login" });
-      return notify("Please log in to complete your purchase");
+  const openAuth = useCallback(() => {
+    if (!window.location.hash.startsWith("#/login")) {
+      try {
+        sessionStorage.setItem("thkee.returnTo", window.location.hash);
+      } catch {}
     }
-    setEnrolledIds((ids) => [...new Set([...ids, ...cartIds])]);
-    setCartIds([]);
-    setOverlay(null);
-    notify("Payment successful — you're enrolled! 🎉");
-  }, [cartIds, notify, setCartIds, setEnrolledIds, user]);
+    window.location.hash = "#/login";
+  }, []);
 
-  const [accounts, setAccounts] = useStoredState<Account[]>("thkee.accounts", []);
-
-  const login = useCallback(
-    (identifier: string, password: string) => {
-      const id = identifier.trim().toLowerCase();
-      const account = [demoAccount, ...accounts].find((a) => (a.username === id || a.email.toLowerCase() === id) && a.password === password);
-      if (account) setUser({ name: account.name, email: account.email });
-      return account ?? null;
+  const toggleWishlist = useCallback(
+    (id: string) => {
+      const saved = wishlistIds.includes(id);
+      setWishlistIds((ids) => (saved ? ids.filter((x) => x !== id) : [...ids, id]));
+      notify(saved ? "Removed from your wishlist" : "Saved to your wishlist ♥");
     },
-    [accounts, setUser],
+    [notify, setWishlistIds, wishlistIds],
   );
 
-  const register = useCallback(
-    (name: string, email: string, password: string) => {
-      const normalized = email.trim().toLowerCase();
-      if ([demoAccount, ...accounts].some((a) => a.email.toLowerCase() === normalized)) return "An account with this email already exists";
-      const account: Account = { name: name.trim(), email: email.trim(), username: normalized.split("@")[0], password };
-      setAccounts((list) => [...list, account]);
-      setUser({ name: account.name, email: account.email });
-      return null;
+  const moveToWishlist = useCallback(
+    (id: string) => {
+      setCartIds((ids) => ids.filter((x) => x !== id));
+      setWishlistIds((ids) => (ids.includes(id) ? ids : [...ids, id]));
+      notify("Moved to your wishlist ♥");
     },
-    [accounts, setAccounts, setUser],
+    [notify, setCartIds, setWishlistIds],
+  );
+
+  const checkout = useCallback(() => {
+    window.location.hash = "#/checkout";
+  }, []);
+
+  const completePurchase = useCallback(() => {
+    const ids = [...cartIds];
+    setEnrolledIds((list) => [...new Set([...list, ...ids])]);
+    setCartIds([]);
+    setPromo(null);
+    setCredit(0);
+    return ids;
+  }, [cartIds, setCartIds, setCredit, setEnrolledIds, setPromo]);
+
+  const signIn = useCallback(
+    (account: User) => {
+      setUser(account);
+      const back = sessionStorage.getItem("thkee.returnTo") ?? "";
+      sessionStorage.removeItem("thkee.returnTo");
+      window.location.hash = back.startsWith("#/login") ? "" : back;
+      notify(`Welcome to Thkee, ${account.name.split(" ")[0]}! 🎉`);
+    },
+    [notify, setUser],
   );
 
   const reserveSeat = useCallback(
     (sessionId: string, title: string) => {
       if (!user) {
-        setOverlay({ type: "auth", mode: "login" });
+        openAuth();
         return notify("Log in to reserve your seat");
       }
       if (reservations.includes(sessionId)) {
@@ -138,7 +225,7 @@ function useAppState() {
     document.documentElement.lang = lang === "AR" ? "ar" : "en";
   }, [lang]);
 
-  return { user, login, register, logout, reservations, reserveSeat, bookings, bookExpert, cart, addToCart, removeFromCart, checkout, enrolledIds, lang, setLang, overlay, setOverlay, toasts, notify };
+  return { route, openSearch, goHome, openAuth, signIn, user, logout, reservations, reserveSeat, bookings, bookExpert, cart, addToCart, removeFromCart, checkout, completePurchase, promo, setPromo, credit, setCredit, wishlistIds, toggleWishlist, moveToWishlist, enrolledIds, lang, setLang, overlay, setOverlay, toasts, notify };
 }
 
 const AppContext = createContext<ReturnType<typeof useAppState> | null>(null);
@@ -153,8 +240,16 @@ export function useApp() {
   return ctx;
 }
 
+export function openLearning(id: string) {
+  window.location.hash = `#/learn/${encodeURIComponent(id)}`;
+}
+
 export function scrollToId(id: string) {
-  document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
+  const el = document.getElementById(id);
+  if (el) return el.scrollIntoView({ behavior: "smooth", block: "start" });
+  // Section lives on the home page: go there first, then scroll once it renders.
+  window.location.hash = "";
+  setTimeout(() => document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" }), 350);
 }
 
 export function formatPrice(price: number) {

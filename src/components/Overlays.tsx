@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState, type FormEvent, type ReactNode } 
 import { categories, categoryColors, courses, experts, infoPages, type Course } from "../data";
 import { fontBold, fontFor, fontHeading, fontMedium, fontRegular, fontSemi } from "../fonts";
 import { ExpertAvatar } from "./Experts";
-import { formatPrice, useApp } from "../store";
+import { formatPrice, useApp, openLearning } from "../store";
 
 const inputClass = `w-full rounded-[10px] border border-[#cbd5e1] bg-white px-4 py-3 text-[16px] text-[#0f172a] outline-none transition focus:border-[#0d5c4b] focus:ring-2 focus:ring-[#0d5c4b]/20 ${fontRegular}`;
 const primaryBtn = `inline-flex h-[48px] items-center justify-center gap-2 rounded-[8px] bg-[#ffb20d] px-6 text-[16px] text-[#1e293b] transition hover:bg-[#faa104] disabled:opacity-50 ${fontSemi}`;
@@ -211,7 +211,7 @@ function Catalog({ initial }: { initial: { category?: string; query?: string; li
 }
 
 function CourseDetail({ id }: { id: string }) {
-  const { setOverlay, addToCart, enrolledIds, user, notify } = useApp();
+  const { setOverlay, addToCart, enrolledIds, user, notify, openAuth } = useApp();
   const course = courses.find((c) => c.id === id);
   if (!course) return null;
   const enrolled = enrolledIds.includes(course.id);
@@ -248,7 +248,7 @@ function CourseDetail({ id }: { id: string }) {
               ← All courses
             </button>
             {enrolled ? (
-              <button type="button" className={primaryBtn} onClick={() => notify(`Opening "${course.title}"… (demo)`)}>
+              <button type="button" className={primaryBtn} onClick={() => openLearning(course.id)}>
                 Continue learning
               </button>
             ) : (
@@ -256,7 +256,7 @@ function CourseDetail({ id }: { id: string }) {
                 type="button"
                 className={primaryBtn}
                 onClick={() => {
-                  if (course.price === 0 && !user) return setOverlay({ type: "auth", mode: "signup" });
+                  if (course.price === 0 && !user) return openAuth();
                   addToCart(course);
                   setOverlay({ type: "cart" });
                 }}
@@ -271,54 +271,6 @@ function CourseDetail({ id }: { id: string }) {
   );
 }
 
-function Cart() {
-  const { cart, removeFromCart, checkout, setOverlay } = useApp();
-  const total = cart.reduce((sum, c) => sum + c.price, 0);
-  return (
-    <Shell title={`Your cart (${cart.length})`} onClose={() => setOverlay(null)} variant="drawer">
-      {cart.length === 0 ? (
-        <div className={`flex flex-col items-center gap-4 px-6 py-20 text-center text-[#64748b] ${fontRegular}`}>
-          <span className="text-[48px]">🛒</span>
-          <p>Your cart is empty.</p>
-          <button type="button" className={darkBtn} onClick={() => setOverlay({ type: "catalog" })}>
-            Browse courses
-          </button>
-        </div>
-      ) : (
-        <div className="flex min-h-full flex-col">
-          <ul className="flex flex-col divide-y divide-[#e2e8f0] px-5">
-            {cart.map((c) => (
-              <li key={c.id} className="flex gap-3 py-4">
-                <CourseThumb course={c} className="h-[64px] w-[88px] shrink-0 rounded-[8px] [&>span]:hidden" />
-                <div className="flex min-w-0 flex-1 flex-col gap-1">
-                  <p dir="auto" className={`truncate text-left text-[15px] text-[#0f172a] ${fontFor(c.title, fontSemi)}`}>{c.title}</p>
-                  <p className={`text-[13px] text-[#64748b] ${fontRegular}`}>{c.instructor}</p>
-                  <div className="flex items-center justify-between">
-                    <span className={`text-[15px] ${fontBold}`}>{formatPrice(c.price)}</span>
-                    <button type="button" onClick={() => removeFromCart(c.id)} className={`text-[13px] text-[#ef4444] hover:underline ${fontMedium}`}>
-                      Remove
-                    </button>
-                  </div>
-                </div>
-              </li>
-            ))}
-          </ul>
-          <div className="mt-auto flex flex-col gap-3 border-t border-[#e2e8f0] p-5">
-            <div className={`flex items-center justify-between text-[18px] ${fontBold}`}>
-              <span>Total</span>
-              <span>{formatPrice(total)}</span>
-            </div>
-            <button type="button" className={primaryBtn} onClick={checkout}>
-              Checkout
-            </button>
-            <p className={`text-center text-[12px] text-[#64748b] ${fontRegular}`}>Demo checkout — no real payment is taken.</p>
-          </div>
-        </div>
-      )}
-    </Shell>
-  );
-}
-
 function Field({ label, error, children }: { label: string; error?: string; children: ReactNode }) {
   return (
     <label className="flex flex-col gap-1.5">
@@ -326,99 +278,6 @@ function Field({ label, error, children }: { label: string; error?: string; chil
       {children}
       {error && <span className={`text-[13px] text-[#ef4444] ${fontRegular}`}>{error}</span>}
     </label>
-  );
-}
-
-function Auth({ mode: initialMode }: { mode: "login" | "signup" }) {
-  const { setOverlay, login, register, notify } = useApp();
-  const [mode, setMode] = useState(initialMode);
-  const [form, setForm] = useState({ name: "", email: "", password: "" });
-  const [errors, setErrors] = useState<Record<string, string>>({});
-  const [loading, setLoading] = useState(false);
-  const signup = mode === "signup";
-
-  const submit = (e: FormEvent) => {
-    e.preventDefault();
-    const next: Record<string, string> = {};
-    if (signup) {
-      if (form.name.trim().length < 2) next.name = "Please enter your full name";
-      if (!isEmail(form.email)) next.email = "Please enter a valid email address";
-      if (form.password.length < 5) next.password = "Password must be at least 5 characters";
-    } else {
-      if (!form.email.trim()) next.email = "Please enter your username or email";
-      if (!form.password) next.password = "Please enter your password";
-    }
-    setErrors(next);
-    if (Object.keys(next).length) return;
-    setLoading(true);
-    setTimeout(() => {
-      setLoading(false);
-      if (signup) {
-        const error = register(form.name, form.email, form.password);
-        if (error) return setErrors({ email: error });
-        setOverlay(null);
-        notify(`Welcome to Thkee, ${form.name.trim()}! 🎉`);
-      } else {
-        const account = login(form.email, form.password);
-        if (!account) return setErrors({ password: "Incorrect username or password" });
-        setOverlay(null);
-        notify(`Welcome back, ${account.name}!`);
-      }
-    }, 500);
-  };
-
-  const tab = (active: boolean) => `flex-1 rounded-full py-2 text-[15px] transition ${fontMedium} ${active ? "bg-[#334155] text-white" : "text-[#334155]"}`;
-
-  return (
-    <Shell title={signup ? "Create your account" : "Welcome back"} onClose={() => setOverlay(null)} width="max-w-[440px]">
-      <form onSubmit={submit} noValidate className="flex flex-col gap-4 p-5 sm:p-6">
-        <div className="flex rounded-full bg-[#f1f5f9] p-1">
-          <button type="button" className={tab(!signup)} onClick={() => setMode("login")}>
-            Log in
-          </button>
-          <button type="button" className={tab(signup)} onClick={() => setMode("signup")}>
-            Sign up
-          </button>
-        </div>
-        {signup && (
-          <Field label="Full name" error={errors.name}>
-            <input className={inputClass} value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} autoComplete="name" />
-          </Field>
-        )}
-        <Field label={signup ? "Email" : "Username or email"} error={errors.email}>
-          <input
-            className={inputClass}
-            type={signup ? "email" : "text"}
-            name={signup ? "email" : "username"}
-            value={form.email}
-            onChange={(e) => setForm({ ...form, email: e.target.value })}
-            autoComplete={signup ? "email" : "username"}
-            autoCapitalize="none"
-          />
-        </Field>
-        <Field label="Password" error={errors.password}>
-          <input className={inputClass} type="password" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} autoComplete={signup ? "new-password" : "current-password"} />
-        </Field>
-        {!signup && (
-          <button
-            type="button"
-            className={`self-end text-[14px] text-[#0d5c4b] hover:underline ${fontMedium}`}
-            onClick={() => (isEmail(form.email) ? notify(`Password reset link sent to ${form.email.trim()}`) : setErrors({ email: "Enter your email first to reset your password" }))}
-          >
-            Forgot password?
-          </button>
-        )}
-        <button type="submit" className={primaryBtn} disabled={loading}>
-          {loading ? "Please wait…" : signup ? "Create account" : "Log in"}
-        </button>
-        {!signup && (
-          <div className={`rounded-[10px] bg-[#f1f5f9] px-4 py-3 text-[13px] text-[#334155] ${fontRegular}`}>
-            Demo account — username <span className={fontSemi}>noman</span>, password <span className={fontSemi}>12345</span>
-          </div>
-        )}
-        <p className={`text-center text-[12px] text-[#64748b] ${fontRegular}`}>Demo only — accounts are stored in this browser.</p>
-      </form>
-    </Shell>
   );
 }
 
@@ -494,7 +353,7 @@ function nextDays(count: number) {
 const timeSlots = ["10:00 AM", "12:00 PM", "3:00 PM", "6:00 PM", "8:00 PM"];
 
 function BookingModal({ expertId }: { expertId: string }) {
-  const { setOverlay, user, bookExpert, bookings, notify } = useApp();
+  const { setOverlay, user, bookExpert, bookings, notify, openAuth } = useApp();
   const expert = experts.find((e) => e.id === expertId);
   const days = nextDays(7);
   const [dayIndex, setDayIndex] = useState(0);
@@ -509,7 +368,7 @@ function BookingModal({ expertId }: { expertId: string }) {
     if (!time) return notify("Choose a time first");
     if (!user) {
       notify("Log in to confirm your booking");
-      return setOverlay({ type: "auth", mode: "login" });
+      return openAuth();
     }
     bookExpert({ expertId: expert.id, date: dayText(days[dayIndex]), time });
   };
@@ -623,8 +482,6 @@ export default function Overlays() {
     <>
       {overlay?.type === "catalog" && <Catalog key={JSON.stringify(overlay)} initial={overlay} />}
       {overlay?.type === "course" && <CourseDetail key={overlay.id} id={overlay.id} />}
-      {overlay?.type === "cart" && <Cart />}
-      {overlay?.type === "auth" && <Auth key={overlay.mode} mode={overlay.mode} />}
       {overlay?.type === "instructor" && <InstructorApply />}
       {overlay?.type === "info" && <Info page={overlay.page} />}
       {overlay?.type === "booking" && <BookingModal key={overlay.expertId} expertId={overlay.expertId} />}
