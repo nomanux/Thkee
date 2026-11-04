@@ -17,7 +17,7 @@ function CloseIcon() {
   );
 }
 
-function Shell({ title, onClose, children, variant = "modal", width = "max-w-[520px]" }: { title: string; onClose: () => void; children: ReactNode; variant?: "modal" | "drawer"; width?: string }) {
+export function Shell({ title, onClose, children, variant = "modal", width = "max-w-[520px]", radius = "sm:rounded-[20px]", hideHeader = false }: { title: string; onClose: () => void; children: ReactNode; variant?: "modal" | "drawer"; width?: string; radius?: string; hideHeader?: boolean }) {
   const panelRef = useRef<HTMLDivElement>(null);
   const onCloseRef = useRef(onClose);
   onCloseRef.current = onClose;
@@ -47,15 +47,17 @@ function Shell({ title, onClose, children, variant = "modal", width = "max-w-[52
         className={
           drawer
             ? "drawer-in absolute inset-y-0 right-0 flex w-full max-w-[440px] flex-col bg-white shadow-2xl"
-            : `modal-in relative flex max-h-[92dvh] w-full ${width} flex-col overflow-hidden rounded-t-[20px] bg-white shadow-2xl sm:mx-4 sm:rounded-[20px]`
+            : `modal-in relative flex max-h-[92dvh] w-full ${width} flex-col overflow-hidden rounded-t-[20px] bg-white shadow-2xl sm:mx-4 ${radius}`
         }
       >
-        <div className="flex items-center justify-between gap-4 border-b border-[#e2e8f0] px-5 py-4 sm:px-6">
-          <h2 className={`text-[20px] text-[#0f172a] ${fontHeading}`}>{title}</h2>
-          <button type="button" onClick={onClose} aria-label="Close" className="flex size-[36px] items-center justify-center rounded-full text-[#64748b] transition hover:bg-[#f1f5f9] hover:text-[#0f172a]">
-            <CloseIcon />
-          </button>
-        </div>
+        {!hideHeader && (
+          <div className="flex items-center justify-between gap-4 border-b border-[#e2e8f0] px-5 py-4 sm:px-6">
+            <h2 className={`text-[20px] text-[#0f172a] ${fontHeading}`}>{title}</h2>
+            <button type="button" onClick={onClose} aria-label="Close" className="flex size-[36px] items-center justify-center rounded-full text-[#64748b] transition hover:bg-[#f1f5f9] hover:text-[#0f172a]">
+              <CloseIcon />
+            </button>
+          </div>
+        )}
         <div className="flex-1 overflow-y-auto">{children}</div>
       </div>
     </div>
@@ -226,10 +228,10 @@ function CourseDetail({ id }: { id: string }) {
           <span>{course.lessons} lessons · {course.hours} hours</span>
           <span>{course.level}</span>
         </div>
-        <p className={`text-[16px] leading-[26px] text-[#1e293b] ${fontRegular}`}>{course.description}</p>
+        <p className={`text-[14px] leading-[22px] text-[#1e293b] ${fontRegular}`}>{course.description}</p>
         <div>
           <p className={`mb-2 text-[16px] text-[#0f172a] ${fontSemi}`}>What you'll learn</p>
-          <ul className={`flex flex-col gap-2 text-[15px] text-[#334155] ${fontRegular}`}>
+          <ul className={`flex flex-col gap-2 text-[14px] text-[#334155] ${fontRegular}`}>
             {course.outcomes.map((o) => (
               <li key={o} className="flex gap-2">
                 <span className="text-[#12b981]">✓</span>
@@ -311,7 +313,7 @@ function InstructorApply() {
         </div>
       ) : (
         <form onSubmit={submit} noValidate className="flex flex-col gap-4 p-5 sm:p-6">
-          <p className={`text-[15px] leading-[24px] text-[#475569] ${fontRegular}`}>Share your expertise with thousands of learners. Keep 70% of every sale and host live classes with our studio tools.</p>
+          <p className={`text-[14px] leading-[22px] text-[#475569] ${fontRegular}`}>Share your expertise with thousands of learners. Keep 70% of every sale and host live classes with our studio tools.</p>
           <Field label="Full name" error={errors.name}>
             <input className={inputClass} value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
           </Field>
@@ -454,7 +456,7 @@ function Info({ page }: { page: string }) {
   if (!info) return null;
   return (
     <Shell title={info.title} onClose={() => setOverlay(null)}>
-      <div className={`flex flex-col gap-4 p-5 text-[16px] leading-[26px] text-[#334155] sm:p-6 ${fontRegular}`}>
+      <div className={`flex flex-col gap-4 p-5 text-[14px] leading-[22px] text-[#334155] sm:p-6 ${fontRegular}`}>
         {info.body.map((p) => (
           <p key={p}>{p}</p>
         ))}

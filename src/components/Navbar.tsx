@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState, type KeyboardEvent as ReactKeyboardEvent } from "react";
 import { categories, courses } from "../data";
 import { fontFor, fontMedium, fontRegular, fontSemi } from "../fonts";
-import { formatPrice, useApp, type Lang } from "../store";
+import { formatPrice, load, openAccount, openMessages, openMyLearning, openPurchaseHistory, scrollToId, useApp, type Lang } from "../store";
 
 const imgLogo = "/assets/820a1.svg";
 const imgChevronDown = "/assets/edb9c.svg";
@@ -216,7 +216,7 @@ function ExploreMenu() {
                     key={sub}
                     type="button"
                     onClick={() => go({ category: current.name, sub })}
-                    className={`flex items-baseline justify-between gap-2 rounded-[8px] py-2.5 text-left text-[16px] text-[#334155] transition-colors hover:text-[#0d5c4b] ${fontRegular}`}
+                    className={`flex items-baseline justify-between gap-2 rounded-[8px] py-2.5 text-left text-[14px] text-[#334155] transition-colors hover:text-[#0d5c4b] ${fontRegular}`}
                   >
                     {sub}
                     <span className="text-[12px] text-[#94a3b8]">{count}</span>
@@ -272,8 +272,13 @@ function LanguageMenu() {
   );
 }
 
+function UserAvatar({ photo, initials, className }: { photo: string; initials: string; className: string }) {
+  if (photo) return <img src={photo} alt="" className={`shrink-0 rounded-full object-cover ${className}`} />;
+  return <span className={`flex shrink-0 items-center justify-center rounded-full bg-[#ffb20d] text-[#1e293b] ${className} ${fontSemi}`}>{initials}</span>;
+}
+
 function UserMenu() {
-  const { user, logout, setOverlay, enrolledIds, openSearch } = useApp();
+  const { user, logout, setOverlay, notify } = useApp();
   const [open, setOpen] = useState(false);
   const ref = useDismiss(open, () => setOpen(false));
   if (!user) return null;
@@ -283,37 +288,63 @@ function UserMenu() {
     .slice(0, 2)
     .join("")
     .toUpperCase();
+  const photo = load("thkee.profile", { photo: "" }).photo;
+  const groups: { label: string; onClick: () => void }[][] = [
+    [
+      { label: "My learning", onClick: () => openMyLearning() },
+      { label: "My cart", onClick: () => setOverlay({ type: "cart" }) },
+      { label: "Wishlist", onClick: () => openMyLearning("wishlist") },
+      { label: "Instructor dashboard", onClick: () => setOverlay({ type: "instructor" }) },
+    ],
+    [
+      { label: "Notifications", onClick: () => openAccount("notifications") },
+      { label: "Messages", onClick: () => openMessages() },
+    ],
+    [
+      { label: "Account settings", onClick: () => openAccount() },
+      { label: "Payment methods", onClick: () => openAccount("payment") },
+      { label: "Purchase history", onClick: () => openPurchaseHistory() },
+    ],
+    [
+      { label: "Public profile", onClick: () => notify("Public profiles are coming soon") },
+      { label: "Edit profile", onClick: () => openAccount("profile") },
+    ],
+    [
+      { label: "Help", onClick: () => scrollToId("faq") },
+      { label: "Logout", onClick: logout },
+    ],
+  ];
   return (
     <div ref={ref} className="relative">
-      <button
-        type="button"
-        aria-expanded={open}
-        aria-label="Account menu"
-        onClick={() => setOpen((o) => !o)}
-        className={`flex size-[44px] items-center justify-center rounded-full border-2 border-white/40 bg-[#ffb20d] text-[15px] text-[#1e293b] transition hover:border-white ${fontSemi}`}
-      >
-        {initials}
+      <button type="button" aria-expanded={open} aria-label="Account menu" onClick={() => setOpen((o) => !o)} className="flex size-[44px] items-center justify-center rounded-full border-2 border-white/40 transition hover:border-white">
+        <UserAvatar photo={photo} initials={initials} className="size-full text-[15px]" />
       </button>
       {open && (
-        <div className={`${menuPanel} right-0 w-[240px]`}>
-          <div className="px-3 py-2">
-            <p className={`truncate text-[15px] text-[#0f172a] ${fontSemi}`}>{user.name}</p>
-            <p className={`truncate text-[13px] text-[#64748b] ${fontRegular}`}>{user.email}</p>
+        <div className="pop-in absolute right-0 top-[calc(100%+8px)] z-40 max-h-[calc(100dvh-88px)] w-[254px] overflow-y-auto rounded-[8px] border border-[#e2e8f0] bg-white shadow-[0_16px_40px_rgba(15,23,42,0.18)]">
+          <div className="flex items-center gap-3 px-3.5 py-5">
+            <UserAvatar photo={photo} initials={initials} className="size-[38px] text-[14px]" />
+            <div className="min-w-0">
+              <p className={`truncate text-[14px] leading-[22px] text-[#1e293b] ${fontSemi}`}>{user.name}</p>
+              <p className={`truncate text-[12px] leading-[18px] text-[#64748b] ${fontRegular}`}>{user.email}</p>
+            </div>
           </div>
-          <div className="my-1 border-t border-[#e2e8f0]" />
-          <button type="button" className={menuItem} onClick={() => (openSearch({}), setOpen(false))}>
-            My learning <span className="text-[13px] text-[#64748b]">{enrolledIds.length} enrolled</span>
-          </button>
-          <button type="button" className={menuItem} onClick={() => (setOverlay({ type: "cart" }), setOpen(false))}>
-            My cart
-          </button>
-          <button type="button" className={menuItem} onClick={() => (setOverlay({ type: "instructor" }), setOpen(false))}>
-            Become an Instructor
-          </button>
-          <div className="my-1 border-t border-[#e2e8f0]" />
-          <button type="button" className={`${menuItem} text-[#ef4444]`} onClick={() => (logout(), setOpen(false))}>
-            Log out
-          </button>
+          {groups.map((items, i) => (
+            <div key={i} className="border-t border-[#e2e8f0]">
+              {items.map((item) => (
+                <button
+                  key={item.label}
+                  type="button"
+                  onClick={() => {
+                    setOpen(false);
+                    item.onClick();
+                  }}
+                  className={`flex h-[52px] w-full items-center px-3.5 text-left text-[14px] text-[#334155] transition hover:bg-[#f1f5f9] ${fontRegular}`}
+                >
+                  {item.label}
+                </button>
+              ))}
+            </div>
+          ))}
         </div>
       )}
     </div>
@@ -374,6 +405,9 @@ export default function Navbar({ solid = false }: { solid?: boolean }) {
           <SearchBox shortcut />
         </div>
         <div className="ml-auto flex shrink-0 items-center gap-[8px] sm:gap-[16px]">
+          <button type="button" onClick={() => openMyLearning()} className={`hidden h-[36px] items-center justify-center whitespace-nowrap rounded-[8px] px-[12px] py-[6px] text-[16px] leading-[20px] tracking-[-0.01px] text-white transition hover:bg-white/10 xl:flex ${fontMedium}`}>
+            My learning
+          </button>
           <button type="button" onClick={() => open({ type: "instructor" })} className={`hidden h-[36px] items-center justify-center whitespace-nowrap rounded-[8px] px-[12px] py-[6px] text-[16px] leading-[20px] tracking-[-0.01px] text-white transition hover:bg-white/10 xl:flex ${fontMedium}`}>
             Become an Instructor
           </button>
@@ -436,7 +470,7 @@ export default function Navbar({ solid = false }: { solid?: boolean }) {
                     All {cat.name} →
                   </button>
                   {cat.subs.map((sub) => (
-                    <button key={sub} type="button" onClick={() => (openSearch({ category: cat.name, sub }), setMenuOpen(false))} className={`px-4 py-2 text-left text-[15px] text-white/80 hover:text-white ${fontRegular}`}>
+                    <button key={sub} type="button" onClick={() => (openSearch({ category: cat.name, sub }), setMenuOpen(false))} className={`px-4 py-2 text-left text-[14px] text-white/80 hover:text-white ${fontRegular}`}>
                       {sub}
                     </button>
                   ))}
@@ -444,6 +478,18 @@ export default function Navbar({ solid = false }: { solid?: boolean }) {
               </details>
             ))}
           </div>
+          <button type="button" className={mobileItem} onClick={() => (openMyLearning(), setMenuOpen(false))}>
+            My learning
+          </button>
+          <button type="button" className={mobileItem} onClick={() => (openPurchaseHistory(), setMenuOpen(false))}>
+            Purchase history
+          </button>
+          <button type="button" className={mobileItem} onClick={() => (openMessages(), setMenuOpen(false))}>
+            Messages
+          </button>
+          <button type="button" className={mobileItem} onClick={() => (openAccount(), setMenuOpen(false))}>
+            Account settings
+          </button>
           <button type="button" className={mobileItem} onClick={() => open({ type: "instructor" })}>
             Become an Instructor
           </button>

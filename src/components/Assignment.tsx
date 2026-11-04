@@ -141,7 +141,7 @@ export function AssignmentPanel({
             <ol key="edit" className="fade-up flex flex-col gap-8">
               {ASSIGNMENT_QUESTIONS.map((q, i) => (
                 <li key={i} className="flex flex-col gap-4">
-                  <label htmlFor={`asg-${i}`} className={`text-[16px] leading-[26px] text-[#1e293b] md:text-[17px] ${fontRegular}`}>
+                  <label htmlFor={`asg-${i}`} className={`text-[14px] leading-[22px] text-[#1e293b] ${fontRegular}`}>
                     {i + 1}. {q}
                   </label>
                   <textarea
@@ -168,7 +168,7 @@ export function AssignmentPanel({
                     <span className={`text-[15px] text-[#0f172a] ${fontSemi}`}>Ques:</span>
                     <span className={`text-[15px] text-[#0f172a] ${fontSemi}`}>{q}</span>
                     <span className={`text-[15px] text-[#0f172a] ${fontSemi}`}>Ans:</span>
-                    <span className={`whitespace-pre-wrap text-[15px] leading-[26px] ${answers[i].trim() ? "text-[#475569]" : "italic text-[#dc2626]"} ${fontRegular}`}>
+                    <span className={`whitespace-pre-wrap text-[14px] leading-[22px] ${answers[i].trim() ? "text-[#475569]" : "italic text-[#dc2626]"} ${fontRegular}`}>
                       {answers[i].trim() || "Not answered yet"}
                     </span>
                   </div>
@@ -190,15 +190,15 @@ export function AssignmentPanel({
               {ASSIGNMENT_QUESTIONS.map((q, i) => (
                 <div key={i} className="overflow-hidden rounded-[8px] border border-[#e2e8f0]">
                   <div className="grid grid-cols-[44px_1fr] gap-y-3 bg-[#f1f5f9] px-4 py-4 md:grid-cols-[64px_1fr] md:px-6">
-                    <span className={`text-[16px] text-[#0f172a] ${fontRegular}`}>Q{i + 1}:</span>
+                    <span className={`text-[14px] text-[#0f172a] ${fontRegular}`}>Q{i + 1}:</span>
                     <span className={`text-[16px] text-[#1e293b] ${fontSemi}`}>{q}</span>
-                    <span className={`text-[16px] text-[#94a3b8] ${fontRegular}`}>Ans:</span>
-                    <span className={`whitespace-pre-wrap text-[15px] leading-[26px] text-[#475569] ${fontRegular}`}>{answers[i].trim() || "—"}</span>
+                    <span className={`text-[14px] text-[#94a3b8] ${fontRegular}`}>Ans:</span>
+                    <span className={`whitespace-pre-wrap text-[14px] leading-[22px] text-[#475569] ${fontRegular}`}>{answers[i].trim() || "—"}</span>
                   </div>
                   <div className="px-4 py-4 md:px-6">
                     <div className="border-l-4 border-[#5b1bf0] pl-3">
                       <p className={`text-[15px] text-[#0f172a] ${fontSemi}`}>Instructor Feedback:</p>
-                      <p className={`mt-1 text-[15px] leading-[24px] text-[#1e293b] ${fontRegular}`}>{feedbackFor(answers[i], i)}</p>
+                      <p className={`mt-1 text-[14px] leading-[22px] text-[#1e293b] ${fontRegular}`}>{feedbackFor(answers[i], i)}</p>
                     </div>
                   </div>
                 </div>

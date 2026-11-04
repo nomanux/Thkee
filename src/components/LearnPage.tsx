@@ -16,11 +16,12 @@ import {
   fontSemi,
 } from "../fonts"
 import { useApp } from "../store"
-import { buildCurriculum, type Lesson } from "./CourseDetailsPage"
+import { buildCurriculum, seedReviews, type Lesson, type Review } from "./CourseDetailsPage"
 import { CourseThumb } from "./Overlays"
 import { QUIZ_LENGTH, QuizPanel, QuizRunner, type QuizResult } from "./Quiz"
 import { ASSIGNMENT_QUESTIONS, AssignmentPanel, type AssignmentState } from "./Assignment"
-import { ArticleReader, NotesPanel, type LessonRef, type Note } from "./Notes"
+import { ActionMenu, FilterSelect } from "./Menus"
+import { ArticleReader, NoteBody, NoteEditor, NotesPanel, type LessonRef, type Note } from "./Notes"
 
 // Demo playback runs 10x faster than the lesson length so a lesson can be finished in a few seconds.
 const SPEED = 10
@@ -29,12 +30,27 @@ const tabs = ["Overview", "Q&A", "Notes", "Announcements", "Reviews"] as const
 type Tab = typeof tabs[number]
 
 type FlatLesson = Lesson & { key: string; section: number; index: number }
-type Question = {
+type QaAnswer = {
   id: number
   name: string
   text: string
-  answers: number
+  html?: string
   when: string
+  votes: number
+  instructor?: boolean
+  mine?: boolean
+}
+type Question = {
+  id: number
+  name: string
+  title: string
+  text: string
+  lecture: number
+  when: string
+  created: number
+  votes: number
+  answers: QaAnswer[]
+  mine?: boolean
 }
 
 function useLocal<T>(key: string, fallback: T) {
@@ -191,7 +207,7 @@ export default function LearnPage({ id }: { id: string }) {
 }
 
 function Player({ course }: { course: Course }) {
-  const { user, notify, goHome, setOverlay } = useApp()
+  const { user, notify, goHome } = useApp()
   const sections = useMemo(() => buildCurriculum(course), [course])
   const flat = useMemo<FlatLesson[]>(() => {
     let index = 0
@@ -211,6 +227,12 @@ function Player({ course }: { course: Course }) {
   )
   const current = flat.find((l) => l.key === progress.current) ?? flat[0]
   const duration = current.minutes * 60
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(`thkee.lastOpened.${course.id}`, String(Date.now()))
+    } catch {}
+  }, [course.id])
 
   const [time, setTime] = useState(0)
   const [playing, setPlaying] = useState(false)
@@ -341,12 +363,6 @@ function Player({ course }: { course: Course }) {
     kind: l.kind,
     minutes: l.minutes,
   })
-
-  const addNote = (note: Omit<Note, "id" | "created">, edit?: boolean) => {
-    const id = Date.now()
-    setNotes((list) => [{ ...note, id, created: id }, ...list])
-    if (edit) setEditNoteId(id)
-  }
 
   const jumpToNote = (note: Note) => {
     const lesson = flat.find((l) => l.key === note.lessonKey)
@@ -523,7 +539,7 @@ function Player({ course }: { course: Course }) {
                 lesson={lessonRef(current)}
                 notes={notes}
                 done={progress.done.includes(current.key)}
-                onAddNote={addNote}
+                setNotes={setNotes}
                 onComplete={() => markDone(current)}
                 onBack={prev ? () => goTo(prev) : undefined}
                 onNext={
@@ -534,7 +550,6 @@ function Player({ course }: { course: Course }) {
                       }
                     : undefined
                 }
-                onOpenNotes={openNotes}
                 notify={notify}
                 expanded={!sidebar}
                 onToggleExpand={() => setSidebar((v) => !v)}
@@ -588,7 +603,7 @@ function Player({ course }: { course: Course }) {
                         {current.title}
                       </p>
                       <p
-                        className={`max-w-[520px] text-[14px] text-white/75 md:text-[15px] ${fontRegular}`}
+                        className={`max-w-[520px] text-[14px] text-white/75 ${fontRegular}`}
                       >
                         {`A ${current.minutes}-minute read that sums up the key ideas from this section, with examples you can reuse.`}
                       </p>
@@ -906,7 +921,17 @@ function Player({ course }: { course: Course }) {
                   onMore={() => setMoreOverview((m) => !m)}
                 />
               )}
-              {tab === "Q&A" && <QaTab course={course} />}
+              {tab === "Q&A" && (
+                <QaTab
+                  course={course}
+                  lecture={current.index + 1}
+                  onOpenLecture={(n) => {
+                    if (!flat[n - 1]) return
+                    goTo(flat[n - 1])
+                    window.scrollTo({ top: 0, behavior: "smooth" })
+                  }}
+                />
+              )}
               {tab === "Notes" && (
                 <NotesPanel
                   notes={notes}
@@ -920,10 +945,7 @@ function Player({ course }: { course: Course }) {
               )}
               {tab === "Announcements" && <AnnouncementsTab course={course} />}
               {tab === "Reviews" && (
-                <ReviewsTab
-                  course={course}
-                  onReview={() => setOverlay({ type: "course", id: course.id })}
-                />
+                <ReviewsTab course={course} />
               )}
             </div>
           </div>
@@ -1190,7 +1212,7 @@ function OverviewTab({
       <Row label="About">
         <p
           dir="auto"
-          className={`text-left text-[16px] leading-[26px] text-[#1e293b] ${fontFor(course.description, fontRegular, "font-normal")}`}
+          className={`text-left text-[14px] leading-[22px] text-[#1e293b] ${fontFor(course.description, fontRegular, "font-normal")}`}
         >
           {course.description}
         </p>
@@ -1225,7 +1247,7 @@ function OverviewTab({
           {details.map(([label, value, icon]) => (
             <div
               key={label}
-              className={`flex items-center gap-3 text-[16px] ${fontRegular}`}
+              className={`flex items-center gap-3 text-[14px] ${fontRegular}`}
             >
               <Svg className="size-[18px] shrink-0 text-[#94a3b8]">{icon}</Svg>
               <dt className="text-[#1e293b]">{label}:</dt>
@@ -1237,7 +1259,7 @@ function OverviewTab({
       <Row label="Overview">
         <div className="relative">
           <div
-            className={`flex flex-col gap-4 text-[16px] leading-[26px] text-[#475569] ${fontRegular} ${
+            className={`flex flex-col gap-4 text-[14px] leading-[22px] text-[#475569] ${fontRegular} ${
               more ? "" : "max-h-[150px] overflow-hidden"
             }`}
           >
@@ -1284,95 +1306,603 @@ function OverviewTab({
   )
 }
 
-const smallInput = `w-full rounded-[6px] border border-[#cbd5e1] bg-white px-3 py-2 text-[14px] text-[#0f172a] outline-none focus:border-[#1e293b] ${fontRegular}`
-const smallBtn = `h-[38px] rounded-[6px] bg-[#1e293b] px-4 text-[14px] text-white transition hover:bg-[#0f172a] disabled:opacity-40 ${fontMedium}`
+const avatarColors = ["#0d5c4b", "#1d4ed8", "#b45309", "#7c3aed", "#be123c"]
 
-function QaTab({ course }: { course: Course }) {
-  const { user } = useApp()
-  const [items, setItems] = useLocal<Question[]>(`thkee.qa.${course.id}`, [
+function Avatar({ name }: { name: string }) {
+  const initials = name
+    .split(" ")
+    .map((p) => p[0])
+    .slice(0, 2)
+    .join("")
+    .toUpperCase()
+  return (
+    <span
+      className={`flex size-[44px] shrink-0 items-center justify-center rounded-full text-[14px] text-white ${fontSemi}`}
+      style={{ background: avatarColors[name.length % avatarColors.length] }}
+      aria-hidden="true"
+    >
+      {initials}
+    </span>
+  )
+}
+
+function seedQuestions(course: Course): Question[] {
+  return [
     {
       id: 1,
-      name: "Sara M.",
-      text: "Will the project files be updated if the tools change?",
-      answers: 2,
+      name: "Esther Howard",
+      title: "Will the project files be updated if the tools change?",
+      text: "I am working through the project with a newer version of the software. Will the exercise files stay up to date, or should I follow the older version shown in the videos?",
+      lecture: 3,
       when: "2 days ago",
+      created: 998,
+      votes: 5,
+      answers: [
+        { id: 101, name: "Omar K.", text: "Most steps still work the same way in the newer version, so you can keep going.", when: "1 day ago", votes: 1 },
+        { id: 102, name: course.instructor, instructor: true, text: "The instructor updates the resources section whenever a tool changes. Check there first.", when: "1 day ago", votes: 4 },
+      ],
     },
     {
       id: 2,
-      name: "Omar K.",
-      text: "Is there a recommended order for the practice exercises?",
-      answers: 1,
+      name: "Omar Khalid",
+      title: "Is there a recommended order for the practice exercises?",
+      text: "Should I finish each exercise before moving to the next lecture, or is it better to watch the full section first and then come back to practise?",
+      lecture: 2,
       when: "1 week ago",
+      created: 993,
+      votes: 12,
+      answers: [
+        { id: 201, name: course.instructor, instructor: true, text: "I watched the full section first, and the exercises made more sense after that.", when: "5 days ago", votes: 3 },
+      ],
     },
     {
       id: 3,
-      name: "Lina A.",
-      text: "Can I download the lessons to watch offline?",
-      answers: 3,
+      name: "Lina Ahmed",
+      title: "Can I download the lessons to watch offline?",
+      text: "I travel often and do not always have a stable connection. Is there a way to save the lessons and watch them without internet access?",
+      lecture: 1,
       when: "2 weeks ago",
+      created: 986,
+      votes: 8,
+      answers: [],
     },
-  ])
+    {
+      id: 4,
+      name: "Yousef Saad",
+      title: "How long should I spend on the assignment in each section?",
+      text: "The assignment takes me much longer than the lessons. How much time do most learners spend on it, and is it fine to come back to it later?",
+      lecture: 4,
+      when: "1 month ago",
+      created: 970,
+      votes: 2,
+      answers: [
+        { id: 401, name: course.instructor, instructor: true, text: "About an hour for me. It is fine to return to it later, since there is no deadline.", when: "3 weeks ago", votes: 2 },
+      ],
+    },
+  ]
+}
+
+const qaLectureOptions = [
+  { value: "all", label: "All Lectures" },
+  { value: "current", label: "Current Lectures" },
+]
+const qaSortOptions = [
+  { value: "recent", label: "Most Recent" },
+  { value: "upvoted", label: "Most Upvoted" },
+  { value: "recommended", label: "Recommended" },
+]
+const qaShowOptions = [
+  { value: "all", label: "All questions" },
+  { value: "following", label: "I'm following" },
+  { value: "asked", label: "I asked" },
+  { value: "unanswered", label: "Questions but no response" },
+]
+
+function UpvoteButton({
+  count,
+  active,
+  onClick,
+}: {
+  count: number
+  active: boolean
+  onClick: () => void
+}) {
+  return (
+    <button
+      type="button"
+      aria-label={active ? `Remove upvote, ${count} upvotes` : `Upvote, ${count} upvotes`}
+      aria-pressed={active}
+      onClick={onClick}
+      className={`flex items-center gap-1.5 text-[14px] tabular-nums transition hover:text-[#6016fc] ${active ? "text-[#6016fc]" : "text-[#64748b]"} ${fontMedium}`}
+    >
+      <svg
+        viewBox="0 0 24 24"
+        className="size-5"
+        fill={active ? "currentColor" : "none"}
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        aria-hidden="true"
+      >
+        <rect x="4" y="4" width="16" height="16" rx="2.5" />
+        <path d="M12 16.5v-9M8.5 11L12 7.5l3.5 3.5" stroke={active ? "white" : "currentColor"} />
+      </svg>
+      {count}
+    </button>
+  )
+}
+
+function QuestionSummary({
+  question,
+  voted,
+  onVote,
+  onOpenLecture,
+  onOpen,
+}: {
+  question: Question
+  voted: number[]
+  onVote: (id: number) => void
+  onOpenLecture: (n: number) => void
+  onOpen?: () => void
+}) {
+  const titleCls = `text-left text-[14px] leading-[22px] text-[#1e293b] ${fontFor(question.title, fontSemi)}`
+  const answerCount = (
+    <>
+      <svg viewBox="0 0 24 24" className="size-5" fill="currentColor" aria-hidden="true">
+        <path d="M4 4h12a2 2 0 012 2v7a2 2 0 01-2 2H9.5L5 18.5V15H4a2 2 0 01-2-2V6a2 2 0 012-2z" />
+        <path d="M20 8.5h.5A1.5 1.5 0 0122 10v6.5a1.5 1.5 0 01-1.5 1.5H20v3l-3.8-3H11v-1.5h5.5A3.5 3.5 0 0020 13z" />
+      </svg>
+      {question.answers.length}
+    </>
+  )
+  const countCls = `flex items-center gap-1.5 text-[14px] tabular-nums text-[#334155] ${fontMedium}`
+  return (
+    <div className="flex gap-3 md:gap-5">
+      <Avatar name={question.name} />
+      <div className="flex min-w-0 flex-1 gap-4">
+        <div className="flex min-w-0 flex-1 flex-col gap-2">
+          {onOpen ? (
+            <button type="button" dir="auto" onClick={onOpen} className={`${titleCls} transition-colors hover:text-[#6016fc]`}>
+              {question.title}
+            </button>
+          ) : (
+            <p dir="auto" className={titleCls}>
+              {question.title}
+            </p>
+          )}
+          <div className={`text-[14px] leading-[22px] text-[#475569] ${fontRegular}`}>
+            <p>Question:</p>
+            <p dir="auto" className={`text-left ${fontFor(question.text, fontRegular, "font-normal")}`}>
+              {question.text}
+            </p>
+          </div>
+          <p className={`flex flex-wrap items-center gap-x-2 gap-y-1 text-[12px] text-[#6016fc] ${fontRegular}`}>
+            <span dir="auto" className={`underline underline-offset-2 ${fontFor(question.name, fontRegular, "font-normal")}`}>
+              {question.name}
+            </span>
+            <span className="text-[#94a3b8]">·</span>
+            <button
+              type="button"
+              onClick={() => onOpenLecture(question.lecture)}
+              className="flex items-center gap-1 transition hover:text-[#4f0fd6] hover:underline"
+            >
+              Lecture {question.lecture}
+              <Svg className="size-3.5">
+                <path d="M14 5h5v5M19 5l-8 8M18 14v4a1 1 0 01-1 1H6a1 1 0 01-1-1V7a1 1 0 011-1h4" />
+              </Svg>
+            </button>
+            <span className="text-[#94a3b8]">·</span>
+            <span className="text-[#64748b]">{question.when}</span>
+          </p>
+        </div>
+        <div className="flex shrink-0 flex-col items-start gap-3">
+          <UpvoteButton
+            count={question.votes + (voted.includes(question.id) ? 1 : 0)}
+            active={voted.includes(question.id)}
+            onClick={() => onVote(question.id)}
+          />
+          {onOpen ? (
+            <button
+              type="button"
+              aria-label={`Open question, ${question.answers.length} replies`}
+              onClick={onOpen}
+              className={`${countCls} transition hover:text-[#6016fc]`}
+            >
+              {answerCount}
+            </button>
+          ) : (
+            <span className={countCls} aria-label={`${question.answers.length} replies`}>
+              {answerCount}
+            </span>
+          )}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function ReplyRow({
+  reply,
+  voted,
+  reported,
+  onVote,
+  onReport,
+  onEdit,
+  onDelete,
+}: {
+  reply: QaAnswer
+  voted: boolean
+  reported: boolean
+  onVote: () => void
+  onReport: () => void
+  onEdit: (text: string, html: string) => void
+  onDelete: () => void
+}) {
+  const [editing, setEditing] = useState(false)
+  return (
+    <div className="flex gap-3">
+      <Avatar name={reply.name} />
+      {editing ? (
+        <NoteEditor
+          extras
+          initial={reply}
+          placeholder="Add a comment...."
+          saveClass={replyBtnClass}
+          onSave={(text, html) => {
+            onEdit(text, html)
+            setEditing(false)
+          }}
+          onCancel={() => setEditing(false)}
+        />
+      ) : (
+        <div className="flex min-w-0 flex-1 flex-col gap-2">
+          <div className="flex items-center gap-3">
+            <p className={`flex min-w-0 flex-1 flex-wrap items-center gap-x-2 gap-y-1 text-[12px] text-[#64748b] ${fontRegular}`}>
+              <span dir="auto" className={`text-[14px] text-[#6016fc] ${fontFor(reply.name, fontSemi)}`}>
+                {reply.name}
+              </span>
+              {reply.instructor ? (
+                <span className={`rounded-[2px] bg-[#f97316] px-1.5 py-0.5 text-[11px] leading-none text-white ${fontMedium}`}>
+                  Instructor
+                </span>
+              ) : (
+                <span className="text-[#94a3b8]">·</span>
+              )}
+              <span>{reply.when}</span>
+            </p>
+            <UpvoteButton count={reply.votes + (voted ? 1 : 0)} active={voted} onClick={onVote} />
+            <ActionMenu
+              label="Reply options"
+              triggerClass={kebabClass}
+              trigger={kebabIcon}
+              items={
+                reply.mine
+                  ? [
+                      { label: "Edit", onClick: () => setEditing(true) },
+                      { label: "Delete", onClick: onDelete },
+                    ]
+                  : [{ label: reported ? "Reported" : "Report Abuse", onClick: onReport, disabled: reported }]
+              }
+            />
+          </div>
+          <NoteBody note={reply} tone="text-[#475569]" />
+        </div>
+      )}
+    </div>
+  )
+}
+
+const replyBtnClass = "bg-[#4f46e5] text-white hover:bg-[#4338ca]"
+
+function QuestionDetail({
+  course,
+  question,
+  total,
+  voted,
+  following,
+  onVote,
+  onFollow,
+  onOpenLecture,
+  onBack,
+  onReply,
+  onEditReply,
+  onDeleteReply,
+}: {
+  course: Course
+  question: Question
+  total: number
+  voted: number[]
+  following: boolean
+  onVote: (id: number) => void
+  onFollow: () => void
+  onOpenLecture: (n: number) => void
+  onBack: () => void
+  onReply: (text: string, html: string) => void
+  onEditReply: (id: number, text: string, html: string) => void
+  onDeleteReply: (id: number) => void
+}) {
+  const { user, notify } = useApp()
+  const [reported, setReported] = useLocal<number[]>(`thkee.qaReported.${course.id}`, [])
+  // Remounts the comment box so it empties after each reply.
+  const [composerKey, setComposerKey] = useState(0)
+  const score = (a: QaAnswer) => a.votes + (voted.includes(a.id) ? 1 : 0)
+  // The most upvoted replies always stay first.
+  const replies = [...question.answers].sort((a, b) => score(b) - score(a) || b.id - a.id)
+
+  return (
+    <div className="flex flex-col gap-6">
+      <h3 className={`m-0 border-b border-[#e2e8f0] pb-4 text-[22px] text-[#0f172a] ${fontRegular}`}>
+        Questions and answers ({total})
+      </h3>
+      <button
+        type="button"
+        onClick={onBack}
+        className={`flex h-[32px] items-center gap-2 self-start rounded-[6px] bg-[#e2e8f0] px-3 text-[14px] text-[#1e293b] transition hover:bg-[#cbd5e1] ${fontMedium}`}
+      >
+        <Svg className="size-4" stroke={2}>
+          <path d="M19 12H5M11 6l-6 6 6 6" />
+        </Svg>
+        Go Back to the Questions
+      </button>
+      <QuestionSummary question={question} voted={voted} onVote={onVote} onOpenLecture={onOpenLecture} />
+      <div className="flex flex-col gap-3">
+        <div className="flex items-center justify-between gap-3">
+          <p className={`text-[14px] text-[#0f172a] ${fontSemi}`}>
+            {question.answers.length === 1 ? "1 reply" : `${question.answers.length} replies`}
+          </p>
+          <button
+            type="button"
+            aria-pressed={following}
+            onClick={onFollow}
+            className={`text-[14px] underline underline-offset-4 transition hover:text-[#4f0fd6] ${following ? "text-[#64748b]" : "text-[#6016fc]"} ${fontMedium}`}
+          >
+            {following ? "Following" : "Follow question"}
+          </button>
+        </div>
+        <div className="flex flex-col gap-6 rounded-[6px] border border-[#e2e8f0] p-4 md:p-5">
+          {replies.map((reply) => (
+            <ReplyRow
+              key={reply.id}
+              reply={reply}
+              voted={voted.includes(reply.id)}
+              reported={reported.includes(reply.id)}
+              onVote={() => onVote(reply.id)}
+              onReport={() => {
+                setReported((list) => [...list, reply.id])
+                notify("Thanks, we'll take a look at this reply")
+              }}
+              onEdit={(text, html) => onEditReply(reply.id, text, html)}
+              onDelete={() => onDeleteReply(reply.id)}
+            />
+          ))}
+          <div className="flex gap-3">
+            <Avatar name={user?.name ?? "You"} />
+            <NoteEditor
+              key={composerKey}
+              extras
+              placeholder="Add a comment...."
+              saveLabel="Reply"
+              saveClass={replyBtnClass}
+              onSave={(text, html) => {
+                onReply(text, html)
+                setComposerKey((k) => k + 1)
+              }}
+            />
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function QuestionRow({
+  question,
+  voted,
+  onVote,
+  onOpen,
+  onOpenLecture,
+}: {
+  question: Question
+  voted: number[]
+  onVote: (id: number) => void
+  onOpen: () => void
+  onOpenLecture: (n: number) => void
+}) {
+  return (
+    <li>
+      <QuestionSummary question={question} voted={voted} onVote={onVote} onOpen={onOpen} onOpenLecture={onOpenLecture} />
+    </li>
+  )
+}
+
+function QaTab({
+  course,
+  lecture,
+  onOpenLecture,
+}: {
+  course: Course
+  lecture: number
+  onOpenLecture: (n: number) => void
+}) {
+  const { user, notify } = useApp()
+  const [items, setItems] = useLocal<Question[]>(`thkee.qa3.${course.id}`, seedQuestions(course))
+  const [voted, setVoted] = useLocal<number[]>(`thkee.qaVoted.${course.id}`, [])
+  const [followed, setFollowed] = useLocal<number[]>(`thkee.qaFollowed.${course.id}`, [])
+  const [search, setSearch] = useState("")
+  const [lectureFilter, setLectureFilter] = useState("all")
+  // Starts on Most Upvoted so upvoted questions move to the front, as the design note asks.
+  const [sort, setSort] = useState("upvoted")
+  const [show, setShow] = useState("all")
+  const [asking, setAsking] = useState(false)
+  const [openId, setOpenId] = useState<number | null>(null)
+  const rootRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (openId !== null) rootRef.current?.scrollIntoView({ block: "start" })
+  }, [openId])
+
+  const [title, setTitle] = useState("")
   const [text, setText] = useState("")
-  const ask = (e: FormEvent) => {
+
+  const toggle = (setter: typeof setVoted, id: number) =>
+    setter((list) => (list.includes(id) ? list.filter((x) => x !== id) : [...list, id]))
+  const score = (q: Question) => q.votes + (voted.includes(q.id) ? 1 : 0)
+
+  const q = search.trim().toLowerCase()
+  const shown = items
+    .filter((item) => !q || `${item.title} ${item.text}`.toLowerCase().includes(q))
+    .filter((item) => lectureFilter === "all" || item.lecture === lecture)
+    .filter((item) =>
+      show === "following"
+        ? followed.includes(item.id)
+        : show === "asked"
+          ? item.mine
+          : show === "unanswered"
+            ? item.answers.length === 0
+            : true,
+    )
+    .sort((a, b) =>
+      sort === "recent"
+        ? b.created - a.created
+        : sort === "upvoted"
+          ? score(b) - score(a) || b.created - a.created
+          : score(b) + b.answers.length * 2 - (score(a) + a.answers.length * 2),
+    )
+
+  const post = (e: FormEvent) => {
     e.preventDefault()
-    if (!text.trim()) return
+    if (!title.trim() || !text.trim()) return
+    const now = Date.now()
     setItems((list) => [
-      {
-        id: Date.now(),
-        name: user?.name ?? "You",
-        text: text.trim(),
-        answers: 0,
-        when: "just now",
-      },
+      { id: now, name: user?.name ?? "You", title: title.trim(), text: text.trim(), lecture, when: "just now", created: now, votes: 0, answers: [], mine: true },
       ...list,
     ])
+    setSearch("")
+    setLectureFilter("all")
+    setShow("all")
+    setSort("recent")
+    setTitle("")
     setText("")
+    setAsking(false)
+    notify("Your question is posted ✓")
   }
-  return (
-    <div className="flex max-w-[860px] flex-col gap-6">
-      <form onSubmit={ask} className="flex flex-col gap-2">
-        <label
-          className={`text-[15px] text-[#0f172a] ${fontSemi}`}
-          htmlFor="qa-text"
-        >
-          Ask a question
-        </label>
-        <textarea
-          id="qa-text"
-          value={text}
-          onChange={(e) => setText(e.target.value)}
-          rows={3}
-          placeholder="What would you like to ask the instructor or other learners?"
-          className={`${smallInput} resize-y`}
+
+  const updateAnswers = (id: number, change: (list: QaAnswer[]) => QaAnswer[]) =>
+    setItems((list) => list.map((item) => (item.id === id ? { ...item, answers: change(item.answers) } : item)))
+
+  const opened = items.find((item) => item.id === openId)
+  if (opened)
+    return (
+      <div ref={rootRef} className="scroll-mt-[140px]">
+        <QuestionDetail
+          course={course}
+          question={opened}
+          total={items.length}
+          voted={voted}
+          following={followed.includes(opened.id)}
+          onVote={(id) => toggle(setVoted, id)}
+          onFollow={() => toggle(setFollowed, opened.id)}
+          onOpenLecture={onOpenLecture}
+          onBack={() => setOpenId(null)}
+          onReply={(value, html) =>
+            updateAnswers(opened.id, (list) => [...list, { id: Date.now(), name: user?.name ?? "You", text: value, html, when: "just now", votes: 0, mine: true }])
+          }
+          onEditReply={(id, value, html) =>
+            updateAnswers(opened.id, (list) => list.map((a) => (a.id === id ? { ...a, text: value, html } : a)))
+          }
+          onDeleteReply={(id) => updateAnswers(opened.id, (list) => list.filter((a) => a.id !== id))}
         />
-        <button
-          type="submit"
-          disabled={!text.trim()}
-          className={`${smallBtn} self-end`}
-        >
-          Post question
-        </button>
-      </form>
-      <ul className="flex flex-col divide-y divide-[#e2e8f0]">
-        {items.map((qItem) => (
-          <li key={qItem.id} className="flex gap-3 py-4">
-            <span
-              className={`flex size-9 shrink-0 items-center justify-center rounded-full bg-[#f1f5f9] text-[13px] text-[#334155] ${fontSemi}`}
+      </div>
+    )
+
+  const fieldCls = `w-full rounded-[6px] border border-[#cbd5e1] bg-white px-3 text-[16px] text-[#0f172a] outline-none placeholder:text-[#94a3b8] focus:border-[#1e293b] md:text-[14px] ${fontRegular}`
+
+  return (
+    <div ref={rootRef} className="flex scroll-mt-[140px] flex-col gap-6">
+      <label className="flex h-[44px] items-center gap-3 rounded-[6px] border border-[#94a3b8] bg-white px-3 focus-within:border-[#1e293b]">
+        <Svg className="size-[18px] shrink-0 text-[#475569]" stroke={2}>
+          <circle cx="11" cy="11" r="7" />
+          <path d="M20 20l-3.5-3.5" />
+        </Svg>
+        <input
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="Search all course questions."
+          aria-label="Search all course questions"
+          className={`min-w-0 flex-1 bg-transparent text-[16px] text-[#0f172a] outline-none placeholder:text-[#94a3b8] md:text-[14px] ${fontRegular}`}
+        />
+      </label>
+      <div className="flex flex-wrap items-center justify-end gap-3">
+        <FilterSelect label="Filter by" options={qaLectureOptions} value={lectureFilter} onChange={setLectureFilter} />
+        <FilterSelect label="Sort by" options={qaSortOptions} value={sort} onChange={setSort} />
+        <FilterSelect label="Filter Questions" options={qaShowOptions} value={show} onChange={setShow} alignRight />
+      </div>
+      <h3 className={`m-0 border-b border-[#e2e8f0] pb-4 text-[22px] text-[#0f172a] ${fontRegular}`}>
+        Questions and answers ({shown.length})
+      </h3>
+      {shown.length === 0 ? (
+        <p className={`py-8 text-center text-[14px] text-[#64748b] ${fontRegular}`}>
+          No questions match these filters.
+        </p>
+      ) : (
+        <ul className="flex flex-col gap-8">
+          {shown.map((item) => (
+            <QuestionRow
+              key={item.id}
+              question={item}
+              voted={voted}
+              onVote={(id) => toggle(setVoted, id)}
+              onOpen={() => setOpenId(item.id)}
+              onOpenLecture={onOpenLecture}
+            />
+          ))}
+        </ul>
+      )}
+      {asking ? (
+        <form onSubmit={post} className="flex flex-col gap-3 rounded-[8px] border border-[#e2e8f0] bg-[#f8fafc] p-4 md:p-5">
+          <input
+            autoFocus
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            placeholder="Question title"
+            aria-label="Question title"
+            className={`h-[44px] ${fieldCls}`}
+          />
+          <textarea
+            value={text}
+            onChange={(e) => setText(e.target.value)}
+            rows={4}
+            placeholder="What would you like to ask the instructor or other learners?"
+            aria-label="Your question"
+            className={`resize-y py-2 ${fieldCls}`}
+          />
+          <div className="flex items-center justify-end gap-3">
+            <button
+              type="button"
+              onClick={() => setAsking(false)}
+              className={`h-[44px] rounded-[8px] px-4 text-[14px] text-[#0f172a] transition hover:bg-[#e2e8f0] ${fontMedium}`}
             >
-              {qItem.name[0]}
-            </span>
-            <div className="flex flex-col gap-1">
-              <p className={`text-[15px] text-[#0f172a] ${fontMedium}`}>
-                {qItem.text}
-              </p>
-              <p className={`text-[13px] text-[#64748b] ${fontRegular}`}>
-                {qItem.name} · {qItem.when} · {qItem.answers}{" "}
-                {qItem.answers === 1 ? "answer" : "answers"}
-              </p>
-            </div>
-          </li>
-        ))}
-      </ul>
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={!title.trim() || !text.trim()}
+              className={`h-[44px] rounded-[8px] bg-[#ffb20d] px-5 text-[14px] text-[#1e293b] transition hover:bg-[#faa104] disabled:opacity-50 ${fontMedium}`}
+            >
+              Post question
+            </button>
+          </div>
+        </form>
+      ) : (
+        <button
+          type="button"
+          onClick={() => setAsking(true)}
+          className={`h-[44px] self-center rounded-[8px] bg-[#ffb20d] px-5 text-[14px] text-[#1e293b] transition hover:bg-[#faa104] ${fontMedium}`}
+        >
+          Ask your Questions
+        </button>
+      )}
     </div>
   )
 }
@@ -1380,97 +1910,404 @@ function QaTab({ course }: { course: Course }) {
 function AnnouncementsTab({ course }: { course: Course }) {
   const items = [
     {
+      title: "Urgent assignment submissions",
+      body: `Dear students, we already uploaded two videos about this week's assignment for ${course.title}. Please watch them and submit your work before Thursday.`,
+      month: "June",
+      time: "3:00 PM",
+    },
+    {
       title: "New practice files added",
-      body: `I've added updated exercise files for the hands-on section of ${course.title}. Download them from the lesson resources.`,
-      when: "3 days ago",
+      body: "Dear students, updated exercise files for the hands-on section are ready. You can download them from the lesson resources.",
+      month: "June",
+      time: "11:30 AM",
     },
     {
       title: "Live Q&A session this week",
       body: "Join me for a live Q&A on Thursday at 7 PM (Riyadh time). Bring your questions about the project.",
-      when: "1 week ago",
+      month: "May",
+      time: "5:15 PM",
+    },
+    {
+      title: "Welcome to the course",
+      body: "Welcome, everyone! Start with the introduction section, then introduce yourself in the Q&A tab so we can get to know you.",
+      month: "May",
+      time: "9:00 AM",
     },
   ]
+  const [open, setOpen] = useState<string | null>(null)
   return (
-    <ul className="flex max-w-[860px] flex-col gap-4">
-      {items.map((a) => (
-        <li key={a.title} className="rounded-[8px] border border-[#e2e8f0] p-5">
-          <p
-            dir="auto"
-            className={`text-left text-[13px] text-[#64748b] ${fontFor(course.instructor, fontRegular, "font-normal")}`}
-          >
-            {course.instructor} · {a.when}
-          </p>
-          <p className={`mt-1 text-[17px] text-[#0f172a] ${fontSemi}`}>
-            {a.title}
-          </p>
-          <p
-            className={`mt-2 text-[15px] leading-[24px] text-[#475569] ${fontRegular}`}
-          >
-            {a.body}
-          </p>
-        </li>
-      ))}
-    </ul>
+    <div className="flex flex-col gap-6">
+      <h3 className={`m-0 text-[22px] text-[#0f172a] ${fontRegular}`}>
+        Instructor Announcements
+      </h3>
+      <ul className="flex flex-col gap-3">
+        {items.map((a) => {
+          const expanded = open === a.title
+          return (
+            <li key={a.title}>
+              <button
+                type="button"
+                aria-expanded={expanded}
+                onClick={() => setOpen(expanded ? null : a.title)}
+                className="flex w-full gap-3 rounded-[6px] border border-[#e2e8f0] bg-[#f8fafc] p-2 text-left transition hover:border-[#cbd5e1] sm:gap-4"
+              >
+                <span
+                  className={`flex w-[72px] shrink-0 flex-col items-center justify-center gap-3 border-r border-[#e2e8f0] py-2 sm:w-[64px] ${fontRegular}`}
+                >
+                  <span className="text-[14px] text-[#475569]">{a.month}</span>
+                  <span className="text-[12px] text-[#64748b]">{a.time}</span>
+                </span>
+                <span className="flex min-w-0 flex-1 flex-col gap-2 py-2 pr-2">
+                  <span className={`text-[14px] text-[#1e293b] ${fontSemi}`}>
+                    {a.title}
+                  </span>
+                  <span
+                    className={`text-[14px] leading-[22px] text-[#475569] ${expanded ? "" : "truncate"} ${fontRegular}`}
+                  >
+                    {a.body}
+                  </span>
+                </span>
+              </button>
+            </li>
+          )
+        })}
+      </ul>
+    </div>
   )
 }
 
-function ReviewsTab({
-  course,
-  onReview,
-}: {
-  course: Course
-  onReview: () => void
-}) {
-  const reviews = [
-    {
-      name: "Oscar Cafeo",
-      when: "3 weeks ago",
-      text: "Well organised and covered a lot more detail than other courses I tried. The exercises helped a lot.",
-    },
-    {
-      name: "Alex Morgan",
-      when: "1 month ago",
-      text: "Short, clear lessons. I used what I learned at work in the first week.",
-    },
-  ]
+function ReviewStars({ rating }: { rating: number }) {
   return (
-    <div className="flex max-w-[860px] flex-col gap-6">
-      <div className="flex items-center gap-4">
-        <span
-          className={`text-[44px] leading-none text-[#0f172a] ${fontHeading}`}
+    <span
+      className="relative inline-flex text-[16px] leading-none"
+      role="img"
+      aria-label={`${rating.toFixed(1)} out of 5`}
+    >
+      <span className="text-[#e2e8f0]">★★★★★</span>
+      <span
+        className="absolute inset-y-0 left-0 overflow-hidden whitespace-nowrap text-[#ffb20d]"
+        style={{ width: `${(rating / 5) * 100}%` }}
+      >
+        ★★★★★
+      </span>
+    </span>
+  )
+}
+
+
+function ReviewForm({
+  initial,
+  onSave,
+  onCancel,
+}: {
+  initial?: Review
+  onSave: (rating: number, body: string) => void
+  onCancel: () => void
+}) {
+  const [stars, setStars] = useState(initial?.rating ?? 0)
+  const [hover, setHover] = useState(0)
+  const [body, setBody] = useState(initial?.body ?? "")
+  const [error, setError] = useState("")
+
+  const submit = (e: FormEvent) => {
+    e.preventDefault()
+    if (!stars) return setError("Please choose a star rating.")
+    if (body.trim().length < 10)
+      return setError("Please write at least 10 characters.")
+    onSave(stars, body.trim())
+  }
+
+  return (
+    <form
+      onSubmit={submit}
+      noValidate
+      className="flex flex-col gap-4 rounded-[8px] border border-[#e2e8f0] bg-[#f8fafc] p-4 md:p-5"
+    >
+      <div
+        className="flex items-center gap-1"
+        role="group"
+        aria-label="Your rating"
+        onMouseLeave={() => setHover(0)}
+      >
+        {[1, 2, 3, 4, 5].map((n) => (
+          <button
+            key={n}
+            type="button"
+            aria-label={`${n} star${n === 1 ? "" : "s"}`}
+            aria-pressed={stars === n}
+            onMouseEnter={() => setHover(n)}
+            onClick={() => setStars(n)}
+            className={`text-[24px] leading-none transition ${n <= (hover || stars) ? "text-[#ffb20d]" : "text-[#cbd5e1]"}`}
+          >
+            ★
+          </button>
+        ))}
+      </div>
+      <textarea
+        autoFocus
+        value={body}
+        onChange={(e) => setBody(e.target.value)}
+        rows={4}
+        placeholder="Share what you liked and what could be better"
+        aria-label="Your review"
+        className={`w-full resize-y rounded-[6px] border border-[#cbd5e1] bg-white px-3 py-2 text-[16px] text-[#0f172a] outline-none placeholder:text-[#94a3b8] focus:border-[#1e293b] md:text-[14px] ${fontRegular}`}
+      />
+      {error && (
+        <p className={`text-[14px] text-[#dc2626] ${fontRegular}`}>{error}</p>
+      )}
+      <div className="flex items-center justify-end gap-3">
+        <button
+          type="button"
+          onClick={onCancel}
+          className={`h-[44px] rounded-[8px] px-4 text-[14px] text-[#0f172a] transition hover:bg-[#e2e8f0] ${fontMedium}`}
         >
-          {course.rating.toFixed(1)}
-        </span>
-        <div>
-          <p className="text-[18px] text-[#f5a524]">★★★★★</p>
-          <p className={`text-[13px] text-[#64748b] ${fontRegular}`}>
-            {Math.round(course.students * 0.23).toLocaleString()} ratings
+          Cancel
+        </button>
+        <button
+          type="submit"
+          className={`h-[44px] rounded-[8px] bg-[#ffb20d] px-5 text-[14px] text-[#1e293b] transition hover:bg-[#faa104] ${fontMedium}`}
+        >
+          {initial ? "Save review" : "Submit review"}
+        </button>
+      </div>
+    </form>
+  )
+}
+
+const kebabClass =
+  "flex size-7 items-center justify-center rounded-[6px] text-[#334155] transition hover:bg-[#f1f5f9]"
+const kebabIcon = (
+  <svg viewBox="0 0 24 24" className="size-4" fill="currentColor" aria-hidden="true">
+    <circle cx="12" cy="5" r="1.8" />
+    <circle cx="12" cy="12" r="1.8" />
+    <circle cx="12" cy="19" r="1.8" />
+  </svg>
+)
+
+const thumbIcon =
+  "M7 10v11H4a1 1 0 01-1-1v-9a1 1 0 011-1zM7 10l4-8a3 3 0 013 3v4h5.5a2 2 0 012 2.3l-1.3 8a2 2 0 01-2 1.7H7"
+
+function ReviewRow({
+  review,
+  own,
+  vote,
+  reported,
+  likes,
+  onVote,
+  onReport,
+  onEdit,
+}: {
+  review: Review
+  own: boolean
+  vote?: "up" | "down"
+  reported: boolean
+  likes: number
+  onVote: (vote: "up" | "down") => void
+  onReport: () => void
+  onEdit: () => void
+}) {
+  const [expanded, setExpanded] = useState(false)
+  const long = review.body.length > 240
+
+  const voteButton = (kind: "up" | "down") => (
+    <button
+      type="button"
+      aria-label={kind === "up" ? "Helpful" : "Not helpful"}
+      aria-pressed={vote === kind}
+      onClick={() => onVote(kind)}
+      className={`transition hover:text-[#0d5c4b] ${vote === kind ? "text-[#0d5c4b]" : "text-[#334155]"}`}
+    >
+      <svg
+        viewBox="0 0 24 24"
+        className={`size-[18px] ${kind === "down" ? "rotate-180" : ""}`}
+        fill={vote === kind ? "currentColor" : "none"}
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        aria-hidden="true"
+      >
+        <path d={thumbIcon} />
+      </svg>
+    </button>
+  )
+
+  return (
+    <div className="flex gap-3 md:gap-4">
+      <Avatar name={review.name} />
+      <div className="flex min-w-0 flex-1 flex-col gap-2">
+        <div className="flex items-start justify-between gap-3">
+          <p
+            dir="auto"
+            className={`min-w-0 truncate text-left text-[16px] text-[#1e293b] ${fontFor(review.name, fontMedium, "font-medium")}`}
+          >
+            {review.name}
           </p>
+          {own && (
+            <div className="shrink-0">
+              <ActionMenu
+                label="Review options"
+                triggerClass={kebabClass}
+                trigger={kebabIcon}
+                items={[{ label: "Edit", onClick: onEdit }]}
+              />
+            </div>
+          )}
+        </div>
+        <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+          <span className={`text-[14px] text-[#f5a524] ${fontMedium}`}>
+            {review.rating.toFixed(1)}
+          </span>
+          <ReviewStars rating={review.rating} />
+          <span className={`text-[12px] text-[#64748b] ${fontRegular}`}>
+            Posted {review.when}
+          </span>
+        </div>
+        <div className="relative">
+          <p
+            dir="auto"
+            className={`text-left text-[14px] leading-[22px] text-[#1e293b] ${long && !expanded ? "line-clamp-3" : ""} ${fontFor(review.body, fontRegular, "font-normal")}`}
+          >
+            {review.body}
+          </p>
+          {long && !expanded && (
+            <div className="pointer-events-none absolute inset-x-0 bottom-0 h-[32px] bg-gradient-to-t from-white to-transparent" />
+          )}
+        </div>
+        {long && (
+          <button
+            type="button"
+            aria-expanded={expanded}
+            onClick={() => setExpanded((v) => !v)}
+            className={`flex items-center gap-1 self-center text-[14px] text-[#f5a524] transition hover:text-[#b45309] ${fontMedium}`}
+          >
+            {expanded ? "Show less" : "Show more"}
+            <Svg className={`size-4 transition-transform ${expanded ? "rotate-180" : ""}`} stroke={2.2}>
+              <path d="M6 9l6 6 6-6" />
+            </Svg>
+          </button>
+        )}
+        <div className={`mt-1 flex items-center gap-3 text-[14px] text-[#334155] ${fontRegular}`}>
+          {voteButton("up")}
+          <span className="tabular-nums">{likes}</span>
+          {voteButton("down")}
+          {!own && (
+            <button
+              type="button"
+              onClick={onReport}
+              disabled={reported}
+              className="underline underline-offset-4 transition hover:text-[#0d5c4b] disabled:text-[#94a3b8] disabled:no-underline"
+            >
+              {reported ? "Reported" : "Report"}
+            </button>
+          )}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function ReviewsTab({ course }: { course: Course }) {
+  const { user, notify } = useApp()
+  // Same key as the course page, so a review written in either place shows in both.
+  const [mine, setMine] = useLocal<Review[]>(`thkee.reviews.${course.id}`, [])
+  const [votes, setVotes] = useLocal<Record<string, "up" | "down">>(
+    `thkee.reviewVotes.${course.id}`,
+    {},
+  )
+  const [reports, setReports] = useLocal<string[]>(
+    `thkee.reviewReports.${course.id}`,
+    [],
+  )
+  const [editing, setEditing] = useState<number | "new" | null>(null)
+  const count = Math.round(course.students * 0.23) + mine.length
+
+  const save = (rating: number, body: string) => {
+    if (editing === "new") {
+      setMine((list) => [
+        { name: user?.name ?? "You", when: "just now", rating, title: "My review", body },
+        ...list,
+      ])
+      notify("Thanks! Your review is posted ✓")
+    } else {
+      setMine((list) =>
+        list.map((r, i) => (i === editing ? { ...r, rating, body } : r)),
+      )
+      notify("Your review is updated ✓")
+    }
+    setEditing(null)
+  }
+
+  const row = (review: Review, own: boolean, baseLikes: number, onEdit: () => void) => {
+    const vote = votes[review.name]
+    return (
+      <ReviewRow
+        review={review}
+        own={own}
+        vote={vote}
+        reported={reports.includes(review.name)}
+        likes={baseLikes + (vote === "up" ? 1 : 0)}
+        onVote={(kind) =>
+          setVotes(({ [review.name]: current, ...rest }) =>
+            current === kind ? rest : { ...rest, [review.name]: kind },
+          )
+        }
+        onReport={() => {
+          setReports((list) => [...list, review.name])
+          notify("Thanks, we'll take a look at this review")
+        }}
+        onEdit={onEdit}
+      />
+    )
+  }
+
+  return (
+    <div className="flex flex-col">
+      <h3
+        className={`-mx-4 m-0 border-b border-[#e2e8f0] px-4 pb-5 text-[22px] text-[#0f172a] md:-mx-6 md:px-6 ${fontRegular}`}
+      >
+        Course Reviews
+      </h3>
+      <div className="flex flex-wrap items-center justify-between gap-4 border-b border-[#e2e8f0] py-6">
+        <div className="flex flex-col gap-1.5">
+          <p className={`text-[14px] text-[#94a3b8] ${fontRegular}`}>
+            <span className={`text-[22px] text-[#0f172a] ${fontBold}`}>
+              {course.rating.toFixed(1)}
+            </span>{" "}
+            out of 5
+          </p>
+          <div className="flex items-center gap-2">
+            <ReviewStars rating={course.rating} />
+            <span className={`text-[14px] text-[#94a3b8] ${fontRegular}`}>
+              {count.toLocaleString()} reviews
+            </span>
+          </div>
         </div>
         <button
           type="button"
-          onClick={onReview}
-          className={`ml-auto h-[38px] rounded-[6px] border border-[#1e293b] px-4 text-[14px] text-[#1e293b] hover:bg-[#1e293b] hover:text-white ${fontMedium}`}
+          onClick={() => setEditing(mine.length ? 0 : "new")}
+          className={`h-[44px] rounded-[8px] bg-[#ffb20d] px-5 text-[14px] text-[#1e293b] transition hover:bg-[#faa104] ${fontMedium}`}
         >
-          Write a review
+          {mine.length ? "Edit your review" : "Write a review"}
         </button>
       </div>
-      <ul className="flex flex-col divide-y divide-[#e2e8f0]">
-        {reviews.map((r) => (
-          <li key={r.name} className="flex flex-col gap-1 py-4">
-            <p className={`text-[15px] text-[#0f172a] ${fontSemi}`}>
-              {r.name}{" "}
-              <span className={`text-[13px] text-[#94a3b8] ${fontRegular}`}>
-                · {r.when}
-              </span>
-            </p>
-            <p className="text-[14px] text-[#f5a524]">★★★★★</p>
-            <p
-              className={`text-[15px] leading-[24px] text-[#475569] ${fontRegular}`}
-            >
-              {r.text}
-            </p>
+      {editing === "new" && (
+        <div className="pt-6">
+          <ReviewForm onSave={save} onCancel={() => setEditing(null)} />
+        </div>
+      )}
+      <ul className="flex flex-col gap-8 pt-8">
+        {mine.map((r, i) => (
+          <li key={i}>
+            {editing === i ? (
+              <ReviewForm initial={r} onSave={save} onCancel={() => setEditing(null)} />
+            ) : (
+              row(r, true, 0, () => setEditing(i))
+            )}
           </li>
+        ))}
+        {seedReviews.map((r) => (
+          <li key={r.name}>{row(r, false, (r.name.length % 5) + 1, () => {})}</li>
         ))}
       </ul>
     </div>

@@ -74,7 +74,7 @@ function CartRow({ course }: { course: Course }) {
           )}
         </div>
         <div className="flex items-center gap-3 sm:mt-auto sm:pt-3">
-          <button type="button" onClick={() => moveToWishlist(course.id)} className={`text-[15px] text-[#94a3b8] underline underline-offset-4 transition-colors hover:text-[#0d5c4b] ${fontRegular}`}>
+          <button type="button" onClick={() => moveToWishlist(course.id)} className={`text-[14px] text-[#94a3b8] underline underline-offset-4 transition-colors hover:text-[#0d5c4b] ${fontRegular}`}>
             Move to Wishlist
           </button>
           <span className="h-4 w-px bg-[#e2e8f0]" aria-hidden="true" />
@@ -94,7 +94,7 @@ function Panel({ title, status, statusClass, open, onToggle, children }: { title
     <div className="border-t border-dashed border-[#e2e8f0] px-6 py-5">
       <button type="button" aria-expanded={open} onClick={onToggle} className="flex w-full items-start justify-between gap-3 text-left">
         <span className="flex flex-col gap-1">
-          <span className={`text-[16px] text-[#475569] ${fontRegular}`}>{title}</span>
+          <span className={`text-[14px] text-[#475569] ${fontRegular}`}>{title}</span>
           {status && <span className={`text-[14px] ${statusClass} ${fontSemi}`}>{status}</span>}
         </span>
         <span className="mt-1 text-[#0f172a]">
@@ -160,7 +160,7 @@ export default function CartPage() {
           <div className="flex flex-col items-center gap-4 rounded-[16px] border border-[#eef2f6] bg-white px-6 py-20 text-center">
             <span className="text-[56px]">🛒</span>
             <p className={`text-[22px] text-[#0f172a] ${fontHeading}`}>Your cart is empty</p>
-            <p className={`max-w-[420px] text-[15px] text-[#64748b] ${fontRegular}`}>Find a course you like and add it to your cart. It will wait for you here.</p>
+            <p className={`max-w-[420px] text-[14px] text-[#64748b] ${fontRegular}`}>Find a course you like and add it to your cart. It will wait for you here.</p>
             <button type="button" onClick={() => openSearch({})} className={`mt-2 h-[48px] rounded-[10px] bg-[#ffb20d] px-7 text-[16px] text-[#1e293b] transition hover:bg-[#faa104] ${fontSemi}`}>
               Browse courses
             </button>
@@ -176,7 +176,7 @@ export default function CartPage() {
             <aside className="overflow-hidden rounded-[16px] border border-[#eef2f6] bg-white shadow-[0_2px_10px_rgba(15,23,42,0.05)] lg:sticky lg:top-[96px]">
               <div className="flex flex-col gap-5 px-6 pb-6 pt-7">
                 <h2 className={`m-0 text-[24px] text-[#0f172a] ${fontHeading}`}>Payment summary</h2>
-                <p className={`text-[16px] text-[#1e293b] ${fontRegular}`}>
+                <p className={`text-[14px] text-[#1e293b] ${fontRegular}`}>
                   You have added {cart.length} {cart.length === 1 ? "course" : "courses"} in your cart.
                 </p>
               </div>

@@ -12,7 +12,7 @@ export default function SectionHeading({ eyebrow, title, subtitle, action, dark 
         <h2 className={`m-0 text-[32px] leading-[1.15] tracking-[-0.96px] md:text-[40px] xl:text-[48px] ${fontHeading} ${dark ? "text-white" : "text-[#0f172a]"}`} style={{ fontVariationSettings: '"wdth" 100' }}>
           {title}
         </h2>
-        {subtitle && <p className={`m-0 text-[16px] leading-[28px] md:text-[18px] ${fontRegular} ${dark ? "text-[#cbd5e1]" : "text-[#475569]"}`}>{subtitle}</p>}
+        {subtitle && <p className={`m-0 text-[14px] leading-[22px] ${fontRegular} ${dark ? "text-[#cbd5e1]" : "text-[#475569]"}`}>{subtitle}</p>}
       </div>
       {action}
     </div>

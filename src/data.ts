@@ -589,6 +589,13 @@ export const infoPages: Record<string, { title: string; body: string[] }> = {
       "Course content is licensed to you for personal use and may not be redistributed.",
     ],
   },
+  "Refund Policy": {
+    title: "Refund Policy",
+    body: [
+      "You can request a full refund within 14 days of purchase as long as you have completed less than 30% of the course.",
+      "Refunds to Thkee Credit show up in your account immediately. Refunds to your original payment method are posted within 3 - 7 days.",
+    ],
+  },
   "Privacy Policy": {
     title: "Privacy Policy",
     body: [

@@ -13,13 +13,24 @@ export type Overlay =
   | null;
 type Toast = { id: number; message: string };
 export type SearchParams = { q?: string; category?: string; sub?: string; live?: boolean };
-export type Route = { page: "home" } | { page: "login" } | { page: "cart" } | { page: "checkout" } | { page: "learn"; id: string } | { page: "course"; id: string } | ({ page: "search" } & SearchParams);
+export type Route = { page: "home" } | { page: "login" } | { page: "cart" } | { page: "checkout" } | { page: "my-learning"; tab?: string } | { page: "purchase-history" } | { page: "refund"; orderId: string; courseId: string } | { page: "account"; section: string } | { page: "messages" } | { page: "teach" } | { page: "instructor-start" } | { page: "instructor" } | { page: "learn"; id: string } | { page: "course"; id: string } | ({ page: "search" } & SearchParams);
 
 function parseRoute(): Route {
   const hash = window.location.hash;
   if (hash.startsWith("#/login")) return { page: "login" };
   if (hash.startsWith("#/cart")) return { page: "cart" };
   if (hash.startsWith("#/checkout")) return { page: "checkout" };
+  if (hash.startsWith("#/my-learning")) return { page: "my-learning", tab: hash.split("tab=")[1] };
+  if (hash.startsWith("#/purchase-history")) return { page: "purchase-history" };
+  if (hash.startsWith("#/account")) return { page: "account", section: hash.slice("#/account/".length) || "profile" };
+  if (hash.startsWith("#/messages")) return { page: "messages" };
+  if (hash.startsWith("#/teach/start")) return { page: "instructor-start" };
+  if (hash.startsWith("#/teach")) return { page: "teach" };
+  if (hash.startsWith("#/instructor")) return { page: "instructor" };
+  if (hash.startsWith("#/refund/")) {
+    const [orderId = "", courseId = ""] = hash.slice("#/refund/".length).split("/").map(decodeURIComponent);
+    return { page: "refund", orderId, courseId };
+  }
   if (hash.startsWith("#/learn/")) return { page: "learn", id: decodeURIComponent(hash.slice("#/learn/".length).split("?")[0]) };
   if (hash.startsWith("#/course/")) return { page: "course", id: decodeURIComponent(hash.slice("#/course/".length).split("?")[0]) };
   if (!hash.startsWith("#/search")) return { page: "home" };
@@ -40,6 +51,9 @@ export function searchHash(params: SearchParams) {
 export const AVAILABLE_CREDIT = 173;
 // Demo coupon codes and the percentage each one takes off.
 export const COUPONS: Record<string, number> = { THKEE10: 10, WELCOME20: 20, LEARN15: 15 };
+// Demo courses that are always in My learning, so the player, quizzes and assignments can be opened any time.
+export const STARTER_COURSE_IDS = ["ai-foundations", "python-data"];
+export const SAVED_CARD = { brand: "Visa", last4: "1234", expiry: "02/27" };
 
 export function orderTotals(cart: Course[], promo: string | null, credit: number) {
   const subtotal = cart.reduce((sum, c) => sum + (c.originalPrice ?? c.price), 0);
@@ -53,8 +67,38 @@ export function orderTotals(cart: Course[], promo: string | null, credit: number
 }
 
 export type Booking = { expertId: string; date: string; time: string };
+export type Order = { id: string; date: string; items: { courseId: string; price: number }[]; total: number; paidWith: string };
+export type Refund = { orderId: string; courseId: string; date: string; status: "Pending" | "Refunded"; refundTo?: string; reason?: string; description?: string };
 
-function load<T>(key: string, fallback: T): T {
+// Coupons and credit lower what was actually paid, so each course's refund is its share of the order total.
+export function refundAmount(order: Order, courseId: string) {
+  const listed = order.items.reduce((sum, i) => sum + i.price, 0);
+  const price = order.items.find((i) => i.courseId === courseId)?.price ?? 0;
+  return listed ? Math.round((price * order.total) / listed) : 0;
+}
+
+function demoOrder(id: string, date: string, courseIds: string[], paidWith: string): Order {
+  const items = courseIds.map((courseId) => ({ courseId, price: courses.find((c) => c.id === courseId)?.price ?? 0 }));
+  return { id, date: `${date}T12:00:00`, items, total: items.reduce((sum, i) => sum + i.price, 0), paidWith };
+}
+
+// Demo purchases so the history page has content before anything is bought at checkout.
+const DEMO_ORDERS = [
+  demoOrder("TH-10428", "2026-10-28", ["ui-ux-figma"], "VISA ***1234"),
+  demoOrder("TH-10397", "2026-10-12", ["react-modern"], "VISA ***1234"),
+  demoOrder("TH-10352", "2026-09-21", ["prompt-engineering", "color-theory", "project-management"], "VISA ***1234"),
+  demoOrder("TH-10310", "2026-08-30", ["flutter-mobile"], "Thkee Credit"),
+  demoOrder("TH-10277", "2026-08-04", ["python-data"], "VISA ***1234"),
+  demoOrder("TH-10203", "2026-06-17", ["ai-foundations"], "Thkee Point"),
+  demoOrder("TH-10154", "2026-05-02", ["entrepreneurship"], "VISA ***1234"),
+];
+const DEMO_REFUNDS: Refund[] = [
+  { orderId: "TH-10352", courseId: "color-theory", date: "2026-09-25T12:00:00", status: "Refunded", refundTo: "Thkee Credit" },
+  { orderId: "TH-10310", courseId: "flutter-mobile", date: "2026-09-02T12:00:00", status: "Refunded", refundTo: "Thkee Credit" },
+  { orderId: "TH-10154", courseId: "entrepreneurship", date: "2026-05-06T12:00:00", status: "Refunded", refundTo: "VISA ***1234" },
+];
+
+export function load<T>(key: string, fallback: T): T {
   try {
     const raw = localStorage.getItem(key);
     return raw ? (JSON.parse(raw) as T) : fallback;
@@ -69,7 +113,7 @@ function save(key: string, value: unknown) {
   } catch {}
 }
 
-function useStoredState<T>(key: string, fallback: T) {
+export function useStoredState<T>(key: string, fallback: T) {
   const [value, setValue] = useState<T>(() => load(key, fallback));
   useEffect(() => save(key, value), [key, value]);
   return [value, setValue] as const;
@@ -78,8 +122,14 @@ function useStoredState<T>(key: string, fallback: T) {
 function useAppState() {
   const [user, setUser] = useStoredState<User | null>("thkee.user", null);
   const [cartIds, setCartIds] = useStoredState<string[]>("thkee.cart", []);
-  const [enrolledIds, setEnrolledIds] = useStoredState<string[]>("thkee.enrolled", []);
+  const [purchasedIds, setPurchasedIds] = useStoredState<string[]>("thkee.enrolled", []);
+  const enrolledIds = useMemo(() => [...new Set([...STARTER_COURSE_IDS, ...purchasedIds])], [purchasedIds]);
   const [wishlistIds, setWishlistIds] = useStoredState<string[]>("thkee.wishlist", []);
+  const [archivedIds, setArchivedIds] = useStoredState<string[]>("thkee.archived", []);
+  const [placedOrders, setPlacedOrders] = useStoredState<Order[]>("thkee.orders", []);
+  const orders = useMemo(() => [...placedOrders, ...DEMO_ORDERS], [placedOrders]);
+  const [refunds, setRefunds] = useStoredState<Refund[]>("thkee.refunds2", DEMO_REFUNDS);
+  const [hasSavedCard, setHasSavedCard] = useStoredState<boolean>("thkee.savedCard", true);
   const [promo, setPromo] = useStoredState<string | null>("thkee.promo", null);
   const [credit, setCredit] = useStoredState<number>("thkee.credit", 0);
   const [lang, setLang] = useStoredState<Lang>("thkee.lang", "EN");
@@ -88,6 +138,10 @@ function useAppState() {
   const setOverlay = useCallback((next: Overlay) => {
     if (next?.type === "course") {
       window.location.hash = `#/course/${encodeURIComponent(next.id)}`;
+      return;
+    }
+    if (next?.type === "instructor") {
+      window.location.hash = load("thkee.instructor", false) ? "#/instructor" : "#/teach";
       return;
     }
     if (next?.type === "cart") {
@@ -126,7 +180,8 @@ function useAppState() {
     setTimeout(() => setToasts((t) => t.filter((x) => x.id !== id)), 3200);
   }, []);
 
-  const cart = useMemo(() => cartIds.map((id) => courses.find((c) => c.id === id)).filter((c): c is Course => !!c), [cartIds]);
+  // A saved cart may still hold a course that is now enrolled, so it is left out here rather than sold again.
+  const cart = useMemo(() => cartIds.filter((id) => !enrolledIds.includes(id)).map((id) => courses.find((c) => c.id === id)).filter((c): c is Course => !!c), [cartIds, enrolledIds]);
 
   const addToCart = useCallback(
     (course: Course) => {
@@ -158,6 +213,15 @@ function useAppState() {
     [notify, setWishlistIds, wishlistIds],
   );
 
+  const toggleArchive = useCallback(
+    (id: string) => {
+      const archived = archivedIds.includes(id);
+      setArchivedIds((ids) => (archived ? ids.filter((x) => x !== id) : [...ids, id]));
+      notify(archived ? "Moved back to All Courses" : "Moved to Archived");
+    },
+    [archivedIds, notify, setArchivedIds],
+  );
+
   const moveToWishlist = useCallback(
     (id: string) => {
       setCartIds((ids) => ids.filter((x) => x !== id));
@@ -171,14 +235,31 @@ function useAppState() {
     window.location.hash = "#/checkout";
   }, []);
 
-  const completePurchase = useCallback(() => {
-    const ids = [...cartIds];
-    setEnrolledIds((list) => [...new Set([...list, ...ids])]);
+  const requestRefund = useCallback(
+    (orderId: string, courseId: string, details: Pick<Refund, "refundTo" | "reason" | "description">) => {
+      setRefunds((list) => [{ orderId, courseId, date: new Date().toISOString(), status: "Pending", ...details }, ...list]);
+    },
+    [setRefunds],
+  );
+
+  const cancelRefund = useCallback(
+    (orderId: string, courseId: string) => {
+      setRefunds((list) => list.filter((r) => r.orderId !== orderId || r.courseId !== courseId));
+      notify("Refund request cancelled");
+    },
+    [notify, setRefunds],
+  );
+
+  const completePurchase = useCallback((paidWith: string) => {
+    const ids = cart.map((c) => c.id);
+    const order = { id: `TH-${Date.now()}`, date: new Date().toISOString(), items: cart.map((c) => ({ courseId: c.id, price: c.price })), total: orderTotals(cart, promo, credit).total, paidWith };
+    setPlacedOrders((list) => [order, ...list]);
+    setPurchasedIds((list) => [...new Set([...list, ...ids])]);
     setCartIds([]);
     setPromo(null);
     setCredit(0);
     return ids;
-  }, [cartIds, setCartIds, setCredit, setEnrolledIds, setPromo]);
+  }, [cart, credit, promo, setCartIds, setCredit, setPlacedOrders, setPurchasedIds, setPromo]);
 
   const signIn = useCallback(
     (account: User) => {
@@ -216,6 +297,27 @@ function useAppState() {
     [notify, setBookings],
   );
 
+  const updateUser = useCallback((patch: Partial<User>) => setUser((u) => (u ? { ...u, ...patch } : u)), [setUser]);
+
+  const removeSavedCard = useCallback(() => {
+    setHasSavedCard(false);
+    notify("Payment method removed");
+  }, [notify, setHasSavedCard]);
+
+  const closeAccount = useCallback(() => {
+    ["thkee.profile", "thkee.privacy", "thkee.notifications", "thkee.threads", "thkee.instructor", "thkee.instructorSurvey"].forEach((key) => localStorage.removeItem(key));
+    setUser(null);
+    setCartIds([]);
+    setPurchasedIds([]);
+    setWishlistIds([]);
+    setArchivedIds([]);
+    setPlacedOrders([]);
+    setRefunds(DEMO_REFUNDS);
+    setHasSavedCard(true);
+    window.location.hash = "";
+    notify("Your account has been closed");
+  }, [notify, setArchivedIds, setCartIds, setHasSavedCard, setPlacedOrders, setPurchasedIds, setRefunds, setUser, setWishlistIds]);
+
   const logout = useCallback(() => {
     setUser(null);
     notify("You've been logged out");
@@ -225,7 +327,7 @@ function useAppState() {
     document.documentElement.lang = lang === "AR" ? "ar" : "en";
   }, [lang]);
 
-  return { route, openSearch, goHome, openAuth, signIn, user, logout, reservations, reserveSeat, bookings, bookExpert, cart, addToCart, removeFromCart, checkout, completePurchase, promo, setPromo, credit, setCredit, wishlistIds, toggleWishlist, moveToWishlist, enrolledIds, lang, setLang, overlay, setOverlay, toasts, notify };
+  return { route, openSearch, goHome, openAuth, signIn, user, logout, reservations, reserveSeat, bookings, bookExpert, cart, addToCart, removeFromCart, checkout, completePurchase, promo, setPromo, credit, setCredit, wishlistIds, toggleWishlist, moveToWishlist, enrolledIds, archivedIds, toggleArchive, orders, refunds, requestRefund, cancelRefund, hasSavedCard, removeSavedCard, updateUser, closeAccount, lang, setLang, overlay, setOverlay, toasts, notify };
 }
 
 const AppContext = createContext<ReturnType<typeof useAppState> | null>(null);
@@ -238,6 +340,30 @@ export function useApp() {
   const ctx = useContext(AppContext);
   if (!ctx) throw new Error("useApp must be used inside AppProvider");
   return ctx;
+}
+
+export function openMyLearning(tab?: string) {
+  window.location.hash = tab ? `#/my-learning?tab=${tab}` : "#/my-learning";
+}
+
+export function openPurchaseHistory() {
+  window.location.hash = "#/purchase-history";
+}
+
+export function openInstructorStart() {
+  window.location.hash = "#/teach/start";
+}
+
+export function openMessages() {
+  window.location.hash = "#/messages";
+}
+
+export function openAccount(section = "profile") {
+  window.location.hash = `#/account/${section}`;
+}
+
+export function openRefund(orderId: string, courseId: string) {
+  window.location.hash = `#/refund/${encodeURIComponent(orderId)}/${encodeURIComponent(courseId)}`;
 }
 
 export function openLearning(id: string) {

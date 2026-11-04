@@ -49,12 +49,12 @@ const extraObjectives = [
   "Work at your own pace on any device",
 ];
 
-type Review = { name: string; when: string; rating: number; title: string; body: string };
+export type Review = { name: string; when: string; rating: number; title: string; body: string };
 
-const seedReviews: Review[] = [
+export const seedReviews: Review[] = [
   { name: "Oscar Cafeo", when: "3 weeks ago", rating: 5, title: "Beautiful course", body: "This course was well organised and covered a lot more detail than other courses I tried. I enjoyed it. One suggestion: add a final project we build together from start to end." },
   { name: "Alex Morgan", when: "1 month ago", rating: 5, title: "Clear and practical", body: "The lessons are short and to the point. The exercises helped me use the skills at work in the first week. I would like more examples in the later sections." },
-  { name: "Reem Al-Dosari", when: "2 months ago", rating: 4, title: "Great for beginners", body: "I started with zero knowledge and finished with a small project I am proud of. The instructor explains every step in simple words." },
+  { name: "Reem Al-Dosari", when: "2 months ago", rating: 4, title: "Great for beginners", body: "I started with zero knowledge and finished with a small project I am proud of. The instructor explains every step in simple words, and each section builds on the one before it, so I never felt lost. The quizzes showed me what I needed to review, and the practice challenges made me use the skills instead of only watching. I now use what I learned every week at work, and I have already recommended this course to two of my colleagues." },
   { name: "Khalid Nasser", when: "3 months ago", rating: 5, title: "Worth the price", body: "Good structure, real examples and fast answers in the Q&A section. I recommend it to my team." },
 ];
 
@@ -215,7 +215,7 @@ function NotFound() {
   return (
     <main className="flex min-h-[70vh] w-full flex-col items-center justify-center gap-4 bg-[#f8fafc] px-4 pt-[72px] text-center">
       <p className={`text-[24px] text-[#0f172a] ${fontHeading}`}>Course not found</p>
-      <p className={`text-[16px] text-[#64748b] ${fontRegular}`}>This course does not exist or was removed.</p>
+      <p className={`text-[14px] text-[#64748b] ${fontRegular}`}>This course does not exist or was removed.</p>
       <button type="button" onClick={() => openSearch({})} className={`h-[48px] rounded-[10px] bg-[#ffb20d] px-7 text-[16px] text-[#1e293b] transition hover:bg-[#faa104] ${fontSemi}`}>
         Browse all courses
       </button>
@@ -480,7 +480,7 @@ function Overview({ course }: { course: Course }) {
   return (
     <Card title="Overview">
       <div className={`relative overflow-hidden transition-[max-height] duration-500 ${open ? "max-h-[1200px]" : "max-h-[470px]"}`}>
-        <div className={`flex flex-col gap-4 text-[15px] leading-[26px] text-[#475569] ${fontRegular}`}>
+        <div className={`flex flex-col gap-4 text-[14px] leading-[22px] text-[#475569] ${fontRegular}`}>
           <p dir="auto" className="text-left">
             {course.description} This {course.level.toLowerCase()} course in {course.subcategory} takes you step by step through {course.lessons} lessons, with {course.hours} hours of focused content.
           </p>
@@ -489,13 +489,13 @@ function Overview({ course }: { course: Course }) {
           </p>
         </div>
         <h3 className={`mb-3 mt-8 text-[18px] text-[#0f172a] ${fontHeading}`}>Requirements</h3>
-        <ul className={`flex list-disc flex-col gap-2 pl-5 text-[15px] leading-[24px] text-[#475569] marker:text-[#0f172a] ${fontRegular}`}>
+        <ul className={`flex list-disc flex-col gap-2 pl-5 text-[14px] leading-[22px] text-[#475569] marker:text-[#0f172a] ${fontRegular}`}>
           {requirements.map((r) => (
             <li key={r}>{r}</li>
           ))}
         </ul>
         <h3 className={`mb-3 mt-8 text-[18px] text-[#0f172a] ${fontHeading}`}>Who this course is for</h3>
-        <ul className={`flex list-disc flex-col gap-2 pl-5 text-[15px] leading-[24px] text-[#475569] marker:text-[#0f172a] ${fontRegular}`}>
+        <ul className={`flex list-disc flex-col gap-2 pl-5 text-[14px] leading-[22px] text-[#475569] marker:text-[#0f172a] ${fontRegular}`}>
           <li>Learners who want a clear, practical start in {course.subcategory}.</li>
           <li>Professionals who want to add a new skill to their CV.</li>
           <li>Teams in Saudi Arabia and the region who learn better with real examples.</li>
@@ -620,7 +620,7 @@ function Instructor({ course }: { course: Course }) {
           {theirs.length} {theirs.length === 1 ? "course" : "courses"}
         </span>
       </div>
-      <div className={`mt-5 flex flex-col gap-3 text-[15px] leading-[26px] text-[#475569] ${fontRegular} ${open ? "" : "line-clamp-4"}`}>
+      <div className={`mt-5 flex flex-col gap-3 text-[14px] leading-[22px] text-[#475569] ${fontRegular} ${open ? "" : "line-clamp-4"}`}>
         <p>
           {course.instructor} is an expert in {course.subcategory} with years of hands-on experience in {course.category.toLowerCase()}. They have trained teams across Saudi Arabia and the Gulf and hold professional certificates in their field.
         </p>

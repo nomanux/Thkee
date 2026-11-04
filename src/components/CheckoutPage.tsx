@@ -1,11 +1,11 @@
 import { useState, type ReactNode } from "react";
 import { courses, type Course } from "../data";
 import { fontBold, fontFor, fontHeading, fontMedium, fontRegular, fontSemi } from "../fonts";
-import { openLearning, orderTotals, useApp } from "../store";
+import { openLearning, orderTotals, SAVED_CARD, useApp } from "../store";
 
 const sar = (n: number) => `${Math.round(n).toLocaleString()} SAR`;
 const countries = ["Saudi Arabia", "United Arab Emirates", "Kuwait", "Qatar", "Bahrain", "Oman", "Egypt", "Jordan", "Pakistan", "Bangladesh", "United Kingdom", "United States"];
-const savedCard = { brand: "Visa", last4: "1234", expiry: "02/27" };
+const savedCard = SAVED_CARD;
 
 const label = `text-[14px] text-[#1e293b] ${fontMedium}`;
 const input = `h-[42px] w-full rounded-[6px] border border-[#e2e8f0] bg-white px-3.5 text-[14px] text-[#0f172a] outline-none transition placeholder:text-[#94a3b8] focus:border-[#1e293b] ${fontRegular}`;
@@ -76,7 +76,7 @@ function Success({ purchased }: { purchased: Course[] }) {
     <div className="fade-up mx-auto flex max-w-[560px] flex-col items-center gap-4 rounded-[16px] border border-[#eef2f6] bg-white px-6 py-12 text-center">
       <span className="flex size-16 items-center justify-center rounded-full bg-[#dcfce7] text-[30px] text-[#16a34a]">✓</span>
       <h1 className={`m-0 text-[26px] text-[#0f172a] ${fontHeading}`}>Payment successful</h1>
-      <p className={`text-[15px] text-[#475569] ${fontRegular}`}>You’re now enrolled in {purchased.length === 1 ? "this course" : `these ${purchased.length} courses`}. A receipt has been sent to your email.</p>
+      <p className={`text-[14px] text-[#475569] ${fontRegular}`}>You’re now enrolled in {purchased.length === 1 ? "this course" : `these ${purchased.length} courses`}. A receipt has been sent to your email.</p>
       <ul className="flex w-full flex-col gap-2 text-left">
         {purchased.map((c) => (
           <li key={c.id}>
@@ -97,7 +97,7 @@ function Success({ purchased }: { purchased: Course[] }) {
 }
 
 export default function CheckoutPage() {
-  const { cart, promo, setPromo, credit, completePurchase, setOverlay, openSearch, notify } = useApp();
+  const { cart, promo, setPromo, credit, completePurchase, setOverlay, openSearch, notify, hasSavedCard } = useApp();
   const [country, setCountry] = useState("Saudi Arabia");
   const [method, setMethod] = useState<Method>("card");
   const [card, setCard] = useState({ name: "", number: "", expiry: "", cvv: "" });
@@ -112,7 +112,9 @@ export default function CheckoutPage() {
   const pay = () => {
     setPaying(true);
     setTimeout(() => {
-      const ids = completePurchase();
+      const last4 = card.number.replace(/\D/g, "").slice(-4);
+      const paidWith = total === 0 ? "Thkee Credit" : method === "paypal" ? "PayPal" : method === "saved" ? `${savedCard.brand.toUpperCase()} ***${savedCard.last4}` : `${card.number.startsWith("4") ? "VISA" : "Card"} ***${last4}`;
+      const ids = completePurchase(paidWith);
       setPurchased(courses.filter((c) => ids.includes(c.id)));
       setPaying(false);
       window.scrollTo({ top: 0, behavior: "smooth" });
@@ -155,7 +157,7 @@ export default function CheckoutPage() {
             {cart.length === 0 ? (
               <div className="flex flex-col items-center gap-3 rounded-[16px] border border-[#eef2f6] bg-white px-6 py-16 text-center">
                 <p className={`text-[20px] text-[#0f172a] ${fontHeading}`}>There’s nothing to check out</p>
-                <p className={`text-[15px] text-[#64748b] ${fontRegular}`}>Add a course to your cart first.</p>
+                <p className={`text-[14px] text-[#64748b] ${fontRegular}`}>Add a course to your cart first.</p>
                 <button type="button" onClick={() => openSearch({})} className={`mt-2 h-[42px] rounded-[8px] bg-[#ffb20d] px-6 text-[14px] text-[#1e293b] hover:bg-[#faa104] ${fontSemi}`}>
                   Browse courses
                 </button>
@@ -238,7 +240,7 @@ export default function CheckoutPage() {
                         <p className={`fade-up -mt-1 rounded-[8px] bg-[#f8fafc] p-4 text-[14px] text-[#475569] ${fontRegular}`}>You’ll be taken to PayPal to finish paying, then brought back to Thkee.</p>
                       )}
 
-                      <MethodRow checked={method === "saved"} onSelect={() => setMethod("saved")} title={`${savedCard.brand} **** ${savedCard.last4}`} right={<VisaBadge />} />
+                      {hasSavedCard && <MethodRow checked={method === "saved"} onSelect={() => setMethod("saved")} title={`${savedCard.brand} **** ${savedCard.last4}`} right={<VisaBadge />} />}
                       {method === "saved" && (
                         <div className="fade-up -mt-1 flex flex-col gap-4 rounded-[8px] bg-[#f8fafc] p-4">
                           <p className={`text-[16px] text-[#1e293b] ${fontSemi}`}>

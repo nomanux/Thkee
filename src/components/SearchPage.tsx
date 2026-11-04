@@ -8,7 +8,7 @@ const PAGE_SIZE = 9;
 const arabic = /[؀-ۿ]/;
 
 const languageOf = (c: Course) => (arabic.test(c.title) ? "Arabic" : "English");
-const isBestseller = (c: Course) => c.students >= 2500;
+export const isBestseller = (c: Course) => c.students >= 2500;
 const formatOf = (c: Course) => (c.live ? "Live cohort" : "Recorded");
 const lengthBuckets = [
   { label: "0 – 2 hours", test: (h: number) => h < 2 },
@@ -64,7 +64,7 @@ const sorters: Record<string, (a: Course, b: Course) => number> = {
   "Price: High to Low": (a, b) => b.price - a.price,
 };
 
-function Stars({ value, size = 14 }: { value: number; size?: number }) {
+export function Stars({ value, size = 14 }: { value: number; size?: number }) {
   const row = (cls: string) => (
     <span className={`flex ${cls}`} style={{ fontSize: size, lineHeight: 1 }}>
       {"★★★★★"}
@@ -180,7 +180,7 @@ function FeaturedCourse({ course }: { course: Course }) {
         <div className="flex flex-wrap items-center gap-2">
           <Stars value={course.rating} size={18} />
           <span className={`text-[18px] text-[#0f172a] ${fontSemi}`}>{course.rating.toFixed(2)}</span>
-          <span className={`text-[15px] text-[#64748b] ${fontRegular}`}>({Math.round(course.students / 14).toLocaleString()} ratings)</span>
+          <span className={`text-[14px] text-[#64748b] ${fontRegular}`}>({Math.round(course.students / 14).toLocaleString()} ratings)</span>
         </div>
         <div className={`flex flex-wrap items-center gap-x-3 gap-y-1 text-[13px] text-[#334155] ${fontRegular}`}>
           <span dir="auto">
@@ -191,7 +191,7 @@ function FeaturedCourse({ course }: { course: Course }) {
           <span className="size-1 rounded-full bg-[#334155]" />
           <span>{course.students.toLocaleString()} students enrolled</span>
         </div>
-        <p className={`line-clamp-2 text-[15px] leading-[24px] text-[#475569] ${fontRegular}`}>{course.description}</p>
+        <p className={`line-clamp-2 text-[14px] leading-[22px] text-[#475569] ${fontRegular}`}>{course.description}</p>
         <div className="flex flex-wrap gap-2">
           {(courseTags[course.id] ?? []).map((t) => (
             <span key={t} className={`rounded-[6px] border border-[#e2e8f0] px-2.5 py-1 text-[12px] text-[#334155] ${fontMedium}`}>
@@ -445,7 +445,7 @@ export default function SearchPage({ params }: { params: SearchParams }) {
           <h1 dir="auto" className={`m-0 text-left text-[30px] leading-[1.2] tracking-[-0.6px] text-[#1e293b] md:text-[36px] ${fontFor(heading, fontHeading, "font-bold")}`} style={{ fontVariationSettings: '"wdth" 100' }}>
             {heading}
           </h1>
-          <p className={`text-[15px] text-[#475569] md:text-[16px] ${fontRegular}`}>
+          <p className={`text-[14px] text-[#475569] ${fontRegular}`}>
             {routeScope.length} {routeScope.length === 1 ? "course" : "courses"} taught by expert instructors — learn at your pace or join a live cohort.
           </p>
           <div role="tablist" className="-mb-px mt-4 flex gap-1 overflow-x-auto">
@@ -500,7 +500,7 @@ export default function SearchPage({ params }: { params: SearchParams }) {
         <section ref={resultsRef} className="flex scroll-mt-[96px] flex-col gap-6">
           <div className="flex flex-col gap-1.5">
             <h2 className={`m-0 text-[26px] text-[#1e293b] md:text-[30px] ${fontHeading}`}>All {params.sub ?? params.category ?? ""} Courses</h2>
-            <p className={`text-[15px] text-[#475569] ${fontRegular}`}>Narrow down with filters to find the course that fits your goals.</p>
+            <p className={`text-[14px] text-[#475569] ${fontRegular}`}>Narrow down with filters to find the course that fits your goals.</p>
           </div>
           <div className="grid grid-cols-1 gap-8 lg:grid-cols-[278px_minmax(0,1fr)] lg:gap-12">
             <aside className="hidden lg:block">{sidebar}</aside>

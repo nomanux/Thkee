@@ -128,7 +128,7 @@ export default function Hero() {
           </span>
         </h1>
 
-        <p className="hero-rise m-0 max-w-[640px] text-[18px] leading-[1.55] text-white/[0.84] sm:text-[20px]" style={{ animationDelay: "0.2s" }}>
+        <p className="hero-rise m-0 max-w-[640px] text-[14px] leading-[22px] text-white/[0.84]" style={{ animationDelay: "0.2s" }}>
           Discover expert-led courses, join live sessions, and learn from instructors around the world.
         </p>
 
@@ -163,7 +163,7 @@ export default function Hero() {
               <span key={g} className={`size-[34px] rounded-full border-2 border-[#065c43] ${i ? "-ml-2.5" : ""}`} style={{ background: g }} />
             ))}
           </div>
-          <div className="text-[16px] text-white/[0.88]">
+          <div className="text-[14px] text-white/[0.88]">
             <span className="text-[#ffb400]">★</span> Trusted by <strong>1000+</strong> learners and <strong>50+</strong> expert instructors
           </div>
         </div>

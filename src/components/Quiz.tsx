@@ -289,7 +289,7 @@ export function QuizRunner({
                 onClick={() =>
                   setPicked((p) => p.map((v, j) => (j === index ? i : v)))
                 }
-                className={`flex w-full items-center gap-3.5 rounded-[8px] border px-4 py-2.5 text-left text-[16px] transition ${fontRegular} ${
+                className={`flex w-full items-center gap-3.5 rounded-[8px] border px-4 py-2.5 text-left text-[14px] transition ${fontRegular} ${
                   showRight
                     ? "border-[#86efac] bg-[#f0fdf4] text-[#14532d]"
                     : showWrong
@@ -551,7 +551,7 @@ export function QuizPanel({
                 Ready for the quiz?
               </h2>
               <p
-                className={`max-w-[460px] text-[15px] leading-[24px] text-[#475569] ${fontRegular}`}
+                className={`max-w-[460px] text-[14px] leading-[22px] text-[#475569] ${fontRegular}`}
               >
                 {questions} questions on UI/UX design. Pick an answer, submit to
                 see if you’re right, and read the short explanation before

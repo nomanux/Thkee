@@ -254,7 +254,7 @@ export default function AuthPage() {
             <form onSubmit={submitCode} noValidate className="flex flex-col items-center">
               <Mark />
               <h1 className={`m-0 mt-5 text-center text-[24px] text-[#1e293b] ${fontHeading}`}>Verify it’s you</h1>
-              <p className={`mt-5 text-center text-[15px] leading-[26px] text-[#64748b] ${fontRegular}`}>
+              <p className={`mt-5 text-center text-[14px] leading-[22px] text-[#64748b] ${fontRegular}`}>
                 we’ve sent a temporary login code to
                 <br />
                 <span className="break-all text-[#0f172a]">{shownEmail}</span>{" "}
@@ -296,7 +296,7 @@ export default function AuthPage() {
             <form onSubmit={submitDetails} noValidate className="flex flex-col">
               <Mark />
               <h1 className={`m-0 mt-5 text-[20px] text-[#1e293b] sm:text-[22px] ${fontHeading}`}>Just a few more details to get started</h1>
-              <p className={`mt-2 text-[15px] text-[#475569] ${fontRegular}`}>This helps personalize your experience on Thkee.</p>
+              <p className={`mt-2 text-[14px] text-[#475569] ${fontRegular}`}>This helps personalize your experience on Thkee.</p>
               <div className={`mt-6 flex flex-wrap items-center gap-2 text-[14px] text-[#334155] ${fontRegular}`}>
                 Signed in as
                 <span className={`flex size-[26px] items-center justify-center rounded-full bg-[#fde68a] text-[13px] text-[#1e293b] ${fontSemi}`}>{shownEmail[0]?.toUpperCase()}</span>

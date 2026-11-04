@@ -5,6 +5,14 @@ import CartPage from "./components/CartPage";
 import CheckoutPage from "./components/CheckoutPage";
 import Hero from "./components/Hero";
 import LearnPage from "./components/LearnPage";
+import AccountSettingsPage from "./components/AccountSettingsPage";
+import InstructorDashboardPage from "./components/InstructorDashboardPage";
+import InstructorOnboardingPage from "./components/InstructorOnboardingPage";
+import MessagesPage from "./components/MessagesPage";
+import TeachPage from "./components/TeachPage";
+import MyLearningPage from "./components/MyLearningPage";
+import PurchaseHistoryPage from "./components/PurchaseHistoryPage";
+import RefundRequestPage from "./components/RefundRequestPage";
 import SearchPage from "./components/SearchPage";
 import CourseDetailsPage from "./components/CourseDetailsPage";
 import HowItWorks from "./components/HowItWorks";
@@ -173,7 +181,7 @@ function PersonalizedLearning() {
             <p className="font-['Instrument_Sans:Bold'] font-bold leading-[normal] relative shrink-0 text-[#0f172a] text-[32px] md:text-[40px] xl:text-[48px] tracking-[-0.96px] w-full" style={{ fontVariationSettings: '"wdth" 100' }}>
               Personalized Learning
             </p>
-            <p className="font-['Inter:Regular'] font-normal leading-[28px] not-italic text-[#1e293b] text-[18px] w-full">
+            <p className="font-['Inter:Regular'] font-normal leading-[22px] not-italic text-[#1e293b] text-[14px] w-full">
               At THKEE, personalized learning goes beyond attending classes - you are creating a path toward your desired goals that are tailored specifically for you.
             </p>
           </div>
@@ -199,7 +207,7 @@ function PersonalizedLearning() {
                   <span className={`font-['Instrument_Sans:Bold'] text-[20px] font-bold leading-[32px] tracking-[0.15px] transition-colors duration-300 ${isActive ? "text-[#0b4c3e]" : "text-[#1e293b] group-hover:text-[#0b4c3e]"}`} style={{ fontVariationSettings: '"wdth" 100' }}>
                     {item.title}
                   </span>
-                  <span className={`font-['Inter:Regular'] text-[16px] font-normal leading-[28px] tracking-[-0.01px] transition-colors duration-300 ${isActive ? "text-[#0d5c4b]" : "text-[#64748b]"}`}>
+                  <span className={`font-['Inter:Regular'] text-[14px] font-normal leading-[22px] tracking-[-0.01px] transition-colors duration-300 ${isActive ? "text-[#0d5c4b]" : "text-[#64748b]"}`}>
                     {item.body}
                   </span>
                 </button>
@@ -334,7 +342,7 @@ function Faq() {
               </button>
               <div className={`grid transition-[grid-template-rows] duration-300 ${open ? "grid-rows-[1fr]" : "grid-rows-[0fr]"}`}>
                 <div className="overflow-hidden">
-                  <p className={`px-5 md:px-[32px] pb-6 md:pb-[32px] text-[#1e293b] text-[16px] leading-[28px] tracking-[-0.01px] ${fontRegular}`}>{item.a}</p>
+                  <p className={`px-5 md:px-[32px] pb-6 md:pb-[32px] text-[#1e293b] text-[14px] leading-[22px] tracking-[-0.01px] ${fontRegular}`}>{item.a}</p>
                 </div>
               </div>
             </div>
@@ -446,6 +454,20 @@ function Site() {
         <Overlays />
       </>
     );
+  if (route.page === "instructor-start")
+    return (
+      <>
+        <InstructorOnboardingPage />
+        <Overlays />
+      </>
+    );
+  if (route.page === "instructor")
+    return (
+      <>
+        <InstructorDashboardPage />
+        <Overlays />
+      </>
+    );
   if (route.page === "login")
     return (
       <>
@@ -464,6 +486,18 @@ function Site() {
         <CheckoutPage />
       ) : route.page === "cart" ? (
         <CartPage />
+      ) : route.page === "my-learning" ? (
+        <MyLearningPage key={route.tab ?? "all"} initialTab={route.tab === "wishlist" ? "Wishlist" : "All Courses"} />
+      ) : route.page === "purchase-history" ? (
+        <PurchaseHistoryPage />
+      ) : route.page === "teach" ? (
+        <TeachPage />
+      ) : route.page === "messages" ? (
+        <MessagesPage />
+      ) : route.page === "account" ? (
+        <AccountSettingsPage section={route.section} />
+      ) : route.page === "refund" ? (
+        <RefundRequestPage key={`${route.orderId}/${route.courseId}`} orderId={route.orderId} courseId={route.courseId} />
       ) : route.page === "course" ? (
         <CourseDetailsPage key={route.id} id={route.id} />
       ) : (
@@ -485,7 +519,7 @@ function SiteFooter() {
           </div>
           <div className="content-stretch flex flex-col gap-[40px] items-start relative shrink-0 w-full">
             <div className="content-stretch flex items-start p-[4px] relative shrink-0 w-full">
-              <p className="[word-break:break-word] font-['Inter:Regular'] font-normal leading-[24px] not-italic relative shrink-0 text-[#e2e8f0] text-[16px] tracking-[-0.01px] w-full max-w-[354px]">
+              <p className="[word-break:break-word] font-['Inter:Regular'] font-normal leading-[22px] not-italic relative shrink-0 text-[#e2e8f0] text-[14px] tracking-[-0.01px] w-full max-w-[354px]">
                 Founded to Innovate: Thkee transforms e-learning with personalized paths and interactive content, aiming to make quality education accessible worldwide.
               </p>
             </div>
@@ -497,7 +531,7 @@ function SiteFooter() {
             <p className="font-['Instrument_Sans:Medium'] font-medium leading-[32px] relative shrink-0 text-[#e2e8f0] text-[20px] tracking-[0.15px] w-full" style={{ fontVariationSettings: '"wdth" 100' }}>
               Company
             </p>
-            <div className="content-stretch flex flex-col font-['Inter:Regular'] font-normal gap-[16px] items-start leading-[24px] not-italic relative shrink-0 text-[16px] text-[#e2e8f0] tracking-[-0.01px] w-full whitespace-nowrap">
+            <div className="content-stretch flex flex-col font-['Inter:Regular'] font-normal gap-[16px] items-start leading-[22px] not-italic relative shrink-0 text-[14px] text-[#e2e8f0] tracking-[-0.01px] w-full whitespace-nowrap">
               <button type="button" className="relative shrink-0 text-left transition-colors hover:text-[#faa104]" onClick={() => setOverlay({ type: "info", page: "About us" })}>
                 {"About us"}
               </button>
@@ -516,7 +550,7 @@ function SiteFooter() {
             <p className="font-['Instrument_Sans:Medium'] font-medium leading-[32px] relative shrink-0 text-[20px] tracking-[0.15px] w-full" style={{ fontVariationSettings: '"wdth" 100' }}>
               Services
             </p>
-            <div className="content-stretch flex flex-col font-['Inter:Regular'] font-normal gap-[16px] items-start leading-[24px] not-italic relative shrink-0 text-[16px] tracking-[-0.01px] w-full whitespace-nowrap">
+            <div className="content-stretch flex flex-col font-['Inter:Regular'] font-normal gap-[16px] items-start leading-[22px] not-italic relative shrink-0 text-[14px] tracking-[-0.01px] w-full whitespace-nowrap">
               <button type="button" className="relative shrink-0 text-left transition-colors hover:text-[#faa104]" onClick={() => scrollToId("faq")}>
                 {"Help & support"}
               </button>
@@ -671,8 +705,8 @@ function LandingPage() {
           <div className="content-stretch flex items-center justify-center relative shrink-0 w-full">
             <div className="[word-break:break-word] content-stretch flex flex-[1_0_0] flex-col gap-[16px] items-center justify-center min-w-px relative text-center">
               <p className="font-['Instrument_Sans:Bold'] font-bold leading-[normal] relative shrink-0 text-[#0f172a] text-[32px] md:text-[40px] xl:text-[48px] tracking-[-0.96px] xl:whitespace-nowrap" style={{ fontVariationSettings: '"wdth" 100' }}>{`Trusted by Saudi Arabia's Leading Institutions`}</p>
-              <div className="flex flex-col font-['Inter:Regular'] font-normal justify-center leading-[0] not-italic relative shrink-0 text-[#1e293b] text-[16px] md:text-[18px] w-full max-w-[606px]">
-                <p className="leading-[28px]">{`Thkee is proudly supported and validated by the Kingdom's top technology and education authorities`}</p>
+              <div className="flex flex-col font-['Inter:Regular'] font-normal justify-center leading-[0] not-italic relative shrink-0 text-[#1e293b] text-[14px] w-full max-w-[606px]">
+                <p className="leading-[22px]">{`Thkee is proudly supported and validated by the Kingdom's top technology and education authorities`}</p>
               </div>
             </div>
           </div>
@@ -769,8 +803,8 @@ function LandingPage() {
               <p className="font-['Instrument_Sans:Bold'] font-bold leading-[normal] relative shrink-0 text-[32px] md:text-[40px] xl:text-[48px] text-white tracking-[-0.96px] xl:whitespace-nowrap" style={{ fontVariationSettings: '"wdth" 100' }}>
                 Find out Powerful Features Now
               </p>
-              <div className="flex flex-col font-['Inter:Regular'] font-normal justify-center leading-[0] min-w-full not-italic relative shrink-0 text-[#f1f5f9] text-[18px] w-[min-content]">
-                <p className="leading-[28px]">{`Our platform is an advanced combination of AI technology with a user-friendly design for a fun learning experience that separates us. `}</p>
+              <div className="flex flex-col font-['Inter:Regular'] font-normal justify-center leading-[0] min-w-full not-italic relative shrink-0 text-[#f1f5f9] text-[14px] w-[min-content]">
+                <p className="leading-[22px]">{`Our platform is an advanced combination of AI technology with a user-friendly design for a fun learning experience that separates us. `}</p>
               </div>
             </div>
           </div>
@@ -786,9 +820,9 @@ function LandingPage() {
               <div className="flex flex-col font-['Instrument_Sans:Bold'] font-bold justify-center relative shrink-0 text-[24px] text-white w-full" style={{ fontVariationSettings: '"wdth" 100' }}>
                 <p className="leading-[32px]">Live Discussions</p>
               </div>
-              <div className="flex flex-col font-['Inter:Regular'] font-normal justify-center not-italic relative shrink-0 text-[#f1f5f9] text-[16px] tracking-[-0.01px] w-full">
-                <p className="leading-[28px] mb-0">{`Participate in live Q&A sessions with your instructors and fellow students to deepen your understanding.`}</p>
-                <p className="leading-[28px]">​</p>
+              <div className="flex flex-col font-['Inter:Regular'] font-normal justify-center not-italic relative shrink-0 text-[#f1f5f9] text-[14px] tracking-[-0.01px] w-full">
+                <p className="leading-[22px] mb-0">{`Participate in live Q&A sessions with your instructors and fellow students to deepen your understanding.`}</p>
+                <p className="leading-[22px]">​</p>
               </div>
             </div>
           </div>
@@ -802,8 +836,8 @@ function LandingPage() {
               <div className="flex flex-col font-['Instrument_Sans:Bold'] font-bold justify-center relative shrink-0 text-[24px] text-white w-full" style={{ fontVariationSettings: '"wdth" 100' }}>
                 <p className="leading-[32px]">Customized Learning Paths</p>
               </div>
-              <div className="flex flex-col font-['Inter:Regular'] font-normal justify-center not-italic relative shrink-0 text-[#f1f5f9] text-[16px] tracking-[-0.01px] w-full">
-                <p className="leading-[28px]">Let our AI guide you to the best course to suit your goals and the progress you have made.</p>
+              <div className="flex flex-col font-['Inter:Regular'] font-normal justify-center not-italic relative shrink-0 text-[#f1f5f9] text-[14px] tracking-[-0.01px] w-full">
+                <p className="leading-[22px]">Let our AI guide you to the best course to suit your goals and the progress you have made.</p>
               </div>
             </div>
           </div>
@@ -817,8 +851,8 @@ function LandingPage() {
               <div className="flex flex-col font-['Instrument_Sans:Bold'] font-bold justify-center relative shrink-0 text-[24px] text-white w-full" style={{ fontVariationSettings: '"wdth" 100' }}>
                 <p className="leading-[32px]">Community Learning</p>
               </div>
-              <div className="flex flex-col font-['Inter:Regular'] font-normal justify-center not-italic relative shrink-0 text-[#f1f5f9] text-[16px] tracking-[-0.01px] w-full">
-                <p className="leading-[28px]">Join discussions or matching group forums to share ideas and develop.</p>
+              <div className="flex flex-col font-['Inter:Regular'] font-normal justify-center not-italic relative shrink-0 text-[#f1f5f9] text-[14px] tracking-[-0.01px] w-full">
+                <p className="leading-[22px]">Join discussions or matching group forums to share ideas and develop.</p>
               </div>
             </div>
           </div>
@@ -832,8 +866,8 @@ function LandingPage() {
               <div className="flex flex-col font-['Instrument_Sans:Bold'] font-bold justify-center relative shrink-0 text-[24px] text-white w-full" style={{ fontVariationSettings: '"wdth" 100' }}>
                 <p className="leading-[32px]">Interactive Learning Tools</p>
               </div>
-              <div className="flex flex-col font-['Inter:Regular'] font-normal justify-center not-italic relative shrink-0 text-[#f1f5f9] text-[16px] tracking-[-0.01px] w-full">
-                <p className="leading-[28px]">Take part in interactive tests, simulations, and other tools to allow you to stick with your learning.</p>
+              <div className="flex flex-col font-['Inter:Regular'] font-normal justify-center not-italic relative shrink-0 text-[#f1f5f9] text-[14px] tracking-[-0.01px] w-full">
+                <p className="leading-[22px]">Take part in interactive tests, simulations, and other tools to allow you to stick with your learning.</p>
               </div>
             </div>
           </div>
@@ -868,8 +902,8 @@ function LandingPage() {
                         <p className="leading-[32px]">Quality Learning Resources</p>
                       </div>
                     </div>
-                    <div className="[word-break:break-word] flex flex-col font-['Inter:Regular'] font-normal justify-center leading-[0] not-italic relative shrink-0 text-[#cbd5e1] text-[16px] tracking-[-0.01px] w-full">
-                      <p className="leading-[28px]">Get high-quality bilingual (Arabic-English) courses designed by top trainers all over the globe.</p>
+                    <div className="[word-break:break-word] flex flex-col font-['Inter:Regular'] font-normal justify-center leading-[0] not-italic relative shrink-0 text-[#cbd5e1] text-[14px] tracking-[-0.01px] w-full">
+                      <p className="leading-[22px]">Get high-quality bilingual (Arabic-English) courses designed by top trainers all over the globe.</p>
                     </div>
                   </div>
                 </div>
@@ -883,8 +917,8 @@ function LandingPage() {
                         <p className="leading-[32px]">Boundless Learning Management</p>
                       </div>
                     </div>
-                    <div className="[word-break:break-word] flex flex-col font-['Inter:Regular'] font-normal justify-center leading-[0] not-italic relative shrink-0 text-[#cbd5e1] text-[16px] tracking-[-0.01px] w-full">
-                      <p className="leading-[28px]">Learn anywhere, anytime, using your smartphone, tablet, desktop, or phone.</p>
+                    <div className="[word-break:break-word] flex flex-col font-['Inter:Regular'] font-normal justify-center leading-[0] not-italic relative shrink-0 text-[#cbd5e1] text-[14px] tracking-[-0.01px] w-full">
+                      <p className="leading-[22px]">Learn anywhere, anytime, using your smartphone, tablet, desktop, or phone.</p>
                     </div>
                   </div>
                 </div>
@@ -898,8 +932,8 @@ function LandingPage() {
                         <p className="leading-[32px]">Scalable Learning Integration</p>
                       </div>
                     </div>
-                    <div className="[word-break:break-word] flex flex-col font-['Inter:Regular'] font-normal justify-center leading-[0] not-italic relative shrink-0 text-[#cbd5e1] text-[16px] tracking-[-0.01px] w-full">
-                      <p className="leading-[28px]">Institutions incorporate our B2B-based training solutions in their existing systems to facilitate the proper development of their students or employees.</p>
+                    <div className="[word-break:break-word] flex flex-col font-['Inter:Regular'] font-normal justify-center leading-[0] not-italic relative shrink-0 text-[#cbd5e1] text-[14px] tracking-[-0.01px] w-full">
+                      <p className="leading-[22px]">Institutions incorporate our B2B-based training solutions in their existing systems to facilitate the proper development of their students or employees.</p>
                     </div>
                   </div>
                 </div>
@@ -915,8 +949,8 @@ function LandingPage() {
                         <p className="leading-[32px]">Smooth Course Management</p>
                       </div>
                     </div>
-                    <div className="[word-break:break-word] flex flex-col font-['Inter:Regular'] font-normal justify-center leading-[0] not-italic relative shrink-0 text-[#cbd5e1] text-[16px] tracking-[-0.01px] w-full">
-                      <p className="leading-[28px]">Design and run your course quickly by using AI tools that help you save time and increase productivity.</p>
+                    <div className="[word-break:break-word] flex flex-col font-['Inter:Regular'] font-normal justify-center leading-[0] not-italic relative shrink-0 text-[#cbd5e1] text-[14px] tracking-[-0.01px] w-full">
+                      <p className="leading-[22px]">Design and run your course quickly by using AI tools that help you save time and increase productivity.</p>
                     </div>
                   </div>
                 </div>
@@ -930,8 +964,8 @@ function LandingPage() {
                         <p className="leading-[32px]">Smart Personal Learning Journeys</p>
                       </div>
                     </div>
-                    <div className="[word-break:break-word] flex flex-col font-['Inter:Regular'] font-normal justify-center leading-[0] not-italic relative shrink-0 text-[#cbd5e1] text-[16px] tracking-[-0.01px] w-full">
-                      <p className="leading-[28px]">At Thkee, no two students receive the same treatment, our innovative system adjusts to your objectives and goals while confidently guiding you step-by-step toward actual results.</p>
+                    <div className="[word-break:break-word] flex flex-col font-['Inter:Regular'] font-normal justify-center leading-[0] not-italic relative shrink-0 text-[#cbd5e1] text-[14px] tracking-[-0.01px] w-full">
+                      <p className="leading-[22px]">At Thkee, no two students receive the same treatment, our innovative system adjusts to your objectives and goals while confidently guiding you step-by-step toward actual results.</p>
                     </div>
                   </div>
                 </div>
@@ -945,8 +979,8 @@ function LandingPage() {
                         <p className="leading-[32px]">Supportive Learning Community</p>
                       </div>
                     </div>
-                    <div className="[word-break:break-word] flex flex-col font-['Inter:Regular'] font-normal justify-center leading-[0] not-italic relative shrink-0 text-[#cbd5e1] text-[16px] tracking-[-0.01px] w-full">
-                      <p className="leading-[28px]">{`You're never on your own at Thkee, join a vibrant community of mentors and peers who encourage, challenge, and encourage you to keep going ahead.`}</p>
+                    <div className="[word-break:break-word] flex flex-col font-['Inter:Regular'] font-normal justify-center leading-[0] not-italic relative shrink-0 text-[#cbd5e1] text-[14px] tracking-[-0.01px] w-full">
+                      <p className="leading-[22px]">{`You're never on your own at Thkee, join a vibrant community of mentors and peers who encourage, challenge, and encourage you to keep going ahead.`}</p>
                     </div>
                   </div>
                 </div>
@@ -1093,8 +1127,8 @@ function LandingPage() {
                 <p className="leading-[normal] mb-0">Feels like the room.</p>
                 <p className="leading-[normal]">Works like the web.</p>
               </div>
-              <div className="flex flex-col font-['Inter:Regular'] font-normal justify-center min-w-full not-italic relative shrink-0 text-[#1e293b] text-[18px] w-[min-content]">
-                <p className="leading-[28px]">{`A purpose-built live studio for teachers — not a generic meeting tool. Everything you need to run an engaging class, nothing you don't.`}</p>
+              <div className="flex flex-col font-['Inter:Regular'] font-normal justify-center min-w-full not-italic relative shrink-0 text-[#1e293b] text-[14px] w-[min-content]">
+                <p className="leading-[22px]">{`A purpose-built live studio for teachers — not a generic meeting tool. Everything you need to run an engaging class, nothing you don't.`}</p>
               </div>
             </div>
             <div className="[word-break:break-word] gap-x-[16px] gap-y-[16px] grid grid-cols-1 sm:grid-cols-2 not-italic relative shrink-0 tracking-[-0.01px] w-full">
@@ -1145,8 +1179,8 @@ function LandingPage() {
             <p className="font-['Instrument_Sans:Bold'] font-bold leading-[normal] relative shrink-0 text-[32px] md:text-[40px] xl:text-[48px] text-white tracking-[-0.96px] w-full" style={{ fontVariationSettings: '"wdth" 100' }}>
               🚀 Start Learning on Your Terms
             </p>
-            <div className="flex flex-col font-['Inter:Regular'] font-normal justify-center leading-[0] not-italic relative shrink-0 text-[#cbd5e1] text-[18px] w-full">
-              <p className="leading-[28px]">{`If you're looking to switch your career, get a certification, or explore something new, THKEE allows you the flexibility to learn whenever and how you'd like to.`}</p>
+            <div className="flex flex-col font-['Inter:Regular'] font-normal justify-center leading-[0] not-italic relative shrink-0 text-[#cbd5e1] text-[14px] w-full">
+              <p className="leading-[22px]">{`If you're looking to switch your career, get a certification, or explore something new, THKEE allows you the flexibility to learn whenever and how you'd like to.`}</p>
             </div>
           </div>
           <div className="content-stretch flex flex-col sm:flex-row gap-[16px] items-stretch sm:items-start relative shrink-0 w-full sm:w-auto">
@@ -1221,8 +1255,8 @@ function LandingPage() {
                 <p className="font-['Instrument_Sans:Bold'] font-bold leading-[normal] relative shrink-0 text-[#0f172a] text-[32px] md:text-[40px] xl:text-[48px] tracking-[-0.96px] xl:whitespace-nowrap" style={{ fontVariationSettings: '"wdth" 100' }}>
                   Our well-wishers thought
                 </p>
-                <div className="flex flex-col font-['Inter:Regular'] font-normal justify-center leading-[0] min-w-full not-italic relative shrink-0 text-[#1e293b] text-[18px] w-[min-content]">
-                  <p className="leading-[28px]">{`At Thkee, we're proud of the successes of our students & instructors. Here's what some of them have to say`}</p>
+                <div className="flex flex-col font-['Inter:Regular'] font-normal justify-center leading-[0] min-w-full not-italic relative shrink-0 text-[#1e293b] text-[14px] w-[min-content]">
+                  <p className="leading-[22px]">{`At Thkee, we're proud of the successes of our students & instructors. Here's what some of them have to say`}</p>
                 </div>
               </div>
             </div>
@@ -1269,8 +1303,8 @@ function LandingPage() {
               <p className="font-['Instrument_Sans:Bold'] font-bold leading-[normal] relative shrink-0 text-[#0f172a] text-[32px] md:text-[40px] xl:text-[48px] tracking-[-0.96px] xl:whitespace-nowrap" style={{ fontVariationSettings: '"wdth" 100' }}>
                 Start Your AI Learning Journey
               </p>
-              <div className="flex flex-col font-['Inter:Regular'] font-normal justify-center leading-[0] min-w-full not-italic relative shrink-0 text-[#1e293b] text-[18px] w-[min-content]">
-                <p className="leading-[28px]">Learn from experts, follow guided paths, and gain real-world AI skills faster.</p>
+              <div className="flex flex-col font-['Inter:Regular'] font-normal justify-center leading-[0] min-w-full not-italic relative shrink-0 text-[#1e293b] text-[14px] w-[min-content]">
+                <p className="leading-[22px]">Learn from experts, follow guided paths, and gain real-world AI skills faster.</p>
               </div>
             </div>
           </div>
@@ -1294,8 +1328,8 @@ function LandingPage() {
               <div className="flex flex-col font-['Instrument_Sans:Bold'] font-bold h-[31.2px] justify-center relative shrink-0 text-[#0c211d] text-[24px] w-full" style={{ fontVariationSettings: '"wdth" 100' }}>
                 <p className="leading-[32px]">Expert Instructors</p>
               </div>
-              <div className="flex flex-col font-['Inter:Regular'] font-normal h-[48px] justify-center not-italic relative shrink-0 text-[#606b68] text-[18px] w-full">
-                <p className="leading-[28px]">Learn from industry experts guiding you every step.</p>
+              <div className="flex flex-col font-['Inter:Regular'] font-normal h-[48px] justify-center not-italic relative shrink-0 text-[#606b68] text-[14px] w-full">
+                <p className="leading-[22px]">Learn from industry experts guiding you every step.</p>
               </div>
             </div>
           </div>
@@ -1318,8 +1352,8 @@ function LandingPage() {
               <div className="flex flex-col font-['Instrument_Sans:Bold'] font-bold h-[32px] justify-center relative shrink-0 text-[#0c211d] text-[24px] w-full" style={{ fontVariationSettings: '"wdth" 100' }}>
                 <p className="leading-[32px]">Hands-On Practice</p>
               </div>
-              <div className="flex flex-col font-['Inter:Regular'] font-normal h-[48px] justify-center not-italic relative shrink-0 text-[#606b68] text-[18px] w-full">
-                <p className="leading-[28px]">Apply your knowledge with real projects and exercises.</p>
+              <div className="flex flex-col font-['Inter:Regular'] font-normal h-[48px] justify-center not-italic relative shrink-0 text-[#606b68] text-[14px] w-full">
+                <p className="leading-[22px]">Apply your knowledge with real projects and exercises.</p>
               </div>
             </div>
           </div>
@@ -1393,8 +1427,8 @@ function LandingPage() {
               <div className="flex flex-col font-['Instrument_Sans:Bold'] font-bold h-[31px] justify-center relative shrink-0 text-[#0c211d] text-[24px] w-full" style={{ fontVariationSettings: '"wdth" 100' }}>
                 <p className="leading-[32px]">Guided Learning</p>
               </div>
-              <div className="flex flex-col font-['Inter:Regular'] font-normal justify-center not-italic relative shrink-0 text-[#606b68] text-[18px] w-full">
-                <p className="leading-[28px]">Clear paths that take you from beginner to confident professional.</p>
+              <div className="flex flex-col font-['Inter:Regular'] font-normal justify-center not-italic relative shrink-0 text-[#606b68] text-[14px] w-full">
+                <p className="leading-[22px]">Clear paths that take you from beginner to confident professional.</p>
               </div>
             </div>
           </div>
@@ -1417,8 +1451,8 @@ function LandingPage() {
               <div className="flex flex-col font-['Instrument_Sans:Bold'] font-bold h-[31.2px] justify-center relative shrink-0 text-[#0c211d] text-[24px] w-full" style={{ fontVariationSettings: '"wdth" 100' }}>
                 <p className="leading-[32px]">AI Career Skills</p>
               </div>
-              <div className="flex flex-col font-['Inter:Regular'] font-normal justify-center not-italic relative shrink-0 text-[#606b68] text-[18px] w-full">
-                <p className="leading-[28px]">Master practical AI tools and build skills that grow your career.</p>
+              <div className="flex flex-col font-['Inter:Regular'] font-normal justify-center not-italic relative shrink-0 text-[#606b68] text-[14px] w-full">
+                <p className="leading-[22px]">Master practical AI tools and build skills that grow your career.</p>
               </div>
             </div>
           </div>
@@ -1431,8 +1465,8 @@ function LandingPage() {
               <p className="font-['Instrument_Sans:Bold'] font-bold leading-[normal] relative shrink-0 text-[#0f172a] text-[32px] md:text-[40px] xl:text-[48px] tracking-[-0.96px] xl:whitespace-nowrap" style={{ fontVariationSettings: '"wdth" 100' }}>
                 Frequently Asked Questions
               </p>
-              <div className="flex flex-col font-['Inter:Regular'] font-normal justify-center leading-[0] min-w-full not-italic relative shrink-0 text-[#1e293b] text-[18px] w-[min-content]">
-                <p className="leading-[28px]">Here are a few of the most frequent queries we get from learners and instructors.</p>
+              <div className="flex flex-col font-['Inter:Regular'] font-normal justify-center leading-[0] min-w-full not-italic relative shrink-0 text-[#1e293b] text-[14px] w-[min-content]">
+                <p className="leading-[22px]">Here are a few of the most frequent queries we get from learners and instructors.</p>
               </div>
             </div>
           </div>
@@ -1457,8 +1491,8 @@ function LandingPage() {
               <div className="flex flex-col font-['Instrument_Sans:Bold'] font-bold justify-center relative shrink-0 text-[#0f0f0f] text-[24px] w-full" style={{ fontVariationSettings: '"wdth" 100' }}>
                 <p className="leading-[32px]">Learn Anything</p>
               </div>
-              <div className="flex flex-col font-['Inter:Regular'] font-normal justify-center not-italic relative shrink-0 text-[#585858] text-[18px] w-full">
-                <p className="leading-[26px]">From beginner to advanced</p>
+              <div className="flex flex-col font-['Inter:Regular'] font-normal justify-center not-italic relative shrink-0 text-[#585858] text-[14px] w-full">
+                <p className="leading-[22px]">From beginner to advanced</p>
               </div>
             </div>
           </div>
@@ -1476,8 +1510,8 @@ function LandingPage() {
               <div className="flex flex-col font-['Instrument_Sans:Bold'] font-bold justify-center relative shrink-0 text-[#0f0f0f] text-[24px] w-full" style={{ fontVariationSettings: '"wdth" 100' }}>
                 <p className="leading-[32px]">Flexible Courses</p>
               </div>
-              <div className="flex flex-col font-['Inter:Regular'] font-normal justify-center not-italic relative shrink-0 text-[#585858] text-[18px] w-full">
-                <p className="leading-[26px]">Learn anytime, anywhere</p>
+              <div className="flex flex-col font-['Inter:Regular'] font-normal justify-center not-italic relative shrink-0 text-[#585858] text-[14px] w-full">
+                <p className="leading-[22px]">Learn anytime, anywhere</p>
               </div>
             </div>
           </div>
@@ -1499,8 +1533,8 @@ function LandingPage() {
               <div className="flex flex-col font-['Instrument_Sans:Bold'] font-bold justify-center relative shrink-0 text-[#0f0f0f] text-[24px] w-full" style={{ fontVariationSettings: '"wdth" 100' }}>
                 <p className="leading-[32px]">Get Certificate</p>
               </div>
-              <div className="flex flex-col font-['Inter:Regular'] font-normal justify-center not-italic relative shrink-0 text-[#585858] text-[18px] w-full">
-                <p className="leading-[26px]">Showcase your achievements</p>
+              <div className="flex flex-col font-['Inter:Regular'] font-normal justify-center not-italic relative shrink-0 text-[#585858] text-[14px] w-full">
+                <p className="leading-[22px]">Showcase your achievements</p>
               </div>
             </div>
           </div>
@@ -1522,8 +1556,8 @@ function LandingPage() {
               <div className="flex flex-col font-['Instrument_Sans:Bold'] font-bold justify-center relative shrink-0 text-[#0f0f0f] text-[24px] w-full" style={{ fontVariationSettings: '"wdth" 100' }}>
                 <p className="leading-[32px]">Expert Tutors</p>
               </div>
-              <div className="flex flex-col font-['Inter:Regular'] font-normal justify-center not-italic relative shrink-0 text-[#585858] text-[18px] w-full">
-                <p className="leading-[26px]">Teaching skills across categories.</p>
+              <div className="flex flex-col font-['Inter:Regular'] font-normal justify-center not-italic relative shrink-0 text-[#585858] text-[14px] w-full">
+                <p className="leading-[22px]">Teaching skills across categories.</p>
               </div>
             </div>
           </div>
@@ -1556,8 +1590,8 @@ function LandingPage() {
                 <p className="font-['Instrument_Sans:Bold'] font-bold leading-[normal] relative shrink-0 text-[32px] md:text-[40px] xl:text-[48px] text-white tracking-[-0.96px] w-full" style={{ fontVariationSettings: '"wdth" 100' }}>
                   Stay Connected via Thkee
                 </p>
-                <div className="flex flex-col font-['Inter:Regular'] font-normal justify-center leading-[0] not-italic relative shrink-0 text-[#cbd5e1] text-[18px] w-full">
-                  <p className="leading-[28px]">Join us on social media, get in touch with us for support.</p>
+                <div className="flex flex-col font-['Inter:Regular'] font-normal justify-center leading-[0] not-italic relative shrink-0 text-[#cbd5e1] text-[14px] w-full">
+                  <p className="leading-[22px]">Join us on social media, get in touch with us for support.</p>
                 </div>
               </div>
               <div className="content-stretch flex flex-col gap-[12px] items-center relative shrink-0 w-full">
