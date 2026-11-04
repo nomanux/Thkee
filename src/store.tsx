@@ -13,7 +13,7 @@ export type Overlay =
   | null;
 type Toast = { id: number; message: string };
 export type SearchParams = { q?: string; category?: string; sub?: string; live?: boolean };
-export type Route = { page: "home" } | { page: "login" } | { page: "cart" } | { page: "checkout" } | { page: "my-learning"; tab?: string } | { page: "purchase-history" } | { page: "refund"; orderId: string; courseId: string } | { page: "account"; section: string } | { page: "messages" } | { page: "teach" } | { page: "instructor-start" } | { page: "instructor" } | { page: "learn"; id: string } | { page: "course"; id: string } | ({ page: "search" } & SearchParams);
+export type Route = { page: "home" } | { page: "login" } | { page: "cart" } | { page: "checkout" } | { page: "my-learning"; tab?: string } | { page: "purchase-history" } | { page: "refund"; orderId: string; courseId: string } | { page: "account"; section: string } | { page: "messages" } | { page: "teach" } | { page: "instructor-start" } | { page: "instructor"; section?: "assignments" | "reports" | "reviews" | "qa" | "co-instructors" | "announcements" | "availability" | "apps" | "sessions" | "schedule"; announcementCourse?: string; scheduleId?: string; appsView?: "store" | "installed"; sessionSeries?: string; sessionId?: string; sessionCourse?: string; submissionId?: string; reportView?: "revenue"; reportMonth?: string; questionId?: string; newQuestionCourse?: string } | { page: "live-create"; draftId?: string; section?: string } | { page: "learn"; id: string } | { page: "course"; id: string } | ({ page: "search" } & SearchParams);
 
 function parseRoute(): Route {
   const hash = window.location.hash;
@@ -26,6 +26,26 @@ function parseRoute(): Route {
   if (hash.startsWith("#/messages")) return { page: "messages" };
   if (hash.startsWith("#/teach/start")) return { page: "instructor-start" };
   if (hash.startsWith("#/teach")) return { page: "teach" };
+  if (hash.startsWith("#/instructor/assignments")) return { page: "instructor", section: "assignments", submissionId: decodeURIComponent(hash.slice("#/instructor/assignments/".length)) || undefined };
+  if (hash.startsWith("#/instructor/qa/new/")) return { page: "instructor", section: "qa", newQuestionCourse: decodeURIComponent(hash.slice("#/instructor/qa/new/".length)) };
+  if (hash.startsWith("#/instructor/qa")) return { page: "instructor", section: "qa", questionId: decodeURIComponent(hash.slice("#/instructor/qa/".length)) || undefined };
+  if (hash.startsWith("#/instructor/create")) {
+    const [draftId, section] = hash.slice("#/instructor/create/".length).split("/").map(decodeURIComponent);
+    return { page: "live-create", draftId: draftId || undefined, section };
+  }
+  if (hash.startsWith("#/instructor/schedule")) return { page: "instructor", section: "schedule" };
+  if (hash.startsWith("#/instructor/sessions")) {
+    const [sessionSeries, sessionId, sessionCourse] = hash.slice("#/instructor/sessions/".length).split("/").map(decodeURIComponent);
+    return { page: "instructor", section: "sessions", sessionSeries: sessionSeries || undefined, sessionId, sessionCourse };
+  }
+  if (hash.startsWith("#/instructor/apps/installed")) return { page: "instructor", section: "apps", appsView: "installed" };
+  if (hash.startsWith("#/instructor/apps")) return { page: "instructor", section: "apps", appsView: "store" };
+  if (hash.startsWith("#/instructor/availability")) return { page: "instructor", section: "availability", scheduleId: decodeURIComponent(hash.slice("#/instructor/availability/".length)) || undefined };
+  if (hash.startsWith("#/instructor/announcements")) return { page: "instructor", section: "announcements", announcementCourse: decodeURIComponent(hash.slice("#/instructor/announcements/".length)) || undefined };
+  if (hash.startsWith("#/instructor/co-instructors")) return { page: "instructor", section: "co-instructors" };
+  if (hash.startsWith("#/instructor/reviews")) return { page: "instructor", section: "reviews" };
+  if (hash.startsWith("#/instructor/reports/revenue")) return { page: "instructor", section: "reports", reportView: "revenue", reportMonth: decodeURIComponent(hash.slice("#/instructor/reports/revenue/".length)) || undefined };
+  if (hash.startsWith("#/instructor/reports")) return { page: "instructor", section: "reports" };
   if (hash.startsWith("#/instructor")) return { page: "instructor" };
   if (hash.startsWith("#/refund/")) {
     const [orderId = "", courseId = ""] = hash.slice("#/refund/".length).split("/").map(decodeURIComponent);
@@ -107,7 +127,7 @@ export function load<T>(key: string, fallback: T): T {
   }
 }
 
-function save(key: string, value: unknown) {
+export function save(key: string, value: unknown) {
   try {
     localStorage.setItem(key, JSON.stringify(value));
   } catch {}
@@ -305,7 +325,7 @@ function useAppState() {
   }, [notify, setHasSavedCard]);
 
   const closeAccount = useCallback(() => {
-    ["thkee.profile", "thkee.privacy", "thkee.notifications", "thkee.threads", "thkee.instructor", "thkee.instructorSurvey"].forEach((key) => localStorage.removeItem(key));
+    ["thkee.profile", "thkee.privacy", "thkee.notifications", "thkee.threads", "thkee.instructor", "thkee.instructorSurvey", "thkee.instructorAssignments", "thkee.instructorReviews", "thkee.instructorQa", "thkee.instructorQa.votes", "thkee.instructorCoRequests", "thkee.instructorAnnouncements", "thkee.instructorAvailability", "thkee.instructorApps", "thkee.instructorSessions", "thkee.instructorSessions.extras", "thkee.instructorSchedule", "thkee.liveDrafts", "thkee.liveLimitDefaults"].forEach((key) => localStorage.removeItem(key));
     setUser(null);
     setCartIds([]);
     setPurchasedIds([]);
@@ -356,6 +376,62 @@ export function openInstructorStart() {
 
 export function openMessages() {
   window.location.hash = "#/messages";
+}
+
+export function openInstructorCourses() {
+  window.location.hash = "#/instructor";
+}
+
+export function openInstructorQa(questionId?: string) {
+  window.location.hash = questionId ? `#/instructor/qa/${encodeURIComponent(questionId)}` : "#/instructor/qa";
+}
+
+export function openNewFeaturedQuestion(course: string) {
+  window.location.hash = `#/instructor/qa/new/${encodeURIComponent(course)}`;
+}
+
+export function openCreateSession() {
+  window.location.hash = "#/instructor/create";
+}
+
+export function openLiveEditor(draftId: string, section = "intended-learners") {
+  window.location.hash = `#/instructor/create/${encodeURIComponent(draftId)}/${section}`;
+}
+
+export function openInstructorSchedule() {
+  window.location.hash = "#/instructor/schedule";
+}
+
+export function openInstructorSessions(...path: string[]) {
+  window.location.hash = ["#/instructor/sessions", ...path.map(encodeURIComponent)].join("/");
+}
+
+export function openInstructorApps(view: "store" | "installed") {
+  window.location.hash = `#/instructor/apps/${view}`;
+}
+
+export function openInstructorAvailability(scheduleId?: string) {
+  window.location.hash = scheduleId ? `#/instructor/availability/${encodeURIComponent(scheduleId)}` : "#/instructor/availability";
+}
+
+export function openInstructorAnnouncements(courseId?: string) {
+  window.location.hash = courseId ? `#/instructor/announcements/${encodeURIComponent(courseId)}` : "#/instructor/announcements";
+}
+
+export function openCoInstructorRequests() {
+  window.location.hash = "#/instructor/co-instructors";
+}
+
+export function openInstructorReviews() {
+  window.location.hash = "#/instructor/reviews";
+}
+
+export function openInstructorReports(view?: "revenue", month?: string) {
+  window.location.hash = view ? `#/instructor/reports/${view}${month ? `/${encodeURIComponent(month)}` : ""}` : "#/instructor/reports";
+}
+
+export function openInstructorAssignments(submissionId?: string) {
+  window.location.hash = submissionId ? `#/instructor/assignments/${encodeURIComponent(submissionId)}` : "#/instructor/assignments";
 }
 
 export function openAccount(section = "profile") {

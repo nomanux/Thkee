@@ -17,7 +17,7 @@ function CloseIcon() {
   );
 }
 
-export function Shell({ title, onClose, children, variant = "modal", width = "max-w-[520px]", radius = "sm:rounded-[20px]", hideHeader = false }: { title: string; onClose: () => void; children: ReactNode; variant?: "modal" | "drawer"; width?: string; radius?: string; hideHeader?: boolean }) {
+export function Shell({ title, onClose, children, variant = "modal", width = "max-w-[520px]", radius = "sm:rounded-[20px]", hideHeader = false, drawerWidth = "max-w-[440px]" }: { title: string; drawerWidth?: string; onClose: () => void; children: ReactNode; variant?: "modal" | "drawer"; width?: string; radius?: string; hideHeader?: boolean }) {
   const panelRef = useRef<HTMLDivElement>(null);
   const onCloseRef = useRef(onClose);
   onCloseRef.current = onClose;
@@ -46,7 +46,7 @@ export function Shell({ title, onClose, children, variant = "modal", width = "ma
         aria-label={title}
         className={
           drawer
-            ? "drawer-in absolute inset-y-0 right-0 flex w-full max-w-[440px] flex-col bg-white shadow-2xl"
+            ? `drawer-in absolute inset-y-0 right-0 flex w-full ${drawerWidth} flex-col bg-white shadow-2xl`
             : `modal-in relative flex max-h-[92dvh] w-full ${width} flex-col overflow-hidden rounded-t-[20px] bg-white shadow-2xl sm:mx-4 ${radius}`
         }
       >

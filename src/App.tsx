@@ -7,6 +7,7 @@ import Hero from "./components/Hero";
 import LearnPage from "./components/LearnPage";
 import AccountSettingsPage from "./components/AccountSettingsPage";
 import InstructorDashboardPage from "./components/InstructorDashboardPage";
+import InstructorLiveCreate from "./components/InstructorLiveCreate";
 import InstructorOnboardingPage from "./components/InstructorOnboardingPage";
 import MessagesPage from "./components/MessagesPage";
 import TeachPage from "./components/TeachPage";
@@ -461,10 +462,17 @@ function Site() {
         <Overlays />
       </>
     );
+  if (route.page === "live-create")
+    return (
+      <>
+        <InstructorLiveCreate key={route.draftId ?? "new"} draftId={route.draftId} section={route.section} />
+        <Overlays />
+      </>
+    );
   if (route.page === "instructor")
     return (
       <>
-        <InstructorDashboardPage />
+        <InstructorDashboardPage section={route.section} submissionId={route.submissionId} reportView={route.reportView} reportMonth={route.reportMonth} questionId={route.questionId} newQuestionCourse={route.newQuestionCourse} announcementCourse={route.announcementCourse} scheduleId={route.scheduleId} appsView={route.appsView} sessionSeries={route.sessionSeries} sessionId={route.sessionId} sessionCourse={route.sessionCourse} />
         <Overlays />
       </>
     );

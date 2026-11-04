@@ -125,7 +125,7 @@ function sanitizeNote(html: string) {
   return doc.body.innerHTML;
 }
 
-const richText = "[&_a]:text-[#6016fc] [&_a]:underline [&_code]:rounded-[4px] [&_code]:bg-[#f1f5f9] [&_code]:px-1 [&_code]:font-mono [&_img]:max-w-full [&_img]:rounded-[6px] [&_ol]:list-decimal [&_ol]:pl-5 [&_ul]:list-disc [&_ul]:pl-5";
+const richText = "[&_b]:font-['Inter:Bold'] [&_strong]:font-['Inter:Bold'] [&_i]:[font-synthesis:style] [&_em]:[font-synthesis:style] [&_u]:underline [&_a]:text-[#6016fc] [&_a]:underline [&_code]:rounded-[4px] [&_code]:bg-[#f1f5f9] [&_code]:px-1 [&_code]:font-mono [&_img]:max-w-full [&_img]:rounded-[6px] [&_ol]:list-decimal [&_ol]:pl-5 [&_ul]:list-disc [&_ul]:pl-5";
 
 export function NoteBody({ note, className = "", tone = "text-[#0f172a]" }: { note: Pick<Note, "text" | "html">; className?: string; tone?: string }) {
   const cls = `text-[14px] leading-[22px] ${tone} ${fontRegular} ${className}`;
@@ -511,6 +511,8 @@ export function NoteEditor({
   sideAction,
   hideActions,
   clearOnSave,
+  toolbarTop,
+  linkOnly,
   autoFocus = true,
   onChange,
   onSave,
@@ -529,6 +531,10 @@ export function NoteEditor({
   sideAction?: boolean;
   hideActions?: boolean;
   clearOnSave?: boolean;
+  // Puts the formatting buttons above the text instead of below it.
+  toolbarTop?: boolean;
+  // With extras, keeps the link button but leaves out image and code.
+  linkOnly?: boolean;
   autoFocus?: boolean;
   onChange?: (text: string, html: string) => void;
   onSave?: (text: string, html: string) => void;
@@ -631,7 +637,7 @@ export function NoteEditor({
   return (
     <div className="flex min-w-0 flex-1 flex-col gap-4">
       <div className={sideAction ? "flex items-start gap-4 sm:gap-6" : "contents"}>
-      <div className={`flex min-h-[126px] resize-y flex-col gap-2 overflow-auto rounded-[8px] border border-[#cbd5e1] bg-white p-4 focus-within:border-[#1e293b] ${sideAction ? "min-w-0 flex-1" : ""}`}>
+      <div className={`flex min-h-[126px] resize-y flex-col gap-2 overflow-auto rounded-[8px] border p-4 focus-within:border-[#1e293b] ${toolbarTop ? "flex-col-reverse border-[#e2e8f0] bg-[#f8fafc]" : "border-[#cbd5e1] bg-white"} ${sideAction ? "min-w-0 flex-1" : ""}`}>
         <div className="relative flex-1">
           {empty && <span className={`pointer-events-none absolute left-0 top-0 text-[16px] text-[#94a3b8] md:text-[14px] ${fontRegular}`}>{placeholder}</span>}
           <div
@@ -668,13 +674,13 @@ export function NoteEditor({
             </button>
           </div>
         )}
-        <div className="flex flex-wrap items-center gap-1">
+        <div className={`flex flex-wrap items-center gap-1 ${toolbarTop ? "border-b border-[#e2e8f0] pb-2" : ""}`}>
           {editorTools.map((tool) => (
             <button key={tool.command} type="button" aria-label={tool.label} title={tool.label} aria-pressed={active.includes(tool.command)} onMouseDown={(e) => e.preventDefault()} onClick={() => run(tool.command)} className={toolCls(active.includes(tool.command))}>
               <Svg>{tool.icon}</Svg>
             </button>
           ))}
-          {(extras || imageOnly) && (
+          {(extras || imageOnly) && !linkOnly && (
             <>
               <button
                 type="button"
@@ -708,9 +714,11 @@ export function NoteEditor({
               >
                 <Svg>{editorExtraIcons.link}</Svg>
               </button>
-              <button type="button" aria-label="Format as code" title="Format as code" onMouseDown={(e) => e.preventDefault()} onClick={insertCode} className={toolCls(false)}>
-                <Svg>{editorExtraIcons.code}</Svg>
-              </button>
+              {!linkOnly && (
+                <button type="button" aria-label="Format as code" title="Format as code" onMouseDown={(e) => e.preventDefault()} onClick={insertCode} className={toolCls(false)}>
+                  <Svg>{editorExtraIcons.code}</Svg>
+                </button>
+              )}
             </>
           )}
         </div>

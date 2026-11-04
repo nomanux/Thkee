@@ -25,12 +25,16 @@ export function FilterSelect({
   value,
   onChange,
   alignRight,
+  large,
+  plain,
 }: {
   label: string;
   options: { value: string; label: string }[];
   value: string;
   onChange: (value: string) => void;
   alignRight?: boolean;
+  large?: boolean;
+  plain?: boolean;
 }) {
   const { open, setOpen, ref } = useDropdown();
   return (
@@ -38,16 +42,27 @@ export function FilterSelect({
       <button
         type="button"
         aria-haspopup="listbox"
+        aria-label={plain ? `${label}: ${options.find((o) => o.value === value)?.label ?? ""}` : undefined}
         aria-expanded={open}
         onClick={() => setOpen((o) => !o)}
-        className={`flex h-[32px] items-center gap-2 rounded-[6px] border border-[#e2e8f0] bg-white px-3 text-[12px] text-[#64748b] transition hover:border-[#cbd5e1] ${fontRegular}`}
+        className={`flex items-center gap-2 border border-[#e2e8f0] bg-white text-[#64748b] transition hover:border-[#cbd5e1] ${plain ? "h-[36px] w-full justify-between rounded-[8px] px-3 text-[14px] tracking-[-0.01px]" : large ? "h-[34px] rounded-[8px] pl-3 pr-2 text-[14px] tracking-[-0.01px]" : "h-[32px] rounded-[6px] px-3 text-[12px]"} ${fontRegular}`}
       >
         <span className="whitespace-nowrap">
-          {label}: <span className={`text-[#0f172a] ${fontMedium}`}>{options.find((o) => o.value === value)?.label}</span>
+          {plain ? (
+            <span className="text-[#334155]">{options.find((o) => o.value === value)?.label}</span>
+          ) : (
+            <>
+              {label}: <span className={`text-[#0f172a] ${fontMedium}`}>{options.find((o) => o.value === value)?.label}</span>
+            </>
+          )}
         </span>
-        <svg viewBox="0 0 24 24" className={`size-3.5 text-[#0f172a] transition-transform ${open ? "rotate-180" : ""}`} fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-          <path d="M6 9l6 6 6-6" />
-        </svg>
+        {large || plain ? (
+          <img src="/assets/423e1.svg" alt="" width={16} height={16} className={`size-4 transition-transform ${open ? "rotate-180" : ""}`} />
+        ) : (
+          <svg viewBox="0 0 24 24" className={`size-3.5 text-[#0f172a] transition-transform ${open ? "rotate-180" : ""}`} fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <path d="M6 9l6 6 6-6" />
+          </svg>
+        )}
       </button>
       {open && (
         <ul role="listbox" aria-label={label} className={`${panel} min-w-full whitespace-nowrap ${alignRight ? "right-0" : "left-0"}`}>
@@ -61,7 +76,7 @@ export function FilterSelect({
                   onChange(o.value);
                   setOpen(false);
                 }}
-                className={`w-full rounded-[4px] px-3 py-2 text-left text-[12px] text-[#334155] transition hover:bg-[#f1f5f9] ${o.value === value ? "bg-[#f1f5f9]" : ""} ${fontRegular}`}
+                className={`w-full rounded-[4px] px-3 py-2 text-left text-[#334155] transition ${large || plain ? "text-[14px]" : "text-[12px]"} hover:bg-[#f1f5f9] ${o.value === value ? "bg-[#f1f5f9]" : ""} ${fontRegular}`}
               >
                 {o.label}
               </button>
@@ -73,7 +88,7 @@ export function FilterSelect({
   );
 }
 
-export type ActionItem = { label: string; icon?: ReactNode; onClick: () => void; disabled?: boolean };
+export type ActionItem = { label: string; icon?: ReactNode; onClick: () => void; disabled?: boolean; danger?: boolean };
 
 export function ActionMenu({ label, trigger, triggerClass, items, alignLeft }: { label: string; trigger: ReactNode; triggerClass: string; items: ActionItem[]; alignLeft?: boolean }) {
   const { open, setOpen, ref } = useDropdown();
@@ -94,7 +109,7 @@ export function ActionMenu({ label, trigger, triggerClass, items, alignLeft }: {
                 setOpen(false);
                 item.onClick();
               }}
-              className={`flex w-full items-center gap-2.5 rounded-[4px] px-3 py-2 text-left text-[14px] text-[#334155] transition hover:bg-[#f1f5f9] disabled:text-[#94a3b8] disabled:hover:bg-transparent ${fontRegular}`}
+              className={`flex w-full items-center gap-2.5 rounded-[4px] px-3 py-2 text-left text-[14px] transition hover:bg-[#f1f5f9] disabled:text-[#94a3b8] disabled:hover:bg-transparent ${item.danger ? "text-[#dc2626]" : "text-[#334155]"} ${fontRegular}`}
             >
               {item.icon}
               {item.label}
