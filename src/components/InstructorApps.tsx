@@ -275,7 +275,7 @@ function InstalledApps({ state, setState, onDialog }: { state: AppsState; setSta
             </div>
             <div className="flex flex-col gap-2 px-6 py-5">
               <p className={`text-[14px] leading-[20px] text-[#1e293b] ${fontRegular}`}>Add events to</p>
-              <div className={`[&_button[aria-haspopup]]:h-[42px] [&_ul]:w-full ${state.addTo ? "" : "pointer-events-none"}`}>
+              <div className={`[&_ul]:w-full ${state.addTo ? "" : "pointer-events-none"}`}>
                 <FilterSelect
                   plain
                   label="Add events to"

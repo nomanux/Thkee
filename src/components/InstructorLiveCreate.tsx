@@ -94,14 +94,14 @@ const TRASH = "M4 7h16M9 7V4h6v3M6 7l1 14h10l1-14M10 11v6M14 11v6";
 const SPARKLE = "M12 3l1.8 4.7L18.5 9.5l-4.7 1.8L12 16l-1.8-4.7L5.5 9.5l4.7-1.8zM19 15l.8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8zM5 15l.6 1.4L7 17l-1.4.6L5 19l-.6-1.4L3 17l1.4-.6z";
 const ARROW_RIGHT = "M5 12h14M13 6l6 6-6 6";
 
-const inputClass = `h-[42px] w-full rounded-[8px] border border-[#e2e8f0] bg-white px-4 text-[14px] leading-[24px] text-[#334155] outline-none placeholder:text-[#94a3b8] focus:border-[#1e293b] ${fontRegular}`;
+const inputClass = "field";
 const labelClass = `text-[14px] leading-[20px] text-[#1e293b] ${fontSemi}`;
 const yellowButton = `flex h-[44px] w-full max-w-[260px] items-center justify-center gap-2 rounded-[8px] bg-[#ffb20d] px-4 text-[16px] leading-[20px] text-[#1e293b] transition hover:bg-[#faa104] ${fontMedium}`;
 const inlineLink = "text-[#faa104] underline transition hover:text-[#c98003]";
 
 function Select({ label, value, options, onChange, error }: { label: string; value: string; options: { value: string; label: string }[]; onChange: (value: string) => void; error?: boolean }) {
   return (
-    <div className={`[&_button[aria-haspopup]]:h-[42px] [&_ul]:max-h-[240px] [&_ul]:w-full [&_ul]:overflow-y-auto ${error ? "[&_button[aria-haspopup]]:border-[#f87171]" : ""}`}>
+    <div className={`[&_ul]:max-h-[240px] [&_ul]:w-full [&_ul]:overflow-y-auto ${error ? "[&_button[aria-haspopup]]:border-[#f87171]" : ""}`}>
       <FilterSelect plain label={label} value={value} onChange={onChange} options={options} />
     </div>
   );
@@ -199,7 +199,7 @@ function StartFlow() {
         <label htmlFor="live-title" className={labelClass}>
           Live Course Title
         </label>
-        <input id="live-title" value={title} maxLength={TITLE_LIMIT} onChange={(e) => setTitle(e.target.value)} placeholder="e.g. Learn Blender in 60 minutes" className={`mt-2 ${inputClass} h-[50px] ${attempted && !title.trim() ? "border-[#f87171]" : ""}`} />
+        <input id="live-title" value={title} maxLength={TITLE_LIMIT} onChange={(e) => setTitle(e.target.value)} placeholder="e.g. Learn Blender in 60 minutes" className={`mt-2 ${inputClass} ${attempted && !title.trim() ? "border-[#f87171]" : ""}`} />
         <div className="mt-1 flex justify-between gap-3 text-[12px] leading-[18px]">
           <span className={`text-[#dc2626] ${fontRegular}`}>{attempted && !title.trim() ? "This is required" : ""}</span>
           <span className={`text-[#64748b] ${fontRegular}`}>{TITLE_LIMIT - title.length} characters left!</span>
@@ -226,7 +226,7 @@ function PointList({ placeholder, values, onChange, keepFirst, counterOnFirst, a
           const counter = counterOnFirst && i === 0;
           return (
             <li key={i} className="flex items-center gap-3">
-              <div className={`flex h-[42px] min-w-0 flex-1 items-center gap-2 rounded-[8px] border border-[#e2e8f0] bg-white pl-4 pr-3 focus-within:border-[#1e293b] ${counter ? "md:mr-0" : ""}`}>
+              <div className={`field-box min-w-0 flex-1 ${counter ? "md:mr-0" : ""}`}>
                 <input aria-label={`${label} ${i + 1}`} value={value} maxLength={POINT_LIMIT} onChange={(e) => onChange(values.map((v, j) => (j === i ? e.target.value : v)))} placeholder={placeholder} className={`min-w-0 flex-1 bg-transparent text-[14px] leading-[24px] text-[#334155] outline-none placeholder:text-[#94a3b8] ${fontRegular}`} />
                 {counter ? (
                   <span className={`shrink-0 text-[14px] text-[#cbd5e1] ${fontRegular}`}>{POINT_LIMIT - value.length}</span>
@@ -399,7 +399,7 @@ function ClassSection({ draft, update }: SectionProps) {
           </label>
           <div className="mt-2 flex">
             <input id="class-duration" type="number" min={1} value={draft.duration} onChange={(e) => update({ duration: e.target.value })} placeholder="60" className={`${inputClass} rounded-r-none`} />
-            <span className={`flex h-[42px] shrink-0 items-center rounded-r-[8px] border border-l-0 border-[#e2e8f0] bg-[#f1f5f9] px-3.5 text-[14px] text-[#475569] ${fontRegular}`}>Minute</span>
+            <span className={`flex h-[36px] shrink-0 items-center rounded-r-[8px] border border-l-0 border-[#e2e8f0] bg-[#f1f5f9] px-3.5 text-[14px] text-[#475569] ${fontRegular}`}>Minute</span>
           </div>
         </div>
         <div>

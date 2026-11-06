@@ -260,7 +260,7 @@ function NewFeatured({ onCreate }: { onCreate: (lecture: string, title: string, 
       <div className="flex max-w-[815px] flex-col gap-4">
         <div className="flex flex-col gap-2">
           <p className={label}>Select Lecture</p>
-          <div className="[&_button[aria-haspopup]]:h-[42px] [&_ul]:w-full">
+          <div className="[&_ul]:w-full">
             <FilterSelect plain label="Select Lecture" value={lecture} onChange={setLecture} options={[{ value: "", label: "Choose value" }, ...LECTURES.map((l) => ({ value: l, label: l }))]} />
           </div>
         </div>
@@ -268,7 +268,7 @@ function NewFeatured({ onCreate }: { onCreate: (lecture: string, title: string, 
           <label htmlFor="qa-title" className={label}>
             Question title
           </label>
-          <div className="flex h-[42px] items-center gap-2 rounded-[8px] border border-[#e2e8f0] px-4 focus-within:border-[#1e293b]">
+          <div className="field-box">
             <input id="qa-title" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Type the question title" className={`min-w-0 flex-1 bg-transparent text-[14px] leading-[24px] text-[#1e293b] outline-none placeholder:text-[#94a3b8] ${fontRegular}`} />
             {title && (
               <button type="button" onClick={() => setTitle("")} aria-label="Clear question title" className="flex shrink-0 transition hover:opacity-70">

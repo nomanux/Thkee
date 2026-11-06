@@ -320,7 +320,7 @@ function NewChat({ onPick, onBack }: { onPick: (name: string) => void; onBack: (
         <button type="button" onClick={onBack} aria-label="Back to messages" className="flex size-8 shrink-0 items-center justify-center rounded-full text-[#334155] hover:bg-[#f1f5f9] md:hidden">
           <Chevron className="size-5 rotate-90" />
         </button>
-        <label className="flex h-[44px] flex-1 items-center gap-2.5 rounded-[8px] border border-[#334155] bg-white px-4">
+        <label className="field-box flex-1">
           <SearchIcon />
           <input autoFocus value={query} onChange={(e) => setQuery(e.target.value)} onKeyDown={(e) => e.key === "Escape" && onBack()} placeholder="Search user or chat" aria-label="Search user or chat" className={`min-w-0 flex-1 bg-transparent text-[16px] text-[#0f172a] outline-none placeholder:text-[#94a3b8] md:text-[14px] ${fontRegular}`} />
         </label>
@@ -403,7 +403,7 @@ export default function MessagesPage() {
                 Create New
               </button>
               {!creating && (
-                <label className="flex h-[42px] items-center gap-2.5 rounded-[8px] bg-[#f1f5f9] px-4">
+                <label className="field-box">
                   <SearchIcon />
                   <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search user or chat" aria-label="Search user or chat" className={`min-w-0 flex-1 bg-transparent text-[16px] text-[#0f172a] outline-none placeholder:text-[#94a3b8] md:text-[14px] ${fontRegular}`} />
                 </label>

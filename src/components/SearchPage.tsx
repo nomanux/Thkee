@@ -327,7 +327,7 @@ export default function SearchPage({ params }: { params: SearchParams }) {
 
   const sidebar = (
     <div className="flex flex-col gap-6">
-      <label className="flex h-[44px] items-center gap-2 rounded-[10px] border border-[#e2e8f0] bg-white px-3.5 focus-within:border-[#0d5c4b] focus-within:ring-2 focus-within:ring-[#0d5c4b]/15">
+      <label className="field-box">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
           <circle cx="11" cy="11" r="7" />
           <path d="M20 20l-3.5-3.5" />
@@ -510,7 +510,7 @@ export default function SearchPage({ params }: { params: SearchParams }) {
                   {results.length} {results.length === 1 ? "course" : "courses"} found
                 </span>
                 <div className="flex items-center gap-2">
-                  <button type="button" onClick={() => setDrawer(true)} className={`flex h-10 items-center gap-2 rounded-[10px] border border-[#cbd5e1] px-3.5 text-[14px] text-[#0f172a] lg:hidden ${fontMedium}`}>
+                  <button type="button" onClick={() => setDrawer(true)} className={`flex h-9 items-center gap-2 rounded-[8px] border border-[#e2e8f0] px-3 text-[14px] text-[#0f172a] lg:hidden ${fontMedium}`}>
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
                       <path d="M4 6h16M7 12h10M10 18h4" />
                     </svg>
@@ -519,7 +519,7 @@ export default function SearchPage({ params }: { params: SearchParams }) {
                   </button>
                   <label className={`flex items-center gap-2 text-[14px] text-[#64748b] ${fontRegular}`}>
                     <span className="hidden sm:inline">Sort by:</span>
-                    <select value={sort} onChange={(e) => setSort(e.target.value)} className={`h-10 rounded-[10px] border border-[#cbd5e1] bg-white px-3 text-[14px] text-[#0f172a] ${fontMedium}`}>
+                    <select value={sort} onChange={(e) => setSort(e.target.value)} className={"field w-auto"}>
                       {Object.keys(sorters).map((s) => (
                         <option key={s}>{s}</option>
                       ))}

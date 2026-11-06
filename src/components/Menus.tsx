@@ -45,7 +45,7 @@ export function FilterSelect({
         aria-label={plain ? `${label}: ${options.find((o) => o.value === value)?.label ?? ""}` : undefined}
         aria-expanded={open}
         onClick={() => setOpen((o) => !o)}
-        className={`flex items-center gap-2 border border-[#e2e8f0] bg-white text-[#64748b] transition hover:border-[#cbd5e1] ${plain ? "h-[36px] w-full justify-between rounded-[8px] px-3 text-[14px] tracking-[-0.01px]" : large ? "h-[34px] rounded-[8px] pl-3 pr-2 text-[14px] tracking-[-0.01px]" : "h-[32px] rounded-[6px] px-3 text-[12px]"} ${fontRegular}`}
+        className={`flex items-center gap-2 border border-[#e2e8f0] bg-white text-[#64748b] transition hover:border-[#cbd5e1] ${plain ? "h-[36px] w-full justify-between rounded-[8px] px-3 text-[14px] tracking-[-0.01px] shadow-[0_1px_2px_rgba(15,23,42,0.05)] outline-none focus:border-[#faa104] focus:ring-3 focus:ring-[#ffb20d]/20" : large ? "h-[34px] rounded-[8px] pl-3 pr-2 text-[14px] tracking-[-0.01px]" : "h-[32px] rounded-[6px] px-3 text-[12px]"} ${fontRegular}`}
       >
         <span className="whitespace-nowrap">
           {plain ? (

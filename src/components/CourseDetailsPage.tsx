@@ -672,7 +672,7 @@ function Reviews({ course, ratingsCount }: { course: Course; ratingsCount: numbe
     notify("Thanks! Your review is posted ✓");
   };
 
-  const inputClass = `w-full rounded-[10px] border border-[#cbd5e1] bg-white px-4 py-3 text-[15px] text-[#0f172a] outline-none transition placeholder:text-[#94a3b8] focus:border-[#0d5c4b] focus:ring-2 focus:ring-[#0d5c4b]/20 ${fontRegular}`;
+  const inputClass = "field";
 
   return (
     <>

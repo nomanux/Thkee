@@ -972,7 +972,7 @@ function Player({ course }: { course: Course }) {
                 </span>
               </div>
               <div className="px-6 py-4">
-                <label className="flex h-[38px] items-center gap-2 rounded-[6px] border border-[#cbd5e1] px-3 focus-within:border-[#1e293b]">
+                <label className="field-box">
                   <Svg className="size-[18px] text-[#0f172a]" stroke={2}>
                     <circle cx="11" cy="11" r="7" />
                     <path d="M20 20l-3.5-3.5" />
@@ -982,7 +982,7 @@ function Player({ course }: { course: Course }) {
                     onChange={(e) => setSearch(e.target.value)}
                     placeholder="Search here"
                     aria-label="Search lessons"
-                    className={`min-w-0 flex-1 bg-transparent text-[13px] text-[#0f172a] outline-none placeholder:text-[#94a3b8] ${fontRegular}`}
+                    className={`min-w-0 flex-1 bg-transparent text-[16px] md:text-[14px] text-[#0f172a] outline-none placeholder:text-[#94a3b8] ${fontRegular}`}
                   />
                 </label>
               </div>
@@ -1816,11 +1816,11 @@ function QaTab({
       </div>
     )
 
-  const fieldCls = `w-full rounded-[6px] border border-[#cbd5e1] bg-white px-3 text-[16px] text-[#0f172a] outline-none placeholder:text-[#94a3b8] focus:border-[#1e293b] md:text-[14px] ${fontRegular}`
+  const fieldCls = "field"
 
   return (
     <div ref={rootRef} className="flex scroll-mt-[140px] flex-col gap-6">
-      <label className="flex h-[44px] items-center gap-3 rounded-[6px] border border-[#94a3b8] bg-white px-3 focus-within:border-[#1e293b]">
+      <label className="field-box">
         <Svg className="size-[18px] shrink-0 text-[#475569]" stroke={2}>
           <circle cx="11" cy="11" r="7" />
           <path d="M20 20l-3.5-3.5" />
@@ -1867,7 +1867,7 @@ function QaTab({
             onChange={(e) => setTitle(e.target.value)}
             placeholder="Question title"
             aria-label="Question title"
-            className={`h-[44px] ${fieldCls}`}
+            className={fieldCls}
           />
           <textarea
             value={text}
@@ -1875,7 +1875,7 @@ function QaTab({
             rows={4}
             placeholder="What would you like to ask the instructor or other learners?"
             aria-label="Your question"
-            className={`resize-y py-2 ${fieldCls}`}
+            className={fieldCls}
           />
           <div className="flex items-center justify-end gap-3">
             <button
@@ -2050,7 +2050,7 @@ function ReviewForm({
         rows={4}
         placeholder="Share what you liked and what could be better"
         aria-label="Your review"
-        className={`w-full resize-y rounded-[6px] border border-[#cbd5e1] bg-white px-3 py-2 text-[16px] text-[#0f172a] outline-none placeholder:text-[#94a3b8] focus:border-[#1e293b] md:text-[14px] ${fontRegular}`}
+        className={"field"}
       />
       {error && (
         <p className={`text-[14px] text-[#dc2626] ${fontRegular}`}>{error}</p>

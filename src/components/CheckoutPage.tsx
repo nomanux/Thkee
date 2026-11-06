@@ -8,7 +8,7 @@ const countries = ["Saudi Arabia", "United Arab Emirates", "Kuwait", "Qatar", "B
 const savedCard = SAVED_CARD;
 
 const label = `text-[14px] text-[#1e293b] ${fontMedium}`;
-const input = `h-[42px] w-full rounded-[6px] border border-[#e2e8f0] bg-white px-3.5 text-[14px] text-[#0f172a] outline-none transition placeholder:text-[#94a3b8] focus:border-[#1e293b] ${fontRegular}`;
+const input = "field";
 
 type Method = "card" | "paypal" | "saved";
 
@@ -177,14 +177,11 @@ export default function CheckoutPage() {
                           Choose country<span className="text-[#ef4444]">*</span>
                         </span>
                         <span className="relative">
-                          <select value={country} onChange={(e) => setCountry(e.target.value)} className={`${input} appearance-none pr-10 shadow-[0_1px_3px_rgba(15,23,42,0.08)]`}>
+                          <select value={country} onChange={(e) => setCountry(e.target.value)} className={input}>
                             {countries.map((c) => (
                               <option key={c}>{c}</option>
                             ))}
                           </select>
-                          <svg className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 text-[#1e293b]" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" aria-hidden="true">
-                            <path d="M6 9l6 6 6-6" />
-                          </svg>
                         </span>
                       </label>
                     </div>

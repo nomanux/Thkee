@@ -7,7 +7,7 @@ import { CourseThumb } from "./Overlays";
 const reasons = ["The course isn't what I expected", "The content quality is poor", "The instructor is hard to understand", "I bought it by mistake", "I found a better course", "Other"];
 
 const fontSubheading = "font-['Instrument_Sans:Medium'] font-medium";
-const fieldBase = `w-full rounded-[8px] border bg-white px-4 text-[16px] outline-none transition focus:border-[#faa104] md:text-[14px] ${fontRegular}`;
+const fieldBase = "field";
 
 function SectionTitle({ children }: { children: ReactNode }) {
   return (
@@ -148,7 +148,7 @@ export default function RefundRequestPage({ orderId, courseId }: { orderId: stri
               aria-invalid={showError && !reason}
               aria-describedby={showError && !reason ? "refund-reason-error" : undefined}
               onChange={(e) => setReason(e.target.value)}
-              className={`${fieldBase} h-[42px] appearance-none pr-10 ${reason ? "text-[#0f172a]" : "text-[#94a3b8]"} ${showError && !reason ? "border-[#ef4444]" : "border-[#e2e8f0]"}`}
+              className={`${fieldBase} ${reason ? "" : "text-[#94a3b8]"} ${showError && !reason ? "border-[#ef4444]" : ""}`}
             >
               <option value="" disabled>
                 Choose your reason
@@ -159,9 +159,6 @@ export default function RefundRequestPage({ orderId, courseId }: { orderId: stri
                 </option>
               ))}
             </select>
-            <svg viewBox="0 0 24 24" className="pointer-events-none absolute right-4 top-1/2 size-4 -translate-y-1/2 text-[#475569]" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-              <path d="M6 9l6 6 6-6" />
-            </svg>
           </div>
           {showError && !reason && (
             <p id="refund-reason-error" className={`text-[12px] leading-[18px] text-[#dc2626] ${fontRegular}`}>
@@ -174,7 +171,7 @@ export default function RefundRequestPage({ orderId, courseId }: { orderId: stri
           <label htmlFor="refund-description" className={`text-[14px] leading-[20px] text-[#0f172a] ${fontMedium}`}>
             Description
           </label>
-          <textarea id="refund-description" value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Please provide additional details." className={`${fieldBase} h-[150px] resize-y border-[#e2e8f0] py-3 text-[#0f172a] leading-[22px] placeholder:text-[#94a3b8]`} />
+          <textarea id="refund-description" value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Please provide additional details." className={`${fieldBase} h-[120px]`} />
         </div>
 
         <button type="button" onClick={submit} className={`mt-8 h-[44px] w-full rounded-[8px] bg-[#ffb20d] text-[16px] text-[#1e293b] transition hover:bg-[#faa104] sm:w-[153px] ${fontMedium}`}>

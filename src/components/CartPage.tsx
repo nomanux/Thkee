@@ -146,7 +146,7 @@ export default function CartPage() {
     .sort((a, b) => Number(cartCategories.has(b.category)) - Number(cartCategories.has(a.category)) || b.students - a.students)
     .slice(0, 4);
   const smallInput = (error: string) =>
-    `h-[36px] min-w-0 flex-1 rounded-[6px] border bg-white px-3 text-[14px] text-[#0f172a] outline-none transition focus:border-[#1e293b] ${error ? "border-[#ef4444]" : "border-[#cbd5e1]"} ${fontMedium}`;
+    `field min-w-0 flex-1 ${error ? "border-[#ef4444]" : ""}`;
   const applyBtn = `h-[36px] shrink-0 rounded-[6px] border border-[#3fb27f] px-3.5 text-[14px] text-[#3fb27f] transition hover:bg-[#3fb27f] hover:text-white ${fontMedium}`;
 
   return (

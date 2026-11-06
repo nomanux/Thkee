@@ -150,7 +150,7 @@ export function AssignmentPanel({
                     onChange={(e) => setAnswers((a) => a.map((v, j) => (j === i ? e.target.value : v)))}
                     rows={4}
                     placeholder="Your Answer..."
-                    className={`w-full resize-y rounded-[8px] border border-[#e2e8f0] px-4 py-3 text-[15px] leading-[24px] text-[#0f172a] outline-none placeholder:text-[#94a3b8] focus:border-[#5b1bf0] focus:ring-2 focus:ring-[#5b1bf0]/10 ${fontRegular}`}
+                    className="field"
                   />
                 </li>
               ))}

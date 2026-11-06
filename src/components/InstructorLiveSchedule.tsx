@@ -107,7 +107,7 @@ const Dots = (
 const dotsClass = "flex size-8 items-center justify-center rounded-full text-[#334155] transition hover:bg-[#f1f5f9]";
 const yellowButton = `flex h-9 shrink-0 items-center gap-2 rounded-[8px] bg-[#ffb20d] px-3 text-[14px] leading-[20px] text-[#1e293b] transition hover:bg-[#faa104] ${fontMedium}`;
 const fieldLabel = `text-[14px] leading-[20px] text-[#475569] ${fontRegular}`;
-const dateInput = `h-[42px] w-full rounded-[8px] border border-[#e2e8f0] bg-white px-3 text-[14px] text-[#1e293b] outline-none focus:border-[#1e293b] disabled:cursor-not-allowed disabled:bg-[#f8fafc] disabled:text-[#94a3b8] ${fontRegular}`;
+const dateInput = "field";
 const smallSelect = `h-7 cursor-pointer rounded-[6px] border-0 bg-[#f1f5f9] px-1.5 text-[14px] text-[#1e293b] outline-none focus:ring-2 focus:ring-[#1e293b]/30 disabled:cursor-not-allowed disabled:text-[#94a3b8] ${fontRegular}`;
 const seatIcon = "M4 4h16v16H4zM8 12l3 3 5-6";
 const peopleIcon = "M16 20v-1a4 4 0 00-4-4H7a4 4 0 00-4 4v1M9.5 11a3.5 3.5 0 100-7 3.5 3.5 0 000 7zM21 20v-1a4 4 0 00-3-3.8M16 4.2a3.5 3.5 0 010 6.6";
@@ -143,7 +143,7 @@ function SessionList({ items, setItems, ctx, initialEditId }: { items: ListItem[
         {items.map((item) =>
           editing?.id === item.id ? (
             <li key={item.id} className="flex flex-wrap items-center gap-2 rounded-[8px] border border-[#1e293b] bg-white p-2">
-              <input type="date" aria-label="Session date" value={editing.date} min={today} onChange={(e) => setEditing({ ...editing, date: e.target.value })} className={`${dateInput} h-[35px] w-auto min-w-0 flex-1`} />
+              <input type="date" aria-label="Session date" value={editing.date} min={today} onChange={(e) => setEditing({ ...editing, date: e.target.value })} className={`${dateInput} w-auto min-w-0 flex-1`} />
               <TimeSelect value={editing.start} label="Session start time" onChange={(start) => setEditing({ ...editing, start })} />
               <button type="button" aria-label="Save session" onClick={saveEdit} className="flex size-[35px] items-center justify-center rounded-[6px] bg-[#ffb20d] text-[#1e293b] transition hover:bg-[#faa104]">
                 <Icon path={CHECK} className="size-4" />

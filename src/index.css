@@ -1,5 +1,18 @@
 @import "tailwindcss";
 
+@theme {
+  --color-primary-50: #fff9f0;
+  --color-primary-100: #fff0d7;
+  --color-primary-200: #fee3b4;
+  --color-primary-300: #fdce7c;
+  --color-primary-400: #fcb740;
+  --color-primary-500: #ffb20d;
+  --color-primary-600: #faa104;
+  --color-primary-700: #c98003;
+  --color-primary-800: #976002;
+  --color-primary-900: #613f00;
+}
+
 @font-face {
   font-family: "Instrument Sans:Bold";
   src: url("https://static.figma.com/font/InstrumentSans_wdth_wght__1")
@@ -199,4 +212,76 @@ body {
 @media (prefers-reduced-motion: reduce) {
   .neon-badge, .neon-btn, .overlay-fade, .modal-in, .drawer-in, .toast-in, .pop-in,
   .hero-drift, .hero-twinkle, .hero-shimmer, .hero-pulse, .hero-marquee, .hero-rise, .fade-up { animation: none; }
+}
+
+/* Shared form fields. Utilities on an element still override these, e.g. "field w-auto". */
+@layer components {
+  .field,
+  .field-box {
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    background-color: #fff;
+    padding-inline: 12px;
+    box-shadow: 0 1px 2px rgb(15 23 42 / 0.05);
+    transition:
+      border-color 0.15s,
+      box-shadow 0.15s;
+  }
+  .field {
+    width: 100%;
+    color: #0f172a;
+    font-family: "Inter:Regular";
+    font-weight: 400;
+    /* 16px on phones stops iOS zooming in when a field is focused. */
+    font-size: 16px;
+    line-height: 20px;
+    outline: none;
+  }
+  input.field,
+  select.field {
+    height: 36px;
+  }
+  textarea.field {
+    display: block;
+    min-height: 88px;
+    padding-block: 8px;
+    resize: vertical;
+  }
+  select.field {
+    appearance: none;
+    cursor: pointer;
+    padding-right: 32px;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+    background-position: right 10px center;
+    background-repeat: no-repeat;
+    background-size: 14px;
+  }
+  .field::placeholder {
+    color: #94a3b8;
+  }
+  .field-box {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    height: 36px;
+  }
+  .field:hover,
+  .field-box:hover {
+    border-color: #cbd5e1;
+  }
+  .field:focus,
+  .field-box:focus-within {
+    border-color: #faa104;
+    box-shadow: 0 0 0 3px rgb(255 178 13 / 0.2);
+  }
+  .field:disabled {
+    cursor: not-allowed;
+    background-color: #f8fafc;
+    color: #94a3b8;
+  }
+  @media (min-width: 48rem) {
+    .field {
+      font-size: 14px;
+    }
+  }
 }

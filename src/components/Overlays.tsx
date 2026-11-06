@@ -4,7 +4,7 @@ import { fontBold, fontFor, fontHeading, fontMedium, fontRegular, fontSemi } fro
 import { ExpertAvatar } from "./Experts";
 import { formatPrice, useApp, openLearning } from "../store";
 
-const inputClass = `w-full rounded-[10px] border border-[#cbd5e1] bg-white px-4 py-3 text-[16px] text-[#0f172a] outline-none transition focus:border-[#0d5c4b] focus:ring-2 focus:ring-[#0d5c4b]/20 ${fontRegular}`;
+const inputClass = "field";
 const primaryBtn = `inline-flex h-[48px] items-center justify-center gap-2 rounded-[8px] bg-[#ffb20d] px-6 text-[16px] text-[#1e293b] transition hover:bg-[#faa104] disabled:opacity-50 ${fontSemi}`;
 const darkBtn = `inline-flex h-[44px] items-center justify-center gap-2 rounded-[8px] bg-[#0d5c4b] px-5 text-[15px] text-white transition hover:bg-[#0b4c3e] ${fontSemi}`;
 const isEmail = (v: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v.trim());
@@ -181,12 +181,12 @@ function Catalog({ initial }: { initial: { category?: string; query?: string; li
             <input type="checkbox" checked={liveOnly} onChange={(e) => setLiveOnly(e.target.checked)} className="size-4 accent-[#0d5c4b]" />
             Live classes only
           </label>
-          <select value={level} onChange={(e) => setLevel(e.target.value)} className="rounded-[8px] border border-[#cbd5e1] bg-white px-3 py-2" aria-label="Level">
+          <select value={level} onChange={(e) => setLevel(e.target.value)} className="field w-auto" aria-label="Level">
             {["All levels", "Beginner", "Intermediate", "Advanced"].map((l) => (
               <option key={l}>{l}</option>
             ))}
           </select>
-          <select value={sort} onChange={(e) => setSort(e.target.value)} className="rounded-[8px] border border-[#cbd5e1] bg-white px-3 py-2" aria-label="Sort by">
+          <select value={sort} onChange={(e) => setSort(e.target.value)} className="field w-auto" aria-label="Sort by">
             {["Most popular", "Highest rated", "Price: low to high", "Price: high to low"].map((s) => (
               <option key={s}>{s}</option>
             ))}

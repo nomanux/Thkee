@@ -5,7 +5,6 @@ import { Checkbox } from "./InstructorAssignments";
 import { ActionMenu } from "./Menus";
 import { Shell } from "./Overlays";
 
-const imgChevron = "/assets/423e1.svg";
 const imgClose = "/assets/53e9a.svg";
 const imgPlusSmall = "/assets/51771.svg";
 
@@ -106,14 +105,13 @@ export function Toggle({ on, label, onChange }: { on: boolean; label: string; on
 export function TimeSelect({ value, label, onChange, width = "w-[105px]", disabled }: { value: number; label: string; onChange: (minutes: number) => void; width?: string; disabled?: boolean }) {
   return (
     <span className={`relative inline-flex ${width}`}>
-      <select aria-label={label} value={value} disabled={disabled} onChange={(e) => onChange(Number(e.target.value))} className={`h-[35px] w-full cursor-pointer appearance-none disabled:cursor-not-allowed disabled:opacity-50 rounded-[8px] border border-[#e2e8f0] bg-white pl-3 pr-7 text-[14px] leading-[24px] tracking-[-0.01px] text-[#334155] outline-none focus:border-[#1e293b] ${fontRegular}`}>
+      <select aria-label={label} value={value} disabled={disabled} onChange={(e) => onChange(Number(e.target.value))} className="field pl-3 pr-7">
         {TIME_OPTIONS.map((minutes) => (
           <option key={minutes} value={minutes}>
             {formatInput(minutes)}
           </option>
         ))}
       </select>
-      <img src={imgChevron} alt="" width={16} height={16} className="pointer-events-none absolute right-2 top-[10px] size-4" />
     </span>
   );
 }
@@ -165,7 +163,7 @@ function NameDialog({ onClose, onContinue }: { onClose: () => void; onContinue: 
         <label htmlFor="schedule-name" className={`text-[16px] leading-[24px] text-[#0f172a] ${fontRegular}`}>
           Name
         </label>
-        <input id="schedule-name" value={name} onChange={(e) => setName(e.target.value)} placeholder="Working hour" className={`h-[42px] rounded-[8px] border border-[#e2e8f0] px-4 text-[16px] text-[#334155] outline-none placeholder:text-[#94a3b8] focus:border-[#1e293b] ${fontRegular}`} />
+        <input id="schedule-name" value={name} onChange={(e) => setName(e.target.value)} placeholder="Working hour" className="field" />
       </form>
       <DialogFooter onCancel={onClose} confirmLabel="Continue" onConfirm={submit} />
     </Shell>

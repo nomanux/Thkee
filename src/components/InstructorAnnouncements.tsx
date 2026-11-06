@@ -83,7 +83,7 @@ function ModalHeader({ title, onClose }: { title: string; onClose: () => void })
 }
 
 const fieldLabel = `text-[14px] leading-[20px] text-[#1e293b] ${fontMedium}`;
-const fieldInput = `h-[42px] w-full rounded-[8px] border border-[#e2e8f0] px-4 text-[14px] leading-[24px] tracking-[-0.01px] text-[#334155] outline-none placeholder:text-[#94a3b8] focus:border-[#1e293b] disabled:cursor-not-allowed disabled:text-[#94a3b8] ${fontRegular}`;
+const fieldInput = "field";
 
 function AnnouncementFields({ title, setTitle, initial, onBody }: { title: string; setTitle: (v: string) => void; initial?: Announcement; onBody: (text: string, html: string) => void }) {
   return (
@@ -148,7 +148,7 @@ export function CreateModal({ fixedCourse, onClose, onPublish }: { fixedCourse?:
         ) : (
           <div className="flex flex-col gap-2">
             <p className={fieldLabel}>Course</p>
-            <div className="[&_button[aria-haspopup]]:h-[42px] [&_ul]:w-full">
+            <div className="[&_ul]:w-full">
               <FilterSelect plain label="Course" value={courseId} onChange={setCourseId} options={[{ value: "", label: "Choose a course" }, ...COURSES.map((c) => ({ value: c.id, label: c.title }))]} />
             </div>
           </div>

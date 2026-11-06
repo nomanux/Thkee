@@ -105,7 +105,7 @@ function NameDialog({ title, label, initial, onClose, onSave }: { title: string;
         <label htmlFor="session-name" className={`text-[14px] leading-[20px] text-[#0f172a] ${fontMedium}`}>
           {label}
         </label>
-        <input id="session-name" value={name} onChange={(e) => setName(e.target.value)} className={`h-[42px] rounded-[8px] border border-[#e2e8f0] px-4 text-[14px] text-[#334155] outline-none focus:border-[#1e293b] ${fontRegular}`} />
+        <input id="session-name" value={name} onChange={(e) => setName(e.target.value)} className="field" />
       </form>
       <div className="flex items-center justify-end gap-8 border-t border-[#e2e8f0] px-6 py-4">
         <button type="button" onClick={onClose} className={`text-[16px] leading-[24px] text-[#1e293b] transition hover:text-[#64748b] ${fontMedium}`}>
@@ -533,7 +533,7 @@ function ParticipantsTab() {
   return (
     <div className="p-6">
       <div className="flex flex-wrap items-center justify-between gap-4">
-        <label className="flex h-9 w-full max-w-[378px] items-center gap-2.5 rounded-[8px] border border-[#e2e8f0] px-3 focus-within:border-[#1e293b]">
+        <label className="field-box w-full max-w-[378px]">
           <Icon path="M11 19a8 8 0 100-16 8 8 0 000 16zM21 21l-4.3-4.3" className="size-[18px] shrink-0 text-[#64748b]" />
           <input type="search" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search" aria-label="Search participants" className={`min-w-0 flex-1 bg-transparent text-[14px] leading-[20px] text-[#1e293b] outline-none placeholder:text-[#94a3b8] ${fontRegular}`} />
         </label>

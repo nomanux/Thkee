@@ -124,7 +124,7 @@ function ReviewCard({ review, state, showCourse, onChange }: { review: Review; s
             rows={3}
             aria-label={`Reply to ${review.student}`}
             placeholder="Write your reply in here..."
-            className={`min-h-[90px] min-w-0 flex-1 rounded-[8px] border border-[#e2e8f0] px-4 py-3 text-[14px] leading-[24px] text-[#1e293b] outline-none placeholder:text-[#94a3b8] focus:border-[#ffb20d] ${fontRegular}`}
+            className="field min-h-[90px] min-w-0 flex-1"
           />
           <div className="flex shrink-0 gap-3 md:flex-col">
             <button type="submit" className={`flex h-[38px] w-[90px] items-center justify-center rounded-[8px] bg-[#ffb20d] text-[14px] leading-[20px] text-[#1e293b] transition hover:bg-[#faa104] ${fontMedium}`}>

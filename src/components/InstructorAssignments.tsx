@@ -290,7 +290,7 @@ function QuestionReviewCard({
           }}
           className="flex min-h-[64px] items-center gap-4 bg-[#f8fafc] px-6 py-2.5"
         >
-          <div className="flex h-[42px] min-w-0 flex-1 items-center gap-2 rounded-[8px] bg-white px-4 focus-within:ring-2 focus-within:ring-[#ffb20d]/50">
+          <div className="field-box min-w-0 flex-1">
             <input
               autoFocus
               value={draft}

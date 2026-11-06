@@ -402,7 +402,7 @@ export function ArticleReader({
                   rows={4}
                   placeholder="Add a note here."
                   aria-label="Note"
-                  className={`w-full resize-y rounded-[6px] border border-[#cbd5e1] px-3 py-2 text-[16px] text-[#0f172a] outline-none placeholder:text-[#64748b] focus:border-[#1e293b] md:text-[14px] ${fontRegular}`}
+                  className={"field"}
                 />
                 <div className="grid grid-cols-2 gap-2">
                   <button type="button" onClick={() => setPop(null)} className={`h-[36px] rounded-[6px] border border-[#475569] text-[14px] text-[#475569] transition hover:bg-[#f1f5f9] ${fontMedium}`}>
@@ -667,7 +667,7 @@ export function NoteEditor({
               }}
               placeholder="Paste a link"
               aria-label="Link address"
-              className={`h-[32px] min-w-0 flex-1 rounded-[4px] border border-[#cbd5e1] px-2 text-[16px] text-[#0f172a] outline-none focus:border-[#1e293b] md:text-[14px] ${fontRegular}`}
+              className={"field h-[32px] min-w-0 flex-1"}
             />
             <button type="button" onClick={addLink} className={`h-[32px] rounded-[4px] bg-[#f1f5f9] px-3 text-[14px] text-[#0f172a] hover:bg-[#e2e8f0] ${fontMedium}`}>
               Add
@@ -741,7 +741,7 @@ export function NoteEditor({
   );
 }
 
-const selectCls = `h-[40px] rounded-[6px] border border-[#cbd5e1] bg-white px-3 pr-8 text-[14px] text-[#334155] outline-none focus:border-[#1e293b] ${fontRegular}`;
+const selectCls = "field w-auto";
 
 export function NotesPanel({
   notes,

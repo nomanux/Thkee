@@ -6,7 +6,7 @@ const CODE_LENGTH = 6;
 const RESEND_SECONDS = 120;
 
 const primaryBtn = `flex h-[48px] w-full items-center justify-center gap-2 rounded-[8px] bg-[#1e293b] text-[16px] text-white transition hover:bg-[#0f172a] disabled:cursor-not-allowed disabled:opacity-50 ${fontMedium}`;
-const inputCls = `h-[48px] w-full rounded-[8px] border border-[#e2e8f0] bg-white px-4 text-[16px] text-[#0f172a] outline-none transition placeholder:text-[#94a3b8] focus:border-[#1e293b] focus:ring-2 focus:ring-[#1e293b]/10 ${fontRegular}`;
+const inputCls = "field";
 
 function Mark() {
   return (
@@ -314,7 +314,7 @@ export default function AuthPage() {
                     autoComplete={key === "first" ? "given-name" : "family-name"}
                     value={names[key]}
                     onChange={(e) => setNames((n) => ({ ...n, [key]: e.target.value }))}
-                    className={`${inputCls} h-[42px]`}
+                    className={inputCls}
                   />
                 </div>
               ))}
