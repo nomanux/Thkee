@@ -30,7 +30,7 @@ const money = (v: number) => `$${v.toFixed(2)}`;
 const titleStyle = { fontVariationSettings: '"wdth" 100' };
 const titleClass = "m-0 font-['Instrument_Sans:Medium'] text-[24px] font-medium leading-[32px] text-[#0f172a]";
 
-function InfoTip({ text, tone = "gray", light }: { text: string; tone?: "gray" | "amber"; light?: boolean }) {
+export function InfoTip({ text, tone = "gray", light }: { text: string; tone?: "gray" | "amber"; light?: boolean }) {
   return (
     <span className="group/tip relative inline-flex shrink-0">
       <button type="button" aria-label={text} className="flex">

@@ -21,7 +21,7 @@ export function ExpertAvatar({ expert, size = 56 }: { expert: Expert; size?: num
   );
 }
 
-function ExpertCard({ expert }: { expert: Expert }) {
+export function ExpertCard({ expert }: { expert: Expert }) {
   const { setOverlay, bookings } = useApp();
   const booking = bookings.find((b) => b.expertId === expert.id);
   return (

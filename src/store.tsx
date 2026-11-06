@@ -13,10 +13,16 @@ export type Overlay =
   | null;
 type Toast = { id: number; message: string };
 export type SearchParams = { q?: string; category?: string; sub?: string; live?: boolean };
-export type Route = { page: "home" } | { page: "login" } | { page: "cart" } | { page: "checkout" } | { page: "my-learning"; tab?: string } | { page: "purchase-history" } | { page: "refund"; orderId: string; courseId: string } | { page: "account"; section: string } | { page: "messages" } | { page: "teach" } | { page: "instructor-start" } | { page: "instructor"; section?: "assignments" | "reports" | "reviews" | "qa" | "co-instructors" | "announcements" | "availability" | "apps" | "sessions" | "schedule"; announcementCourse?: string; scheduleId?: string; appsView?: "store" | "installed"; sessionSeries?: string; sessionId?: string; sessionCourse?: string; submissionId?: string; reportView?: "revenue"; reportMonth?: string; questionId?: string; newQuestionCourse?: string } | { page: "live-create"; draftId?: string; section?: string } | { page: "learn"; id: string } | { page: "course"; id: string } | ({ page: "search" } & SearchParams);
+export type Route = { page: "home" } | { page: "login" } | { page: "cart" } | { page: "checkout" } | { page: "my-learning"; tab?: string } | { page: "purchase-history" } | { page: "refund"; orderId: string; courseId: string } | { page: "account"; section: string } | { page: "messages" } | { page: "components" } | { page: "teach" } | { page: "instructor-start" } | { page: "instructor"; section?: "assignments" | "reports" | "reviews" | "qa" | "co-instructors" | "announcements" | "availability" | "apps" | "sessions" | "schedule"; announcementCourse?: string; scheduleId?: string; appsView?: "store" | "installed"; sessionSeries?: string; sessionId?: string; sessionCourse?: string; submissionId?: string; reportView?: "revenue"; reportMonth?: string; questionId?: string; newQuestionCourse?: string } | { page: "live-create"; draftId?: string; section?: string } | { page: "learn"; id: string } | { page: "course"; id: string } | ({ page: "search" } & SearchParams);
 
 function parseRoute(): Route {
+  // Typing /component or /components goes to the hash route the rest of the app uses.
+  if (/^\/components?\/?$/.test(window.location.pathname)) {
+    window.history.replaceState(null, "", "/#/components");
+    return { page: "components" };
+  }
   const hash = window.location.hash;
+  if (hash.startsWith("#/component")) return { page: "components" };
   if (hash.startsWith("#/login")) return { page: "login" };
   if (hash.startsWith("#/cart")) return { page: "cart" };
   if (hash.startsWith("#/checkout")) return { page: "checkout" };
@@ -325,7 +331,7 @@ function useAppState() {
   }, [notify, setHasSavedCard]);
 
   const closeAccount = useCallback(() => {
-    ["thkee.profile", "thkee.privacy", "thkee.notifications", "thkee.threads", "thkee.instructor", "thkee.instructorSurvey", "thkee.instructorAssignments", "thkee.instructorReviews", "thkee.instructorQa", "thkee.instructorQa.votes", "thkee.instructorCoRequests", "thkee.instructorAnnouncements", "thkee.instructorAvailability", "thkee.instructorApps", "thkee.instructorSessions", "thkee.instructorSessions.extras", "thkee.instructorSchedule", "thkee.liveDrafts", "thkee.liveLimitDefaults"].forEach((key) => localStorage.removeItem(key));
+    ["thkee.profile", "thkee.privacy", "thkee.notifications", "thkee.threads", "thkee.instructor", "thkee.instructorSurvey", "thkee.instructorCourses", "thkee.instructorAssignments", "thkee.instructorReviews", "thkee.instructorQa", "thkee.instructorQa.votes", "thkee.instructorCoRequests", "thkee.instructorAnnouncements", "thkee.instructorAvailability", "thkee.instructorApps", "thkee.instructorSessions", "thkee.instructorSessions.extras", "thkee.instructorSchedule", "thkee.liveDrafts", "thkee.liveLimitDefaults"].forEach((key) => localStorage.removeItem(key));
     setUser(null);
     setCartIds([]);
     setPurchasedIds([]);

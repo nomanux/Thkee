@@ -15,6 +15,7 @@ import MyLearningPage from "./components/MyLearningPage";
 import PurchaseHistoryPage from "./components/PurchaseHistoryPage";
 import RefundRequestPage from "./components/RefundRequestPage";
 import SearchPage from "./components/SearchPage";
+import ComponentsPage from "./components/ComponentsPage";
 import CourseDetailsPage from "./components/CourseDetailsPage";
 import HowItWorks from "./components/HowItWorks";
 import Navbar from "./components/Navbar";
@@ -502,6 +503,8 @@ function Site() {
         <TeachPage />
       ) : route.page === "messages" ? (
         <MessagesPage />
+      ) : route.page === "components" ? (
+        <ComponentsPage />
       ) : route.page === "account" ? (
         <AccountSettingsPage section={route.section} />
       ) : route.page === "refund" ? (
@@ -517,7 +520,7 @@ function Site() {
 }
 
 // Signed-in pages people come to for a task get a slim footer instead of the full marketing one.
-const personalPages: string[] = ["account", "messages", "purchase-history", "refund", "my-learning"];
+const personalPages: string[] = ["components", "account", "messages", "purchase-history", "refund", "my-learning"];
 
 function SlimFooter() {
   const { setOverlay } = useApp();

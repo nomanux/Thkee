@@ -17,7 +17,7 @@ function SectionTitle({ children }: { children: ReactNode }) {
   );
 }
 
-function RefundOption({ checked, onSelect, title, note }: { checked: boolean; onSelect: () => void; title: string; note: string }) {
+export function RefundOption({ checked, onSelect, title, note }: { checked: boolean; onSelect: () => void; title: string; note: string }) {
   return (
     <label className={`flex cursor-pointer items-start gap-3 p-4 transition ${checked ? "bg-[#fff9f0]" : "bg-white hover:bg-[#f8fafc]"}`}>
       <input type="radio" name="refund-method" checked={checked} onChange={onSelect} className="peer sr-only" />

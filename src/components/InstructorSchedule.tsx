@@ -149,7 +149,7 @@ const weekNumber = (time: number) => {
   return 1 + Math.round(((date.getTime() - firstWeek.getTime()) / (1440 * MINUTE) - 3 + ((firstWeek.getDay() + 6) % 7)) / 7);
 };
 
-function MiniCalendar({ selected, today, marked, onPick }: { selected: number; today: number; marked: Set<number>; onPick: (day: number) => void }) {
+export function MiniCalendar({ selected, today, marked, onPick }: { selected: number; today: number; marked: Set<number>; onPick: (day: number) => void }) {
   const [month, setMonth] = useState(() => new Date(new Date(selected).getFullYear(), new Date(selected).getMonth(), 1).getTime());
   const first = new Date(month);
   const lead = (first.getDay() + 6) % 7;

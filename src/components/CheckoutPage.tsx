@@ -12,7 +12,7 @@ const input = "field";
 
 type Method = "card" | "paypal" | "saved";
 
-function MadaBadge() {
+export function MadaBadge() {
   return (
     <span className="flex h-[20px] w-[30px] flex-col justify-center gap-[2px] rounded-[3px] bg-[#162f6a] px-[4px]" aria-label="mada">
       <span className="h-[2px] w-full bg-[#84bd00]" />
@@ -21,11 +21,11 @@ function MadaBadge() {
   );
 }
 
-function VisaBadge() {
+export function VisaBadge() {
   return <span className={`flex h-[20px] items-center rounded-[3px] bg-[#1a4c9b] px-1.5 text-[10px] italic tracking-[0.5px] text-white ${fontBold}`}>VISA</span>;
 }
 
-function MastercardBadge() {
+export function MastercardBadge() {
   return (
     <span className="relative flex h-[20px] w-[30px] items-center justify-center rounded-[3px] bg-[#111]" aria-label="Mastercard">
       <span className="absolute left-[6px] size-[11px] rounded-full bg-[#eb001b]" />
@@ -34,7 +34,7 @@ function MastercardBadge() {
   );
 }
 
-function PaypalLogo() {
+export function PaypalLogo() {
   return (
     <span className={`text-[17px] italic tracking-[-0.3px] ${fontBold}`}>
       <span className="text-[#003087]">Pay</span>
@@ -54,7 +54,7 @@ function CardBrand({ number }: { number: string }) {
   );
 }
 
-function MethodRow({ checked, onSelect, title, right }: { checked: boolean; onSelect: () => void; title: string; right: ReactNode }) {
+export function MethodRow({ checked, onSelect, title, right }: { checked: boolean; onSelect: () => void; title: string; right: ReactNode }) {
   return (
     <button
       type="button"

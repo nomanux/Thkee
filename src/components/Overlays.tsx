@@ -105,7 +105,7 @@ function Stars({ rating }: { rating: number }) {
   );
 }
 
-function CourseCard({ course }: { course: Course }) {
+export function CourseCard({ course }: { course: Course }) {
   const { setOverlay, addToCart, enrolledIds } = useApp();
   const enrolled = enrolledIds.includes(course.id);
   return (

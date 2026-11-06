@@ -66,10 +66,10 @@ const sections: { id: string; label: string; icon: ReactNode }[] = [
 const languages = ["English", "Arabic"];
 const timezones = ["(GMT+03:00) Riyadh", "(GMT+04:00) Dubai", "(GMT+03:00) Kuwait", "(GMT+02:00) Cairo", "(GMT+00:00) London", "(GMT+01:00) Paris", "(GMT-05:00) New York", "(GMT+06:00) Dhaka"];
 const socials = [
-  { key: "linkedin", label: "LinkedIn", placeholder: "linkedin.com/in/username", color: "#0a66c2", path: "M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 1 1 0-4.124 2.062 2.062 0 0 1 0 4.124zM7.119 20.452H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z" },
-  { key: "twitter", label: "X (Twitter)", placeholder: "x.com/username", color: "#0f172a", path: "M18.901 1.153h3.68l-8.04 9.19L24 22.846h-7.406l-5.8-7.584-6.638 7.584H.474l8.6-9.83L0 1.154h7.594l5.243 6.932ZM17.61 20.644h2.039L6.486 3.24H4.298Z" },
-  { key: "facebook", label: "Facebook", placeholder: "facebook.com/username", color: "#1877f2", path: "M24 12.073C24 5.405 18.627 0 12 0S0 5.405 0 12.073C0 18.1 4.388 23.094 10.125 24v-8.437H7.078v-3.49h3.047V9.413c0-3.026 1.792-4.697 4.533-4.697 1.312 0 2.686.235 2.686.235v2.971h-1.513c-1.491 0-1.956.93-1.956 1.886v2.264h3.328l-.532 3.49h-2.796V24C19.612 23.094 24 18.1 24 12.073z" },
-  { key: "youtube", label: "YouTube", placeholder: "youtube.com/@channel", color: "#ff0000", path: "M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z" },
+  { key: "linkedin", label: "LinkedIn", prefix: "linkedin.com/in/", match: /^(?:https?:\/\/)?(?:www\.)?linkedin\.com\/(?:in\/)?/i, color: "#0a66c2", path: "M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 1 1 0-4.124 2.062 2.062 0 0 1 0 4.124zM7.119 20.452H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z" },
+  { key: "twitter", label: "X (Twitter)", prefix: "x.com/", match: /^(?:https?:\/\/)?(?:www\.)?(?:x|twitter)\.com\//i, color: "#0f172a", path: "M18.901 1.153h3.68l-8.04 9.19L24 22.846h-7.406l-5.8-7.584-6.638 7.584H.474l8.6-9.83L0 1.154h7.594l5.243 6.932ZM17.61 20.644h2.039L6.486 3.24H4.298Z" },
+  { key: "facebook", label: "Facebook", prefix: "facebook.com/", match: /^(?:https?:\/\/)?(?:www\.)?facebook\.com\//i, color: "#1877f2", path: "M24 12.073C24 5.405 18.627 0 12 0S0 5.405 0 12.073C0 18.1 4.388 23.094 10.125 24v-8.437H7.078v-3.49h3.047V9.413c0-3.026 1.792-4.697 4.533-4.697 1.312 0 2.686.235 2.686.235v2.971h-1.513c-1.491 0-1.956.93-1.956 1.886v2.264h3.328l-.532 3.49h-2.796V24C19.612 23.094 24 18.1 24 12.073z" },
+  { key: "youtube", label: "YouTube", prefix: "youtube.com/@", match: /^(?:https?:\/\/)?(?:www\.)?youtube\.com\//i, color: "#ff0000", path: "M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z" },
 ] as const;
 const MAX_PHOTO_BYTES = 1024 * 1024;
 
@@ -91,7 +91,7 @@ function FieldError({ id, message }: { id: string; message?: string }) {
   );
 }
 
-function TextField({ id, label, value, onChange, placeholder, error, hint, type = "text", required }: { id: string; label: string; value: string; onChange: (value: string) => void; placeholder?: string; error?: string; hint?: string; type?: string; required?: boolean }) {
+export function TextField({ id, label, value, onChange, placeholder, error, hint, type = "text", required }: { id: string; label: string; value: string; onChange: (value: string) => void; placeholder?: string; error?: string; hint?: string; type?: string; required?: boolean }) {
   const describedBy = error ? `${id}-error` : hint ? `${id}-hint` : undefined;
   return (
     <div className="flex flex-col gap-1.5">
@@ -109,21 +109,25 @@ function TextField({ id, label, value, onChange, placeholder, error, hint, type 
   );
 }
 
-function LinkField({ id, label, value, onChange, placeholder, icon, type = "text" }: { id: string; label: string; value: string; onChange: (value: string) => void; placeholder: string; icon: ReactNode; type?: string }) {
+export function LinkField({ id, label, value, onChange, placeholder, prefix, icon, type = "text" }: { id: string; label: string; value: string; onChange: (value: string) => void; placeholder?: string; prefix?: string; icon: ReactNode; type?: string }) {
+  const text = `text-[16px] leading-[20px] md:text-[14px] ${fontRegular}`;
   return (
     <div className="flex min-w-0 flex-col gap-1.5">
       <label htmlFor={id} className={labelClass}>
         {label}
       </label>
-      <div className="relative">
-        <span className="pointer-events-none absolute left-3 top-1/2 flex -translate-y-1/2">{icon}</span>
-        <input id={id} type={type} value={value} onChange={(e) => onChange(e.target.value)} placeholder={placeholder} className={`${fieldBox} pl-9`} />
+      <div className="field-box cursor-text" onClick={(e) => e.currentTarget.querySelector("input")?.focus()}>
+        <span className="flex shrink-0">{icon}</span>
+        <div className="flex min-w-0 flex-1 items-center">
+          {prefix && <span className={`shrink-0 text-[#64748b] ${text}`}>{prefix}</span>}
+          <input id={id} type={type} value={value} onChange={(e) => onChange(e.target.value)} placeholder={placeholder} className={`min-w-0 flex-1 bg-transparent text-[#0f172a] outline-none placeholder:text-[#94a3b8] ${text}`} />
+        </div>
       </div>
     </div>
   );
 }
 
-function SelectField({ id, label, value, onChange, placeholder, options }: { id: string; label: string; value: string; onChange: (value: string) => void; placeholder: string; options: string[] }) {
+export function SelectField({ id, label, value, onChange, placeholder, options }: { id: string; label: string; value: string; onChange: (value: string) => void; placeholder: string; options: string[] }) {
   return (
     <div className="flex flex-col gap-1.5">
       <label htmlFor={id} className={labelClass}>
@@ -145,7 +149,7 @@ function SelectField({ id, label, value, onChange, placeholder, options }: { id:
   );
 }
 
-function CheckField({ checked, onChange, children }: { checked: boolean; onChange: (checked: boolean) => void; children: ReactNode }) {
+export function CheckField({ checked, onChange, children }: { checked: boolean; onChange: (checked: boolean) => void; children: ReactNode }) {
   return (
     <label className={`flex cursor-pointer items-start gap-2 text-[14px] leading-[20px] tracking-[-0.01px] text-[#475569] ${fontRegular}`}>
       <input type="checkbox" checked={checked} onChange={(e) => onChange(e.target.checked)} className="peer sr-only" />
@@ -155,7 +159,7 @@ function CheckField({ checked, onChange, children }: { checked: boolean; onChang
   );
 }
 
-function ToggleRow({ title, description, checked, onChange }: { title: string; description: string; checked: boolean; onChange: (checked: boolean) => void }) {
+export function ToggleRow({ title, description, checked, onChange }: { title: string; description: string; checked: boolean; onChange: (checked: boolean) => void }) {
   const id = useId();
   return (
     <div className="flex items-center justify-between gap-6 py-4 first:pt-0 last:pb-0">
@@ -185,7 +189,7 @@ function SectionHeading({ title, subtitle }: { title: string; subtitle: string }
   );
 }
 
-function Card({ title, description, footer, danger, children }: { title: string; description?: string; footer?: ReactNode; danger?: boolean; children: ReactNode }) {
+export function Card({ title, description, footer, danger, children }: { title: string; description?: string; footer?: ReactNode; danger?: boolean; children: ReactNode }) {
   return (
     <section className="border-t border-[#e2e8f0] py-7">
       <h3 className={`m-0 text-[14px] leading-[22px] ${danger ? "text-[#b91c1c]" : "text-[#0f172a]"} ${fontSemi}`}>{title}</h3>
@@ -296,14 +300,14 @@ function ProfileSection() {
             }
           />
           <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
-            {socials.map(({ key, label, placeholder, color, path }) => (
+            {socials.map(({ key, label, prefix, match, color, path }) => (
               <LinkField
                 key={key}
                 id={key}
                 label={label}
                 value={draft[key]}
-                onChange={set(key)}
-                placeholder={placeholder}
+                onChange={(value) => set(key)(value.trim().replace(match, "").replace(/^@/, ""))}
+                prefix={prefix}
                 icon={
                   <svg viewBox="0 0 24 24" className="size-3.5" fill={color} aria-hidden="true">
                     <path d={path} />
@@ -315,7 +319,7 @@ function ProfileSection() {
         </div>
       </Card>
 
-      <div className="sticky bottom-0 z-10 flex items-center gap-3 border-t border-[#e2e8f0] bg-white py-4">
+      <div className="flex items-center gap-3 border-t border-[#e2e8f0] py-4">
         <button type="button" disabled={!dirty} onClick={save} className={primaryButton}>
           Save changes
         </button>

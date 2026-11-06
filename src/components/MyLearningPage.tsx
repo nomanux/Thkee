@@ -37,7 +37,7 @@ function MenuIcon({ children }: { children: ReactNode }) {
   );
 }
 
-function ClassCard({ course }: { course: Course }) {
+export function ClassCard({ course }: { course: Course }) {
   const { enrolledIds, archivedIds, toggleArchive, wishlistIds, toggleWishlist, setOverlay, notify } = useApp();
   const enrolled = enrolledIds.includes(course.id);
   const archived = archivedIds.includes(course.id);

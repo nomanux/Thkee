@@ -13,7 +13,7 @@ const tabs: { label: string; pick: (list: Course[]) => Course[] }[] = [
   { label: "Free", pick: (l) => l.filter((c) => c.price === 0) },
 ];
 
-function CourseTile({ course }: { course: Course }) {
+export function CourseTile({ course }: { course: Course }) {
   const { setOverlay, addToCart, enrolledIds } = useApp();
   const enrolled = enrolledIds.includes(course.id);
   const isNew = !!course.launched && course.launched >= "2026-09-01";

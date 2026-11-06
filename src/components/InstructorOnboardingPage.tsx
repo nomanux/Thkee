@@ -33,7 +33,7 @@ const steps: { title: string; text: string; question: string; options: string[];
   },
 ];
 
-function Stepper({ current }: { current: number }) {
+export function Stepper({ current }: { current: number }) {
   return (
     <ol aria-label={`Step ${current + 1} of ${steps.length}`} className="flex w-full max-w-[640px] items-center">
       {steps.map((step, i) => (
