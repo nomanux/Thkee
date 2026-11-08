@@ -41,6 +41,7 @@ const SEED: Question[] = [
 ];
 
 const STORE_KEY = "thkee.instructorQa";
+export const unansweredQuestionCount = () => load<Question[]>(STORE_KEY, SEED).filter((q) => q.replies.length === 0).length;
 const titleClass = "m-0 flex h-[42px] items-center font-['Instrument_Sans:Medium'] text-[24px] font-medium leading-[32px] text-[#0f172a]";
 const titleStyle = { fontVariationSettings: '"wdth" 100' };
 const dimText = `text-[12px] leading-[18px] tracking-[-0.01px] text-[#94a3b8] ${fontRegular}`;

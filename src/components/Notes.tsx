@@ -513,6 +513,9 @@ export function NoteEditor({
   clearOnSave,
   toolbarTop,
   linkOnly,
+  hideUnderline,
+  toolbarEnd,
+  boxClass = "min-h-[126px]",
   autoFocus = true,
   onChange,
   onSave,
@@ -535,6 +538,11 @@ export function NoteEditor({
   toolbarTop?: boolean;
   // With extras, keeps the link button but leaves out image and code.
   linkOnly?: boolean;
+  hideUnderline?: boolean;
+  // Sits at the far end of the formatting buttons.
+  toolbarEnd?: ReactNode;
+  // Sizing for the text box.
+  boxClass?: string;
   autoFocus?: boolean;
   onChange?: (text: string, html: string) => void;
   onSave?: (text: string, html: string) => void;
@@ -637,7 +645,7 @@ export function NoteEditor({
   return (
     <div className="flex min-w-0 flex-1 flex-col gap-4">
       <div className={sideAction ? "flex items-start gap-4 sm:gap-6" : "contents"}>
-      <div className={`flex min-h-[126px] resize-y flex-col gap-2 overflow-auto rounded-[8px] border p-4 focus-within:border-[#1e293b] ${toolbarTop ? "flex-col-reverse border-[#e2e8f0] bg-[#f8fafc]" : "border-[#cbd5e1] bg-white"} ${sideAction ? "min-w-0 flex-1" : ""}`}>
+      <div className={`flex ${boxClass} resize-y flex-col gap-2 overflow-auto rounded-[8px] border p-4 focus-within:border-[#1e293b] ${toolbarTop ? "flex-col-reverse border-[#e2e8f0] bg-[#f8fafc]" : "border-[#cbd5e1] bg-white"} ${sideAction ? "min-w-0 flex-1" : ""}`}>
         <div className="relative flex-1">
           {empty && <span className={`pointer-events-none absolute left-0 top-0 text-[16px] text-[#94a3b8] md:text-[14px] ${fontRegular}`}>{placeholder}</span>}
           <div
@@ -675,7 +683,8 @@ export function NoteEditor({
           </div>
         )}
         <div className={`flex flex-wrap items-center gap-1 ${toolbarTop ? "border-b border-[#e2e8f0] pb-2" : ""}`}>
-          {editorTools.map((tool) => (
+          {toolbarEnd && <span className="order-last ml-auto flex">{toolbarEnd}</span>}
+          {editorTools.filter((tool) => !(hideUnderline && tool.command === "underline")).map((tool) => (
             <button key={tool.command} type="button" aria-label={tool.label} title={tool.label} aria-pressed={active.includes(tool.command)} onMouseDown={(e) => e.preventDefault()} onClick={() => run(tool.command)} className={toolCls(active.includes(tool.command))}>
               <Svg>{tool.icon}</Svg>
             </button>

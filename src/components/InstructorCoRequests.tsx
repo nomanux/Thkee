@@ -20,6 +20,10 @@ const seedStatus = (i: number): Status => (i < 4 ? "Pending" : i < 7 ? "Accepted
 const REQUESTS = NAMES.map((name, i) => ({ id: `co-${i + 1}`, name, course: i % 2 === 0 ? PYTHON : WEB, requestedOn: `${String(7 + i).padStart(2, "0")} June 2025`, status: seedStatus(i) }));
 
 const STORE_KEY = "thkee.instructorCoRequests";
+export const pendingCoRequestCount = () => {
+  const decisions = load<Record<string, Decision>>(STORE_KEY, {});
+  return REQUESTS.filter((r) => (decisions[r.id]?.status ?? r.status) === "Pending").length;
+};
 const PAGE_SIZE = 10;
 const COLUMNS = "grid grid-cols-[254fr_269fr_156fr_170fr_230fr] items-center gap-x-3 px-6";
 

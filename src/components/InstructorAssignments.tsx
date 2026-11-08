@@ -55,6 +55,11 @@ const gradedReview: SubmissionReview = {
 const allCorrectReview: SubmissionReview = { checked: true, questions: Object.fromEntries(QUESTIONS.map((_, i) => [i, { correct: true }])) };
 const INITIAL_REVIEWS: ReviewStore = { "sub-2": gradedReview, "sub-7": gradedReview, "sub-4": allCorrectReview, "sub-6": gradedReview };
 
+export const uncheckedSubmissionCount = () => {
+  const reviews: ReviewStore = { ...INITIAL_REVIEWS, ...load<ReviewStore>(STORE_KEY, {}) };
+  return SUBMISSIONS.filter((s) => !reviews[s.id]?.checked).length;
+};
+
 const isReviewed = (review?: QuestionReview) => Boolean(review?.correct || review?.feedback);
 
 const countLabel = (name: string, count: number) => `${name}(${count})`;

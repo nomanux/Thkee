@@ -106,7 +106,7 @@ const TABS = [
 ];
 
 const PAYOUT_TIP = "Your payout schedule is monthly. Expected earnings shown are based on current sales, subject to change with additional sales or refunds before payout.";
-const PAYOUT_TILES: { value: string; label: string; bg: string; color: string; icon: ReactNode; tip: string }[] = [
+export const PAYOUT_TILES: { value: string; label: string; bg: string; color: string; icon: ReactNode; tip: string }[] = [
   { value: "$ 3845.00", label: "Expected Earnings", bg: "#d1fae5", color: "#059669", icon: <path d="M17 7L7 17M7 9v8h8" />, tip: PAYOUT_TIP },
   { value: "$ 3845.00", label: "Available Balance", bg: "#e0f2fe", color: "#0284c7", icon: <path d="M17 7L7 17M7 9v8h8" />, tip: "The amount that is ready to be paid out on your next payout date." },
   { value: "$ 200.00", label: "Total Refund", bg: "#fee2e2", color: "#dc2626", icon: <path d="M7 17L17 7M9 7h8v8" />, tip: "Refunds processed during this payout period." },

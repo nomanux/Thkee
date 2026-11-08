@@ -22,6 +22,10 @@ const COURSES = [...new Set(REVIEWS.map((r) => r.course))];
 
 type ReviewState = { reply?: string; flagged?: boolean; vote?: "up" | "down" };
 const STORE_KEY = "thkee.instructorReviews";
+export const unrepliedReviewCount = () => {
+  const states = load<Record<string, ReviewState>>(STORE_KEY, {});
+  return REVIEWS.filter((r) => !states[r.id]?.reply).length;
+};
 
 function Stars({ rating, size = "size-5" }: { rating: number; size?: string }) {
   return (

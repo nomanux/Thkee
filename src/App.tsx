@@ -6,6 +6,7 @@ import CheckoutPage from "./components/CheckoutPage";
 import Hero from "./components/Hero";
 import LearnPage from "./components/LearnPage";
 import AccountSettingsPage from "./components/AccountSettingsPage";
+import InstructorCourseEditor from "./components/InstructorCourseEditor";
 import InstructorDashboardPage from "./components/InstructorDashboardPage";
 import InstructorLiveCreate from "./components/InstructorLiveCreate";
 import InstructorOnboardingPage from "./components/InstructorOnboardingPage";
@@ -463,6 +464,13 @@ function Site() {
         <Overlays />
       </>
     );
+  if (route.page === "course-editor")
+    return (
+      <>
+        <InstructorCourseEditor key={route.id} id={route.id} section={route.section} />
+        <Overlays />
+      </>
+    );
   if (route.page === "live-create")
     return (
       <>
@@ -473,7 +481,7 @@ function Site() {
   if (route.page === "instructor")
     return (
       <>
-        <InstructorDashboardPage section={route.section} submissionId={route.submissionId} reportView={route.reportView} reportMonth={route.reportMonth} questionId={route.questionId} newQuestionCourse={route.newQuestionCourse} announcementCourse={route.announcementCourse} scheduleId={route.scheduleId} appsView={route.appsView} sessionSeries={route.sessionSeries} sessionId={route.sessionId} sessionCourse={route.sessionCourse} />
+        <InstructorDashboardPage section={route.section} newCourse={route.newCourse} submissionId={route.submissionId} reportView={route.reportView} reportMonth={route.reportMonth} questionId={route.questionId} newQuestionCourse={route.newQuestionCourse} announcementCourse={route.announcementCourse} scheduleId={route.scheduleId} appsView={route.appsView} sessionSeries={route.sessionSeries} sessionId={route.sessionId} sessionCourse={route.sessionCourse} />
         <Overlays />
       </>
     );

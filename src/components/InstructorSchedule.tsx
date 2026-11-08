@@ -32,11 +32,11 @@ const SEED: Seed[] = [
 const courseOf = (id: string) => LIVE_COURSES.find((c) => c.id === id)!;
 const startOfDay = (time: number) => new Date(time).setHours(0, 0, 0, 0);
 const dayDiff = (time: number, from: number) => Math.round((startOfDay(time) - startOfDay(from)) / (1440 * MINUTE));
-const formatTime = (time: number) => new Date(time).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
+export const formatTime = (time: number) => new Date(time).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
 const durationOf = (id: string) => (courseOf(id).kind === "multi" ? 120 : 90);
 const formatDuration = (minutes: number) => `${Math.floor(minutes / 60)}h ${String(minutes % 60).padStart(2, "0")}m`;
 
-const dayLabel = (time: number, now: number) => {
+export const dayLabel = (time: number, now: number) => {
   const diff = dayDiff(time, now);
   const date = new Date(time);
   const name = diff === 0 ? "Today" : diff === 1 ? "Tomorrow" : diff === -1 ? "Yesterday" : date.toLocaleDateString("en-US", { weekday: "long" });
@@ -52,6 +52,13 @@ const buildItems = (base: number): Item[] =>
     start: "inMinutes" in seed ? base + seed.inMinutes * MINUTE : startOfDay(base) + seed.day * 1440 * MINUTE + seed.at * MINUTE,
   }));
 
+export const upcomingSessions = (base: number) => {
+  const cancelled = load<string[]>(STORE_KEY, []);
+  return buildItems(base)
+    .filter((item) => item.tab === "Upcoming" && !cancelled.includes(item.id))
+    .sort((a, b) => a.start - b.start);
+};
+
 function Icon({ path, className = "size-4" }: { path: string; className?: string }) {
   return (
     <svg viewBox="0 0 24 24" className={className} fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -60,7 +67,7 @@ function Icon({ path, className = "size-4" }: { path: string; className?: string
   );
 }
 
-const sessionInfo = (item: Item, now: number) => {
+export const sessionInfo = (item: Item, now: number) => {
   const course = courseOf(item.course);
   const title = load<{ titles?: Record<string, string> }>("thkee.instructorSessions.extras", {}).titles?.[course.id] ?? course.title;
   const duration = durationOf(item.course);
@@ -88,7 +95,7 @@ function SessionMenu({ item, now, onCancel }: { item: Item; now: number; onCance
   );
 }
 
-function JoinButton({ canJoin }: { canJoin: boolean }) {
+export function JoinButton({ canJoin }: { canJoin: boolean }) {
   const { notify } = useApp();
   return (
     <button type="button" disabled={!canJoin} title={canJoin ? undefined : "You can join 15 minutes before the start time"} onClick={() => notify("The live classroom isn't connected yet")} className={`h-8 shrink-0 rounded-[6px] bg-[#1e293b] px-3 text-[14px] leading-[20px] text-white transition hover:bg-[#0f172a] disabled:cursor-not-allowed disabled:bg-[#94a3b8] ${fontMedium}`}>
