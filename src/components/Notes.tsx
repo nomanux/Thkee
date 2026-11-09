@@ -509,6 +509,7 @@ export function NoteEditor({
   extras,
   imageOnly,
   sideAction,
+  submitOnEnter,
   hideActions,
   clearOnSave,
   toolbarTop,
@@ -532,6 +533,8 @@ export function NoteEditor({
   imageOnly?: boolean;
   // Puts the save button beside the box instead of below it.
   sideAction?: boolean;
+  // Enter saves, Shift+Enter adds a new line.
+  submitOnEnter?: boolean;
   hideActions?: boolean;
   clearOnSave?: boolean;
   // Puts the formatting buttons above the text instead of below it.
@@ -644,7 +647,7 @@ export function NoteEditor({
 
   return (
     <div className="flex min-w-0 flex-1 flex-col gap-4">
-      <div className={sideAction ? "flex items-start gap-4 sm:gap-6" : "contents"}>
+      <div className={sideAction ? "flex items-end gap-3" : "contents"}>
       <div className={`flex ${boxClass} resize-y flex-col gap-2 overflow-auto rounded-[8px] border p-4 focus-within:border-[#1e293b] ${toolbarTop ? "flex-col-reverse border-[#e2e8f0] bg-[#f8fafc]" : "border-[#cbd5e1] bg-white"} ${sideAction ? "min-w-0 flex-1" : ""}`}>
         <div className="relative flex-1">
           {empty && <span className={`pointer-events-none absolute left-0 top-0 text-[16px] text-[#94a3b8] md:text-[14px] ${fontRegular}`}>{placeholder}</span>}
@@ -656,7 +659,13 @@ export function NoteEditor({
             contentEditable
             suppressContentEditableWarning
             onInput={onInput}
-            onKeyDown={(e) => e.key === "Escape" && onCancel?.()}
+            onKeyDown={(e) => {
+              if (e.key === "Escape") onCancel?.();
+              if (submitOnEnter && e.key === "Enter" && !e.shiftKey && !e.nativeEvent.isComposing) {
+                e.preventDefault();
+                if (!empty || allowEmpty) save();
+              }
+            }}
             className={`min-h-[48px] whitespace-pre-wrap break-words text-[16px] leading-[22px] text-[#0f172a] outline-none md:text-[14px] ${richText} ${fontRegular}`}
           />
         </div>

@@ -1,7 +1,9 @@
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { Fragment, useEffect, useRef, useState } from "react";
+import { HugeiconsIcon, type IconSvgElement } from "@hugeicons/react";
+import { ArrowLeft01Icon, MessageMultiple01Icon, MoreVerticalIcon, PencilEdit02Icon, Search01Icon, SentIcon } from "@hugeicons/core-free-icons";
 import { courses } from "../data";
 import { fontFor, fontMedium, fontRegular, fontSemi } from "../fonts";
-import { load, useApp, useStoredState } from "../store";
+import { useApp, useStoredState } from "../store";
 import { ActionMenu } from "./Menus";
 import { NoteBody, NoteEditor } from "./Notes";
 import { Shell } from "./Overlays";
@@ -10,16 +12,20 @@ type Message = { id: string; mine: boolean; text: string; html?: string; at: str
 type Thread = { id: string; name: string; unread: number; messages: Message[] };
 
 const HOUR = 60 * 60 * 1000;
+// Messages from the same person this close together share one avatar and timestamp.
+const GROUP_GAP = 5 * 60 * 1000;
 const avatarColors = ["#0d5c4b", "#1d4ed8", "#7c3aed", "#b45309", "#be123c", "#0f766e", "#475569"];
 const issueTypes = ["Inappropriate Course Content", "Inappropriate Behavior", "Spammy Content", "Other"];
 const people = [...new Set(courses.map((c) => c.instructor))];
+const courseOf = (name: string) => courses.find((c) => c.instructor === name)?.title;
+const headingStyle = { fontVariationSettings: '"wdth" 100' };
 
 const demoChats: { name: string; unread: number; hoursAgo: number; lines: string[] }[] = [
   {
     name: "Dr. Sara Al-Qahtani",
     unread: 2,
     hoursAgo: 16,
-    lines: ["Hi, welcome to AI Foundations for Everyone. You can take the course however you'd like, but the idea is to finish one short lesson per day.", "Okay, thank you for taking me on this journey!", "Great! Let me know if any lesson feels too fast, and I'll share extra material.", "Okay, thank you!"],
+    lines: ["Hi, welcome to AI Foundations for Everyone. You can take the course however you'd like, but the idea is to finish one short lesson per day.", "Okay, thank you for taking me on this journey!", "Great! Let me know if any lesson feels too fast, and I'll share extra material."],
   },
   { name: "Omar Al-Harbi", unread: 0, hoursAgo: 20, lines: ["Hi, how is the Python course going so far?", "Really well. The data section is my favourite."] },
   { name: "Layla Hassan", unread: 2, hoursAgo: 26, lines: ["Thanks for joining the Prompt Engineering Masterclass.", "Happy to be here!", "I've added a new practice exercise, have a look when you can."] },
@@ -40,26 +46,33 @@ function demoThreads(): Thread[] {
   }));
 }
 
-const formatClock = (iso: string) => new Date(iso).toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" });
+const formatClock = (iso: string) => new Date(iso).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
+const daysAgo = (iso: string) => Math.round((new Date().setHours(0, 0, 0, 0) - new Date(iso).setHours(0, 0, 0, 0)) / (24 * HOUR));
 
 function dayLabel(iso: string) {
-  const date = new Date(iso);
-  const days = Math.round((new Date().setHours(0, 0, 0, 0) - new Date(iso).setHours(0, 0, 0, 0)) / (24 * HOUR));
+  const days = daysAgo(iso);
   if (days === 0) return "Today";
   if (days === 1) return "Yesterday";
-  return date.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+  const date = new Date(iso);
+  if (days < 7) return date.toLocaleDateString("en-US", { weekday: "long" });
+  return date.toLocaleDateString("en-US", { month: "short", day: "numeric", year: date.getFullYear() === new Date().getFullYear() ? undefined : "numeric" });
 }
 
-function timeAgo(iso: string) {
-  const hours = Math.floor((Date.now() - new Date(iso).getTime()) / HOUR);
-  if (hours < 1) return "Just now";
-  if (hours < 24) return `${hours} ${hours === 1 ? "hour" : "hours"} ago`;
-  const days = Math.floor(hours / 24);
-  return `${days} ${days === 1 ? "day" : "days"} ago`;
+// Short stamp for the conversation list: a time today, then Yesterday, a weekday, or a date.
+function listStamp(iso: string) {
+  const days = daysAgo(iso);
+  if (days === 0) return formatClock(iso);
+  if (days === 1) return "Yesterday";
+  const date = new Date(iso);
+  if (days < 7) return date.toLocaleDateString("en-US", { weekday: "short" });
+  return date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
 }
 
-function Avatar({ name, photo, className = "size-10 rounded-full text-[14px]" }: { name: string; photo?: string; className?: string }) {
-  if (photo) return <img src={photo} alt="" className={`shrink-0 object-cover ${className}`} />;
+function Icon({ icon, size = 18, className = "" }: { icon: IconSvgElement; size?: number; className?: string }) {
+  return <HugeiconsIcon icon={icon} size={size} strokeWidth={1.8} aria-hidden="true" className={`shrink-0 ${className}`} />;
+}
+
+function Avatar({ name, className = "size-10 text-[14px]" }: { name: string; className?: string }) {
   const initials = name
     .replace(/^Dr\.\s*/, "")
     .split(" ")
@@ -69,20 +82,14 @@ function Avatar({ name, photo, className = "size-10 rounded-full text-[14px]" }:
     .toUpperCase();
   const color = avatarColors[[...name].reduce((sum, ch) => sum + ch.charCodeAt(0), 0) % avatarColors.length];
   return (
-    <span aria-hidden="true" className={`flex shrink-0 items-center justify-center text-white ${className} ${fontSemi}`} style={{ backgroundColor: color }}>
+    <span aria-hidden="true" className={`flex shrink-0 items-center justify-center rounded-full text-white ${className} ${fontSemi}`} style={{ backgroundColor: color }}>
       {initials || "?"}
     </span>
   );
 }
 
-function SearchIcon() {
-  return (
-    <svg viewBox="0 0 24 24" className="size-5 shrink-0 text-[#475569]" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <circle cx="11" cy="11" r="7" />
-      <path d="M20 20l-3.5-3.5" />
-    </svg>
-  );
-}
+const iconButton = "flex size-9 items-center justify-center rounded-[8px] text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900";
+const dots = <Icon icon={MoreVerticalIcon} />;
 
 function Chevron({ open, className = "size-4 text-[#0f172a]" }: { open?: boolean; className?: string }) {
   return (
@@ -91,15 +98,6 @@ function Chevron({ open, className = "size-4 text-[#0f172a]" }: { open?: boolean
     </svg>
   );
 }
-
-const dots = (
-  <svg viewBox="0 0 24 24" className="size-4" fill="currentColor" aria-hidden="true">
-    <circle cx="12" cy="5.5" r="1.6" />
-    <circle cx="12" cy="12" r="1.6" />
-    <circle cx="12" cy="18.5" r="1.6" />
-  </svg>
-);
-const dotsButton = "flex size-7 items-center justify-center rounded-full bg-white text-[#64748b] shadow-[0_1px_3px_rgba(15,23,42,0.12)] transition hover:text-[#0f172a]";
 
 function ReportAbuseDialog({ onClose }: { onClose: () => void }) {
   const [issue, setIssue] = useState("");
@@ -189,101 +187,146 @@ function ReportAbuseDialog({ onClose }: { onClose: () => void }) {
 function ThreadRow({ thread, selected, onOpen, onToggleRead, onReport }: { thread: Thread; selected: boolean; onOpen: () => void; onToggleRead: () => void; onReport: () => void }) {
   const last = thread.messages[thread.messages.length - 1];
   const unread = thread.unread > 0;
-  const preview = last ? (last.text || "Sent an image") : "";
+  const preview = last ? `${last.mine ? "You: " : ""}${last.text || "Sent an image"}` : "No messages yet";
   return (
-    <li className={`relative transition ${selected ? "bg-[#f1f5f9]" : "hover:bg-[#f8fafc]"}`}>
-      <button type="button" aria-current={selected ? "true" : undefined} onClick={onOpen} className="flex w-full items-start gap-3 py-4 pl-4 pr-[52px] text-left">
-        <Avatar name={thread.name} />
-        <span className="flex min-w-0 flex-1 flex-col gap-1.5">
-          <span dir="auto" className={`truncate pr-16 text-[14px] leading-[22px] ${unread || selected ? `text-[#0f172a] ${fontFor(thread.name, fontSemi)}` : `text-[#475569] ${fontFor(thread.name, fontRegular, "font-normal")}`}`}>
-            {thread.name}
+    <li className="group relative px-2">
+      <button type="button" aria-current={selected ? "true" : undefined} onClick={onOpen} className={`flex w-full items-center gap-3 rounded-[10px] px-3 py-3 text-left transition-colors ${selected ? "bg-[#eef7f3]" : "hover:bg-slate-50"}`}>
+        <Avatar name={thread.name} className="size-11 text-[15px]" />
+        <span className="flex min-w-0 flex-1 flex-col gap-0.5">
+          <span className="flex items-baseline gap-2">
+            <span dir="auto" className={`min-w-0 flex-1 truncate text-[14px] leading-[20px] text-slate-900 ${fontFor(thread.name, unread ? fontSemi : fontMedium)}`}>
+              {thread.name}
+            </span>
+            {last && <span className={`shrink-0 text-[12px] leading-[16px] ${unread ? `text-[#0d5c4b] ${fontMedium}` : `text-slate-500 ${fontRegular}`}`}>{listStamp(last.at)}</span>}
           </span>
-          <span dir="auto" className={`truncate text-[14px] leading-[22px] ${unread || selected ? "text-[#1e293b]" : "text-[#94a3b8]"} ${fontRegular}`}>
-            {preview}
+          <span className="flex items-center gap-2">
+            <span dir="auto" className={`min-w-0 flex-1 truncate text-[13px] leading-[20px] ${unread ? `text-slate-800 ${fontMedium}` : `text-slate-500 ${fontRegular}`}`}>
+              {preview}
+            </span>
+            {unread && (
+              <span aria-label={`${thread.unread} unread`} className={`flex h-5 min-w-5 shrink-0 items-center justify-center rounded-full bg-[#0d5c4b] px-1.5 text-[11px] text-white ${fontSemi}`}>
+                {thread.unread}
+              </span>
+            )}
           </span>
         </span>
       </button>
-      <span className={`pointer-events-none absolute right-4 top-4 text-[12px] leading-[18px] text-[#64748b] ${fontRegular}`}>{last ? (selected ? `${dayLabel(last.at)}, ${formatClock(last.at)}` : timeAgo(last.at)) : ""}</span>
-      <div className="absolute bottom-3.5 right-4 flex items-center gap-2">
-        {unread && (
-          <span aria-label={`${thread.unread} unread`} className={`flex size-6 items-center justify-center rounded-full bg-[#10b981] text-[12px] text-white ${fontMedium}`}>
-            {thread.unread}
-          </span>
-        )}
-        {!selected && (
-          <ActionMenu
-            label={`Options for ${thread.name}`}
-            triggerClass={dotsButton}
-            trigger={dots}
-            items={[
-              { label: unread ? "Mark as read" : "Mark as unread", onClick: onToggleRead },
-              { label: "Report abuse", onClick: onReport },
-            ]}
-          />
-        )}
+      {/* Row actions show on hover for mouse users; touch users get the same actions in the conversation header. */}
+      <div className="absolute right-4 top-2 hidden opacity-0 transition-opacity focus-within:opacity-100 group-hover:opacity-100 [@media(hover:hover)]:block">
+        <ActionMenu
+          label={`Options for ${thread.name}`}
+          triggerClass="flex size-7 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-600 shadow-sm transition-colors hover:text-slate-900"
+          trigger={<Icon icon={MoreVerticalIcon} size={16} />}
+          items={[
+            { label: unread ? "Mark as read" : "Mark as unread", onClick: onToggleRead },
+            { label: "Report abuse", onClick: onReport, danger: true },
+          ]}
+        />
       </div>
     </li>
   );
 }
 
-function ThreadView({ thread, onBack, onSend, onReport }: { thread: Thread; onBack: () => void; onSend: (text: string, html: string) => void; onReport: () => void }) {
-  const { user } = useApp();
-  const myPhoto = load("thkee.profile", { photo: "" }).photo;
+function DayDivider({ label }: { label: string }) {
+  return (
+    <div className="my-2 flex justify-center">
+      <span className={`rounded-full border border-slate-200 bg-white px-3 py-0.5 text-[12px] leading-[18px] text-slate-500 ${fontMedium}`}>{label}</span>
+    </div>
+  );
+}
+
+function ThreadView({ thread, onBack, onSend, onMarkUnread, onReport }: { thread: Thread; onBack: () => void; onSend: (text: string, html: string) => void; onMarkUnread: () => void; onReport: () => void }) {
   const scroller = useRef<HTMLDivElement>(null);
-  const last = thread.messages[thread.messages.length - 1];
+  const course = courseOf(thread.name);
+  const { messages } = thread;
 
   useEffect(() => {
     if (scroller.current) scroller.current.scrollTop = scroller.current.scrollHeight;
-  }, [thread.id, thread.messages.length]);
+  }, [thread.id, messages.length]);
+
+  const sameGroup = (a?: Message, b?: Message) => !!a && !!b && a.mine === b.mine && dayLabel(a.at) === dayLabel(b.at) && Math.abs(new Date(b.at).getTime() - new Date(a.at).getTime()) < GROUP_GAP;
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
-      <header className="flex items-center gap-3 border-b border-[#e2e8f0] bg-[#f8fafc] px-4 py-3 sm:gap-4 sm:px-6">
-        <button type="button" onClick={onBack} aria-label="Back to messages" className="flex size-8 shrink-0 items-center justify-center rounded-full text-[#334155] hover:bg-[#f1f5f9] md:hidden">
-          <Chevron className="size-5 rotate-90" />
+      <header className="flex h-[68px] shrink-0 items-center gap-3 border-b border-slate-200 px-3 sm:px-5">
+        <button type="button" onClick={onBack} aria-label="Back to messages" className={`${iconButton} md:hidden`}>
+          <Icon icon={ArrowLeft01Icon} size={20} />
         </button>
-        <Avatar name={thread.name} className="size-14 rounded-full text-[18px]" />
+        <Avatar name={thread.name} />
         <div className="min-w-0 flex-1">
-          <p dir="auto" className={`truncate text-[18px] leading-[28px] text-[#1e293b] ${fontFor(thread.name, fontSemi)}`}>
+          <p dir="auto" className={`truncate text-[15px] leading-[22px] text-slate-900 ${fontFor(thread.name, fontSemi)}`}>
             {thread.name}
           </p>
-          <p className={`text-[14px] leading-[22px] text-[#64748b] ${fontRegular}`}>{last ? `${dayLabel(last.at)} at ${formatClock(last.at)}` : "New conversation"}</p>
+          <p className={`truncate text-[13px] leading-[18px] text-slate-500 ${fontRegular}`}>{course ? `Instructor · ${course}` : "Instructor"}</p>
         </div>
-        <ActionMenu label={`Options for ${thread.name}`} triggerClass={dotsButton} trigger={dots} items={[{ label: "Report abuse", onClick: onReport }]} />
+        <ActionMenu
+          label={`Options for ${thread.name}`}
+          triggerClass={iconButton}
+          trigger={dots}
+          items={[
+            { label: "Mark as unread", onClick: onMarkUnread, disabled: messages.length === 0 },
+            { label: "Report abuse", onClick: onReport, danger: true },
+          ]}
+        />
       </header>
-      <div ref={scroller} className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-4 py-4 sm:px-5">
-        {thread.messages.map((message, i) => {
-          const day = dayLabel(message.at);
-          const newDay = i === 0 || dayLabel(thread.messages[i - 1].at) !== day;
-          return (
-            <div key={message.id} className="flex flex-col gap-4">
-              {newDay && (
-                <div className="flex items-center gap-5">
-                  <span className="h-px flex-1 bg-[#e2e8f0]" />
-                  <span className={`text-[12px] uppercase leading-[18px] text-[#94a3b8] ${fontRegular}`}>{day}</span>
-                  <span className="h-px flex-1 bg-[#e2e8f0]" />
-                </div>
-              )}
-              <div className={`flex gap-4 ${message.mine ? "flex-row-reverse" : ""}`}>
-                {message.mine ? <Avatar name={user?.name ?? "You"} photo={myPhoto} /> : <Avatar name={thread.name} />}
-                <div className={`flex min-w-0 max-w-[456px] flex-col gap-2 ${message.mine ? "items-end" : "items-start"}`}>
-                  <p className={`flex items-baseline gap-3 ${message.mine ? "flex-row-reverse" : ""}`}>
-                    <span dir="auto" className={`text-[16px] leading-[24px] text-[#1e293b] ${message.mine ? fontSemi : fontFor(thread.name, fontSemi)}`}>
-                      {message.mine ? "You" : thread.name}
-                    </span>
-                    <span className={`text-[12px] leading-[18px] text-[#64748b] ${fontRegular}`}>{formatClock(message.at)}</span>
-                  </p>
-                  <div className={`max-w-full rounded-[12px] px-4 py-3 ${message.mine ? "border border-[#fdce7c] bg-[#fff9f0]" : "bg-[#f8fafc]"}`}>
-                    <NoteBody note={message} tone={message.mine ? "text-[#5c3d00]" : "text-[#1e293b]"} className="break-words" />
-                  </div>
-                </div>
-              </div>
-            </div>
-          );
-        })}
+
+      <div ref={scroller} className="min-h-0 flex-1 overflow-y-auto bg-slate-50/70 px-3 py-5 sm:px-6">
+        {messages.length === 0 ? (
+          <div className="flex h-full flex-col items-center justify-center gap-2 text-center">
+            <Avatar name={thread.name} className="size-16 text-[20px]" />
+            <p dir="auto" className={`mt-2 text-[16px] leading-[24px] text-slate-900 ${fontFor(thread.name, fontSemi)}`}>
+              {thread.name}
+            </p>
+            {course && <p className={`text-[13px] leading-[18px] text-slate-500 ${fontRegular}`}>Instructor · {course}</p>}
+            <p className={`mt-2 max-w-[320px] text-[14px] leading-[20px] text-slate-600 ${fontRegular}`}>This is the start of your conversation. Ask a question about the course or say hello.</p>
+          </div>
+        ) : (
+          <ol className="flex flex-col">
+            {messages.map((message, i) => {
+              const prev = messages[i - 1];
+              const next = messages[i + 1];
+              const newDay = !prev || dayLabel(prev.at) !== dayLabel(message.at);
+              const first = !sameGroup(prev, message);
+              const lastInGroup = !sameGroup(message, next);
+              const mine = message.mine;
+              return (
+                <Fragment key={message.id}>
+                  {newDay && <DayDivider label={dayLabel(message.at)} />}
+                  <li className={`flex items-end gap-2 ${mine ? "justify-end" : ""} ${first && !newDay ? "mt-4" : "mt-1"}`}>
+                    {!mine && (lastInGroup ? <Avatar name={thread.name} className="size-8 text-[12px]" /> : <span className="w-8 shrink-0" />)}
+                    <div className={`flex min-w-0 max-w-[80%] flex-col sm:max-w-[520px] ${mine ? "items-end" : "items-start"}`}>
+                      <div
+                        className={`max-w-full rounded-[18px] px-3.5 py-2 ${
+                          mine ? `bg-[#0d5c4b] [&_a]:!text-white [&_code]:!bg-white/15 ${lastInGroup ? "rounded-br-[6px]" : ""}` : `border border-slate-200 bg-white ${lastInGroup ? "rounded-bl-[6px]" : ""}`
+                        }`}
+                      >
+                        <NoteBody note={message} tone={mine ? "text-white" : "text-slate-800"} className="break-words" />
+                      </div>
+                      {lastInGroup && <span className={`mt-1 px-1 text-[11px] leading-[16px] text-slate-400 ${fontRegular}`}>{formatClock(message.at)}</span>}
+                    </div>
+                  </li>
+                </Fragment>
+              );
+            })}
+          </ol>
+        )}
       </div>
-      <div className="bg-[#f8fafc] p-4 sm:p-6">
-        <NoteEditor key={thread.id} placeholder="Type your message" saveLabel="Send" saveClass="!h-[56px] w-[80px] shrink-0 !px-0 border border-[#1e293b] bg-[#fdce7c] text-[#1e293b] hover:bg-[#ffb20d]" imageOnly sideAction clearOnSave autoFocus={false} onSave={onSend} />
+
+      <div className="shrink-0 border-t border-slate-200 bg-white p-3 sm:px-5 sm:py-4">
+        <NoteEditor
+          key={thread.id}
+          placeholder={`Message ${thread.name}`}
+          saveLabel="Send"
+          saveClass="!h-[44px] shrink-0 bg-[#ffb20d] !px-4 text-[#1e293b] hover:bg-[#faa104]"
+          boxClass="min-h-[96px] max-h-[240px] !p-3"
+          imageOnly
+          sideAction
+          submitOnEnter
+          clearOnSave
+          autoFocus={false}
+          onSave={onSend}
+        />
+        <p className={`mt-2 hidden text-[12px] leading-[16px] text-slate-400 sm:block ${fontRegular}`}>Press Enter to send, Shift + Enter for a new line.</p>
       </div>
     </div>
   );
@@ -291,22 +334,12 @@ function ThreadView({ thread, onBack, onSend, onReport }: { thread: Thread; onBa
 
 function EmptyThread() {
   return (
-    <div className="flex flex-1 flex-col items-center justify-center gap-6 p-6 text-center">
-      <svg viewBox="0 0 208 188" className="w-[208px]" fill="none" aria-hidden="true">
-        <path d="M6 4h124a4 4 0 014 4v36a4 4 0 01-4 4H34L14 66l2-18H6a4 4 0 01-4-4V8a4 4 0 014-4z" fill="#fff" stroke="#94a3b8" />
-        <circle cx="16" cy="15" r="4.5" fill="#cbd5e1" />
-        <path d="M12 26h76" stroke="#cbd5e1" strokeWidth="4" strokeLinecap="round" />
-        <path d="M12 37h112" stroke="#cbd5e1" strokeWidth="4" strokeLinecap="round" />
-        <path d="M78 62h124a4 4 0 014 4v36a4 4 0 01-4 4h-10l2 18-20-18H78a4 4 0 01-4-4V66a4 4 0 014-4z" fill="#fff" stroke="#475569" />
-        <circle cx="88" cy="72" r="4.5" fill="#475569" />
-        <path d="M84 83h76" stroke="#ffb20d" strokeWidth="4" strokeLinecap="round" />
-        <path d="M84 94h112" stroke="#ffb20d" strokeWidth="4" strokeLinecap="round" />
-        <path d="M6 122h124a4 4 0 014 4v36a4 4 0 01-4 4H34l-20 18 2-18H6a4 4 0 01-4-4v-36a4 4 0 014-4z" fill="#fff" stroke="#94a3b8" />
-        <circle cx="16" cy="133" r="4.5" fill="#cbd5e1" />
-        <path d="M12 144h76" stroke="#cbd5e1" strokeWidth="4" strokeLinecap="round" />
-        <path d="M12 155h112" stroke="#cbd5e1" strokeWidth="4" strokeLinecap="round" />
-      </svg>
-      <p className={`text-[14px] leading-[24px] text-[#1e293b] ${fontRegular}`}>Select a message thread to read it here.</p>
+    <div className="flex flex-1 flex-col items-center justify-center gap-3 bg-slate-50/70 p-6 text-center">
+      <span className="flex size-14 items-center justify-center rounded-full bg-[#eef7f3] text-[#0d5c4b]">
+        <Icon icon={MessageMultiple01Icon} size={26} />
+      </span>
+      <p className={`mt-1 text-[16px] leading-[24px] text-slate-900 ${fontSemi}`}>Your messages</p>
+      <p className={`max-w-[300px] text-[14px] leading-[20px] text-slate-500 ${fontRegular}`}>Pick a conversation from the list, or start a new one with an instructor.</p>
     </div>
   );
 }
@@ -315,39 +348,37 @@ function NewChat({ onPick, onBack }: { onPick: (name: string) => void; onBack: (
   const [query, setQuery] = useState("");
   const matches = people.filter((name) => name.toLowerCase().includes(query.trim().toLowerCase()));
   return (
-    <div className="relative flex min-h-0 flex-1 flex-col">
-      <div className="flex items-center gap-2 border-b border-[#e2e8f0] p-4 sm:px-6">
-        <button type="button" onClick={onBack} aria-label="Back to messages" className="flex size-8 shrink-0 items-center justify-center rounded-full text-[#334155] hover:bg-[#f1f5f9] md:hidden">
-          <Chevron className="size-5 rotate-90" />
+    <div className="flex min-h-0 flex-1 flex-col">
+      <header className="flex h-[68px] shrink-0 items-center gap-3 border-b border-slate-200 px-3 sm:px-5">
+        <button type="button" onClick={onBack} aria-label="Back to messages" className={`${iconButton} md:hidden`}>
+          <Icon icon={ArrowLeft01Icon} size={20} />
         </button>
-        <label className="field-box flex-1">
-          <SearchIcon />
-          <input autoFocus value={query} onChange={(e) => setQuery(e.target.value)} onKeyDown={(e) => e.key === "Escape" && onBack()} placeholder="Search user or chat" aria-label="Search user or chat" className={`min-w-0 flex-1 bg-transparent text-[16px] text-[#0f172a] outline-none placeholder:text-slate-400 md:text-[14px] ${fontRegular}`} />
+        <p className={`text-[15px] leading-[22px] text-slate-900 ${fontSemi}`}>New message</p>
+      </header>
+      <div className="flex flex-col gap-2 border-b border-slate-200 px-3 py-3 sm:px-5">
+        <label className="field-box">
+          <span className={`text-[14px] text-slate-500 ${fontRegular}`}>To:</span>
+          <input autoFocus value={query} onChange={(e) => setQuery(e.target.value)} onKeyDown={(e) => e.key === "Escape" && onBack()} placeholder="Search instructors" aria-label="Search instructors" className={`min-w-0 flex-1 bg-transparent text-[16px] text-slate-900 outline-none placeholder:text-slate-400 md:text-[14px] ${fontRegular}`} />
         </label>
       </div>
-      <ul className="min-h-0 overflow-y-auto py-3 shadow-[0_12px_24px_rgba(15,23,42,0.08)]">
+      <p className={`px-5 pb-1 pt-4 text-[12px] uppercase tracking-[0.04em] text-slate-500 ${fontMedium}`}>Your instructors</p>
+      <ul className="min-h-0 flex-1 overflow-y-auto px-2 pb-3">
         {matches.map((name) => (
           <li key={name}>
-            <button type="button" onClick={() => onPick(name)} className="flex w-full items-center gap-3 px-6 py-2 text-left transition hover:bg-[#fff9f0]">
-              <Avatar name={name} className="size-9 rounded-[4px] text-[12px]" />
-              <span dir="auto" className={`truncate text-[14px] leading-[22px] text-[#334155] ${fontFor(name, fontMedium)}`}>
-                {name}
+            <button type="button" onClick={() => onPick(name)} className="flex w-full items-center gap-3 rounded-[10px] px-3 py-2.5 text-left transition-colors hover:bg-slate-50">
+              <Avatar name={name} className="size-9 text-[13px]" />
+              <span className="flex min-w-0 flex-col">
+                <span dir="auto" className={`truncate text-[14px] leading-[20px] text-slate-900 ${fontFor(name, fontMedium)}`}>
+                  {name}
+                </span>
+                {courseOf(name) && <span className={`truncate text-[12px] leading-[16px] text-slate-500 ${fontRegular}`}>{courseOf(name)}</span>}
               </span>
             </button>
           </li>
         ))}
-        {matches.length === 0 && <li className={`px-6 py-4 text-[14px] text-[#64748b] ${fontRegular}`}>No users match your search.</li>}
+        {matches.length === 0 && <li className={`px-3 py-4 text-[14px] text-slate-500 ${fontRegular}`}>No instructors match your search.</li>}
       </ul>
     </div>
-  );
-}
-
-function MenuTrigger({ children, open }: { children: ReactNode; open?: boolean }) {
-  return (
-    <span className={`flex items-center gap-2 text-[14px] leading-[22px] text-[#0f172a] ${fontMedium}`}>
-      {children}
-      <Chevron open={open} />
-    </span>
   );
 }
 
@@ -362,6 +393,7 @@ export default function MessagesPage() {
 
   const open = openName ? (threads.find((t) => t.id === openName) ?? { id: openName, name: openName, unread: 0, messages: [] }) : null;
   const q = query.trim().toLowerCase();
+  const unreadCount = threads.filter((t) => t.unread > 0).length;
   const shown = threads.filter((t) => (!unreadOnly || t.unread > 0) && (!q || t.name.toLowerCase().includes(q) || t.messages.some((m) => m.text.toLowerCase().includes(q))));
   const setUnread = (id: string, unread: number) => setThreads((list) => list.map((t) => (t.id === id ? { ...t, unread } : t)));
 
@@ -379,60 +411,68 @@ export default function MessagesPage() {
     setThreads((list) => list.map((t) => ({ ...t, unread: 0 })));
     notify("All messages marked as read");
   };
+  const markUnread = () => {
+    if (!open) return;
+    setUnread(open.id, 1);
+    setOpenName(null);
+  };
   const paneOpen = creating || !!open;
+  const tab = (active: boolean) => `flex h-[30px] flex-1 items-center justify-center gap-1.5 rounded-[6px] text-[13px] transition-colors ${active ? `bg-white text-slate-900 shadow-[0_1px_2px_rgba(15,23,42,0.08)] ${fontMedium}` : `text-slate-600 hover:text-slate-900 ${fontRegular}`}`;
 
   return (
     <main className="w-full bg-white pt-[56px]">
-      <div className="border-b border-[#e2e8f0] bg-[#f8fafc] px-4 md:px-8 xl:px-20">
-        <h1 className="mx-auto m-0 flex h-[122px] max-w-[1280px] items-center font-['Instrument_Sans:Medium'] text-[24px] font-medium leading-[32px] text-[#0f172a]" style={{ fontVariationSettings: '"wdth" 100' }}>
-          Messages
-        </h1>
-      </div>
-      <div className="px-4 py-6 md:px-8 xl:px-20">
-        <div className="mx-auto flex h-[calc(100dvh-120px)] min-h-[560px] max-w-[1280px] overflow-hidden rounded-[8px] border border-[#e2e8f0] md:h-[max(640px,calc(100dvh-200px))]">
-          <aside className={`min-h-0 w-full flex-col border-[#e2e8f0] md:flex md:w-[340px] md:shrink-0 md:border-r lg:w-[414px] ${paneOpen ? "hidden" : "flex"}`}>
-            <div className="flex flex-col gap-4 border-b border-[#e2e8f0] p-6">
-              <button
-                type="button"
-                onClick={() => {
-                  setCreating(true);
-                  setOpenName(null);
-                }}
-                className={`h-[44px] rounded-[6px] bg-[#334155] text-[14px] text-white transition hover:bg-[#1e293b] ${fontMedium}`}
-              >
-                Create New
-              </button>
-              {!creating && (
-                <label className="field-box">
-                  <SearchIcon />
-                  <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search user or chat" aria-label="Search user or chat" className={`min-w-0 flex-1 bg-transparent text-[16px] text-[#0f172a] outline-none placeholder:text-slate-400 md:text-[14px] ${fontRegular}`} />
-                </label>
-              )}
+      <div className="mx-auto max-w-[1272px] px-0 sm:px-4 sm:pb-8 sm:pt-6 md:pt-8">
+        <div className="flex h-[calc(100dvh-56px)] min-h-[520px] overflow-hidden bg-white sm:h-[calc(100dvh-56px-56px)] sm:rounded-[12px] sm:border sm:border-slate-200 sm:shadow-[0_1px_2px_rgba(15,23,42,0.04)] md:h-[calc(100dvh-56px-64px)]">
+          <aside className={`min-h-0 w-full flex-col border-slate-200 md:flex md:w-[320px] md:shrink-0 md:border-r lg:w-[360px] ${paneOpen ? "hidden" : "flex"}`}>
+            <div className="flex flex-col gap-3 px-4 pb-3 pt-4">
+              <div className="flex h-9 items-center justify-between gap-2">
+                <h1 className="m-0 font-['Instrument_Sans:Medium'] text-[22px] font-medium leading-[28px] text-slate-900" style={headingStyle}>
+                  Messages
+                </h1>
+                <div className="flex items-center gap-0.5">
+                  <ActionMenu label="Message list options" triggerClass={iconButton} trigger={dots} items={[{ label: "Mark all as read", onClick: markAllRead, disabled: unreadCount === 0 }]} />
+                  <button
+                    type="button"
+                    title="New message"
+                    aria-label="New message"
+                    onClick={() => {
+                      setCreating(true);
+                      setOpenName(null);
+                    }}
+                    className={`${iconButton} ${creating ? "bg-[#eef7f3] text-[#0d5c4b]" : ""}`}
+                  >
+                    <Icon icon={PencilEdit02Icon} size={20} />
+                  </button>
+                </div>
+              </div>
+              <label className="field-box">
+                <Icon icon={Search01Icon} size={16} className="text-slate-400" />
+                <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search messages" aria-label="Search messages" className={`min-w-0 flex-1 bg-transparent text-[16px] text-slate-900 outline-none placeholder:text-slate-400 md:text-[14px] ${fontRegular}`} />
+              </label>
+              <div role="tablist" aria-label="Filter conversations" className="flex rounded-[8px] bg-slate-100 p-0.5">
+                <button type="button" role="tab" aria-selected={!unreadOnly} onClick={() => setUnreadOnly(false)} className={tab(!unreadOnly)}>
+                  All
+                </button>
+                <button type="button" role="tab" aria-selected={unreadOnly} onClick={() => setUnreadOnly(true)} className={tab(unreadOnly)}>
+                  Unread
+                  {unreadCount > 0 && <span className={`rounded-full bg-[#0d5c4b] px-1.5 text-[11px] leading-[16px] text-white ${fontSemi}`}>{unreadCount}</span>}
+                </button>
+              </div>
             </div>
-            <div className="flex items-center justify-between gap-3 px-6 py-3">
-              <ActionMenu
-                label="Filter messages"
-                triggerClass=""
-                trigger={<MenuTrigger>{unreadOnly ? "Unread" : "All messages"}</MenuTrigger>}
-                items={[
-                  { label: "All messages", onClick: () => setUnreadOnly(false) },
-                  { label: "Unread", onClick: () => setUnreadOnly(true) },
-                ]}
-                alignLeft
-              />
-              <button type="button" onClick={markAllRead} className={`text-[14px] leading-[22px] text-[#059669] transition hover:text-[#047857] ${fontMedium}`}>
-                Mark all Read
-              </button>
-            </div>
-            <ul className="min-h-0 flex-1 overflow-y-auto">
+            <ul className="min-h-0 flex-1 overflow-y-auto pb-2">
               {shown.map((thread) => (
                 <ThreadRow key={thread.id} thread={thread} selected={thread.id === openName} onOpen={() => openThread(thread.id)} onToggleRead={() => setUnread(thread.id, thread.unread ? 0 : 1)} onReport={() => setReporting(true)} />
               ))}
-              {shown.length === 0 && <li className={`px-6 py-10 text-center text-[14px] text-[#64748b] ${fontRegular}`}>{q ? "No conversations match your search." : "No unread messages."}</li>}
+              {shown.length === 0 && (
+                <li className="flex flex-col items-center gap-1 px-6 py-12 text-center">
+                  <p className={`text-[14px] text-slate-900 ${fontMedium}`}>{q ? "No results" : "You're all caught up"}</p>
+                  <p className={`text-[13px] text-slate-500 ${fontRegular}`}>{q ? "No conversations match your search." : "There are no unread messages."}</p>
+                </li>
+              )}
             </ul>
           </aside>
           <section className={`min-h-0 min-w-0 flex-1 flex-col md:flex ${paneOpen ? "flex" : "hidden"}`}>
-            {creating ? <NewChat onPick={openThread} onBack={() => setCreating(false)} /> : open ? <ThreadView thread={open} onBack={() => setOpenName(null)} onSend={send} onReport={() => setReporting(true)} /> : <EmptyThread />}
+            {creating ? <NewChat onPick={openThread} onBack={() => setCreating(false)} /> : open ? <ThreadView thread={open} onBack={() => setOpenName(null)} onSend={send} onMarkUnread={markUnread} onReport={() => setReporting(true)} /> : <EmptyThread />}
           </section>
         </div>
       </div>
