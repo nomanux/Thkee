@@ -332,7 +332,7 @@ export default function SearchPage({ params }: { params: SearchParams }) {
           <circle cx="11" cy="11" r="7" />
           <path d="M20 20l-3.5-3.5" />
         </svg>
-        <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search courses…" aria-label="Search within results" className={`min-w-0 flex-1 bg-transparent text-[14px] text-[#0f172a] outline-none placeholder:text-[#94a3b8] ${fontRegular}`} />
+        <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search courses…" aria-label="Search within results" className={`min-w-0 flex-1 bg-transparent text-[14px] text-[#0f172a] outline-none placeholder:text-slate-400 ${fontRegular}`} />
         {query && (
           <button type="button" onClick={() => setQuery("")} aria-label="Clear search" className="text-[#94a3b8] hover:text-[#0f172a]">
             ✕
@@ -412,7 +412,7 @@ export default function SearchPage({ params }: { params: SearchParams }) {
   );
 
   return (
-    <main className="w-full bg-white pt-[72px]">
+    <main className="w-full bg-white pt-[56px]">
       <section className="w-full border-b border-[#e2e8f0] bg-[#f8fafc] px-4 pt-10 md:px-8">
         <div className="mx-auto flex max-w-[1240px] flex-col gap-3">
           <nav aria-label="Breadcrumb" className={`flex items-center gap-2 text-[13px] text-[#64748b] ${fontRegular}`}>

@@ -535,7 +535,7 @@ function ParticipantsTab() {
       <div className="flex flex-wrap items-center justify-between gap-4">
         <label className="field-box w-full max-w-[378px]">
           <Icon path="M11 19a8 8 0 100-16 8 8 0 000 16zM21 21l-4.3-4.3" className="size-[18px] shrink-0 text-[#64748b]" />
-          <input type="search" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search" aria-label="Search participants" className={`min-w-0 flex-1 bg-transparent text-[14px] leading-[20px] text-[#1e293b] outline-none placeholder:text-[#94a3b8] ${fontRegular}`} />
+          <input type="search" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search" aria-label="Search participants" className={`min-w-0 flex-1 bg-transparent text-[14px] leading-[20px] text-[#1e293b] outline-none placeholder:text-slate-400 ${fontRegular}`} />
         </label>
         <div className="flex flex-wrap items-center gap-5">
           {selected.length > 0 && (

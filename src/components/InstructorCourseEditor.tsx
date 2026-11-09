@@ -193,8 +193,8 @@ function AiInput({ id, label, value, original, placeholder, maxLength, height = 
   const reveal = "opacity-0 transition group-focus-within/field:opacity-100 group-hover/field:opacity-100 pointer-coarse:opacity-100";
   const canRestore = original !== undefined && original !== value;
   return (
-    <div className={`field-box group/field min-w-0 flex-1 focus-within:border-[#334155] focus-within:shadow-none ${height}`}>
-      <input id={id} aria-label={id ? undefined : label} value={value} maxLength={maxLength} onChange={(e) => onChange(e.target.value)} placeholder={placeholder} className={`min-w-0 flex-1 bg-transparent text-[16px] leading-[24px] text-[#1e293b] outline-none placeholder:text-[#94a3b8] md:text-[14px] ${fontRegular}`} />
+    <div className={`field-box group/field min-w-0 flex-1 ${height}`}>
+      <input id={id} aria-label={id ? undefined : label} value={value} maxLength={maxLength} onChange={(e) => onChange(e.target.value)} placeholder={placeholder} className={`min-w-0 flex-1 bg-transparent text-[16px] leading-[24px] text-[#1e293b] outline-none placeholder:text-slate-400 md:text-[14px] ${fontRegular}`} />
       <button type="button" aria-label={`Suggest ${label.toLowerCase()} with AI`} title="Suggest with AI" onClick={() => notify("AI suggestions are coming soon")} className={`flex shrink-0 p-1 text-[#6016fc] ${reveal}`}>
         <Icon path={SPARKLE} className="size-5" filled />
       </button>
@@ -1133,7 +1133,7 @@ function QuizDrawer({ lecture, lectureOptions, onCancel, onSave }: { lecture: Le
                       </div>
                       <div className="rounded-[0_8px_8px_8px] bg-[#f1f5f9] p-2">
                         <div className="flex h-12 items-center gap-2 rounded-[8px] border border-transparent bg-white px-4 focus-within:border-[#334155]">
-                          <input id="quiz-question" value={active.text} onChange={(e) => patchActive({ text: e.target.value })} placeholder="Write question here" className={`min-w-0 flex-1 bg-transparent text-[18px] leading-[24px] text-[#1e293b] outline-none placeholder:text-[#94a3b8] ${fontRegular}`} />
+                          <input id="quiz-question" value={active.text} onChange={(e) => patchActive({ text: e.target.value })} placeholder="Write question here" className={`min-w-0 flex-1 bg-transparent text-[18px] leading-[24px] text-[#1e293b] outline-none placeholder:text-slate-400 ${fontRegular}`} />
                           {active.text && (
                             <button type="button" aria-label="Clear question" onClick={() => patchActive({ text: "" })} className="flex size-4 shrink-0 items-center justify-center rounded-full bg-[#cbd5e1] text-white transition hover:bg-[#94a3b8]">
                               <Icon path={CLOSE} className="size-2.5" />

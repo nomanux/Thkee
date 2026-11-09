@@ -227,7 +227,7 @@ function PointList({ placeholder, values, onChange, keepFirst, counterOnFirst, a
           return (
             <li key={i} className="flex items-center gap-3">
               <div className={`field-box min-w-0 flex-1 ${counter ? "md:mr-0" : ""}`}>
-                <input aria-label={`${label} ${i + 1}`} value={value} maxLength={POINT_LIMIT} onChange={(e) => onChange(values.map((v, j) => (j === i ? e.target.value : v)))} placeholder={placeholder} className={`min-w-0 flex-1 bg-transparent text-[14px] leading-[24px] text-[#334155] outline-none placeholder:text-[#94a3b8] ${fontRegular}`} />
+                <input aria-label={`${label} ${i + 1}`} value={value} maxLength={POINT_LIMIT} onChange={(e) => onChange(values.map((v, j) => (j === i ? e.target.value : v)))} placeholder={placeholder} className={`min-w-0 flex-1 bg-transparent text-[14px] leading-[24px] text-[#334155] outline-none placeholder:text-slate-400 ${fontRegular}`} />
                 {counter ? (
                   <span className={`shrink-0 text-[14px] text-[#cbd5e1] ${fontRegular}`}>{POINT_LIMIT - value.length}</span>
                 ) : (

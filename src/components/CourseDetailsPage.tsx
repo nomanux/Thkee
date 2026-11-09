@@ -213,7 +213,7 @@ export default function CourseDetailsPage({ id }: { id: string }) {
 function NotFound() {
   const { openSearch } = useApp();
   return (
-    <main className="flex min-h-[70vh] w-full flex-col items-center justify-center gap-4 bg-[#f8fafc] px-4 pt-[72px] text-center">
+    <main className="flex min-h-[70vh] w-full flex-col items-center justify-center gap-4 bg-[#f8fafc] px-4 pt-[56px] text-center">
       <p className={`text-[24px] text-[#0f172a] ${fontHeading}`}>Course not found</p>
       <p className={`text-[14px] text-[#64748b] ${fontRegular}`}>This course does not exist or was removed.</p>
       <button type="button" onClick={() => openSearch({})} className={`h-[48px] rounded-[10px] bg-[#ffb20d] px-7 text-[16px] text-[#1e293b] transition hover:bg-[#faa104] ${fontSemi}`}>
@@ -259,7 +259,7 @@ function Details({ course }: { course: Course }) {
   };
 
   return (
-    <main className="w-full bg-[#f8fafc] pb-20 pt-[80px]">
+    <main className="w-full bg-[#f8fafc] pb-20 pt-[64px]">
       <div className="mx-auto grid max-w-[1392px] grid-cols-1 px-3 md:px-6 lg:grid-cols-[384px_minmax(0,1fr)] lg:gap-x-8 xl:grid-cols-[424px_minmax(0,1fr)] xl:gap-x-[46px] 2xl:px-0">
         {/* Banner */}
         <div className="relative overflow-hidden rounded-[20px] bg-[linear-gradient(120deg,#0b1220_0%,#0f172a_55%,#13213a_100%)] px-5 pb-8 pt-6 md:px-8 lg:col-span-2 lg:col-start-1 lg:row-start-1 lg:min-h-[454px] lg:pb-8 lg:pl-[416px] lg:pr-8 lg:pt-[105px] xl:pl-[470px] xl:pr-[34px]">

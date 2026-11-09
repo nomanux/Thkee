@@ -1,4 +1,6 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
+import { HugeiconsIcon } from "@hugeicons/react";
+import { ArrowDown01Icon, Tick02Icon } from "@hugeicons/core-free-icons";
 import { fontMedium, fontRegular } from "../fonts";
 
 function useDropdown() {
@@ -17,7 +19,8 @@ function useDropdown() {
   return { open, setOpen, ref };
 }
 
-const panel = "pop-in absolute top-full z-20 mt-1 flex flex-col gap-0.5 rounded-[6px] bg-white p-1 shadow-[0_8px_24px_rgba(15,23,42,0.15)]";
+const panel =
+  "pop-in absolute top-full z-20 mt-1.5 flex flex-col gap-0.5 rounded-[12px] border border-slate-200 bg-white p-1.5 shadow-[0_1px_2px_rgba(15,23,42,0.05),0_16px_36px_-8px_rgba(15,23,42,0.2)]";
 
 export function FilterSelect({
   label,
@@ -27,6 +30,8 @@ export function FilterSelect({
   alignRight,
   large,
   plain,
+  id,
+  placeholder,
 }: {
   label: string;
   options: { value: string; label: string }[];
@@ -35,53 +40,67 @@ export function FilterSelect({
   alignRight?: boolean;
   large?: boolean;
   plain?: boolean;
+  /** Lets a visible <label htmlFor> point at the trigger. */
+  id?: string;
+  /** Shown (in slate-400) when no option matches the value. */
+  placeholder?: string;
 }) {
   const { open, setOpen, ref } = useDropdown();
+  const selectedLabel = options.find((o) => o.value === value)?.label;
   return (
     <div ref={ref} className="relative" onKeyDown={(e) => e.key === "Escape" && setOpen(false)}>
       <button
+        id={id}
         type="button"
         aria-haspopup="listbox"
-        aria-label={plain ? `${label}: ${options.find((o) => o.value === value)?.label ?? ""}` : undefined}
+        aria-label={plain && !id ? `${label}: ${selectedLabel ?? placeholder ?? ""}` : undefined}
         aria-expanded={open}
         onClick={() => setOpen((o) => !o)}
-        className={`flex items-center gap-2 border border-[#e2e8f0] bg-white text-[#64748b] transition hover:border-[#cbd5e1] ${plain ? "h-[36px] w-full justify-between rounded-[8px] px-3 text-[14px] tracking-[-0.01px] shadow-[0_1px_2px_rgba(15,23,42,0.05)] outline-none focus:border-[#faa104] focus:ring-3 focus:ring-[#ffb20d]/20" : large ? "h-[34px] rounded-[8px] pl-3 pr-2 text-[14px] tracking-[-0.01px]" : "h-[32px] rounded-[6px] px-3 text-[12px]"} ${fontRegular}`}
+        className={`group flex items-center gap-2 border bg-white text-slate-500 shadow-[0_1px_2px_rgba(15,23,42,0.04)] outline-none transition-[border-color,box-shadow,background-color] duration-150 focus-visible:border-[#0d5c4b]/60 focus-visible:ring-3 focus-visible:ring-[#0d5c4b]/12 ${
+          open ? "border-[#0d5c4b]/60 ring-3 ring-[#0d5c4b]/12" : "border-slate-200 hover:border-slate-300 hover:bg-slate-50"
+        } ${plain ? "h-[36px] w-full justify-between rounded-[10px] pl-3 pr-2.5 text-[14px]" : large ? "h-[36px] rounded-[10px] pl-3 pr-2.5 text-[14px]" : "h-[32px] rounded-[8px] pl-2.5 pr-2 text-[13px]"} ${fontRegular}`}
       >
-        <span className="whitespace-nowrap">
+        <span className="min-w-0 truncate whitespace-nowrap">
           {plain ? (
-            <span className="text-[#334155]">{options.find((o) => o.value === value)?.label}</span>
+            <span className={value && selectedLabel ? "text-slate-900" : "text-slate-400"}>{selectedLabel ?? placeholder}</span>
           ) : (
             <>
-              {label}: <span className={`text-[#0f172a] ${fontMedium}`}>{options.find((o) => o.value === value)?.label}</span>
+              {label}: <span className={`text-slate-900 ${fontMedium}`}>{selectedLabel ?? placeholder}</span>
             </>
           )}
         </span>
-        {large || plain ? (
-          <img src="/assets/423e1.svg" alt="" width={16} height={16} className={`size-4 transition-transform ${open ? "rotate-180" : ""}`} />
-        ) : (
-          <svg viewBox="0 0 24 24" className={`size-3.5 text-[#0f172a] transition-transform ${open ? "rotate-180" : ""}`} fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-            <path d="M6 9l6 6 6-6" />
-          </svg>
-        )}
+        <HugeiconsIcon
+          icon={ArrowDown01Icon}
+          size={large || plain ? 18 : 16}
+          strokeWidth={1.8}
+          aria-hidden="true"
+          className={`shrink-0 transition-[transform,color] duration-200 ${open ? "rotate-180 text-[#0d5c4b]" : "text-slate-500 group-hover:text-slate-700"}`}
+        />
       </button>
       {open && (
-        <ul role="listbox" aria-label={label} className={`${panel} min-w-full whitespace-nowrap ${alignRight ? "right-0" : "left-0"}`}>
-          {options.map((o) => (
-            <li key={o.value} role="presentation">
-              <button
-                type="button"
-                role="option"
-                aria-selected={o.value === value}
-                onClick={() => {
-                  onChange(o.value);
-                  setOpen(false);
-                }}
-                className={`w-full rounded-[4px] px-3 py-2 text-left text-[#334155] transition ${large || plain ? "text-[14px]" : "text-[12px]"} hover:bg-[#f1f5f9] ${o.value === value ? "bg-[#f1f5f9]" : ""} ${fontRegular}`}
-              >
-                {o.label}
-              </button>
-            </li>
-          ))}
+        <ul role="listbox" aria-label={label} className={`${panel} min-w-[max(100%,180px)] whitespace-nowrap ${alignRight ? "right-0" : "left-0"}`}>
+          {options.map((o) => {
+            const selected = o.value === value;
+            return (
+              <li key={o.value} role="presentation">
+                <button
+                  type="button"
+                  role="option"
+                  aria-selected={selected}
+                  onClick={() => {
+                    onChange(o.value);
+                    setOpen(false);
+                  }}
+                  className={`flex w-full items-center justify-between gap-4 rounded-[8px] px-2.5 py-2 text-left text-[14px] leading-[20px] transition-colors ${
+                    selected ? `bg-[#eef7f3] text-[#0d5c4b] ${fontMedium}` : `text-slate-700 hover:bg-slate-100 hover:text-slate-900 ${fontRegular}`
+                  }`}
+                >
+                  {o.label}
+                  {selected && <HugeiconsIcon icon={Tick02Icon} size={16} strokeWidth={2} aria-hidden="true" className="shrink-0" />}
+                </button>
+              </li>
+            );
+          })}
         </ul>
       )}
     </div>
@@ -109,7 +128,7 @@ export function ActionMenu({ label, trigger, triggerClass, items, alignLeft }: {
                 setOpen(false);
                 item.onClick();
               }}
-              className={`flex w-full items-center gap-2.5 rounded-[4px] px-3 py-2 text-left text-[14px] transition hover:bg-[#f1f5f9] disabled:text-[#94a3b8] disabled:hover:bg-transparent ${item.danger ? "text-[#dc2626]" : "text-[#334155]"} ${fontRegular}`}
+              className={`flex w-full items-center gap-2.5 rounded-[8px] px-2.5 py-2 text-left text-[14px] leading-[20px] transition-colors disabled:text-slate-400 disabled:hover:bg-transparent ${item.danger ? "text-[#dc2626] hover:bg-[#fef2f2]" : "text-slate-700 hover:bg-slate-100 hover:text-slate-900"} ${fontRegular}`}
             >
               {item.icon}
               {item.label}

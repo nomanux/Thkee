@@ -61,7 +61,7 @@ export default function TeachPage() {
   const photo = "rounded-[6px] object-cover";
 
   return (
-    <main className="w-full bg-white pt-[72px]">
+    <main className="w-full bg-white pt-[56px]">
       <section className="bg-[#f8fafc] px-4 py-10 md:px-8 xl:px-[100px] xl:py-[50px]">
         <div className="mx-auto flex max-w-[1240px] flex-col items-center justify-between gap-10 lg:flex-row">
           <div className="flex flex-col items-start gap-5">

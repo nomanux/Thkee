@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { courses, experts } from "../data";
 import { fontHeading, fontMedium, fontRegular, fontSemi } from "../fonts";
 import { useApp } from "../store";
@@ -173,6 +173,31 @@ export default function ComponentsPage() {
   const [step, setStep] = useState(1);
   const [picked, setPicked] = useState(midnight);
   const [overlay, setOverlay] = useState<"modal" | "drawer" | "confirm" | null>(null);
+  const [active, setActive] = useState(nav[0].id);
+  // While a clicked section is smooth-scrolling into view, keep the clicked item selected.
+  const lockUntil = useRef(0);
+
+  useEffect(() => {
+    const onScroll = () => {
+      if (Date.now() < lockUntil.current) return;
+      let current = nav[0].id;
+      for (const item of nav) {
+        const el = document.getElementById(item.id);
+        if (el && el.getBoundingClientRect().top <= 120) current = item.id;
+      }
+      if (window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 4) current = nav[nav.length - 1].id;
+      setActive(current);
+    };
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
+  const goTo = (id: string) => {
+    setActive(id);
+    lockUntil.current = Date.now() + 900;
+    document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
   const sortOptions = [
     { value: "newest", label: "Newest" },
     { value: "popular", label: "Most popular" },
@@ -180,7 +205,7 @@ export default function ComponentsPage() {
   ];
 
   return (
-    <main className="w-full bg-white pt-[72px]">
+    <main className="w-full bg-white pt-[56px]">
       <div className="mx-auto flex max-w-[1272px] flex-col gap-6 px-4 pb-14 pt-8 md:flex-row md:gap-14 md:pt-10">
         <aside className="shrink-0 md:w-[232px]">
           <div className="md:sticky md:top-[112px]">
@@ -189,11 +214,22 @@ export default function ComponentsPage() {
             </h1>
             <p className={`mb-4 mt-1 text-[14px] leading-[20px] text-[#64748b] ${fontRegular}`}>The UI used across Thkee, shown live.</p>
             <nav aria-label="Component sections" className="-mx-3 flex gap-1 overflow-x-auto md:flex-col md:overflow-visible">
-              {nav.map((item) => (
-                <button key={item.id} type="button" onClick={() => document.getElementById(item.id)?.scrollIntoView({ behavior: "smooth", block: "start" })} className={`flex h-[36px] shrink-0 items-center whitespace-nowrap rounded-[8px] px-3 text-left text-[14px] text-[#475569] transition hover:bg-[#f1f5f9] hover:text-[#0f172a] ${fontRegular}`}>
-                  {item.label}
-                </button>
-              ))}
+              {nav.map((item) => {
+                const selected = item.id === active;
+                return (
+                  <button
+                    key={item.id}
+                    type="button"
+                    aria-current={selected ? "true" : undefined}
+                    onClick={() => goTo(item.id)}
+                    className={`flex h-[36px] shrink-0 items-center whitespace-nowrap rounded-[8px] px-3 text-left text-[14px] transition-colors ${
+                      selected ? `bg-[#eef7f3] text-[#0d5c4b] ${fontMedium}` : `text-[#475569] hover:bg-[#f3f6f5] hover:text-[#0f172a] ${fontRegular}`
+                    }`}
+                  >
+                    {item.label}
+                  </button>
+                );
+              })}
             </nav>
           </div>
         </aside>
@@ -295,7 +331,7 @@ export default function ComponentsPage() {
                   <circle cx="11" cy="11" r="7" />
                   <path d="M20 20l-3.5-3.5" />
                 </svg>
-                <input aria-label="Sample search" placeholder="Search" className={`min-w-0 flex-1 bg-transparent text-[16px] text-[#0f172a] outline-none placeholder:text-[#94a3b8] md:text-[14px] ${fontRegular}`} />
+                <input aria-label="Sample search" placeholder="Search" className={`min-w-0 flex-1 bg-transparent text-[16px] text-[#0f172a] outline-none placeholder:text-slate-400 md:text-[14px] ${fontRegular}`} />
               </label>
             </Demo>
             <Demo name="TimeSelect" from="InstructorAvailability.tsx">

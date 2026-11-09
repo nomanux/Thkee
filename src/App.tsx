@@ -381,7 +381,7 @@ function Newsletter() {
           }}
           placeholder="Enter your email..."
           aria-label="Email address"
-          className={`flex-1 min-w-0 bg-transparent leading-[24px] text-[#1e293b] text-[16px] tracking-[-0.01px] placeholder:text-[#1e293b] focus:outline-none ${fontRegular}`}
+          className={`flex-1 min-w-0 bg-transparent leading-[24px] text-[#1e293b] text-[16px] tracking-[-0.01px] placeholder:text-slate-400 focus:outline-none ${fontRegular}`}
         />
         <button type="submit" className={`bg-[#1e293b] px-[20px] py-[12px] rounded-[8px] shrink-0 leading-[24px] text-[16px] text-white whitespace-nowrap transition-colors hover:bg-[#0d5c4b] ${fontSemi}`}>
           Subscribe

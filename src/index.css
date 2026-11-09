@@ -149,10 +149,6 @@ body {
   .live-orbit, .live-orbit-rev, .live-ring { animation: none; }
 }
 
-::selection {
-  background: #12b981;
-  color: #04201a;
-}
 
 @keyframes neon-pulse {
   0%, 100% { box-shadow: 0 0 0 rgba(146, 227, 169, 0); }
@@ -214,22 +210,38 @@ body {
   .hero-drift, .hero-twinkle, .hero-shimmer, .hero-pulse, .hero-marquee, .hero-rise, .fade-up { animation: none; }
 }
 
+/* Standard placeholder: regular weight, slate-400, same size as the field's text.
+   In the base layer, so a placeholder:* utility can still override it (e.g. on dark backgrounds). */
+@layer base {
+  input::placeholder,
+  textarea::placeholder {
+    color: var(--color-slate-400);
+    opacity: 1;
+    font-family: "Inter:Regular", Inter, sans-serif;
+    font-weight: 400;
+    font-style: normal;
+    letter-spacing: normal;
+  }
+}
+
 /* Shared form fields. Utilities on an element still override these, e.g. "field w-auto". */
 @layer components {
+  /* Matches FilterSelect in Menus.tsx: soft grey border, 10px radius, brand-green focus ring. */
   .field,
   .field-box {
-    border: 1px solid #e2e8f0;
-    border-radius: 8px;
+    border: 1px solid var(--color-slate-200);
+    border-radius: 10px;
     background-color: #fff;
     padding-inline: 12px;
-    box-shadow: 0 1px 2px rgb(15 23 42 / 0.05);
+    box-shadow: 0 1px 2px rgb(15 23 42 / 0.04);
     transition:
       border-color 0.15s,
-      box-shadow 0.15s;
+      box-shadow 0.15s,
+      background-color 0.15s;
   }
   .field {
     width: 100%;
-    color: #0f172a;
+    color: var(--color-slate-900);
     font-family: "Inter:Regular";
     font-weight: 400;
     /* 16px on phones stops iOS zooming in when a field is focused. */
@@ -237,9 +249,12 @@ body {
     line-height: 20px;
     outline: none;
   }
+  /* Line box fills the inside of the 36px field (36 - 2px border), so the text sits exactly in the vertical middle. */
   input.field,
   select.field {
     height: 36px;
+    padding-block: 0;
+    line-height: 34px;
   }
   textarea.field {
     display: block;
@@ -250,14 +265,18 @@ body {
   select.field {
     appearance: none;
     cursor: pointer;
-    padding-right: 32px;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+    padding-right: 34px;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M18 9.00005C18 9.00005 13.5811 15 12 15C10.4188 15 6 9 6 9'/%3E%3C/svg%3E");
     background-position: right 10px center;
     background-repeat: no-repeat;
-    background-size: 14px;
+    background-size: 18px;
   }
-  .field::placeholder {
-    color: #94a3b8;
+  textarea.field {
+    border-radius: 12px;
+  }
+  .field::placeholder,
+  .field-box input::placeholder {
+    color: var(--color-slate-400);
   }
   .field-box {
     display: flex;
@@ -267,17 +286,45 @@ body {
   }
   .field:hover,
   .field-box:hover {
-    border-color: #cbd5e1;
+    border-color: var(--color-slate-300);
+    background-color: var(--color-slate-50);
   }
   .field:focus,
   .field-box:focus-within {
-    border-color: #faa104;
-    box-shadow: 0 0 0 3px rgb(255 178 13 / 0.2);
+    border-color: rgb(13 92 75 / 0.6);
+    background-color: #fff;
+    box-shadow: 0 0 0 3px rgb(13 92 75 / 0.12);
   }
-  .field:disabled {
+  /* Chrome autofill paints its own blue background and text colour; keep autofilled fields looking like the rest. */
+  .field:-webkit-autofill,
+  .field-box input:-webkit-autofill {
+    -webkit-text-fill-color: var(--color-slate-900);
+    caret-color: var(--color-slate-900);
+    box-shadow: 0 0 0 1000px #fff inset, 0 1px 2px rgb(15 23 42 / 0.04);
+    transition: background-color 9999s ease-out 0s;
+  }
+  .field:-webkit-autofill:focus {
+    box-shadow: 0 0 0 1000px #fff inset, 0 0 0 3px rgb(13 92 75 / 0.12);
+  }
+  .field-box input:-webkit-autofill {
+    box-shadow: 0 0 0 1000px #fff inset;
+  }
+  .field[aria-invalid="true"],
+  .field-box:has([aria-invalid="true"]) {
+    border-color: #f87171;
+  }
+  .field[aria-invalid="true"]:focus,
+  .field-box:has([aria-invalid="true"]):focus-within {
+    border-color: #ef4444;
+    box-shadow: 0 0 0 3px rgb(239 68 68 / 0.14);
+  }
+  .field:disabled,
+  .field-box:has(:disabled) {
     cursor: not-allowed;
-    background-color: #f8fafc;
-    color: #94a3b8;
+    border-color: var(--color-slate-200);
+    background-color: var(--color-slate-50);
+    color: var(--color-slate-400);
+    box-shadow: none;
   }
   @media (min-width: 48rem) {
     .field {

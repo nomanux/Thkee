@@ -437,7 +437,7 @@ export default function InstructorCourses({ startNew }: { startNew?: boolean }) 
                   })}
                 </div>
                 <div className="flex w-full items-center gap-2 pb-3 @3xl:w-auto">
-                  <label className="flex h-9 min-w-0 flex-1 items-center gap-2 rounded-[10px] border border-[#e2e8f0] bg-[#f8fafc] px-3 transition focus-within:border-[#ffb20d] focus-within:bg-white focus-within:ring-4 focus-within:ring-[#ffb20d]/15 @3xl:w-[240px] @3xl:flex-none">
+                  <label className="flex h-9 min-w-0 flex-1 items-center gap-2 rounded-[10px] border border-slate-200 bg-white px-3 shadow-[0_1px_2px_rgba(15,23,42,0.04)] transition hover:border-slate-300 focus-within:border-[#0d5c4b]/60 focus-within:ring-3 focus-within:ring-[#0d5c4b]/12 @3xl:w-[240px] @3xl:flex-none">
                     <Icon d={I.search} className="size-4 shrink-0 text-[#94a3b8]" />
                     <input
                       type="search"
@@ -448,12 +448,12 @@ export default function InstructorCourses({ startNew }: { startNew?: boolean }) 
                       }}
                       placeholder="Search courses"
                       aria-label="Search courses"
-                      className={`min-w-0 flex-1 bg-transparent text-[14px] text-[#0f172a] outline-none placeholder:text-[#94a3b8] ${fontRegular}`}
+                      className={`min-w-0 flex-1 bg-transparent text-[14px] text-slate-900 outline-none placeholder:text-slate-400 ${fontRegular}`}
                     />
                   </label>
                   <label className="relative">
                     <span className="sr-only">Sort by</span>
-                    <select value={sort} onChange={(e) => setSort(e.target.value as SortKey)} className={`h-9 appearance-none rounded-[10px] border border-[#e2e8f0] bg-white pl-3 pr-8 text-[14px] text-[#0f172a] outline-none transition hover:bg-[#f8fafc] focus:border-[#ffb20d] ${fontMedium}`}>
+                    <select value={sort} onChange={(e) => setSort(e.target.value as SortKey)} className={`h-9 appearance-none rounded-[10px] border border-slate-200 bg-white pl-3 pr-8 text-[14px] text-slate-900 shadow-[0_1px_2px_rgba(15,23,42,0.04)] outline-none transition hover:border-slate-300 hover:bg-slate-50 focus:border-[#0d5c4b]/60 focus:ring-3 focus:ring-[#0d5c4b]/12 ${fontMedium}`}>
                       <option value="updated">Recently updated</option>
                       <option value="purchases">Most sales</option>
                       <option value="favorites">Most favourited</option>

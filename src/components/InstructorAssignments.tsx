@@ -303,7 +303,7 @@ function QuestionReviewCard({
               onKeyDown={(e) => e.key === "Escape" && onCancel()}
               aria-label={`Feedback for question ${number}`}
               placeholder="Write feedback..."
-              className={`min-w-0 flex-1 bg-transparent text-[14px] leading-[24px] tracking-[-0.01px] text-[#1e293b] outline-none placeholder:text-[#64748b] ${fontRegular}`}
+              className={`min-w-0 flex-1 bg-transparent text-[14px] leading-[24px] tracking-[-0.01px] text-[#1e293b] outline-none placeholder:text-slate-400 ${fontRegular}`}
             />
             <button type="button" onClick={onCancel} aria-label="Cancel feedback" className="flex shrink-0 rounded-full transition hover:opacity-70">
               <img src={imgClose} alt="" width={20} height={20} className="size-5" />

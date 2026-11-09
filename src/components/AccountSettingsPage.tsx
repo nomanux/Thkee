@@ -1,67 +1,21 @@
 import { useId, useRef, useState, type ChangeEvent, type ReactNode } from "react";
 import { fontBold, fontHeading, fontMedium, fontRegular, fontSemi } from "../fonts";
 import { openAccount, SAVED_CARD, useApp, useStoredState } from "../store";
+import { HugeiconsIcon, type IconSvgElement } from "@hugeicons/react";
+import { AlertCircleIcon, CreditCardIcon, LockIcon, Notification01Icon, Shield01Icon, UserIcon } from "@hugeicons/core-free-icons";
+import { FilterSelect } from "./Menus";
 import { Shell } from "./Overlays";
 
 const imgCheckboxOn = "/assets/70227.svg";
 const imgCloseAccount = "/assets/8c19a.png";
 
-const sections: { id: string; label: string; icon: ReactNode }[] = [
-  {
-    id: "profile",
-    label: "Profile",
-    icon: (
-      <>
-        <circle cx="12" cy="8" r="4" />
-        <path d="M4 21c0-4.4 3.6-7 8-7s8 2.6 8 7" />
-      </>
-    ),
-  },
-  {
-    id: "security",
-    label: "Security",
-    icon: (
-      <>
-        <rect x="4" y="11" width="16" height="10" rx="2" />
-        <path d="M8 11V7a4 4 0 0 1 8 0v4" />
-      </>
-    ),
-  },
-  {
-    id: "privacy",
-    label: "Privacy",
-    icon: <path d="M12 3l8 3v6c0 5-3.4 8-8 9-4.6-1-8-4-8-9V6z" />,
-  },
-  {
-    id: "notifications",
-    label: "Notifications",
-    icon: (
-      <>
-        <path d="M6 16V10a6 6 0 0 1 12 0v6l2 2H4z" />
-        <path d="M10 21h4" />
-      </>
-    ),
-  },
-  {
-    id: "payment",
-    label: "Payment Methods",
-    icon: (
-      <>
-        <rect x="3" y="5" width="18" height="14" rx="2" />
-        <path d="M3 10h18" />
-      </>
-    ),
-  },
-  {
-    id: "close",
-    label: "Close Account",
-    icon: (
-      <>
-        <circle cx="12" cy="12" r="9" />
-        <path d="M12 7.5v5.5M12 16.5v.01" />
-      </>
-    ),
-  },
+const sections: { id: string; label: string; icon: IconSvgElement }[] = [
+  { id: "profile", label: "Profile", icon: UserIcon },
+  { id: "security", label: "Security", icon: LockIcon },
+  { id: "privacy", label: "Privacy", icon: Shield01Icon },
+  { id: "notifications", label: "Notifications", icon: Notification01Icon },
+  { id: "payment", label: "Payment Methods", icon: CreditCardIcon },
+  { id: "close", label: "Close Account", icon: AlertCircleIcon },
 ];
 const languages = ["English", "Arabic"];
 const timezones = ["(GMT+03:00) Riyadh", "(GMT+04:00) Dubai", "(GMT+03:00) Kuwait", "(GMT+02:00) Cairo", "(GMT+00:00) London", "(GMT+01:00) Paris", "(GMT-05:00) New York", "(GMT+06:00) Dhaka"];
@@ -74,13 +28,12 @@ const socials = [
 const MAX_PHOTO_BYTES = 1024 * 1024;
 
 const fieldBox = "field";
-const labelClass = `text-[14px] leading-[20px] text-[#0f172a] ${fontMedium}`;
-const hintClass = `text-[14px] leading-[20px] text-[#64748b] ${fontRegular}`;
-const primaryButton = `h-[36px] shrink-0 rounded-[8px] bg-[#ffb20d] px-4 text-[14px] text-[#1e293b] transition hover:bg-[#faa104] disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-[#ffb20d] ${fontMedium}`;
-const secondaryButton = `h-[36px] shrink-0 rounded-[8px] border border-[#cbd5e1] bg-white px-4 text-[14px] text-[#1e293b] transition hover:bg-[#f8fafc] disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-white ${fontMedium}`;
+const labelClass = `text-[14px] leading-[20px] text-slate-900 ${fontMedium}`;
+const hintClass = `text-[14px] leading-[20px] text-slate-500 ${fontRegular}`;
+const primaryButton = `h-[36px] shrink-0 rounded-[8px] bg-[#ffb20d] px-4 text-[14px] text-slate-800 transition hover:bg-[#faa104] disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-[#ffb20d] ${fontMedium}`;
+const secondaryButton = `h-[36px] shrink-0 rounded-[8px] border border-slate-300 bg-white px-4 text-[14px] text-slate-800 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-white ${fontMedium}`;
 const dangerButton = `h-[36px] shrink-0 rounded-[8px] bg-[#dc2626] px-4 text-[14px] text-white transition hover:bg-[#b91c1c] disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-[#dc2626] ${fontMedium}`;
 
-const borderFor = (error?: string) => (error ? "border-[#ef4444]" : "");
 
 function FieldError({ id, message }: { id: string; message?: string }) {
   if (!message) return null;
@@ -96,9 +49,9 @@ export function TextField({ id, label, value, onChange, placeholder, error, hint
   return (
     <div className="flex flex-col gap-1.5">
       <label htmlFor={id} className={labelClass}>
-        {label} {required && <span className={`text-[#64748b] ${fontRegular}`}>(Required)</span>}
+        {label} {required && <span className={`text-slate-500 ${fontRegular}`}>(Required)</span>}
       </label>
-      <input id={id} type={type} value={value} onChange={(e) => onChange(e.target.value)} placeholder={placeholder} aria-invalid={!!error} aria-describedby={describedBy} className={`${fieldBox} ${borderFor(error)}`} />
+      <input id={id} type={type} value={value} onChange={(e) => onChange(e.target.value)} placeholder={placeholder} aria-invalid={!!error} aria-describedby={describedBy} className={fieldBox} />
       <FieldError id={id} message={error} />
       {hint && !error && (
         <p id={`${id}-hint`} className={hintClass}>
@@ -119,8 +72,8 @@ export function LinkField({ id, label, value, onChange, placeholder, prefix, ico
       <div className="field-box cursor-text" onClick={(e) => e.currentTarget.querySelector("input")?.focus()}>
         <span className="flex shrink-0">{icon}</span>
         <div className="flex min-w-0 flex-1 items-center">
-          {prefix && <span className={`shrink-0 text-[#64748b] ${text}`}>{prefix}</span>}
-          <input id={id} type={type} value={value} onChange={(e) => onChange(e.target.value)} placeholder={placeholder} className={`min-w-0 flex-1 bg-transparent text-[#0f172a] outline-none placeholder:text-[#94a3b8] ${text}`} />
+          {prefix && <span className={`shrink-0 text-slate-500 ${text}`}>{prefix}</span>}
+          <input id={id} type={type} value={value} onChange={(e) => onChange(e.target.value)} placeholder={placeholder} className={`min-w-0 flex-1 bg-transparent text-slate-900 outline-none placeholder:text-slate-400 ${text}`} />
         </div>
       </div>
     </div>
@@ -133,27 +86,16 @@ export function SelectField({ id, label, value, onChange, placeholder, options }
       <label htmlFor={id} className={labelClass}>
         {label}
       </label>
-      <div className="relative">
-        <select id={id} value={value} onChange={(e) => onChange(e.target.value)} className={`${fieldBox} ${value ? "" : "text-[#94a3b8]"}`}>
-          <option value="" disabled>
-            {placeholder}
-          </option>
-          {options.map((o) => (
-            <option key={o} value={o} className="text-[#0f172a]">
-              {o}
-            </option>
-          ))}
-        </select>
-      </div>
+      <FilterSelect plain id={id} label={label} value={value} onChange={onChange} placeholder={placeholder} options={options.map((o) => ({ value: o, label: o }))} />
     </div>
   );
 }
 
 export function CheckField({ checked, onChange, children }: { checked: boolean; onChange: (checked: boolean) => void; children: ReactNode }) {
   return (
-    <label className={`flex cursor-pointer items-start gap-2 text-[14px] leading-[20px] tracking-[-0.01px] text-[#475569] ${fontRegular}`}>
+    <label className={`flex cursor-pointer items-start gap-2 text-[14px] leading-[20px] tracking-[-0.01px] text-slate-600 ${fontRegular}`}>
       <input type="checkbox" checked={checked} onChange={(e) => onChange(e.target.checked)} className="peer sr-only" />
-      <span className="mt-0.5 size-4 shrink-0 rounded-[3.5px] peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-[#0d5c4b]">{checked ? <img src={imgCheckboxOn} alt="" width={16} height={16} className="block size-4" /> : <span className="block size-4 rounded-[3.5px] border border-[#cbd5e1] bg-white" />}</span>
+      <span className="mt-0.5 size-4 shrink-0 rounded-[3.5px] peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-[#0d5c4b]">{checked ? <img src={imgCheckboxOn} alt="" width={16} height={16} className="block size-4" /> : <span className="block size-4 rounded-[3.5px] border border-slate-300 bg-white" />}</span>
       {children}
     </label>
   );
@@ -171,7 +113,7 @@ export function ToggleRow({ title, description, checked, onChange }: { title: st
           {description}
         </p>
       </div>
-      <button type="button" role="switch" aria-checked={checked} aria-labelledby={`${id}-title`} aria-describedby={`${id}-text`} onClick={() => onChange(!checked)} className={`relative h-6 w-11 shrink-0 rounded-full transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0d5c4b] ${checked ? "bg-[#0d5c4b]" : "bg-[#cbd5e1]"}`}>
+      <button type="button" role="switch" aria-checked={checked} aria-labelledby={`${id}-title`} aria-describedby={`${id}-text`} onClick={() => onChange(!checked)} className={`relative h-6 w-11 shrink-0 rounded-full transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0d5c4b] ${checked ? "bg-[#0d5c4b]" : "bg-slate-300"}`}>
         <span className={`absolute left-0.5 top-0.5 size-5 rounded-full bg-white shadow-sm transition-transform ${checked ? "translate-x-5" : ""}`} />
       </button>
     </div>
@@ -181,18 +123,18 @@ export function ToggleRow({ title, description, checked, onChange }: { title: st
 function SectionHeading({ title, subtitle }: { title: string; subtitle: string }) {
   return (
     <div className="flex flex-col gap-1 pb-6">
-      <h2 className={`m-0 text-[20px] leading-[28px] text-[#0f172a] ${fontHeading}`} style={{ fontVariationSettings: '"wdth" 100' }}>
+      <h2 className={`m-0 text-[20px] leading-[28px] text-slate-900 ${fontHeading}`} style={{ fontVariationSettings: '"wdth" 100' }}>
         {title}
       </h2>
-      <p className={`text-[14px] leading-[22px] text-[#64748b] ${fontRegular}`}>{subtitle}</p>
+      <p className={`text-[14px] leading-[22px] text-slate-500 ${fontRegular}`}>{subtitle}</p>
     </div>
   );
 }
 
 export function Card({ title, description, footer, danger, children }: { title: string; description?: string; footer?: ReactNode; danger?: boolean; children: ReactNode }) {
   return (
-    <section className="border-t border-[#e2e8f0] py-7">
-      <h3 className={`m-0 text-[14px] leading-[22px] ${danger ? "text-[#b91c1c]" : "text-[#0f172a]"} ${fontSemi}`}>{title}</h3>
+    <section className="border-t border-slate-200 py-7">
+      <h3 className={`m-0 text-[14px] leading-[22px] ${danger ? "text-[#b91c1c]" : "text-slate-900"} ${fontSemi}`}>{title}</h3>
       {description && <p className={`mt-0.5 ${hintClass}`}>{description}</p>}
       <div className="mt-4">
         {children}
@@ -293,7 +235,7 @@ function ProfileSection() {
             onChange={set("website")}
             placeholder="https://yourwebsite.com"
             icon={
-              <svg viewBox="0 0 24 24" className="size-4 text-[#64748b]" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <svg viewBox="0 0 24 24" className="size-4 text-slate-500" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                 <circle cx="12" cy="12" r="9" />
                 <path d="M3 12h18M12 3c2.5 2.5 3.8 5.5 3.8 9s-1.3 6.5-3.8 9c-2.5-2.5-3.8-5.5-3.8-9S9.5 5.5 12 3z" />
               </svg>
@@ -319,7 +261,7 @@ function ProfileSection() {
         </div>
       </Card>
 
-      <div className="flex items-center gap-3 border-t border-[#e2e8f0] py-4">
+      <div className="flex items-center gap-3 border-t border-slate-200 py-4">
         <button type="button" disabled={!dirty} onClick={save} className={primaryButton}>
           Save changes
         </button>
@@ -354,7 +296,7 @@ function ChangePasswordDialog({ onClose }: { onClose: () => void }) {
   return (
     <Shell title="Change Password" onClose={onClose} width="max-w-[587px]" radius="sm:rounded-[12px]">
       <div className="flex flex-col gap-5 p-6">
-        <p className={`text-[14px] leading-[24px] text-[#334155] ${fontRegular}`}>
+        <p className={`text-[14px] leading-[24px] text-slate-700 ${fontRegular}`}>
           In-case you forgot your current password, proceed to{" "}
           <button
             type="button"
@@ -372,7 +314,7 @@ function ChangePasswordDialog({ onClose }: { onClose: () => void }) {
         <TextField id="new-password" label="New Password" required type="password" placeholder="Enter your new password" value={values.next} onChange={set("next")} error={show("next")} hint="Use at least 8 characters." />
         <TextField id="confirm-password" label="Confirm New Password" required type="password" placeholder="Enter your confirmation password" value={values.confirm} onChange={set("confirm")} error={show("confirm")} />
       </div>
-      <div className="flex items-center justify-end gap-3 border-t border-[#e2e8f0] px-6 py-4">
+      <div className="flex items-center justify-end gap-3 border-t border-slate-200 px-6 py-4">
         <button type="button" onClick={onClose} className={secondaryButton}>
           Cancel
         </button>
@@ -434,7 +376,7 @@ function PrivacySection() {
     <div className="flex flex-col">
       <SectionHeading title="Privacy" subtitle="Choose what other people can see on your profile page." />
       <Card title="Profile visibility">
-        <div className="divide-y divide-[#e2e8f0]">
+        <div className="divide-y divide-slate-200">
           <ToggleRow title="Show my profile" description="Let logged-in users view your profile." checked={saved.showProfile} onChange={toggle("showProfile")} />
           <ToggleRow title="Show my courses" description="Show the courses you are taking on your profile page." checked={saved.showCourses} onChange={toggle("showCourses")} />
         </div>
@@ -454,7 +396,7 @@ function NotificationsSection() {
     <div className="flex flex-col">
       <SectionHeading title="Notifications" subtitle="Choose the updates you want to receive from Thkee." />
       <Card title="Email notifications">
-        <div className="divide-y divide-[#e2e8f0]">
+        <div className="divide-y divide-slate-200">
           <ToggleRow title="Course recommendations" description="Suggested courses and helpful resources from Thkee." checked={saved.recommendations} onChange={(recommendations) => update({ recommendations })} />
           <ToggleRow title="Instructor announcements" description={'Updates from instructors of courses you\'re enrolled in. To change this for one course, open its dashboard and click "Options".'} checked={saved.announcements} onChange={(announcements) => update({ announcements })} />
           <ToggleRow title="Promotional emails" description="Offers and promotions. You'll still get important emails like purchase receipts." checked={!saved.noPromotions} onChange={(on) => update({ noPromotions: !on })} />
@@ -501,7 +443,7 @@ function CloseAccountDialog({ onClose }: { onClose: () => void }) {
             <p className={`text-[24px] leading-[30px] tracking-[-0.5px] text-black sm:text-[30px] sm:leading-[36px] ${fontHeading}`} style={{ fontVariationSettings: '"wdth" 100' }}>
               Are you sure you want to close your account?
             </p>
-            <p className={`text-[14px] leading-[24px] tracking-[-0.01px] text-[#64748b] ${fontRegular}`}>Continue with closing requires you to confirm the information below</p>
+            <p className={`text-[14px] leading-[24px] tracking-[-0.01px] text-slate-500 ${fontRegular}`}>Continue with closing requires you to confirm the information below</p>
           </div>
           <img src={imgCloseAccount} alt="" width={149} height={130} className="hidden h-[130px] w-[149px] shrink-0 object-cover sm:block" />
         </div>
@@ -514,7 +456,7 @@ function CloseAccountDialog({ onClose }: { onClose: () => void }) {
           </CheckField>
         </div>
       </div>
-      <div className="flex items-center justify-end gap-3 border-t border-[#e2e8f0] px-6 py-4">
+      <div className="flex items-center justify-end gap-3 border-t border-slate-200 px-6 py-4">
         <button type="button" onClick={onClose} className={secondaryButton}>
           Cancel
         </button>
@@ -551,7 +493,7 @@ function CloseSection() {
         }
       >
         <div className="flex flex-col gap-5">
-          <ul className={`flex list-disc flex-col gap-1 pl-5 text-[14px] leading-[24px] text-[#475569] ${fontRegular}`}>
+          <ul className={`flex list-disc flex-col gap-1 pl-5 text-[14px] leading-[24px] text-slate-600 ${fontRegular}`}>
             <li>Closing your account is permanent and cannot be undone.</li>
             <li>Ensure you have saved any important information or data before proceeding.</li>
             <li>If you have any pending transactions or issues, please resolve them before closing your account.</li>
@@ -561,8 +503,8 @@ function CloseSection() {
               Current password
             </label>
             <div className="relative">
-              <input id="close-password" type={visible ? "text" : "password"} value={password} onChange={(e) => setPassword(e.target.value)} aria-invalid={!!error} aria-describedby={error ? "close-password-error" : undefined} className={`${fieldBox} pr-10 ${borderFor(error)}`} />
-              <button type="button" onClick={() => setVisible((v) => !v)} aria-label={visible ? "Hide password" : "Show password"} className="absolute right-3 top-1/2 flex size-6 -translate-y-1/2 items-center justify-center text-[#64748b] transition hover:text-[#0f172a]">
+              <input id="close-password" type={visible ? "text" : "password"} value={password} onChange={(e) => setPassword(e.target.value)} aria-invalid={!!error} aria-describedby={error ? "close-password-error" : undefined} className={`${fieldBox} pr-10`} />
+              <button type="button" onClick={() => setVisible((v) => !v)} aria-label={visible ? "Hide password" : "Show password"} className="absolute right-3 top-1/2 flex size-6 -translate-y-1/2 items-center justify-center text-slate-500 transition hover:text-slate-900">
                 <svg viewBox="0 0 24 24" className="size-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                   <path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7-10-7-10-7z" />
                   <circle cx="12" cy="12" r="3" />
@@ -573,7 +515,7 @@ function CloseSection() {
             <FieldError id="close-password" message={error} />
             <p className={hintClass}>
               If you log in with Google, set a password in{" "}
-              <button type="button" onClick={() => openAccount("security")} className={`text-[#0f172a] underline ${fontMedium}`}>
+              <button type="button" onClick={() => openAccount("security")} className={`text-slate-900 underline ${fontMedium}`}>
                 Security settings
               </button>{" "}
               first.
@@ -590,11 +532,11 @@ export default function AccountSettingsPage({ section }: { section: string }) {
   const current = sections.some((s) => s.id === section) ? section : "profile";
 
   return (
-    <main className="w-full bg-white pt-[72px]">
+    <main className="w-full bg-white pt-[56px]">
       <div className="mx-auto flex max-w-[1272px] flex-col gap-6 px-4 pb-14 pt-8 md:flex-row md:gap-14 md:pt-10">
         <aside className="shrink-0 md:w-[232px]">
           <div className="md:sticky md:top-[112px]">
-            <h1 className="m-0 mb-4 font-['Instrument_Sans:Medium'] text-[24px] font-medium leading-[32px] text-[#0f172a]" style={{ fontVariationSettings: '"wdth" 100' }}>
+            <h1 className="m-0 mb-4 font-['Instrument_Sans:Medium'] text-[24px] font-medium leading-[32px] text-slate-900" style={{ fontVariationSettings: '"wdth" 100' }}>
               Account Settings
             </h1>
             <nav aria-label="Account settings" className="-mx-3 flex gap-1 overflow-x-auto md:flex-col md:overflow-visible">
@@ -602,10 +544,8 @@ export default function AccountSettingsPage({ section }: { section: string }) {
                 const active = s.id === current;
                 const danger = s.id === "close";
                 return (
-                  <button key={s.id} type="button" aria-current={active ? "page" : undefined} onClick={() => openAccount(s.id)} className={`flex h-[40px] shrink-0 items-center gap-2.5 whitespace-nowrap rounded-[8px] px-3 text-left text-[14px] transition ${active ? (danger ? `bg-[#fef2f2] text-[#b91c1c] ${fontMedium}` : `bg-[#f1f5f9] text-[#0f172a] ${fontMedium}`) : danger ? `text-[#dc2626] hover:bg-[#fef2f2] ${fontRegular}` : `text-[#475569] hover:bg-[#f8fafc] hover:text-[#0f172a] ${fontRegular}`}`}>
-                    <svg viewBox="0 0 24 24" className="size-[18px] shrink-0" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                      {s.icon}
-                    </svg>
+                  <button key={s.id} type="button" aria-current={active ? "page" : undefined} onClick={() => openAccount(s.id)} className={`flex h-[40px] shrink-0 items-center gap-2.5 whitespace-nowrap rounded-[8px] px-3 text-left text-[14px] transition-colors ${active ? (danger ? `bg-red-50 text-red-700 ${fontMedium}` : `bg-[#eef7f3] text-[#0d5c4b] ${fontMedium}`) : danger ? `text-red-600 hover:bg-red-50 ${fontRegular}` : `text-slate-600 hover:bg-slate-100 hover:text-slate-900 ${fontRegular}`}`}>
+                    <HugeiconsIcon icon={s.icon} size={18} strokeWidth={1.7} aria-hidden="true" className="shrink-0" />
                     {s.label}
                   </button>
                 );

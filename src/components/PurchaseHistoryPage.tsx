@@ -447,7 +447,7 @@ export default function PurchaseHistoryPage() {
   const [doc, setDoc] = useState<OrderDoc | null>(null);
 
   return (
-    <main className="w-full bg-[#fffefe] pb-20 pt-[72px]">
+    <main className="w-full bg-[#fffefe] pb-20 pt-[56px]">
       <div className="border-b border-[#e2e8f0] bg-[#f8fafc] px-4 pt-2 md:px-8 xl:px-20">
         <div className="mx-auto max-w-[1280px]">
           <h1 className="m-0 py-6 font-['Instrument_Sans:Medium'] text-[24px] font-medium leading-[32px] text-[#0f172a]" style={{ fontVariationSettings: '"wdth" 100' }}>

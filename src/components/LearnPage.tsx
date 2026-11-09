@@ -982,7 +982,7 @@ function Player({ course }: { course: Course }) {
                     onChange={(e) => setSearch(e.target.value)}
                     placeholder="Search here"
                     aria-label="Search lessons"
-                    className={`min-w-0 flex-1 bg-transparent text-[16px] md:text-[14px] text-[#0f172a] outline-none placeholder:text-[#94a3b8] ${fontRegular}`}
+                    className={`min-w-0 flex-1 bg-transparent text-[16px] md:text-[14px] text-[#0f172a] outline-none placeholder:text-slate-400 ${fontRegular}`}
                   />
                 </label>
               </div>
@@ -1830,7 +1830,7 @@ function QaTab({
           onChange={(e) => setSearch(e.target.value)}
           placeholder="Search all course questions."
           aria-label="Search all course questions"
-          className={`min-w-0 flex-1 bg-transparent text-[16px] text-[#0f172a] outline-none placeholder:text-[#94a3b8] md:text-[14px] ${fontRegular}`}
+          className={`min-w-0 flex-1 bg-transparent text-[16px] text-[#0f172a] outline-none placeholder:text-slate-400 md:text-[14px] ${fontRegular}`}
         />
       </label>
       <div className="flex flex-wrap items-center justify-end gap-3">

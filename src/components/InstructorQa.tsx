@@ -270,7 +270,7 @@ function NewFeatured({ onCreate }: { onCreate: (lecture: string, title: string, 
             Question title
           </label>
           <div className="field-box">
-            <input id="qa-title" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Type the question title" className={`min-w-0 flex-1 bg-transparent text-[14px] leading-[24px] text-[#1e293b] outline-none placeholder:text-[#94a3b8] ${fontRegular}`} />
+            <input id="qa-title" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Type the question title" className={`min-w-0 flex-1 bg-transparent text-[14px] leading-[24px] text-[#1e293b] outline-none placeholder:text-slate-400 ${fontRegular}`} />
             {title && (
               <button type="button" onClick={() => setTitle("")} aria-label="Clear question title" className="flex shrink-0 transition hover:opacity-70">
                 <img src={imgClose} alt="" width={20} height={20} className="size-5" />

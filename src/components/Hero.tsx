@@ -81,7 +81,7 @@ export default function Hero() {
     <div
       ref={rootRef}
       id="top"
-      className="relative w-full overflow-hidden pt-[72px] font-['Plus_Jakarta_Sans',sans-serif] text-white"
+      className="relative w-full overflow-hidden pt-[56px] font-['Plus_Jakarta_Sans',sans-serif] text-white"
       style={{ background: "radial-gradient(ellipse 90% 70% at 50% 0%, #0b9c70 0%, #065c43 42%, #03281d 100%)" }}
     >
       <div

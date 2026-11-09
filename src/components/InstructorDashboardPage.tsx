@@ -309,7 +309,7 @@ function CommandSearch() {
           }}
           placeholder="Search pages…"
           aria-label="Search instructor pages"
-          className={`min-w-0 flex-1 bg-transparent text-[14px] text-white outline-none placeholder:text-[#64748b] ${fontRegular}`}
+          className={`min-w-0 flex-1 bg-transparent text-[14px] text-white outline-none placeholder:text-white/45 ${fontRegular}`}
         />
         <kbd className={`hidden shrink-0 rounded-[6px] border border-white/10 bg-white/5 px-1.5 py-0.5 text-[11px] text-[#94a3b8] lg:block ${fontMedium}`}>⌘K</kbd>
       </div>

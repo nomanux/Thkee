@@ -322,7 +322,7 @@ function NewChat({ onPick, onBack }: { onPick: (name: string) => void; onBack: (
         </button>
         <label className="field-box flex-1">
           <SearchIcon />
-          <input autoFocus value={query} onChange={(e) => setQuery(e.target.value)} onKeyDown={(e) => e.key === "Escape" && onBack()} placeholder="Search user or chat" aria-label="Search user or chat" className={`min-w-0 flex-1 bg-transparent text-[16px] text-[#0f172a] outline-none placeholder:text-[#94a3b8] md:text-[14px] ${fontRegular}`} />
+          <input autoFocus value={query} onChange={(e) => setQuery(e.target.value)} onKeyDown={(e) => e.key === "Escape" && onBack()} placeholder="Search user or chat" aria-label="Search user or chat" className={`min-w-0 flex-1 bg-transparent text-[16px] text-[#0f172a] outline-none placeholder:text-slate-400 md:text-[14px] ${fontRegular}`} />
         </label>
       </div>
       <ul className="min-h-0 overflow-y-auto py-3 shadow-[0_12px_24px_rgba(15,23,42,0.08)]">
@@ -382,7 +382,7 @@ export default function MessagesPage() {
   const paneOpen = creating || !!open;
 
   return (
-    <main className="w-full bg-white pt-[72px]">
+    <main className="w-full bg-white pt-[56px]">
       <div className="border-b border-[#e2e8f0] bg-[#f8fafc] px-4 md:px-8 xl:px-20">
         <h1 className="mx-auto m-0 flex h-[122px] max-w-[1280px] items-center font-['Instrument_Sans:Medium'] text-[24px] font-medium leading-[32px] text-[#0f172a]" style={{ fontVariationSettings: '"wdth" 100' }}>
           Messages
@@ -405,7 +405,7 @@ export default function MessagesPage() {
               {!creating && (
                 <label className="field-box">
                   <SearchIcon />
-                  <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search user or chat" aria-label="Search user or chat" className={`min-w-0 flex-1 bg-transparent text-[16px] text-[#0f172a] outline-none placeholder:text-[#94a3b8] md:text-[14px] ${fontRegular}`} />
+                  <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search user or chat" aria-label="Search user or chat" className={`min-w-0 flex-1 bg-transparent text-[16px] text-[#0f172a] outline-none placeholder:text-slate-400 md:text-[14px] ${fontRegular}`} />
                 </label>
               )}
             </div>
