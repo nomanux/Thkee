@@ -449,7 +449,7 @@ export default function App() {
 }
 
 function Site() {
-  const { route } = useApp();
+  const { route, user } = useApp();
   if (route.page === "learn")
     return (
       <>
@@ -522,33 +522,13 @@ function Site() {
       ) : (
         <LandingPage />
       )}
-      {personalPages.includes(route.page) ? <SlimFooter /> : <SiteFooter />}
+      {!user && !personalPages.includes(route.page) && <SiteFooter />}
     </div>
   );
 }
 
-// Signed-in pages people come to for a task get a slim footer instead of the full marketing one.
+// Signed-in users get no footer; these task pages never show one, even when signed out.
 const personalPages: string[] = ["components", "account", "messages", "purchase-history", "refund", "my-learning"];
-
-function SlimFooter() {
-  const { setOverlay } = useApp();
-  const link = `text-[#475569] transition-colors hover:text-[#0f172a] ${fontRegular}`;
-  return (
-    <footer className="mt-auto w-full border-t border-[#e2e8f0] bg-white">
-      <div className={`mx-auto flex max-w-[1272px] flex-col gap-2 px-4 py-4 text-[14px] leading-[20px] text-[#64748b] sm:flex-row sm:items-center sm:justify-between ${fontRegular}`}>
-        <p>© 2025 Thkee. All rights reserved.</p>
-        <div className="flex items-center gap-4">
-          <button type="button" onClick={() => setOverlay({ type: "info", page: "Terms of Service" })} className={link}>
-            Terms of Service
-          </button>
-          <button type="button" onClick={() => setOverlay({ type: "info", page: "Privacy Policy" })} className={link}>
-            Privacy Policy
-          </button>
-        </div>
-      </div>
-    </footer>
-  );
-}
 
 function SiteFooter() {
   const { setOverlay } = useApp();

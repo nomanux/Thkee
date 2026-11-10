@@ -1,6 +1,7 @@
 import { useState, type ReactNode } from "react";
 import { fontHeading, fontMedium, fontRegular, fontSemi } from "../fonts";
 import { openLiveEditor, useApp } from "../store";
+import { DatePicker } from "./DatePicker";
 import { Checkbox } from "./InstructorAssignments";
 import { TimeSelect, fromIso, loadSchedules, toIso, type Schedule } from "./InstructorAvailability";
 import { ConfirmDialog } from "./InstructorSessions";
@@ -143,7 +144,7 @@ function SessionList({ items, setItems, ctx, initialEditId }: { items: ListItem[
         {items.map((item) =>
           editing?.id === item.id ? (
             <li key={item.id} className="flex flex-wrap items-center gap-2 rounded-[8px] border border-[#1e293b] bg-white p-2">
-              <input type="date" aria-label="Session date" value={editing.date} min={today} onChange={(e) => setEditing({ ...editing, date: e.target.value })} className={`${dateInput} w-auto min-w-0 flex-1`} />
+              <DatePicker ariaLabel="Session date" value={editing.date} min={today} onChange={(date) => date && setEditing({ ...editing, date })} clearable={false} className="min-w-[160px] flex-1" />
               <TimeSelect value={editing.start} label="Session start time" onChange={(start) => setEditing({ ...editing, start })} />
               <button type="button" aria-label="Save session" onClick={saveEdit} className="flex size-[35px] items-center justify-center rounded-[6px] bg-[#ffb20d] text-[#1e293b] transition hover:bg-[#faa104]">
                 <Icon path={CHECK} className="size-4" />
@@ -219,13 +220,13 @@ function DateFields({ start, end, setStart }: { start: string; end: string; setS
         <label htmlFor="new-start-date" className={fieldLabel}>
           New Start Date
         </label>
-        <input id="new-start-date" type="date" value={start} min={toIso(new Date())} onChange={(e) => setStart(e.target.value)} className={`mt-1 ${dateInput}`} />
+        <DatePicker id="new-start-date" value={start} min={toIso(new Date())} onChange={(date) => date && setStart(date)} clearable={false} className="mt-1" />
       </div>
       <div>
         <label htmlFor="new-end-date" className={fieldLabel}>
           New End Date:
         </label>
-        <input id="new-end-date" type="date" value={end} disabled className={`mt-1 ${dateInput}`} />
+        <DatePicker id="new-end-date" value={end} onChange={() => {}} disabled clearable={false} className="mt-1" />
       </div>
     </div>
   );

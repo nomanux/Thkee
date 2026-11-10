@@ -74,6 +74,8 @@
 
 html {
   scroll-behavior: smooth;
+  /* Keep room for the scrollbar so pages don't shift sideways when it appears or disappears. */
+  scrollbar-gutter: stable;
 }
 
 body {
@@ -278,6 +280,14 @@ body {
   .field-box input::placeholder {
     color: var(--color-slate-400);
   }
+  /* Standard help text under a field: smaller than the field text, so it never reads like a placeholder. */
+  .field-help {
+    font-family: "Inter:Regular", Inter, sans-serif;
+    font-weight: 400;
+    font-size: 12px;
+    line-height: 16px;
+    color: var(--color-slate-500);
+  }
   .field-box {
     display: flex;
     align-items: center;
@@ -330,5 +340,24 @@ body {
     .field {
       font-size: 14px;
     }
+  }
+}
+
+/* Gentle bob for empty-state illustrations. */
+@keyframes float-y {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-6px);
+  }
+}
+.float-y {
+  animation: float-y 4s ease-in-out infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .float-y {
+    animation: none;
   }
 }

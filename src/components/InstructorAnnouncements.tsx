@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { fontMedium, fontRegular, fontSemi } from "../fonts";
 import { load, openInstructorAnnouncements, save, useApp } from "../store";
+import { DatePicker } from "./DatePicker";
 import { Checkbox } from "./InstructorAssignments";
 import { Pagination } from "./InstructorCourses";
 import { ActionMenu, FilterSelect } from "./Menus";
@@ -172,7 +173,7 @@ export function CreateModal({ fixedCourse, onClose, onPublish }: { fixedCourse?:
             <label htmlFor="announcement-date" className={fieldLabel}>
               Published at
             </label>
-            <input id="announcement-date" type="date" value={date} min={toDateInput(new Date())} disabled={publishNow} onChange={(e) => setDate(e.target.value)} className={fieldInput} />
+            <DatePicker id="announcement-date" value={date} min={toDateInput(new Date())} disabled={publishNow} onChange={setDate} clearable={false} />
           </div>
           <div className="flex flex-col gap-2">
             <label htmlFor="announcement-time" className={fieldLabel}>

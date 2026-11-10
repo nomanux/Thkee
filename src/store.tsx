@@ -85,7 +85,17 @@ export const AVAILABLE_CREDIT = 173;
 export const COUPONS: Record<string, number> = { THKEE10: 10, WELCOME20: 20, LEARN15: 15 };
 // Demo courses that are always in My learning, so the player, quizzes and assignments can be opened any time.
 export const STARTER_COURSE_IDS = ["ai-foundations", "python-data"];
-export const SAVED_CARD = { brand: "Visa", last4: "1234", expiry: "02/27" };
+export type CardBrand = "Visa" | "Mastercard" | "Card";
+export type SavedCard = { id: string; brand: CardBrand; last4: string; expiry: string; name: string };
+// Demo card every account starts with. The first card in the list is the default one.
+const DEMO_CARD: SavedCard = { id: "demo-visa", brand: "Visa", last4: "1234", expiry: "02/27", name: "" };
+
+export function cardBrand(number: string): CardBrand {
+  const digits = number.replace(/\D/g, "");
+  if (digits.startsWith("4")) return "Visa";
+  if (/^5[1-5]/.test(digits) || /^2[2-7]/.test(digits)) return "Mastercard";
+  return "Card";
+}
 
 export function orderTotals(cart: Course[], promo: string | null, credit: number) {
   const subtotal = cart.reduce((sum, c) => sum + (c.originalPrice ?? c.price), 0);
@@ -161,7 +171,8 @@ function useAppState() {
   const [placedOrders, setPlacedOrders] = useStoredState<Order[]>("thkee.orders", []);
   const orders = useMemo(() => [...placedOrders, ...DEMO_ORDERS], [placedOrders]);
   const [refunds, setRefunds] = useStoredState<Refund[]>("thkee.refunds2", DEMO_REFUNDS);
-  const [hasSavedCard, setHasSavedCard] = useStoredState<boolean>("thkee.savedCard", true);
+  // Older builds stored only whether the demo card was kept, so that flag seeds the list once.
+  const [savedCards, setSavedCards] = useStoredState<SavedCard[]>("thkee.cards", load("thkee.savedCard", true) ? [DEMO_CARD] : []);
   const [promo, setPromo] = useStoredState<string | null>("thkee.promo", null);
   const [credit, setCredit] = useStoredState<number>("thkee.credit", 0);
   const [lang, setLang] = useStoredState<Lang>("thkee.lang", "EN");
@@ -331,13 +342,32 @@ function useAppState() {
 
   const updateUser = useCallback((patch: Partial<User>) => setUser((u) => (u ? { ...u, ...patch } : u)), [setUser]);
 
-  const removeSavedCard = useCallback(() => {
-    setHasSavedCard(false);
-    notify("Payment method removed");
-  }, [notify, setHasSavedCard]);
+  const addCard = useCallback(
+    (card: Omit<SavedCard, "id">, makeDefault: boolean) => {
+      const saved = { ...card, id: `card-${Date.now()}` };
+      setSavedCards((list) => (makeDefault ? [saved, ...list] : [...list, saved]));
+    },
+    [setSavedCards],
+  );
+
+  const removeCard = useCallback(
+    (id: string) => {
+      setSavedCards((list) => list.filter((c) => c.id !== id));
+      notify("Payment method removed");
+    },
+    [notify, setSavedCards],
+  );
+
+  const setDefaultCard = useCallback(
+    (id: string) => {
+      setSavedCards((list) => [...list.filter((c) => c.id === id), ...list.filter((c) => c.id !== id)]);
+      notify("Default payment method updated");
+    },
+    [notify, setSavedCards],
+  );
 
   const closeAccount = useCallback(() => {
-    ["thkee.profile", "thkee.privacy", "thkee.notifications", "thkee.threads", "thkee.instructor", "thkee.instructorSurvey", "thkee.instructorCourses", "thkee.instructorCourseDetails", "thkee.instructorAssignments", "thkee.instructorReviews", "thkee.instructorQa", "thkee.instructorQa.votes", "thkee.instructorCoRequests", "thkee.instructorAnnouncements", "thkee.instructorAvailability", "thkee.instructorApps", "thkee.instructorSessions", "thkee.instructorSessions.extras", "thkee.instructorSchedule", "thkee.liveDrafts", "thkee.liveLimitDefaults"].forEach((key) => localStorage.removeItem(key));
+    ["thkee.profile", "thkee.privacy", "thkee.notifications", "thkee.threads", "thkee.instructor", "thkee.instructorSurvey", "thkee.instructorCourses", "thkee.instructorCourseDetails", "thkee.courseSettings", "thkee.instructorAssignments", "thkee.instructorReviews", "thkee.instructorQa", "thkee.instructorQa.votes", "thkee.instructorCoRequests", "thkee.instructorAnnouncements", "thkee.instructorAvailability", "thkee.instructorApps", "thkee.instructorSessions", "thkee.instructorSessions.extras", "thkee.instructorSchedule", "thkee.liveDrafts", "thkee.liveLimitDefaults"].forEach((key) => localStorage.removeItem(key));
     setUser(null);
     setCartIds([]);
     setPurchasedIds([]);
@@ -345,10 +375,10 @@ function useAppState() {
     setArchivedIds([]);
     setPlacedOrders([]);
     setRefunds(DEMO_REFUNDS);
-    setHasSavedCard(true);
+    setSavedCards([DEMO_CARD]);
     window.location.hash = "";
     notify("Your account has been closed");
-  }, [notify, setArchivedIds, setCartIds, setHasSavedCard, setPlacedOrders, setPurchasedIds, setRefunds, setUser, setWishlistIds]);
+  }, [notify, setArchivedIds, setCartIds, setPlacedOrders, setPurchasedIds, setRefunds, setSavedCards, setUser, setWishlistIds]);
 
   const logout = useCallback(() => {
     setUser(null);
@@ -359,7 +389,7 @@ function useAppState() {
     document.documentElement.lang = lang === "AR" ? "ar" : "en";
   }, [lang]);
 
-  return { route, openSearch, goHome, openAuth, signIn, user, logout, reservations, reserveSeat, bookings, bookExpert, cart, addToCart, removeFromCart, checkout, completePurchase, promo, setPromo, credit, setCredit, wishlistIds, toggleWishlist, moveToWishlist, enrolledIds, archivedIds, toggleArchive, orders, refunds, requestRefund, cancelRefund, hasSavedCard, removeSavedCard, updateUser, closeAccount, lang, setLang, overlay, setOverlay, toasts, notify };
+  return { route, openSearch, goHome, openAuth, signIn, user, logout, reservations, reserveSeat, bookings, bookExpert, cart, addToCart, removeFromCart, checkout, completePurchase, promo, setPromo, credit, setCredit, wishlistIds, toggleWishlist, moveToWishlist, enrolledIds, archivedIds, toggleArchive, orders, refunds, requestRefund, cancelRefund, savedCards, addCard, removeCard, setDefaultCard, updateUser, closeAccount, lang, setLang, overlay, setOverlay, toasts, notify };
 }
 
 const AppContext = createContext<ReturnType<typeof useAppState> | null>(null);

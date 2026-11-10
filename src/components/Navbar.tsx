@@ -425,6 +425,8 @@ export default function Navbar({ solid = false }: { solid?: boolean }) {
   const { user, setOverlay, lang, setLang, cart, logout, openSearch, goHome, openAuth } = useApp();
   const [menuOpen, setMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  // The teach link speaks to who is signed in: instructors go to their dashboard, learners are invited to start teaching.
+  const teachLabel = !user ? "Teach on Thkee" : load("thkee.instructor", false) ? "Instructor" : "Become an instructor";
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 40);
@@ -467,7 +469,7 @@ export default function Navbar({ solid = false }: { solid?: boolean }) {
             My learning
           </button>
           <button type="button" onClick={() => open({ type: "instructor" })} className={`hidden h-[36px] items-center whitespace-nowrap rounded-[8px] px-[10px] text-[14px] leading-[20px] text-white/80 transition hover:bg-white/10 hover:text-white xl:flex ${fontMedium}`}>
-            Teach on Thkee
+            {teachLabel}
           </button>
           <div className="mx-[6px] hidden h-[20px] w-px bg-white/20 xl:block" />
           <CartButton className="hidden lg:flex" />
@@ -549,7 +551,7 @@ export default function Navbar({ solid = false }: { solid?: boolean }) {
             Account settings
           </button>
           <button type="button" className={mobileItem} onClick={() => open({ type: "instructor" })}>
-            Become an Instructor
+            {teachLabel}
           </button>
           <button type="button" className={`${mobileItem} lg:hidden`} onClick={() => open({ type: "cart" })}>
             Cart

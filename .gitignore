@@ -4,3 +4,7 @@ dist/
 .DS_Store
 *.local
 .env*
+
+# Server secrets
+server/api/config.php
+server/data/

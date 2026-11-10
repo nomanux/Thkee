@@ -1,6 +1,9 @@
 import { useId, useRef, useState, type ChangeEvent, type ReactNode } from "react";
-import { fontBold, fontHeading, fontMedium, fontRegular, fontSemi } from "../fonts";
-import { openAccount, SAVED_CARD, useApp, useStoredState } from "../store";
+import { fontHeading, fontMedium, fontRegular, fontSemi } from "../fonts";
+import { uploadFile } from "../api";
+import { shrinkImage } from "../imageShrink";
+import { cardBrand, openAccount, useApp, useStoredState } from "../store";
+import { BrandBadge } from "./CheckoutPage";
 import { HugeiconsIcon, type IconSvgElement } from "@hugeicons/react";
 import { AlertCircleIcon, CreditCardIcon, LockIcon, Notification01Icon, Shield01Icon, UserIcon } from "@hugeicons/core-free-icons";
 import { FilterSelect } from "./Menus";
@@ -30,6 +33,8 @@ const MAX_PHOTO_BYTES = 1024 * 1024;
 const fieldBox = "field";
 const labelClass = `text-[14px] leading-[20px] text-slate-900 ${fontMedium}`;
 const hintClass = `text-[14px] leading-[20px] text-slate-500 ${fontRegular}`;
+// Help text under a field is smaller than the field text, so it never reads like a placeholder.
+const helpClass = "field-help";
 const primaryButton = `h-[36px] shrink-0 rounded-[8px] bg-[#ffb20d] px-4 text-[14px] text-slate-800 transition hover:bg-[#faa104] disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-[#ffb20d] ${fontMedium}`;
 const secondaryButton = `h-[36px] shrink-0 rounded-[8px] border border-slate-300 bg-white px-4 text-[14px] text-slate-800 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-white ${fontMedium}`;
 const dangerButton = `h-[36px] shrink-0 rounded-[8px] bg-[#dc2626] px-4 text-[14px] text-white transition hover:bg-[#b91c1c] disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-[#dc2626] ${fontMedium}`;
@@ -54,7 +59,7 @@ export function TextField({ id, label, value, onChange, placeholder, error, hint
       <input id={id} type={type} value={value} onChange={(e) => onChange(e.target.value)} placeholder={placeholder} aria-invalid={!!error} aria-describedby={describedBy} className={fieldBox} />
       <FieldError id={id} message={error} />
       {hint && !error && (
-        <p id={`${id}-hint`} className={hintClass}>
+        <p id={`${id}-hint`} className={helpClass}>
           {hint}
         </p>
       )}
@@ -104,7 +109,7 @@ export function CheckField({ checked, onChange, children }: { checked: boolean; 
 export function ToggleRow({ title, description, checked, onChange }: { title: string; description: string; checked: boolean; onChange: (checked: boolean) => void }) {
   const id = useId();
   return (
-    <div className="flex items-center justify-between gap-6 py-4 first:pt-0 last:pb-0">
+    <div className="flex items-center justify-between gap-6 py-3 first:pt-0 last:pb-0">
       <div className="min-w-0">
         <p id={`${id}-title`} className={labelClass}>
           {title}
@@ -122,8 +127,8 @@ export function ToggleRow({ title, description, checked, onChange }: { title: st
 
 function SectionHeading({ title, subtitle }: { title: string; subtitle: string }) {
   return (
-    <div className="flex flex-col gap-1 pb-6">
-      <h2 className={`m-0 text-[20px] leading-[28px] text-slate-900 ${fontHeading}`} style={{ fontVariationSettings: '"wdth" 100' }}>
+    <div className="flex flex-col gap-0.5 pb-4">
+      <h2 className={`m-0 text-[18px] leading-[26px] text-slate-900 ${fontHeading}`} style={{ fontVariationSettings: '"wdth" 100' }}>
         {title}
       </h2>
       <p className={`text-[14px] leading-[22px] text-slate-500 ${fontRegular}`}>{subtitle}</p>
@@ -133,12 +138,12 @@ function SectionHeading({ title, subtitle }: { title: string; subtitle: string }
 
 export function Card({ title, description, footer, danger, children }: { title: string; description?: string; footer?: ReactNode; danger?: boolean; children: ReactNode }) {
   return (
-    <section className="border-t border-slate-200 py-7">
+    <section className="border-t border-slate-200 py-5">
       <h3 className={`m-0 text-[14px] leading-[22px] ${danger ? "text-[#b91c1c]" : "text-slate-900"} ${fontSemi}`}>{title}</h3>
       {description && <p className={`mt-0.5 ${hintClass}`}>{description}</p>}
-      <div className="mt-4">
+      <div className="mt-3">
         {children}
-        {footer && <div className="mt-5 flex items-center gap-3">{footer}</div>}
+        {footer && <div className="mt-4 flex items-center gap-3">{footer}</div>}
       </div>
     </section>
   );
@@ -159,10 +164,16 @@ function ProfileSection() {
     e.target.value = "";
     if (!file) return;
     if (!["image/jpeg", "image/png"].includes(file.type)) return notify("Please choose a .jpg, .jpeg or .png file");
-    if (file.size > MAX_PHOTO_BYTES) return notify("Please choose a photo under 1 MB");
-    const reader = new FileReader();
-    reader.onload = () => set("photo")(String(reader.result));
-    reader.readAsDataURL(file);
+    // Large photos shrink automatically to under 1 MB.
+    shrinkImage(file, MAX_PHOTO_BYTES)
+      .then(async (small) => {
+        const url = await uploadFile(small);
+        if (url) return set("photo")(url);
+        const reader = new FileReader();
+        reader.onload = () => set("photo")(String(reader.result));
+        reader.readAsDataURL(small);
+      })
+      .catch(() => notify("Photo upload failed. Please try again"));
   };
 
   const save = () => {
@@ -197,14 +208,14 @@ function ProfileSection() {
                 </button>
               )}
             </div>
-            <p className={hintClass}>JPG or PNG, up to 1 MB.</p>
+            <p className={helpClass}>JPG or PNG. Large photos shrink automatically.</p>
           </div>
         </div>
       </Card>
 
       <Card title="Personal information" description="Your name and headline are shown on your public profile.">
-        <div className="flex flex-col gap-5">
-          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+        <div className="flex flex-col gap-4">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <TextField id="first-name" label="First name" value={draft.firstName} onChange={set("firstName")} />
             <TextField id="last-name" label="Last name" value={draft.lastName} onChange={set("lastName")} />
           </div>
@@ -213,12 +224,12 @@ function ProfileSection() {
             <label htmlFor="biography" className={labelClass}>
               Biography
             </label>
-            <textarea id="biography" value={draft.biography} onChange={(e) => set("biography")(e.target.value)} placeholder="Tell others a little about yourself" aria-describedby="biography-hint" className={fieldBox} />
-            <p id="biography-hint" className={hintClass}>
+            <textarea id="biography" value={draft.biography} onChange={(e) => set("biography")(e.target.value)} placeholder="e.g. I design mobile apps and spend my weekends learning data science." aria-describedby="biography-hint" className={fieldBox} />
+            <p id="biography-hint" className={helpClass}>
               A few sentences about your background and interests.
             </p>
           </div>
-          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <SelectField id="language" label="Language" value={draft.language} onChange={set("language")} placeholder="Select a language" options={languages} />
             <SelectField id="timezone" label="Time zone" value={draft.timezone} onChange={set("timezone")} placeholder="Select a time zone" options={timezones} />
           </div>
@@ -226,7 +237,7 @@ function ProfileSection() {
       </Card>
 
       <Card title="Social links" description="Add links to help people find you elsewhere.">
-        <div className="flex flex-col gap-5">
+        <div className="flex flex-col gap-4">
           <LinkField
             id="website"
             label="Website"
@@ -241,7 +252,7 @@ function ProfileSection() {
               </svg>
             }
           />
-          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             {socials.map(({ key, label, prefix, match, color, path }) => (
               <LinkField
                 key={key}
@@ -406,27 +417,192 @@ function NotificationsSection() {
   );
 }
 
+// Standard card checksum, so obvious typos are caught before the card is saved.
+function passesLuhn(digits: string) {
+  let sum = 0;
+  for (let i = 0; i < digits.length; i++) {
+    let d = Number(digits[digits.length - 1 - i]);
+    if (i % 2 === 1) {
+      d *= 2;
+      if (d > 9) d -= 9;
+    }
+    sum += d;
+  }
+  return sum % 10 === 0;
+}
+
+function expiryError(expiry: string) {
+  const match = /^(\d{2})\/(\d{2})$/.exec(expiry);
+  if (!match) return "Enter the expiry date as MM/YY";
+  const month = Number(match[1]);
+  if (month < 1 || month > 12) return "Enter a month between 01 and 12";
+  const now = new Date();
+  const year = 2000 + Number(match[2]);
+  if (year < now.getFullYear() || (year === now.getFullYear() && month < now.getMonth() + 1)) return "This card has expired";
+  return "";
+}
+
+function AddCardDialog({ onClose }: { onClose: () => void }) {
+  const { savedCards, addCard, notify } = useApp();
+  const [values, setValues] = useState({ name: "", number: "", expiry: "", cvv: "" });
+  const [makeDefault, setMakeDefault] = useState(savedCards.length === 0);
+  const [submitted, setSubmitted] = useState(false);
+  const digits = values.number.replace(/\D/g, "");
+  const brand = cardBrand(digits);
+  const duplicate = savedCards.some((c) => c.brand === brand && c.last4 === digits.slice(-4) && c.expiry === values.expiry);
+  const errors = {
+    name: values.name.trim() ? "" : "Enter the name shown on the card",
+    number: digits.length < 13 || !passesLuhn(digits) ? "Enter a valid card number" : duplicate ? "This card is already saved" : "",
+    expiry: expiryError(values.expiry),
+    cvv: /^\d{3,4}$/.test(values.cvv) ? "" : "Enter the 3 or 4 digit code on the back of the card",
+  };
+  const show = (key: keyof typeof errors) => (submitted ? errors[key] : "");
+
+  const setNumber = (v: string) =>
+    setValues((s) => ({
+      ...s,
+      number: v
+        .replace(/\D/g, "")
+        .slice(0, 19)
+        .replace(/(\d{4})(?=\d)/g, "$1 "),
+    }));
+  const setExpiry = (v: string) => {
+    const d = v.replace(/\D/g, "").slice(0, 4);
+    setValues((s) => ({ ...s, expiry: d.length > 2 ? `${d.slice(0, 2)}/${d.slice(2)}` : d }));
+  };
+
+  const save = () => {
+    setSubmitted(true);
+    if (Object.values(errors).some(Boolean)) return;
+    addCard({ brand, last4: digits.slice(-4), expiry: values.expiry, name: values.name.trim() }, makeDefault || savedCards.length === 0);
+    notify(`${brand} ending in ${digits.slice(-4)} has been added`);
+    onClose();
+  };
+
+  const field = (key: keyof typeof errors) => ({ "aria-invalid": !!show(key), "aria-describedby": show(key) ? `card-${key}-error` : undefined, className: fieldBox });
+
+  return (
+    <Shell title="Add a card" onClose={onClose} width="max-w-[520px]" radius="sm:rounded-[12px]">
+      <form
+        noValidate
+        onSubmit={(e) => {
+          e.preventDefault();
+          save();
+        }}
+      >
+        <div className="flex flex-col gap-5 p-6">
+          <div className="flex flex-col gap-1.5">
+            <label htmlFor="card-name" className={labelClass}>
+              Name on card
+            </label>
+            <input id="card-name" value={values.name} onChange={(e) => setValues((s) => ({ ...s, name: e.target.value }))} placeholder="e.g. Sara Ahmed" autoComplete="cc-name" {...field("name")} />
+            <FieldError id="card-name" message={show("name")} />
+          </div>
+          <div className="flex flex-col gap-1.5">
+            <label htmlFor="card-number" className={labelClass}>
+              Card number
+            </label>
+            <div className="relative">
+              <input id="card-number" value={values.number} onChange={(e) => setNumber(e.target.value)} placeholder="1234 5678 9012 3456" inputMode="numeric" autoComplete="cc-number" {...field("number")} className={`${fieldBox} pr-14`} />
+              <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2">
+                <BrandBadge brand={brand} />
+              </span>
+            </div>
+            <FieldError id="card-number" message={show("number")} />
+          </div>
+          <div className="grid grid-cols-2 gap-5">
+            <div className="flex flex-col gap-1.5">
+              <label htmlFor="card-expiry" className={labelClass}>
+                Expiry date
+              </label>
+              <input id="card-expiry" value={values.expiry} onChange={(e) => setExpiry(e.target.value)} placeholder="MM/YY" inputMode="numeric" autoComplete="cc-exp" {...field("expiry")} />
+              <FieldError id="card-expiry" message={show("expiry")} />
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <label htmlFor="card-cvv" className={labelClass}>
+                Security code
+              </label>
+              <input id="card-cvv" type="password" value={values.cvv} onChange={(e) => setValues((s) => ({ ...s, cvv: e.target.value.replace(/\D/g, "").slice(0, 4) }))} placeholder="CVV" inputMode="numeric" autoComplete="cc-csc" {...field("cvv")} />
+              <FieldError id="card-cvv" message={show("cvv")} />
+            </div>
+          </div>
+          {savedCards.length > 0 && (
+            <CheckField checked={makeDefault} onChange={setMakeDefault}>
+              Use as my default payment method
+            </CheckField>
+          )}
+          <p className={helpClass}>We don't store your security code. You'll enter it each time you pay.</p>
+        </div>
+        <div className="flex items-center justify-end gap-3 border-t border-slate-200 px-6 py-4">
+          <button type="button" onClick={onClose} className={secondaryButton}>
+            Cancel
+          </button>
+          <button type="submit" className={primaryButton}>
+            Save card
+          </button>
+        </div>
+      </form>
+    </Shell>
+  );
+}
+
 function PaymentSection() {
-  const { hasSavedCard, removeSavedCard } = useApp();
+  const { savedCards, removeCard, setDefaultCard } = useApp();
+  const [adding, setAdding] = useState(false);
   return (
     <div className="flex flex-col">
       <SectionHeading title="Payment Methods" subtitle="Manage the cards saved to your account." />
-      <Card title="Saved cards">
-        {hasSavedCard ? (
-          <div className="flex items-center gap-3">
-            <span className={`flex h-[32px] w-[48px] shrink-0 items-center justify-center rounded-[4px] bg-[#1a4c9b] text-[12px] italic tracking-[0.5px] text-white ${fontBold}`}>VISA</span>
-            <div className="min-w-0 flex-1">
-              <p className={labelClass}>Visa ending in {SAVED_CARD.last4}</p>
-              <p className={hintClass}>Expires {SAVED_CARD.expiry}</p>
-            </div>
-            <button type="button" onClick={removeSavedCard} className={secondaryButton}>
-              Remove
+      {savedCards.length === 0 ? (
+        <div className="flex flex-col items-center border-t border-slate-200 px-4 py-8 text-center">
+          <img src="/illustrations/credit-card.svg" alt="Credit card" width={1000} height={1000} className="float-y h-auto w-full max-w-[160px]" />
+          <h3 className={`m-0 mt-4 text-[16px] leading-[24px] text-slate-900 ${fontSemi}`}>No saved cards yet</h3>
+          <p className={`mt-1 max-w-[360px] ${hintClass}`}>Add a card to check out faster. Your default card is selected first at checkout.</p>
+          <button type="button" onClick={() => setAdding(true)} className={`mt-5 ${primaryButton}`}>
+            Add card
+          </button>
+        </div>
+      ) : (
+        <Card
+          title="Saved cards"
+          description="Your default card is selected first at checkout."
+          footer={
+            <button type="button" onClick={() => setAdding(true)} className={secondaryButton}>
+              + Add card
             </button>
-          </div>
-        ) : (
-          <p className={hintClass}>You have no saved payment methods.</p>
-        )}
-      </Card>
+          }
+        >
+          <ul className="divide-y divide-slate-200 rounded-[8px] border border-slate-200">
+            {savedCards.map((c, i) => (
+              <li key={c.id} className="flex flex-wrap items-center gap-3 px-4 py-3">
+                <span className="flex h-[32px] w-[48px] shrink-0 items-center justify-center rounded-[4px] border border-slate-200 bg-white">
+                  <BrandBadge brand={c.brand} />
+                </span>
+                <div className="min-w-0 flex-1">
+                  <p className={`flex items-center gap-2 ${labelClass}`}>
+                    {c.brand} ending in {c.last4}
+                    {i === 0 && <span className={`rounded-full bg-[#eef7f3] px-2 py-0.5 text-[12px] leading-[16px] text-[#0d5c4b] ${fontMedium}`}>Default</span>}
+                  </p>
+                  <p className={hintClass}>
+                    Expires {c.expiry}
+                    {c.name && ` · ${c.name}`}
+                  </p>
+                </div>
+                <div className="flex items-center gap-1">
+                  {i > 0 && (
+                    <button type="button" onClick={() => setDefaultCard(c.id)} className={`h-[36px] rounded-[8px] px-3 text-[14px] text-slate-700 transition hover:bg-slate-100 ${fontMedium}`}>
+                      Make default
+                    </button>
+                  )}
+                  <button type="button" onClick={() => removeCard(c.id)} aria-label={`Remove ${c.brand} ending in ${c.last4}`} className={`h-[36px] rounded-[8px] px-3 text-[14px] text-[#dc2626] transition hover:bg-[#fef2f2] ${fontMedium}`}>
+                    Remove
+                  </button>
+                </div>
+              </li>
+            ))}
+          </ul>
+        </Card>
+      )}
+      {adding && <AddCardDialog onClose={() => setAdding(false)} />}
     </div>
   );
 }
@@ -492,7 +668,7 @@ function CloseSection() {
           </button>
         }
       >
-        <div className="flex flex-col gap-5">
+        <div className="flex flex-col gap-4">
           <ul className={`flex list-disc flex-col gap-1 pl-5 text-[14px] leading-[24px] text-slate-600 ${fontRegular}`}>
             <li>Closing your account is permanent and cannot be undone.</li>
             <li>Ensure you have saved any important information or data before proceeding.</li>
@@ -513,7 +689,7 @@ function CloseSection() {
               </button>
             </div>
             <FieldError id="close-password" message={error} />
-            <p className={hintClass}>
+            <p className={helpClass}>
               If you log in with Google, set a password in{" "}
               <button type="button" onClick={() => openAccount("security")} className={`text-slate-900 underline ${fontMedium}`}>
                 Security settings
@@ -532,11 +708,11 @@ export default function AccountSettingsPage({ section }: { section: string }) {
   const current = sections.some((s) => s.id === section) ? section : "profile";
 
   return (
-    <main className="w-full bg-white pt-[56px]">
-      <div className="mx-auto flex max-w-[1272px] flex-col gap-6 px-4 pb-14 pt-8 md:flex-row md:gap-14 md:pt-10">
-        <aside className="shrink-0 md:w-[232px]">
-          <div className="md:sticky md:top-[112px]">
-            <h1 className="m-0 mb-4 font-['Instrument_Sans:Medium'] text-[24px] font-medium leading-[32px] text-slate-900" style={{ fontVariationSettings: '"wdth" 100' }}>
+    <main className="w-full flex-1 bg-white pt-[56px]">
+      <div className="mx-auto flex max-w-[1272px] flex-col gap-5 px-4 pb-10 pt-6 md:flex-row md:gap-10 md:pt-8">
+        <aside className="shrink-0 md:w-[220px] md:self-start md:sticky md:top-[88px]">
+          <div>
+            <h1 className="m-0 mb-3 font-['Instrument_Sans:Medium'] text-[20px] font-medium leading-[28px] text-slate-900" style={{ fontVariationSettings: '"wdth" 100' }}>
               Account Settings
             </h1>
             <nav aria-label="Account settings" className="-mx-3 flex gap-1 overflow-x-auto md:flex-col md:overflow-visible">
@@ -544,7 +720,7 @@ export default function AccountSettingsPage({ section }: { section: string }) {
                 const active = s.id === current;
                 const danger = s.id === "close";
                 return (
-                  <button key={s.id} type="button" aria-current={active ? "page" : undefined} onClick={() => openAccount(s.id)} className={`flex h-[40px] shrink-0 items-center gap-2.5 whitespace-nowrap rounded-[8px] px-3 text-left text-[14px] transition-colors ${active ? (danger ? `bg-red-50 text-red-700 ${fontMedium}` : `bg-[#eef7f3] text-[#0d5c4b] ${fontMedium}`) : danger ? `text-red-600 hover:bg-red-50 ${fontRegular}` : `text-slate-600 hover:bg-slate-100 hover:text-slate-900 ${fontRegular}`}`}>
+                  <button key={s.id} type="button" aria-current={active ? "page" : undefined} onClick={() => openAccount(s.id)} className={`flex h-[36px] shrink-0 items-center gap-2.5 whitespace-nowrap rounded-[8px] px-3 text-left text-[14px] transition-colors ${active ? (danger ? `bg-red-50 text-red-700 ${fontMedium}` : `bg-[#eef7f3] text-[#0d5c4b] ${fontMedium}`) : danger ? `text-red-600 hover:bg-red-50 ${fontRegular}` : `text-slate-600 hover:bg-slate-100 hover:text-slate-900 ${fontRegular}`}`}>
                     <HugeiconsIcon icon={s.icon} size={18} strokeWidth={1.7} aria-hidden="true" className="shrink-0" />
                     {s.label}
                   </button>

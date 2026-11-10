@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { fontHeading, fontMedium, fontRegular, fontSemi } from "../fonts";
 import { load, openCreateSession, openInstructorSessions, openLiveEditor, save, useApp } from "../store";
+import { uploadFile } from "../api";
+import { BANNER_MAX_UPLOAD_BYTES, BANNER_MIN, prepareBanner } from "../imageShrink";
 import { formatClock, loadSchedules } from "./InstructorAvailability";
 import LiveScheduleSection, { hasScheduleProblem, seedSchedule, type ScheduleFields } from "./InstructorLiveSchedule";
 import { Checkbox } from "./InstructorAssignments";
@@ -311,10 +313,18 @@ function DetailsSection({ draft, update }: SectionProps) {
     if (fileRef.current) fileRef.current.value = "";
     if (!file) return;
     if (!["image/webp", "image/jpeg", "image/png"].includes(file.type)) return notify("Use a .webp, .jpg, .jpeg or .png image");
-    if (file.size > 1024 * 1024) return notify("Images must be under 1 MB for now");
-    const reader = new FileReader();
-    reader.onload = () => update({ cover: String(reader.result) });
-    reader.readAsDataURL(file);
+    if (file.size > BANNER_MAX_UPLOAD_BYTES) return notify("Please choose an image under 10 MB");
+    // Banners are cropped to 16:9, resized to 1600 × 900 px and compressed under 500 KB.
+    prepareBanner(file)
+      .then(async ({ file: small, lowRes }) => {
+        if (lowRes) notify(`This image is smaller than ${BANNER_MIN.width} × ${BANNER_MIN.height} px, so it may look blurry`);
+        const url = await uploadFile(small);
+        if (url) return update({ cover: url });
+        const reader = new FileReader();
+        reader.onload = () => update({ cover: String(reader.result) });
+        reader.readAsDataURL(small);
+      })
+      .catch(() => notify("Image upload failed. Please try again"));
   };
 
   return (
@@ -350,7 +360,7 @@ function DetailsSection({ draft, update }: SectionProps) {
           </p>
         </div>
         <div className="mt-4 flex flex-col gap-6 md:flex-row">
-          <div className="flex aspect-[7/4] w-full shrink-0 flex-col items-center justify-center gap-3 overflow-hidden rounded-[8px] bg-[#f8fafc] md:w-[310px]">
+          <div className="flex aspect-video w-full shrink-0 flex-col items-center justify-center gap-3 overflow-hidden rounded-[8px] bg-[#f8fafc] md:w-[310px]">
             {draft.cover ? (
               <img src={draft.cover} alt="Course cover preview" className="size-full object-cover" />
             ) : (
@@ -365,7 +375,7 @@ function DetailsSection({ draft, update }: SectionProps) {
           <div className="min-w-0">
             <p className={`text-[16px] leading-[24px] text-[#1e293b] ${fontSemi}`}>Cover Image</p>
             <p className={`mt-2 text-[14px] leading-[24px] text-[#475569] ${fontRegular}`}>
-              Upload your course image here. Supported files are .webp, .jpg, .jpeg, or .png. Best Size:(7:4 ratio) or <span className={fontSemi}>(580px × 330px)</span> See our{" "}
+              Upload your course image here. Supported files are .webp, .jpg, .jpeg, or .png. Best size: 16:9, at least <span className={fontSemi}>750 × 422 px</span>, up to 10 MB. See our{" "}
               <button type="button" onClick={() => notify("Image guidelines are coming soon")} className={inlineLink}>
                 image guidelines.
               </button>

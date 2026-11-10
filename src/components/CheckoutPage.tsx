@@ -1,16 +1,15 @@
 import { useState, type ReactNode } from "react";
 import { courses, type Course } from "../data";
 import { fontBold, fontFor, fontHeading, fontMedium, fontRegular, fontSemi } from "../fonts";
-import { openLearning, orderTotals, SAVED_CARD, useApp } from "../store";
+import { cardBrand, openLearning, orderTotals, useApp, type CardBrand } from "../store";
 
 const sar = (n: number) => `${Math.round(n).toLocaleString()} SAR`;
 const countries = ["Saudi Arabia", "United Arab Emirates", "Kuwait", "Qatar", "Bahrain", "Oman", "Egypt", "Jordan", "Pakistan", "Bangladesh", "United Kingdom", "United States"];
-const savedCard = SAVED_CARD;
 
 const label = `text-[14px] text-[#1e293b] ${fontMedium}`;
 const input = "field";
 
-type Method = "card" | "paypal" | "saved";
+type Method = "card" | "paypal" | `saved:${string}`;
 
 export function MadaBadge() {
   return (
@@ -43,10 +42,9 @@ export function PaypalLogo() {
   );
 }
 
-function CardBrand({ number }: { number: string }) {
-  const digits = number.replace(/\D/g, "");
-  if (digits.startsWith("4")) return <VisaBadge />;
-  if (/^5[1-5]/.test(digits) || /^2[2-7]/.test(digits)) return <MastercardBadge />;
+export function BrandBadge({ brand }: { brand: CardBrand }) {
+  if (brand === "Visa") return <VisaBadge />;
+  if (brand === "Mastercard") return <MastercardBadge />;
   return (
     <span className="flex h-[20px] w-[30px] items-center rounded-[3px] bg-[#e2e8f0] px-1" aria-hidden="true">
       <span className="h-[5px] w-[10px] rounded-[1px] bg-[#cbd5e1]" />
@@ -97,9 +95,11 @@ function Success({ purchased }: { purchased: Course[] }) {
 }
 
 export default function CheckoutPage() {
-  const { cart, promo, setPromo, credit, completePurchase, setOverlay, openSearch, notify, hasSavedCard } = useApp();
+  const { cart, promo, setPromo, credit, completePurchase, setOverlay, openSearch, notify, savedCards, addCard } = useApp();
   const [country, setCountry] = useState("Saudi Arabia");
-  const [method, setMethod] = useState<Method>("card");
+  // Start on the default saved card when there is one, so returning buyers only need their CVV.
+  const [method, setMethod] = useState<Method>(savedCards[0] ? `saved:${savedCards[0].id}` : "card");
+  const savedCard = savedCards.find((c) => method === `saved:${c.id}`);
   const [card, setCard] = useState({ name: "", number: "", expiry: "", cvv: "" });
   const [savedCvv, setSavedCvv] = useState("");
   const [remember, setRemember] = useState(true);
@@ -112,8 +112,10 @@ export default function CheckoutPage() {
   const pay = () => {
     setPaying(true);
     setTimeout(() => {
-      const last4 = card.number.replace(/\D/g, "").slice(-4);
-      const paidWith = total === 0 ? "Thkee Credit" : method === "paypal" ? "PayPal" : method === "saved" ? `${savedCard.brand.toUpperCase()} ***${savedCard.last4}` : `${card.number.startsWith("4") ? "VISA" : "Card"} ***${last4}`;
+      const digits = card.number.replace(/\D/g, "");
+      const last4 = digits.slice(-4);
+      const paidWith = total === 0 ? "Thkee Credit" : method === "paypal" ? "PayPal" : savedCard ? `${savedCard.brand.toUpperCase()} ***${savedCard.last4}` : `${cardBrand(digits).toUpperCase()} ***${last4}`;
+      if (total > 0 && method === "card" && remember && digits.length >= 12) addCard({ brand: cardBrand(digits), last4, expiry: card.expiry, name: card.name.trim() }, false);
       const ids = completePurchase(paidWith);
       setPurchased(courses.filter((c) => ids.includes(c.id)));
       setPaying(false);
@@ -213,7 +215,7 @@ export default function CheckoutPage() {
                             <span className="relative">
                               <input value={card.number} onChange={(e) => setNumber(e.target.value)} placeholder="**** **** **** 0000" inputMode="numeric" autoComplete="cc-number" className={`${input} pr-12`} />
                               <span className="absolute right-3 top-1/2 -translate-y-1/2">
-                                <CardBrand number={card.number} />
+                                <BrandBadge brand={cardBrand(card.number)} />
                               </span>
                             </span>
                           </label>
@@ -237,24 +239,28 @@ export default function CheckoutPage() {
                         <p className={`fade-up -mt-1 rounded-[8px] bg-[#f8fafc] p-4 text-[14px] text-[#475569] ${fontRegular}`}>You’ll be taken to PayPal to finish paying, then brought back to Thkee.</p>
                       )}
 
-                      {hasSavedCard && <MethodRow checked={method === "saved"} onSelect={() => setMethod("saved")} title={`${savedCard.brand} **** ${savedCard.last4}`} right={<VisaBadge />} />}
-                      {method === "saved" && (
-                        <div className="fade-up -mt-1 flex flex-col gap-4 rounded-[8px] bg-[#f8fafc] p-4">
-                          <p className={`text-[16px] text-[#1e293b] ${fontSemi}`}>
-                            {savedCard.brand} **** {savedCard.last4}
-                          </p>
-                          <div className="grid grid-cols-1 gap-x-6 gap-y-4 sm:grid-cols-2">
-                            <label className="flex flex-col gap-2">
-                              <span className={label}>Expiry Date</span>
-                              <input value={savedCard.expiry} readOnly className={`${input} border-transparent text-[#475569]`} />
-                            </label>
-                            <label className="flex flex-col gap-2">
-                              <span className={label}>CVV Code</span>
-                              <input value={savedCvv} onChange={(e) => setSavedCvv(e.target.value.replace(/\D/g, "").slice(0, 4))} type="password" inputMode="numeric" autoComplete="cc-csc" placeholder="***" className={`${input} border-[#1e293b]`} />
-                            </label>
-                          </div>
+                      {savedCards.map((c) => (
+                        <div key={c.id} className="contents">
+                          <MethodRow checked={method === `saved:${c.id}`} onSelect={() => setMethod(`saved:${c.id}`)} title={`${c.brand} **** ${c.last4}`} right={<BrandBadge brand={c.brand} />} />
+                          {method === `saved:${c.id}` && (
+                            <div className="fade-up -mt-1 flex flex-col gap-4 rounded-[8px] bg-[#f8fafc] p-4">
+                              <p className={`text-[16px] text-[#1e293b] ${fontSemi}`}>
+                                {c.brand} **** {c.last4}
+                              </p>
+                              <div className="grid grid-cols-1 gap-x-6 gap-y-4 sm:grid-cols-2">
+                                <label className="flex flex-col gap-2">
+                                  <span className={label}>Expiry Date</span>
+                                  <input value={c.expiry} readOnly className={`${input} border-transparent text-[#475569]`} />
+                                </label>
+                                <label className="flex flex-col gap-2">
+                                  <span className={label}>CVV Code</span>
+                                  <input value={savedCvv} onChange={(e) => setSavedCvv(e.target.value.replace(/\D/g, "").slice(0, 4))} type="password" inputMode="numeric" autoComplete="cc-csc" placeholder="***" className={`${input} border-[#1e293b]`} />
+                                </label>
+                              </div>
+                            </div>
+                          )}
                         </div>
-                      )}
+                      ))}
                     </div>
                   </div>
                 </section>

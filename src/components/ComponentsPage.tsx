@@ -4,6 +4,7 @@ import { fontHeading, fontMedium, fontRegular, fontSemi } from "../fonts";
 import { useApp } from "../store";
 import { Card, CheckField, LinkField, SelectField, TextField, ToggleRow } from "./AccountSettingsPage";
 import { MadaBadge, MastercardBadge, MethodRow, PaypalLogo, VisaBadge } from "./CheckoutPage";
+import { DateField, DatePicker, todayIso } from "./DatePicker";
 import { ExpertAvatar, ExpertCard } from "./Experts";
 import { BarChart, Donut, LineChart } from "./InstructorCharts";
 import { ChecklistArt, InspireIcon, LaptopsArt, PresentingArt, RecordingArt, TeachIcon, TrophyIcon } from "./InstructorArt";
@@ -162,6 +163,8 @@ export default function ComponentsPage() {
   const [choice, setChoice] = useState("");
   const [handle, setHandle] = useState("");
   const [time, setTime] = useState(540);
+  const [pickedDate, setPickedDate] = useState(todayIso);
+  const [endDate, setEndDate] = useState("");
   const [checked, setChecked] = useState(true);
   const [boxed, setBoxed] = useState(false);
   const [switched, setSwitched] = useState(true);
@@ -338,6 +341,16 @@ export default function ComponentsPage() {
               <div className={row}>
                 <TimeSelect label="Start time" value={time} onChange={setTime} />
                 <TimeSelect label="Disabled time" value={time} onChange={setTime} disabled />
+              </div>
+            </Demo>
+            <Demo name="DateField and DatePicker" from="DatePicker.tsx">
+              <div className="grid grid-cols-1 gap-5 sm:grid-cols-3">
+                <DateField id="demo-date" label="Default" value={pickedDate} onChange={setPickedDate} hint="Use this in place of the browser date input." />
+                <DateField id="demo-date-min" label="Future dates only" value={endDate} onChange={setEndDate} min={todayIso()} placeholder="Select an end date" />
+                <DateField id="demo-date-error" label="With error" value="" onChange={() => {}} error="Choose an end date" />
+              </div>
+              <div className="mt-5 max-w-[220px]">
+                <DatePicker ariaLabel="Disabled date" value={todayIso()} onChange={() => {}} disabled />
               </div>
             </Demo>
           </Section>

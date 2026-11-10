@@ -1,5 +1,9 @@
-import { useEffect, useMemo, useRef, useState, type MouseEvent, type ReactNode } from "react";
+import { Fragment, useEffect, useMemo, useRef, useState, type MouseEvent, type ReactNode } from "react";
+import { uploadFile } from "../api";
+import { shrinkImage } from "../imageShrink";
 import { fontMedium, fontRegular, fontSemi } from "../fonts";
+import { HugeiconsIcon, type IconSvgElement } from "@hugeicons/react";
+import { Image01Icon, LeftToRightListBulletIcon, LeftToRightListNumberIcon, Link01Icon, SourceCodeIcon, TextBoldIcon, TextItalicIcon, TextUnderlineIcon } from "@hugeicons/core-free-icons";
 
 export type Note = {
   id: number;
@@ -478,25 +482,16 @@ function KindBadge({ kind }: { kind: Note["kind"] }) {
   );
 }
 
-const editorTools: { command: string; label: string; icon: ReactNode }[] = [
-  { command: "bold", label: "Bold", icon: <path d="M7 5h6a3.5 3.5 0 010 7H7zM7 12h7a3.5 3.5 0 010 7H7z" /> },
-  { command: "italic", label: "Italic", icon: <path d="M10 5h7M7 19h7M14 5l-4 14" /> },
-  { command: "underline", label: "Underline", icon: <path d="M7 4v7a5 5 0 0010 0V4M5 20h14" /> },
-  { command: "insertUnorderedList", label: "Bulleted list", icon: <path d="M9 6h11M9 12h11M9 18h11M4.5 6h.01M4.5 12h.01M4.5 18h.01" /> },
-  { command: "insertOrderedList", label: "Numbered list", icon: <path d="M10 6h10M10 12h10M10 18h10M4 5l1.5-1v5M3.5 14.5a1.2 1.2 0 012.2.7c0 1-2.2 2-2.2 3.3h2.5" /> },
+// Toolbar icons come from Hugeicons, like the rest of the app's menus.
+const editorTools: { command: string; label: string; icon: IconSvgElement }[] = [
+  { command: "bold", label: "Bold", icon: TextBoldIcon },
+  { command: "italic", label: "Italic", icon: TextItalicIcon },
+  { command: "underline", label: "Underline", icon: TextUnderlineIcon },
+  { command: "insertUnorderedList", label: "Bulleted list", icon: LeftToRightListBulletIcon },
+  { command: "insertOrderedList", label: "Numbered list", icon: LeftToRightListNumberIcon },
 ];
 
-const editorExtraIcons = {
-  image: (
-    <>
-      <rect x="3" y="4" width="18" height="16" rx="2" />
-      <circle cx="9" cy="10" r="1.5" />
-      <path d="M21 16l-5-5-9 9" />
-    </>
-  ),
-  link: <path d="M10 14a4 4 0 005.7 0l3-3a4 4 0 00-5.7-5.7l-1 1M14 10a4 4 0 00-5.7 0l-3 3a4 4 0 005.7 5.7l1-1" />,
-  code: <path d="M8 7l-5 5 5 5M16 7l5 5-5 5" />,
-};
+const editorExtraIcons = { image: Image01Icon, link: Link01Icon, code: SourceCodeIcon };
 
 const escapeHtml = (text: string) => text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 
@@ -513,6 +508,7 @@ export function NoteEditor({
   hideActions,
   clearOnSave,
   toolbarTop,
+  modern,
   linkOnly,
   hideUnderline,
   toolbarEnd,
@@ -539,6 +535,8 @@ export function NoteEditor({
   clearOnSave?: boolean;
   // Puts the formatting buttons above the text instead of below it.
   toolbarTop?: boolean;
+  // Writing-first look: content on top, a quiet grouped toolbar along the bottom, larger text.
+  modern?: boolean;
   // With extras, keeps the link button but leaves out image and code.
   linkOnly?: boolean;
   hideUnderline?: boolean;
@@ -606,14 +604,23 @@ export function NoteEditor({
   const pickImage = (file?: File) => {
     if (fileRef.current) fileRef.current.value = "";
     if (!file) return;
-    if (file.size > 1024 * 1024) return setError("Images must be under 1 MB.");
     setError("");
-    const reader = new FileReader();
-    reader.onload = () => {
-      restoreCursor();
-      run("insertImage", String(reader.result));
-    };
-    reader.readAsDataURL(file);
+    // Large images shrink automatically to under 1 MB.
+    shrinkImage(file)
+      .then(async (small) => {
+        const url = await uploadFile(small);
+        if (url) {
+          restoreCursor();
+          return run("insertImage", url);
+        }
+        const reader = new FileReader();
+        reader.onload = () => {
+          restoreCursor();
+          run("insertImage", String(reader.result));
+        };
+        reader.readAsDataURL(small);
+      })
+      .catch(() => setError("Image upload failed. Please try again."));
   };
 
   const addLink = () => {
@@ -643,14 +650,18 @@ export function NoteEditor({
     }
   };
 
-  const toolCls = (on: boolean) => `flex size-7 items-center justify-center rounded-[4px] transition hover:bg-[#f1f5f9] hover:text-[#0f172a] ${on ? "bg-[#e2e8f0] text-[#0f172a]" : "text-[#64748b]"}`;
+  const toolCls = (on: boolean) =>
+    modern
+      ? `flex size-8 items-center justify-center rounded-[8px] transition ${on ? "bg-[#eef7f3] text-[#0d5c4b]" : "text-slate-500 hover:bg-slate-100 hover:text-slate-900"}`
+      : `flex size-7 items-center justify-center rounded-[4px] transition hover:bg-[#f1f5f9] hover:text-[#0f172a] ${on ? "bg-[#e2e8f0] text-[#0f172a]" : "text-[#64748b]"}`;
 
   return (
     <div className="flex min-w-0 flex-1 flex-col gap-4">
       <div className={sideAction ? "flex items-end gap-3" : "contents"}>
-      <div className={`flex ${boxClass} resize-y flex-col gap-2 overflow-auto rounded-[8px] border p-4 focus-within:border-[#1e293b] ${toolbarTop ? "flex-col-reverse border-[#e2e8f0] bg-[#f8fafc]" : "border-[#cbd5e1] bg-white"} ${sideAction ? "min-w-0 flex-1" : ""}`}>
-        <div className="relative flex-1">
-          {empty && <span className={`pointer-events-none absolute left-0 top-0 text-[16px] text-[#94a3b8] md:text-[14px] ${fontRegular}`}>{placeholder}</span>}
+      {/* The toolbar-on-top variant matches the standard .field look: white box, slate border, green focus ring and a light toolbar strip. */}
+      <div className={`flex ${boxClass} flex-col overflow-auto ${modern ? "rounded-[14px] border border-slate-200 bg-white shadow-[0_1px_2px_rgba(15,23,42,0.04)] transition-[border-color,box-shadow] hover:border-slate-300 focus-within:!border-[#0d5c4b]/50 focus-within:shadow-[0_0_0_4px_rgba(13,92,75,0.08)]" : toolbarTop ? "flex-col-reverse rounded-[12px] border border-slate-200 bg-white shadow-[0_1px_2px_rgba(15,23,42,0.04)] transition-[border-color,box-shadow] hover:border-slate-300 focus-within:!border-[#0d5c4b]/60 focus-within:shadow-[0_0_0_3px_rgba(13,92,75,0.12)]" : "resize-y gap-2 rounded-[8px] border border-[#cbd5e1] bg-white p-4 focus-within:border-[#1e293b]"} ${sideAction ? "min-w-0 flex-1" : ""}`}>
+        <div className={`relative flex-1 ${modern ? "mx-4 mb-3 mt-3.5" : toolbarTop ? "mx-3 my-2.5" : ""}`}>
+          {empty && <span className={`pointer-events-none absolute left-0 top-0 text-[#94a3b8] ${modern ? "text-[15px] leading-[26px]" : "text-[16px] md:text-[14px]"} ${fontRegular}`}>{placeholder}</span>}
           <div
             ref={ref}
             role="textbox"
@@ -666,11 +677,11 @@ export function NoteEditor({
                 if (!empty || allowEmpty) save();
               }
             }}
-            className={`min-h-[48px] whitespace-pre-wrap break-words text-[16px] leading-[22px] text-[#0f172a] outline-none md:text-[14px] ${richText} ${fontRegular}`}
+            className={`min-h-[48px] whitespace-pre-wrap break-words text-[#0f172a] outline-none ${modern ? "text-[15px] leading-[26px] [&_li]:my-0.5 [&_ol]:my-2 [&_ul]:my-2" : "text-[16px] leading-[22px] md:text-[14px]"} ${richText} ${fontRegular}`}
           />
         </div>
         {linkOpen && (
-          <div className="flex items-center gap-2">
+          <div className={`flex items-center gap-2 ${modern ? "mx-4 mb-3" : toolbarTop ? "mx-3 mb-2.5" : ""}`}>
             <input
               autoFocus
               value={linkUrl}
@@ -691,12 +702,16 @@ export function NoteEditor({
             </button>
           </div>
         )}
-        <div className={`flex flex-wrap items-center gap-1 ${toolbarTop ? "border-b border-[#e2e8f0] pb-2" : ""}`}>
+        <div className={`flex flex-wrap items-center gap-0.5 ${modern ? "sticky bottom-0 z-[1] border-t border-slate-100 bg-white/95 px-2 py-1.5 backdrop-blur-sm" : toolbarTop ? "sticky top-0 z-[1] border-b border-slate-200 bg-slate-50 px-1.5 py-1" : ""}`}>
           {toolbarEnd && <span className="order-last ml-auto flex">{toolbarEnd}</span>}
           {editorTools.filter((tool) => !(hideUnderline && tool.command === "underline")).map((tool) => (
-            <button key={tool.command} type="button" aria-label={tool.label} title={tool.label} aria-pressed={active.includes(tool.command)} onMouseDown={(e) => e.preventDefault()} onClick={() => run(tool.command)} className={toolCls(active.includes(tool.command))}>
-              <Svg>{tool.icon}</Svg>
+            <Fragment key={tool.command}>
+            {/* Modern toolbar: a thin divider separates text styles from lists. */}
+            {modern && tool.command === "insertUnorderedList" && <span aria-hidden="true" className="mx-1 h-5 w-px bg-slate-200" />}
+            <button type="button" aria-label={tool.label} title={tool.label} aria-pressed={active.includes(tool.command)} onMouseDown={(e) => e.preventDefault()} onClick={() => run(tool.command)} className={toolCls(active.includes(tool.command))}>
+              <HugeiconsIcon icon={tool.icon} size={18} strokeWidth={1.8} aria-hidden="true" />
             </button>
+            </Fragment>
           ))}
           {(extras || imageOnly) && !linkOnly && (
             <>
@@ -711,7 +726,7 @@ export function NoteEditor({
                 }}
                 className={toolCls(false)}
               >
-                <Svg>{editorExtraIcons.image}</Svg>
+                <HugeiconsIcon icon={editorExtraIcons.image} size={18} strokeWidth={1.8} aria-hidden="true" />
               </button>
               <input ref={fileRef} type="file" accept="image/png,image/jpeg,image/gif,image/webp" hidden onChange={(e) => pickImage(e.target.files?.[0])} />
             </>
@@ -730,11 +745,11 @@ export function NoteEditor({
                 }}
                 className={toolCls(linkOpen)}
               >
-                <Svg>{editorExtraIcons.link}</Svg>
+                <HugeiconsIcon icon={editorExtraIcons.link} size={18} strokeWidth={1.8} aria-hidden="true" />
               </button>
               {!linkOnly && (
                 <button type="button" aria-label="Format as code" title="Format as code" onMouseDown={(e) => e.preventDefault()} onClick={insertCode} className={toolCls(false)}>
-                  <Svg>{editorExtraIcons.code}</Svg>
+                  <HugeiconsIcon icon={editorExtraIcons.code} size={18} strokeWidth={1.8} aria-hidden="true" />
                 </button>
               )}
             </>

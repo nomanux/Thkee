@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { fontHeading, fontMedium, fontRegular, fontSemi } from "../fonts";
 import { load, openCreateSession, openInstructorSessions, openLiveEditor, openMessages, save, useApp } from "../store";
+import { uploadFile } from "../api";
 import { loadLiveDrafts } from "./InstructorLiveCreate";
 import { CreateModal, DeleteModal, EditModal, type Announcement } from "./InstructorAnnouncements";
 import { Checkbox } from "./InstructorAssignments";
@@ -14,7 +15,7 @@ const imgMegaphone = "/assets/48fdd.svg";
 type SessionStatus = "Completed" | "In progress" | "Upcoming";
 type Session = { id: string; name: string; date: string; time: string; status: SessionStatus };
 type Series = { id: string; name: string; sessions: Session[] };
-type Material = { id: string; name: string; size: string };
+type Material = { id: string; name: string; size: string; url?: string };
 type SessionAnnouncement = Announcement & { posted: string; pinned?: boolean };
 type Store = { series: Series[]; materials: Material[]; announcements: SessionAnnouncement[] };
 
@@ -299,10 +300,16 @@ function StudyMaterialsTab({ materials, setMaterials }: { materials: Material[];
   const [renaming, setRenaming] = useState<Material | null>(null);
   const [deleting, setDeleting] = useState<Material | null>(null);
 
-  const addFile = (file?: File) => {
+  const addFile = async (file?: File) => {
     if (fileRef.current) fileRef.current.value = "";
     if (!file) return;
-    setMaterials([...materials, { id: `m-${Date.now()}`, name: file.name, size: `${Math.max(1, Math.round(file.size / 1024))} KB` }]);
+    let url: string | null = null;
+    try {
+      url = await uploadFile(file);
+    } catch {
+      return notify("Upload failed. Please try again");
+    }
+    setMaterials([...materials, { id: `m-${Date.now()}`, name: file.name, size: `${Math.max(1, Math.round(file.size / 1024))} KB`, ...(url ? { url } : {}) }]);
     notify("Study material added");
   };
 
@@ -330,7 +337,13 @@ function StudyMaterialsTab({ materials, setMaterials }: { materials: Material[];
               </span>
               <div className="min-w-0 flex-1">
                 <p title={m.name} className={`truncate text-[14px] leading-[20px] text-[#334155] ${fontRegular}`}>
-                  {m.name}
+                  {m.url ? (
+                    <a href={m.url} target="_blank" rel="noreferrer" className="hover:underline">
+                      {m.name}
+                    </a>
+                  ) : (
+                    m.name
+                  )}
                 </p>
                 <p className={`mt-0.5 text-[14px] leading-[20px] text-[#94a3b8] ${fontRegular}`}>{m.size}</p>
               </div>
