@@ -296,3 +296,118 @@ export async function suggestQuizQuestions(ctx: LectureContext, count: number, s
   // Shuffle the answers too, so the correct one isn't always first.
   return fresh.slice(0, count).map((q, i) => ({ ...q, options: shuffle(q.options, seed + i + 1) }));
 }
+
+// ---- Article lecture draft ----
+
+export async function suggestArticle(ctx: LectureContext, seed: number): Promise<{ text: string; html: string }> {
+  await think();
+  const topic = tidy(lectureTopic(ctx));
+  // Titles that start with an action ("Set up your account") read as a how-to.
+  const howTo = /^(set up|build|create|make|use|design|add|install|learn|write|plan|test|share|export|import|link|start|get started with|choose|organi[sz]e)\b/i.test(topic);
+  const subject = howTo ? `how to ${topic.charAt(0).toLowerCase()}${topic.slice(1)}` : topic;
+  const { tool, beginner } = describe(ctx.course);
+  const where = tool && !new RegExp(`\\b${tool}\\b`, "i").test(topic) ? ` in ${tool}` : "";
+  const pick = (options: string[]) => shuffle(options, seed)[0];
+  const intro = pick([
+    `This short read explains ${subject}${where}. Keep it open while you work through the next lectures.`,
+    `Here is everything you need to know about ${subject}${where}, on one page. Use it as a quick reference whenever you need a reminder.`,
+  ]);
+  const points = howTo
+    ? ["What you need before you start", "The steps, in order", "Common mistakes and how to avoid them", "How to check that it worked"]
+    : [`What ${topic} is and why it matters`, "The key steps, in the order you will use them", "Common mistakes and how to avoid them", "A quick checklist to review your own work"];
+  const tip = beginner
+    ? "Tip: try each step yourself right after reading it. Short practice beats long reading."
+    : "Tip: compare these steps with how you work today, and pick one habit to change this week.";
+  // The title is already on the page, so the draft starts with the introduction.
+  const html = `<p>${esc(intro)}</p><p><b>In this article:</b></p><ul>${points.map((p) => `<li>${esc(p)}</li>`).join("")}</ul><p>${esc(tip)}</p>`;
+  const text = [intro, "In this article:", ...points.map((p) => `• ${p}`), tip].join("\n\n");
+  return { text, html };
+}
+
+// ---- Assignment drafts ----
+
+export type AssignmentDraft = { prompt: { text: string; html: string }; model: { text: string; html: string }; answer: "text" | "textfiles" | "files" };
+const rich = (lines: string[], list?: string[]) => ({
+  text: [...lines, ...(list ?? []).map((l) => `• ${l}`)].join("\n"),
+  html: lines.map((l) => (l.endsWith(":") ? `<p><b>${esc(l)}</b></p>` : `<p>${esc(l)}</p>`)).join("") + (list?.length ? `<ul>${list.map((l) => `<li>${esc(l)}</li>`).join("")}</ul>` : ""),
+});
+
+// Titles that start with a verb ("Wireframe a food delivery app") are tasks, not topics, and need different phrasing.
+const ACTION = /^(set up|build|create|make|use|design|add|install|learn|write|plan|test|share|export|import|link|start|get started with|choose|organi[sz]e|wireframe|prototype|sketch|draw|code|research|analy[sz]e|map|redesign|improve|publish|launch|present)\b/i;
+function assignmentWords(ctx: LectureContext) {
+  const topic = tidy(lectureTopic(ctx));
+  const task = ACTION.test(topic);
+  const verb = `${topic.charAt(0).toLowerCase()}${topic.slice(1)}`;
+  const { tool } = describe(ctx.course);
+  const where = tool && !new RegExp(`\\b${tool}\\b`, "i").test(topic) ? ` in ${tool}` : "";
+  return {
+    task,
+    tool,
+    where,
+    // "how to wireframe a food delivery app" or "auto layout"
+    subject: task ? `how to ${verb}` : topic,
+    // "wireframe a food delivery app" or "create a small example of auto layout"
+    doIt: task ? verb : `create a small example of ${topic}`,
+    // "when they wireframe a food delivery app" or "with auto layout"
+    mistakes: task ? `when they ${verb}` : `with ${topic}`,
+    // "need to wireframe a food delivery app" or "use auto layout"
+    useIn: task ? `need to ${verb}` : `use ${topic}`,
+  };
+}
+
+export async function suggestAssignmentInstructions(ctx: LectureContext, seed: number): Promise<{ text: string; html: string }> {
+  await think();
+  const w = assignmentWords(ctx);
+  const pick = (options: string[]) => shuffle(options, seed)[0];
+  const intro = pick([
+    `In this assignment you ${w.doIt}${w.where}. Work through each question and submit when you are done.`,
+    `${w.task ? `Time to put it into practice. Your task: ${w.doIt}${w.where}.` : `Time to practise ${w.subject}${w.where}.`} Answer each question in your own words and share your work.`,
+  ]);
+  const rules = [
+    "Answer every question. Short, clear answers are better than long ones.",
+    w.tool ? `Share your ${w.tool} file or a link to it where a question asks for files.` : "Attach files where a question asks for them.",
+    "Explain your choices in one or two sentences.",
+    "Plan for about 30 to 45 minutes.",
+  ];
+  return rich([intro, "Before you start:"], rules);
+}
+
+export async function suggestAssignmentQuestions(ctx: LectureContext, count: number, seed: number, existing: string[] = []): Promise<AssignmentDraft[]> {
+  await think();
+  const w = assignmentWords(ctx);
+  const bank: AssignmentDraft[] = [
+    {
+      answer: "textfiles",
+      prompt: rich([`${cap(w.doIt)}${w.where}. Attach your file or a link, and describe what you made in two or three sentences.`]),
+      model: rich(["A strong answer includes a working file and a short note that covers:"], ["What the work shows", "One choice you made and why", "What you would improve next"]),
+    },
+    {
+      answer: "text",
+      prompt: rich([`In your own words, explain ${w.subject} to someone new to the topic. Use one everyday example.`]),
+      model: rich(["A good answer explains the idea in plain words, gives one simple real-world example and avoids jargon."]),
+    },
+    {
+      answer: "text",
+      prompt: rich([`What are two common mistakes people make ${w.mistakes}? For each one, say how to avoid it.`]),
+      model: rich(["Look for two specific mistakes, each with a clear fix. For example:"], ["Skipping the planning step. Fix: sketch the idea first.", "Doing too much at once. Fix: finish one small part, then build on it."]),
+    },
+    {
+      answer: "files",
+      prompt: rich([`Take a screenshot of your finished work${w.where} and upload it.`]),
+      model: rich(["The screenshot should show the finished result clearly, with labels or names that are easy to read."]),
+    },
+    {
+      answer: "text",
+      prompt: rich([`Describe a real project where you would ${w.useIn}. What would you do first?`]),
+      model: rich(["A strong answer names a concrete project, explains why it fits and lists a clear first step."]),
+    },
+    {
+      answer: "textfiles",
+      prompt: rich([`Take an earlier piece of your work and improve it with what you learned about ${w.subject}. Share the before and after.`]),
+      model: rich(["The best answers show both versions and point out two or three specific changes, with the reason for each."]),
+    },
+  ];
+  return shuffle(bank, seed)
+    .filter((d) => !existing.some((e) => same(e, d.prompt.text)))
+    .slice(0, count);
+}

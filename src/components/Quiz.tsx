@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react"
+import { NoteBody } from "./Notes"
 import {
   fontBold,
   fontHeading,
@@ -400,16 +401,25 @@ export function QuizRunner({
   )
 }
 
+// Demo rules for the start screen. Instructors write their own in the quiz editor (Instructions).
+export const DEMO_QUIZ_INSTRUCTIONS = {
+  text: "",
+  html: "<ol><li>Read each question carefully before you answer.</li><li>Answer on your own. Do not use AI tools or search the internet.</li><li>Some questions have more than one correct answer. Tick every one that applies.</li><li>Finish every required question before you submit.</li></ol>",
+}
+
 export function QuizPanel({
   title,
   questions,
   result,
+  instructions,
   onStart,
   onNext,
 }: {
   title: string
   questions: number
   result?: QuizResult
+  // Optional rules from the instructor, shown before the learner starts.
+  instructions?: { text: string; html: string }
   onStart: () => void
   onNext?: () => void
 }) {
@@ -557,6 +567,14 @@ export function QuizPanel({
                 see if you’re right, and read the short explanation before
                 moving on.
               </p>
+              {instructions && (instructions.html || instructions.text.trim()) && (
+                <div className="mt-2 w-full max-w-[560px] rounded-[12px] border border-[#e2e8f0] bg-[#f8fafc] px-5 py-4 text-left">
+                  <p className={`m-0 text-[12px] uppercase tracking-[0.08em] text-[#64748b] ${fontSemi}`}>
+                    Before you start
+                  </p>
+                  <NoteBody note={instructions} className="mt-2" tone="text-[#334155]" />
+                </div>
+              )}
               <button
                 type="button"
                 onClick={onStart}

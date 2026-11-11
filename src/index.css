@@ -1,16 +1,91 @@
 @import "tailwindcss";
 
 @theme {
-  --color-primary-50: #fff9f0;
-  --color-primary-100: #fff0d7;
-  --color-primary-200: #fee3b4;
-  --color-primary-300: #fdce7c;
-  --color-primary-400: #fcb740;
-  --color-primary-500: #ffb20d;
-  --color-primary-600: #faa104;
-  --color-primary-700: #c98003;
-  --color-primary-800: #976002;
-  --color-primary-900: #613f00;
+  /* Primary: brand green. */
+  --color-primary-50: #f4faf7;
+  --color-primary-100: #eef7f3;
+  --color-primary-200: #e6f4ee;
+  --color-primary-300: #d4e8df;
+  --color-primary-400: #9fc9b8;
+  --color-primary-500: #3f8f78;
+  --color-primary-600: #1f6b5a;
+  --color-primary-700: #0d5c4b;
+  --color-primary-800: #0b4c3e;
+  --color-primary-900: #0f2f2a;
+
+  /* Secondary: brand yellow. */
+  --color-secondary-50: #fff9f0;
+  --color-secondary-100: #fff0d7;
+  --color-secondary-200: #fee3b4;
+  --color-secondary-300: #fdce7c;
+  --color-secondary-400: #fcb740;
+  --color-secondary-500: #ffb20d;
+  --color-secondary-600: #faa104;
+  --color-secondary-700: #c98003;
+  --color-secondary-800: #976002;
+  --color-secondary-900: #613f00;
+
+  /* AI accents (violet). */
+  --color-ai-600: #6016fc;
+  --color-ai-800: #3d1299;
+  --color-ai-900: #2e0a78;
+
+  /* In-between neutrals used for hairlines and page backgrounds. */
+  --color-slate-25: #fbfcfd;
+  --color-slate-150: #eef1f4;
+
+  --text-10: 10px;
+  --text-11: 11px;
+  --text-13: 13px;
+  --text-15: 15px;
+  --text-17: 17px;
+  --text-22: 22px;
+  --text-26: 26px;
+
+  --radius-10: 10px;
+  --radius-14: 14px;
+  --radius-18: 18px;
+  --radius-20: 20px;
+
+  --tracking-label: 0.08em;
+
+  --shadow-card: 0 1px 2px rgba(15, 23, 42, 0.04), 0 4px 16px rgba(15, 23, 42, 0.04);
+  --shadow-section: 0 1px 2px rgba(15, 23, 42, 0.04), 0 12px 28px -20px rgba(15, 23, 42, 0.25);
+  --shadow-panel: 0 1px 2px rgba(15, 23, 42, 0.04), 0 12px 32px rgba(15, 23, 42, 0.08);
+  --shadow-popover: 0 1px 2px rgba(15, 23, 42, 0.05), 0 16px 36px -8px rgba(15, 23, 42, 0.2);
+  --shadow-primary-xs: 0 1px 2px rgba(13, 92, 75, 0.25);
+  --shadow-primary-button: 0 1px 2px rgba(13, 92, 75, 0.25), 0 8px 20px -10px rgba(13, 92, 75, 0.6);
+  --shadow-primary-hover: 0 8px 20px -12px rgba(13, 92, 75, 0.45);
+  --shadow-primary-glow: 0 10px 24px -10px rgba(13, 92, 75, 0.6);
+  --shadow-primary-chip: 0 4px 10px -4px rgba(13, 92, 75, 0.6);
+  --shadow-primary-tile: 0 1px 2px rgba(13, 92, 75, 0.08), 0 8px 24px -12px rgba(13, 92, 75, 0.25);
+  --shadow-ai-button: 0 6px 16px -8px rgba(96, 22, 252, 0.7);
+  --shadow-fab: 0 6px 16px rgba(46, 10, 120, 0.3);
+}
+
+/* Layout helpers that need calc() or several properties. */
+@utility h-panel {
+  height: calc(100dvh - 112px);
+}
+@utility h-below-header {
+  height: calc(100dvh - 64px);
+}
+@utility grid-cols-guide {
+  grid-template-columns: minmax(0, 1fr) 340px;
+}
+@utility grid-cols-split {
+  grid-template-columns: minmax(0, 1fr) 24px var(--preview-w);
+}
+@utility scrollbar-thin {
+  scrollbar-width: thin;
+}
+@utility bg-video-cover {
+  background-image: radial-gradient(120% 90% at 30% 20%, #1f6b5a 0%, #0f2f2a 45%, #0b1220 100%);
+}
+@utility dot-grid {
+  background-image: radial-gradient(var(--color-primary-700) 1px, transparent 1px);
+  background-size: 14px 14px;
+  mask-image: linear-gradient(to left, black, transparent);
 }
 
 @font-face {

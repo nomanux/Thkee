@@ -1,32 +1,123 @@
-import { useEffect, useRef, useState, type DragEvent, type FocusEvent, type KeyboardEvent, type ReactNode } from "react";
+import {
+  useEffect,
+  useRef,
+  useState,
+  type DragEvent,
+  type FocusEvent,
+  type KeyboardEvent,
+  type ReactNode,
+} from "react";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { ArrowUpRight01Icon, Attachment01Icon, File02Icon, LockIcon, MaximizeScreenIcon, MinimizeScreenIcon, ViewIcon } from "@hugeicons/core-free-icons";
-import { suggestDescription, suggestLectureDescription, suggestLectureTitles, suggestPoints, suggestQuizQuestions, suggestTitles, type CourseContext, type LectureContext, type PointKind, type QuizDraft } from "../aiSuggest";
+import {
+  ArrowUpRight01Icon,
+  Attachment01Icon,
+  File02Icon,
+  LockIcon,
+  MaximizeScreenIcon,
+  MinimizeScreenIcon,
+  ViewIcon,
+} from "@hugeicons/core-free-icons";
+import {
+  suggestDescription,
+  suggestLectureDescription,
+  suggestLectureTitles,
+  suggestAssignmentInstructions,
+  suggestAssignmentQuestions,
+  type AssignmentDraft,
+  suggestPoints,
+  suggestQuizQuestions,
+  suggestTitles,
+  type CourseContext,
+  type LectureContext,
+  type PointKind,
+  type QuizDraft,
+  suggestArticle,
+} from "../aiSuggest";
 import { uploadFile } from "../api";
-import { BANNER_MAX_UPLOAD_BYTES, BANNER_MIN, prepareBanner } from "../imageShrink";
+import {
+  BANNER_MAX_UPLOAD_BYTES,
+  BANNER_MIN,
+  prepareBanner,
+} from "../imageShrink";
 import { categories } from "../data";
 import { fontHeading, fontMedium, fontRegular, fontSemi } from "../fonts";
-import { load, openCourseEditor, openInstructorCourses, save, useApp, useStoredState } from "../store";
+import {
+  load,
+  openCourseEditor,
+  openInstructorCourses,
+  save,
+  useApp,
+  useStoredState,
+} from "../store";
 import { SelectField, TextField } from "./AccountSettingsPage";
 import { Checkbox } from "./InstructorAssignments";
 import { Toggle } from "./InstructorAvailability";
-import { COURSE_DETAILS_KEY, StatusPill, loadInstructorCourses, sampleCover, saveInstructorCourses, todayLabel, type CourseStatus, type InstructorCourse } from "./InstructorCourses";
+import {
+  COURSE_DETAILS_KEY,
+  StatusPill,
+  loadInstructorCourses,
+  sampleCover,
+  saveInstructorCourses,
+  todayLabel,
+  type CourseStatus,
+  type InstructorCourse,
+} from "./InstructorCourses";
 import { ConfirmDialog } from "./InstructorSessions";
 import { InfoTip } from "./InstructorReports";
 import { ActionMenu, type ActionItem } from "./Menus";
 import { DateField, todayIso } from "./DatePicker";
-import CoursePagePreview, { type CoursePreviewData, type PreviewAnchor } from "./CoursePagePreview";
+import CoursePagePreview, {
+  type CoursePreviewData,
+  type PreviewAnchor,
+} from "./CoursePagePreview";
 import { NoteBody, NoteEditor } from "./Notes";
 import { Shell } from "./Overlays";
 
 type Point = { id: string; text: string };
 type LectureKind = "Video" | "Quiz" | "Assignment" | "Article";
-type Lecture = { id: string; title: string; kind: LectureKind; duration?: string; file?: string; preview?: boolean; description?: string; resources?: { id: string; name: string }[]; questions?: QuizQuestion[]; quizSettings?: QuizSettings };
-type QuizOption = { id: string; text: string; explanation: string; correct: boolean; saved: boolean };
-type QuizQuestion = { id: string; text: string; relatedLecture: string; required: boolean; randomise: boolean; multiple: boolean; options: QuizOption[] };
+type Lecture = {
+  id: string;
+  title: string;
+  kind: LectureKind;
+  duration?: string;
+  file?: string;
+  preview?: boolean;
+  description?: string;
+  // Rich text body for article lectures.
+  article?: { text: string; html: string };
+  resources?: { id: string; name: string }[];
+  questions?: QuizQuestion[];
+  quizSettings?: QuizSettings;
+  // Rules learners read on the start screen, before the first question.
+  quizInstructions?: { text: string; html: string };
+  assignment?: AssignmentData;
+};
+type QuizOption = {
+  id: string;
+  text: string;
+  explanation: string;
+  correct: boolean;
+  saved: boolean;
+};
+type QuestionKind = "choice" | "multi" | "truefalse" | "blank" | "order";
+type QuizQuestion = {
+  id: string;
+  // Older questions have no type: they are multiple choice, with "multiple" for several correct answers.
+  type?: QuestionKind;
+  text: string;
+  relatedLecture: string;
+  required: boolean;
+  randomise: boolean;
+  multiple: boolean;
+  options: QuizOption[];
+};
 type QuizSettings = { passScore: string; retakes: boolean; shuffle: boolean };
 // Upload progress by lecture id (100 means processing) and session-only video previews by file name.
-type Uploads = { progress: Record<string, number>; urls: Record<string, string>; start: (file: File, lectureId: string) => void };
+type Uploads = {
+  progress: Record<string, number>;
+  urls: Record<string, string>;
+  start: (file: File, lectureId: string) => void;
+};
 type CourseSection = { id: string; title: string; lectures: Lecture[] };
 type Coupon = { id: string; code: string; percent: number; expires: string };
 type Details = {
@@ -50,7 +141,8 @@ type Draft = Details & { title: string; category: string; price: string };
 
 let idCounter = 0;
 const uid = (prefix: string) => `${prefix}-${Date.now()}-${idCounter++}`;
-const blankPoints = (count: number): Point[] => Array.from({ length: count }, () => ({ id: uid("point"), text: "" }));
+const blankPoints = (count: number): Point[] =>
+  Array.from({ length: count }, () => ({ id: uid("point"), text: "" }));
 
 const blankDetails = (): Details => ({
   objectives: blankPoints(4),
@@ -75,7 +167,20 @@ const MIN_OBJECTIVES = 4;
 const MIN_DESCRIPTION_WORDS = 200;
 const LEVELS = ["Beginner", "Intermediate", "Advanced", "All levels"];
 const LANGUAGES = ["English", "Arabic"];
-const TOPIC_OPTIONS = ["Prototyping", "Wireframing", "Usability", "UI Design", "UX Research", "Figma", "Web Development", "Python", "Data Analysis", "Leadership", "Digital Marketing", "Entrepreneurship"];
+const TOPIC_OPTIONS = [
+  "Prototyping",
+  "Wireframing",
+  "Usability",
+  "UI Design",
+  "UX Research",
+  "Figma",
+  "Web Development",
+  "Python",
+  "Data Analysis",
+  "Leadership",
+  "Digital Marketing",
+  "Entrepreneurship",
+];
 const MAX_VIDEO_MB = 200;
 const MAX_LECTURE_VIDEO_MB = 700;
 const VIDEO_URLS_KEY = "thkee.videoUrls";
@@ -83,127 +188,335 @@ const AUTOSAVE_DELAY_MS = 1500;
 const LECTURE_DESCRIPTION_LIMIT = 500;
 
 const SECTIONS: { id: string; label: string; icon: string }[] = [
-  { id: "intended-learners", label: "Intended Learners", icon: "M2 9l10-5 10 5-10 5-10-5zM6 11.5V16c0 1.5 3 3 6 3s6-1.5 6-3v-4.5M20 10v6" },
-  { id: "details", label: "Details", icon: "M14 4H6a2 2 0 00-2 2v12a2 2 0 002 2h12a2 2 0 002-2v-7M8 12h5M8 16h8M18 2.5a3 3 0 100 6 3 3 0 000-6z" },
-  { id: "curriculum", label: "Curriculum", icon: "M6 3h12a2 2 0 012 2v14a2 2 0 01-2 2H6a2 2 0 01-2-2V5a2 2 0 012-2zM8 8h8M8 12h8M8 16h5" },
-  { id: "promotions", label: "Promotions", icon: "M6 3h12a2 2 0 012 2v16l-3-2-3 2-2-2-2 2-3-2-3 2V5a2 2 0 012-2zM15 8l-6 6M9.5 8.5h.01M14.5 13.5h.01" },
-  { id: "pricing", label: "Pricing", icon: "M6 3h12a3 3 0 013 3v12a3 3 0 01-3 3H6a3 3 0 01-3-3V6a3 3 0 013-3zM15 9c-.5-1-1.5-1.5-3-1.5-2 0-3 1-3 2.2 0 3 6 1.6 6 4.6 0 1.2-1 2.2-3 2.2-1.5 0-2.5-.5-3-1.5M12 6v12" },
-  { id: "tips", label: "Tips", icon: "M9 18h6M10 21h4M12 3a6 6 0 00-4 10.5c.8.8 1 1.5 1 2.5h6c0-1 .2-1.7 1-2.5A6 6 0 0012 3z" },
-  { id: "settings", label: "Settings", icon: "M12 15a3 3 0 100-6 3 3 0 000 6zM19 12a7 7 0 00-.1-1.2l2-1.5-2-3.4-2.3 1a7 7 0 00-2.1-1.2L14 3h-4l-.5 2.7a7 7 0 00-2.1 1.2l-2.3-1-2 3.4 2 1.5A7 7 0 005 12a7 7 0 00.1 1.2l-2 1.5 2 3.4 2.3-1a7 7 0 002.1 1.2L10 21h4l.5-2.7a7 7 0 002.1-1.2l2.3 1 2-3.4-2-1.5A7 7 0 0019 12z" },
+  {
+    id: "intended-learners",
+    label: "Intended Learners",
+    icon: "M2 9l10-5 10 5-10 5-10-5zM6 11.5V16c0 1.5 3 3 6 3s6-1.5 6-3v-4.5M20 10v6",
+  },
+  {
+    id: "details",
+    label: "Details",
+    icon: "M14 4H6a2 2 0 00-2 2v12a2 2 0 002 2h12a2 2 0 002-2v-7M8 12h5M8 16h8M18 2.5a3 3 0 100 6 3 3 0 000-6z",
+  },
+  {
+    id: "curriculum",
+    label: "Curriculum",
+    icon: "M6 3h12a2 2 0 012 2v14a2 2 0 01-2 2H6a2 2 0 01-2-2V5a2 2 0 012-2zM8 8h8M8 12h8M8 16h5",
+  },
+  {
+    id: "promotions",
+    label: "Promotions",
+    icon: "M6 3h12a2 2 0 012 2v16l-3-2-3 2-2-2-2 2-3-2-3 2V5a2 2 0 012-2zM15 8l-6 6M9.5 8.5h.01M14.5 13.5h.01",
+  },
+  {
+    id: "pricing",
+    label: "Pricing",
+    icon: "M6 3h12a3 3 0 013 3v12a3 3 0 01-3 3H6a3 3 0 01-3-3V6a3 3 0 013-3zM15 9c-.5-1-1.5-1.5-3-1.5-2 0-3 1-3 2.2 0 3 6 1.6 6 4.6 0 1.2-1 2.2-3 2.2-1.5 0-2.5-.5-3-1.5M12 6v12",
+  },
+  {
+    id: "tips",
+    label: "Tips",
+    icon: "M9 18h6M10 21h4M12 3a6 6 0 00-4 10.5c.8.8 1 1.5 1 2.5h6c0-1 .2-1.7 1-2.5A6 6 0 0012 3z",
+  },
+  {
+    id: "settings",
+    label: "Settings",
+    icon: "M12 15a3 3 0 100-6 3 3 0 000 6zM19 12a7 7 0 00-.1-1.2l2-1.5-2-3.4-2.3 1a7 7 0 00-2.1-1.2L14 3h-4l-.5 2.7a7 7 0 00-2.1 1.2l-2.3-1-2 3.4 2 1.5A7 7 0 005 12a7 7 0 00.1 1.2l-2 1.5 2 3.4 2.3-1a7 7 0 002.1 1.2L10 21h4l.5-2.7a7 7 0 002.1-1.2l2.3 1 2-3.4-2-1.5A7 7 0 0019 12z",
+  },
 ];
 // Sections that sit under the divider at the bottom of the menu instead of in the setup list.
 const UTILITY_SECTIONS = ["tips", "settings"];
 
 // Course settings take effect as soon as they change, so they are stored apart from the draft that needs saving.
 export const COURSE_SETTINGS_KEY = "thkee.courseSettings";
-type CourseSettings = { unlisted: boolean; qaDigest: boolean; lectureReady: boolean; monthlyEnrollments: boolean; privacy: "public" | "private" };
-const DEFAULT_COURSE_SETTINGS: CourseSettings = { unlisted: false, qaDigest: true, lectureReady: true, monthlyEnrollments: true, privacy: "public" };
+type CourseSettings = {
+  unlisted: boolean;
+  qaDigest: boolean;
+  lectureReady: boolean;
+  monthlyEnrollments: boolean;
+  privacy: "public" | "private";
+};
+const DEFAULT_COURSE_SETTINGS: CourseSettings = {
+  unlisted: false,
+  qaDigest: true,
+  lectureReady: true,
+  monthlyEnrollments: true,
+  privacy: "public",
+};
 
-const GUIDES: Record<string, { card: { title: string; text: string }; explain: string[] }> = {
+const GUIDES: Record<
+  string,
+  { card: { title: string; text: string }; explain: string[] }
+> = {
   "intended-learners": {
-    card: { title: "Craft Your Perfect Course Details", text: "Learn how to craft descriptions that attract the right learners and boost engagement." },
-    explain: ["Course objectives tell students what they will be able to do after your course. Start each one with an action, like \"Build\" or \"Design\". You need at least four.", "Requirements list the skills or tools students need first. If there are none, say the course suits beginners.", "Who this course is for helps the right students recognise themselves, so name specific people and goals."],
+    card: {
+      title: "Craft Your Perfect Course Details",
+      text: "Learn how to craft descriptions that attract the right learners and boost engagement.",
+    },
+    explain: [
+      'Course objectives tell students what they will be able to do after your course. Start each one with an action, like "Build" or "Design". You need at least four.',
+      "Requirements list the skills or tools students need first. If there are none, say the course suits beginners.",
+      "Who this course is for helps the right students recognise themselves, so name specific people and goals.",
+    ],
   },
   details: {
-    card: { title: "Pro Tips!", text: "Create a captivating promo video: Keep it short, focus on key benefits, and show your teaching style to attract students." },
-    explain: ["Use a clear title that says what students will learn, and a subtitle with one or two keywords.", "Choose your topics, level, language, category and sub category so your course shows up in the right searches.", `The description needs at least ${MIN_DESCRIPTION_WORDS} words. Add a cover image in a 7:4 ratio and a promotional video of up to ${MAX_VIDEO_MB} MB to help students decide.`],
+    card: {
+      title: "Pro Tips!",
+      text: "Create a captivating promo video: Keep it short, focus on key benefits, and show your teaching style to attract students.",
+    },
+    explain: [
+      "Use a clear title that says what students will learn, and a subtitle with one or two keywords.",
+      "Choose your topics, level, language, category and sub category so your course shows up in the right searches.",
+      `The description needs at least ${MIN_DESCRIPTION_WORDS} words. Add a cover image in a 7:4 ratio and a promotional video of up to ${MAX_VIDEO_MB} MB to help students decide.`,
+    ],
   },
   curriculum: {
     card: { title: "", text: "" },
-    explain: ["Sections group your lectures by topic. Name each one clearly and order them from simple to advanced.", "Choose a content type for each lecture. A video teaches a topic, a quiz checks understanding, an assignment gives practice and an article adds reading.", "Drag the handles to reorder sections and lectures, or use the menu on each row. Your course needs at least one lecture before you can submit it."],
+    explain: [
+      "Sections group your lectures by topic. Name each one clearly and order them from simple to advanced.",
+      "Choose a content type for each lecture. A video teaches a topic, a quiz checks understanding, an assignment gives practice and an article adds reading.",
+      "Drag the handles to reorder sections and lectures, or use the menu on each row. Your course needs at least one lecture before you can submit it.",
+    ],
   },
   promotions: {
-    card: { title: "Reach More Students", text: "A limited-time coupon gives new students a reason to enroll today." },
-    explain: ["Coupons give students a percentage off until the date you choose. Share the code with your audience.", "The Deals Program is optional. It lets Thkee promote your course at a discount in targeted campaigns."],
+    card: {
+      title: "Reach More Students",
+      text: "A limited-time coupon gives new students a reason to enroll today.",
+    },
+    explain: [
+      "Coupons give students a percentage off until the date you choose. Share the code with your audience.",
+      "The Deals Program is optional. It lets Thkee promote your course at a discount in targeted campaigns.",
+    ],
   },
   pricing: {
-    card: { title: "Price With Confidence", text: "Look at similar courses in your category, then choose a price that reflects the value you offer." },
-    explain: ["Enter the price students pay in US dollars. Enter 0 to offer the course for free.", "Coupons from the Promotions section are taken off this price."],
+    card: {
+      title: "Price With Confidence",
+      text: "Look at similar courses in your category, then choose a price that reflects the value you offer.",
+    },
+    explain: [
+      "Enter the price students pay in US dollars. Enter 0 to offer the course for free.",
+      "Coupons from the Promotions section are taken off this price.",
+    ],
   },
-  settings: { card: { title: "", text: "" }, explain: ["Unlisting hides your course from search and browsing. Students who already enrolled keep their access.", "Email notifications are only about this course. You can change them at any time.", "Enrollment privacy decides whether anyone can enroll or only people you invite. It becomes available once the course is published."] },
-  tips: { card: { title: "", text: "" }, explain: ["This checklist shows what is left before you can submit your course for review. Select an item to go to it.", "The tips below it are general guidance for organising a course that students finish."] },
+  settings: {
+    card: { title: "", text: "" },
+    explain: [
+      "Unlisting hides your course from search and browsing. Students who already enrolled keep their access.",
+      "Email notifications are only about this course. You can change them at any time.",
+      "Enrollment privacy decides whether anyone can enroll or only people you invite. It becomes available once the course is published.",
+    ],
+  },
+  tips: {
+    card: { title: "", text: "" },
+    explain: [
+      "This checklist shows what is left before you can submit your course for review. Select an item to go to it.",
+      "The tips below it are general guidance for organising a course that students finish.",
+    ],
+  },
 };
 
 const TIPS = [
-  { title: "Start with the outcome", text: "Decide what students should be able to do at the end, then work backwards to the lectures that get them there." },
-  { title: "Keep lectures short", text: "One idea per lecture makes a course easier to follow and easier to come back to." },
-  { title: "Practice in every section", text: "A quiz or assignment after each section helps students check what they have learned." },
-  { title: "Show the first win early", text: "Let students make or solve something in the first section so they want to continue." },
+  {
+    title: "Start with the outcome",
+    text: "Decide what students should be able to do at the end, then work backwards to the lectures that get them there.",
+  },
+  {
+    title: "Keep lectures short",
+    text: "One idea per lecture makes a course easier to follow and easier to come back to.",
+  },
+  {
+    title: "Practice in every section",
+    text: "A quiz or assignment after each section helps students check what they have learned.",
+  },
+  {
+    title: "Show the first win early",
+    text: "Let students make or solve something in the first section so they want to continue.",
+  },
 ];
 
-const wordCount = (text: string) => text.trim().split(/\s+/).filter(Boolean).length;
+const wordCount = (text: string) =>
+  text.trim().split(/\s+/).filter(Boolean).length;
 const filled = (points: Point[]) => points.filter((p) => p.text.trim()).length;
-const lectureCount = (draft: Draft) => draft.curriculum.reduce((sum, s) => sum + s.lectures.filter((l) => l.title.trim()).length, 0);
-const priceIsValid = (price: string) => price.trim() !== "" && Number.isFinite(Number(price)) && Number(price) >= 0;
+const lectureCount = (draft: Draft) =>
+  draft.curriculum.reduce(
+    (sum, s) => sum + s.lectures.filter((l) => l.title.trim()).length,
+    0,
+  );
+const priceIsValid = (price: string) =>
+  price.trim() !== "" && Number.isFinite(Number(price)) && Number(price) >= 0;
 
-const checklist = (draft: Draft): { section: string; label: string; done: boolean }[] => [
-  { section: "intended-learners", label: `Add at least ${MIN_OBJECTIVES} course objectives`, done: filled(draft.objectives) >= MIN_OBJECTIVES },
-  { section: "intended-learners", label: "Add at least one requirement", done: filled(draft.requirements) >= 1 },
-  { section: "intended-learners", label: "Add who this course is for", done: filled(draft.audience) >= 1 },
-  { section: "details", label: "Add a title and subtitle", done: !!draft.title.trim() && !!draft.subtitle.trim() },
-  { section: "details", label: "Choose a category, level and language", done: !!draft.category && !!draft.level && !!draft.language },
-  { section: "details", label: `Write at least ${MIN_DESCRIPTION_WORDS} words in the description`, done: wordCount(draft.description.text) >= MIN_DESCRIPTION_WORDS },
-  { section: "curriculum", label: "Add at least one lecture", done: lectureCount(draft) >= 1 },
+const checklist = (
+  draft: Draft,
+): { section: string; label: string; done: boolean }[] => [
+  {
+    section: "intended-learners",
+    label: `Add at least ${MIN_OBJECTIVES} course objectives`,
+    done: filled(draft.objectives) >= MIN_OBJECTIVES,
+  },
+  {
+    section: "intended-learners",
+    label: "Add at least one requirement",
+    done: filled(draft.requirements) >= 1,
+  },
+  {
+    section: "intended-learners",
+    label: "Add who this course is for",
+    done: filled(draft.audience) >= 1,
+  },
+  {
+    section: "details",
+    label: "Add a title and subtitle",
+    done: !!draft.title.trim() && !!draft.subtitle.trim(),
+  },
+  {
+    section: "details",
+    label: "Choose a category, level and language",
+    done: !!draft.category && !!draft.level && !!draft.language,
+  },
+  {
+    section: "details",
+    label: `Write at least ${MIN_DESCRIPTION_WORDS} words in the description`,
+    done: wordCount(draft.description.text) >= MIN_DESCRIPTION_WORDS,
+  },
+  {
+    section: "curriculum",
+    label: "Add at least one lecture",
+    done: lectureCount(draft) >= 1,
+  },
   { section: "pricing", label: "Set a price", done: priceIsValid(draft.price) },
 ];
 
-const savedLabel = (savedAt: number | undefined, updated: string, now: number) => {
+const savedLabel = (
+  savedAt: number | undefined,
+  updated: string,
+  now: number,
+) => {
   if (!savedAt) return `Last updated ${updated}`;
   const seconds = Math.max(0, Math.round((now - savedAt) / 1000));
   if (seconds < 10) return "Last saved just now";
   if (seconds < 60) return `Last saved ${seconds} seconds ago`;
   const minutes = Math.round(seconds / 60);
-  if (minutes < 60) return `Last saved ${minutes} ${minutes === 1 ? "minute" : "minutes"} ago`;
+  if (minutes < 60)
+    return `Last saved ${minutes} ${minutes === 1 ? "minute" : "minutes"} ago`;
   const hours = Math.round(minutes / 60);
-  if (hours < 24) return `Last saved ${hours} ${hours === 1 ? "hour" : "hours"} ago`;
+  if (hours < 24)
+    return `Last saved ${hours} ${hours === 1 ? "hour" : "hours"} ago`;
   return `Last saved ${new Date(savedAt).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "2-digit" })}`;
 };
 
-function Icon({ path, className = "size-5", filled: solid }: { path: string; className?: string; filled?: boolean }) {
+function Icon({
+  path,
+  className = "size-5",
+  filled: solid,
+}: {
+  path: string;
+  className?: string;
+  filled?: boolean;
+}) {
   return (
-    <svg viewBox="0 0 24 24" className={className} fill={solid ? "currentColor" : "none"} stroke={solid ? "none" : "currentColor"} strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <svg
+      viewBox="0 0 24 24"
+      className={className}
+      fill={solid ? "currentColor" : "none"}
+      stroke={solid ? "none" : "currentColor"}
+      strokeWidth="1.7"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
       <path d={path} />
     </svg>
   );
 }
 const PLUS = "M12 5v14M5 12h14";
 const TRASH = "M4 7h16M9 7V4h6v3M6 7l1 14h10l1-14M10 11v6M14 11v6";
-const SPARKLE = "M12 3l1.8 4.7L18.5 9.5l-4.7 1.8L12 16l-1.8-4.7L5.5 9.5l4.7-1.8zM19 15l.8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8zM5 15l.6 1.4L7 17l-1.4.6L5 19l-.6-1.4L3 17l1.4-.6z";
+const SPARKLE =
+  "M12 3l1.8 4.7L18.5 9.5l-4.7 1.8L12 16l-1.8-4.7L5.5 9.5l4.7-1.8zM19 15l.8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8zM5 15l.6 1.4L7 17l-1.4.6L5 19l-.6-1.4L3 17l1.4-.6z";
 const HISTORY = "M3 12a9 9 0 109-9 9 9 0 00-6.4 2.6L3 8M3 3v5h5M12 7v5l3 2";
 const DOWN = "M6 9l6 6 6-6";
-const IMAGE = "M4 7h13a2 2 0 012 2v9a2 2 0 01-2 2H4a2 2 0 01-2-2V9a2 2 0 012-2zM2 17l5-5 4 4 3-3 5 5M7 4h13a2 2 0 012 2v9M14 11h.01";
-const VIDEO = "M4 5h16a2 2 0 012 2v10a2 2 0 01-2 2H4a2 2 0 01-2-2V7a2 2 0 012-2zM10 9l5 3-5 3zM2 16h20";
+const IMAGE =
+  "M4 7h13a2 2 0 012 2v9a2 2 0 01-2 2H4a2 2 0 01-2-2V9a2 2 0 012-2zM2 17l5-5 4 4 3-3 5 5M7 4h13a2 2 0 012 2v9M14 11h.01";
+const VIDEO =
+  "M4 5h16a2 2 0 012 2v10a2 2 0 01-2 2H4a2 2 0 01-2-2V7a2 2 0 012-2zM10 9l5 3-5 3zM2 16h20";
 const BELL = "M6 16V11a6 6 0 0112 0v5l2 3H4l2-3zM10 21h4M12 3v2";
 const QUESTION = "M2 13l3.500 3.500L12 9M10 15l1.500 1.500L22 7";
-const PANEL = "M5 4h14a2 2 0 012 2v12a2 2 0 01-2 2H5a2 2 0 01-2-2V6a2 2 0 012-2zM15 4v16M17.500 8.500h1M17.500 11.500h1";
+const PANEL =
+  "M5 4h14a2 2 0 012 2v12a2 2 0 01-2 2H5a2 2 0 01-2-2V6a2 2 0 012-2zM15 4v16M17.500 8.500h1M17.500 11.500h1";
 const CLOSE = "M6 6l12 12M18 6L6 18";
 const PENCIL = "M4 20l1-4L16.5 4.500a2.100 2.100 0 013 3L8 19l-4 1zM14 20h7";
-const PLAY = "M12 3a9 9 0 100 18 9 9 0 000-18zM10 8.500l5.500 3.500-5.500 3.500z";
-const QUIZ = "M12.0 2.4 L15.1 4.5 L18.8 5.2 L19.5 8.9 L21.6 12.0 L19.5 15.1 L18.8 18.8 L15.1 19.5 L12.0 21.6 L8.9 19.5 L5.2 18.8 L4.5 15.1 L2.4 12.0 L4.5 8.9 L5.2 5.2 L8.9 4.5zM9.8 9.7a2.3 2.3 0 114 1.5c-.8.7-1.8 1.1-1.8 2.2M12 16h.01";
-const ASSIGNMENT = "M16 11V5a2 2 0 00-2-2H6a2 2 0 00-2 2v14a2 2 0 002 2h5M8 8h4M8 12h4M14 21l.7-2.800 5.200-5.200a1.400 1.400 0 012 2l-5.200 5.200z";
-const ARTICLE = "M7 3h10a2 2 0 012 2v14a2 2 0 01-2 2H7a2 2 0 01-2-2V5a2 2 0 012-2zM9 8h6M9 12h6M9 16h4";
-const UPLOAD = "M12 3a9 9 0 100 18 9 9 0 000-18zM8.500 7.500h7M12 17v-6.500M9 13l3-3 3 3";
-const LIBRARY = "M7 7V5a1 1 0 011-1h8a1 1 0 011 1v2M4 7h16M5.500 10h13L17 20a1.500 1.500 0 01-1.500 1h-7A1.500 1.500 0 017 20z";
+const PLAY =
+  "M12 3a9 9 0 100 18 9 9 0 000-18zM10 8.500l5.500 3.500-5.500 3.500z";
+// Free CC0 sample clip (MDN) used to preview lectures whose real file is not in this browser session.
+const SAMPLE_VIDEO =
+  "https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4";
+const QUIZ =
+  "M12.0 2.4 L15.1 4.5 L18.8 5.2 L19.5 8.9 L21.6 12.0 L19.5 15.1 L18.8 18.8 L15.1 19.5 L12.0 21.6 L8.9 19.5 L5.2 18.8 L4.5 15.1 L2.4 12.0 L4.5 8.9 L5.2 5.2 L8.9 4.5zM9.8 9.7a2.3 2.3 0 114 1.5c-.8.7-1.8 1.1-1.8 2.2M12 16h.01";
+const ASSIGNMENT =
+  "M16 11V5a2 2 0 00-2-2H6a2 2 0 00-2 2v14a2 2 0 002 2h5M8 8h4M8 12h4M14 21l.7-2.800 5.200-5.200a1.400 1.400 0 012 2l-5.200 5.200z";
+const ARTICLE =
+  "M7 3h10a2 2 0 012 2v14a2 2 0 01-2 2H7a2 2 0 01-2-2V5a2 2 0 012-2zM9 8h6M9 12h6M9 16h4";
+const UPLOAD =
+  "M12 3a9 9 0 100 18 9 9 0 000-18zM8.500 7.500h7M12 17v-6.500M9 13l3-3 3 3";
+const LIBRARY =
+  "M7 7V5a1 1 0 011-1h8a1 1 0 011 1v2M4 7h16M5.500 10h13L17 20a1.500 1.500 0 01-1.500 1h-7A1.500 1.500 0 017 20z";
 const CHECK_CIRCLE = "M12 3a9 9 0 100 18 9 9 0 000-18zM8 12l3 3 5-6";
-const EYE = "M2 12s3.600-7 10-7 10 7 10 7-3.600 7-10 7S2 12 2 12zM12 9a3 3 0 100 6 3 3 0 000-6z";
+const EYE =
+  "M2 12s3.600-7 10-7 10 7 10 7-3.600 7-10 7S2 12 2 12zM12 9a3 3 0 100 6 3 3 0 000-6z";
 const EXPAND = "M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7";
 
 // Where the live preview points when a builder section opens, and for fields that sit outside a marked group.
-const SECTION_ANCHOR: Record<string, PreviewAnchor> = { details: "banner", "intended-learners": "objectives", curriculum: "content", pricing: "card", promotions: "card" };
-const FIELD_ANCHOR: Record<string, PreviewAnchor> = { "course-title": "banner", "course-subtitle": "banner", "course-level": "banner", "course-language": "banner", "course-category": "banner", "course-subcategory": "banner", "course-price": "card" };
-const STATUS_LABEL: Record<CourseStatus, string> = { draft: "Draft", pending: "In review", published: "Published", rejected: "Needs changes" };
-const STATUS_DOT: Record<CourseStatus, string> = { draft: "#94a3b8", pending: "#f59e0b", published: "#10b981", rejected: "#ef4444" };
-const courseSlug = (title: string) => (title || "your-course").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "your-course";
+const SECTION_ANCHOR: Record<string, PreviewAnchor> = {
+  details: "banner",
+  "intended-learners": "objectives",
+  curriculum: "content",
+  pricing: "card",
+  promotions: "card",
+};
+const FIELD_ANCHOR: Record<string, PreviewAnchor> = {
+  "course-title": "banner",
+  "course-subtitle": "banner",
+  "course-level": "banner",
+  "course-language": "banner",
+  "course-category": "banner",
+  "course-subcategory": "banner",
+  "course-price": "card",
+};
+const STATUS_LABEL: Record<CourseStatus, string> = {
+  draft: "Draft",
+  pending: "In review",
+  published: "Published",
+  rejected: "Needs changes",
+};
+const STATUS_DOT: Record<CourseStatus, string> = {
+  draft: "#94a3b8",
+  pending: "#f59e0b",
+  published: "#10b981",
+  rejected: "#ef4444",
+};
+const courseSlug = (title: string) =>
+  (title || "your-course")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "") || "your-course";
 
 // Live preview width, as a percentage of the builder area.
 const PREVIEW_DEFAULT = 50;
-const PREVIEW_MIN = 30;
+const PREVIEW_MIN = 20;
 const PREVIEW_MAX = 70;
 
 // The divider between the form and the live preview. Drag it, use the arrow keys, or double-click to reset.
-function SplitHandle({ containerRef, value, onChange }: { containerRef: { current: HTMLDivElement | null }; value: number; onChange: (pct: number) => void }) {
+function SplitHandle({
+  containerRef,
+  value,
+  onChange,
+}: {
+  containerRef: { current: HTMLDivElement | null };
+  value: number;
+  onChange: (pct: number) => void;
+}) {
   const [dragging, setDragging] = useState(false);
-  const clamp = (pct: number) => Math.round(Math.min(PREVIEW_MAX, Math.max(PREVIEW_MIN, pct)));
+  const clamp = (pct: number) =>
+    Math.round(Math.min(PREVIEW_MAX, Math.max(PREVIEW_MIN, pct)));
   const fromPointer = (clientX: number) => {
     const box = containerRef.current?.getBoundingClientRect();
     if (box) onChange(clamp(((box.right - clientX) / box.width) * 100));
@@ -244,18 +557,25 @@ function SplitHandle({ containerRef, value, onChange }: { containerRef: { curren
             onChange(e.key === "Home" ? PREVIEW_MAX : PREVIEW_MIN);
           }
         }}
-        className="group sticky top-[88px] mt-7 flex h-[calc(100dvh-112px)] cursor-col-resize touch-none items-center justify-center outline-none"
+        className="group sticky top-22 mt-7 flex h-panel cursor-col-resize touch-none items-center justify-center outline-none"
       >
-        <span aria-hidden="true" className={`absolute inset-y-6 left-1/2 w-px -translate-x-1/2 transition-colors ${dragging ? "bg-[#0d5c4b]" : "bg-transparent group-hover:bg-[#cbd5e1] group-focus-visible:bg-[#0d5c4b]"}`} />
-        <span aria-hidden="true" className={`relative flex h-10 w-[6px] items-center justify-center rounded-full border transition ${dragging ? "border-[#0d5c4b] bg-[#0d5c4b]" : "border-[#cbd5e1] bg-white shadow-[0_1px_2px_rgba(15,23,42,0.08)] group-hover:border-[#94a3b8] group-focus-visible:border-[#0d5c4b] group-focus-visible:ring-3 group-focus-visible:ring-[#0d5c4b]/15"}`} />
+        <span
+          aria-hidden="true"
+          className={`absolute inset-y-6 left-1/2 w-px -translate-x-1/2 transition-colors ${dragging ? "bg-primary-700" : "bg-transparent group-hover:bg-slate-300 group-focus-visible:bg-primary-700"}`}
+        />
+        <span
+          aria-hidden="true"
+          className={`relative flex h-10 w-1.5 items-center justify-center rounded-full border transition ${dragging ? "border-primary-700 bg-primary-700" : "border-slate-300 bg-white shadow-xs group-hover:border-slate-400 group-focus-visible:border-primary-700 group-focus-visible:ring-3 group-focus-visible:ring-primary-700/15"}`}
+        />
       </div>
     </div>
   );
 }
 
-const inlineLink = "text-[#c98003] underline transition hover:text-[#976002]";
-const iconButton = "flex size-9 shrink-0 items-center justify-center rounded-[8px] text-[#64748b] transition hover:bg-[#f1f5f9] hover:text-[#0f172a] disabled:cursor-not-allowed disabled:opacity-40";
-const fieldHint = `text-[12px] leading-[18px] text-[#64748b] ${fontRegular}`;
+const inlineLink = "text-secondary-700 underline transition hover:text-secondary-800";
+const iconButton =
+  "flex size-9 shrink-0 items-center justify-center rounded-lg text-slate-500 transition hover:bg-slate-100 hover:text-slate-900 disabled:cursor-not-allowed disabled:opacity-40";
+const fieldHint = `text-xs leading-4.5 text-slate-500 ${fontRegular}`;
 
 const move = <T,>(list: T[], index: number, by: number) => {
   const next = [...list];
@@ -266,16 +586,50 @@ const move = <T,>(list: T[], index: number, by: number) => {
 
 function SectionTitle({ children }: { children: ReactNode }) {
   return (
-    <div className="relative border-b border-[#e2e8f0] pb-2.5">
-      <h1 className={`m-0 text-[22px] leading-[30px] tracking-[-0.2px] text-[#0f172a] ${fontSemi}`}>{children}</h1>
-      <span aria-hidden="true" className="absolute -bottom-px left-0 h-0.5 w-11 bg-[#faa104]" />
+    <div className="relative border-b border-slate-200 pb-2.5">
+      <h1
+        className={`m-0 text-22 leading-7.5 tracking-tight text-slate-900 ${fontSemi}`}
+      >
+        {children}
+      </h1>
+      <span
+        aria-hidden="true"
+        className="absolute -bottom-px left-0 h-0.5 w-11 bg-secondary-600"
+      />
     </div>
   );
 }
 
-function AiInput({ id, label, value, original, placeholder, maxLength, height = "h-12", counter, onKeyDown, onSuggest, onRemove, onChange }: { id?: string; label: string; value: string; original?: string; placeholder: string; maxLength?: number; height?: string; counter?: boolean; onKeyDown?: (e: KeyboardEvent<HTMLInputElement>) => void; onSuggest?: () => Promise<void>; onRemove?: () => void; onChange: (value: string) => void }) {
+function AiInput({
+  id,
+  label,
+  value,
+  original,
+  placeholder,
+  maxLength,
+  height = "h-12",
+  counter,
+  onKeyDown,
+  onSuggest,
+  onRemove,
+  onChange,
+}: {
+  id?: string;
+  label: string;
+  value: string;
+  original?: string;
+  placeholder: string;
+  maxLength?: number;
+  height?: string;
+  counter?: boolean;
+  onKeyDown?: (e: KeyboardEvent<HTMLInputElement>) => void;
+  onSuggest?: () => Promise<void>;
+  onRemove?: () => void;
+  onChange: (value: string) => void;
+}) {
   const { notify } = useApp();
-  const reveal = "opacity-0 transition group-focus-within/field:opacity-100 group-hover/field:opacity-100 pointer-coarse:opacity-100";
+  const reveal =
+    "opacity-0 transition group-focus-within/field:opacity-100 group-hover/field:opacity-100 pointer-coarse:opacity-100";
   const canRestore = original !== undefined && original !== value;
   const [busy, setBusy] = useState(false);
   const suggest = async () => {
@@ -289,22 +643,58 @@ function AiInput({ id, label, value, original, placeholder, maxLength, height = 
   };
   return (
     <div className={`field-box group/field min-w-0 flex-1 ${height}`}>
-      <input id={id} aria-label={id ? undefined : label} value={value} maxLength={maxLength} onKeyDown={onKeyDown} onChange={(e) => onChange(e.target.value)} placeholder={placeholder} className={`min-w-0 flex-1 bg-transparent text-[16px] leading-[20px] text-[#0f172a] outline-none placeholder:text-slate-400 md:text-[14px] ${fontRegular}`} />
+      <input
+        id={id}
+        aria-label={id ? undefined : label}
+        value={value}
+        maxLength={maxLength}
+        onKeyDown={onKeyDown}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder={placeholder}
+        className={`min-w-0 flex-1 bg-transparent text-base leading-5 text-slate-900 outline-none placeholder:text-slate-400 md:text-sm ${fontRegular}`}
+      />
       {counter && maxLength && (
-        <span aria-hidden="true" className={`shrink-0 text-[12px] tabular-nums opacity-0 transition group-focus-within/field:opacity-100 ${value.length >= maxLength ? "text-[#dc2626]" : "text-[#94a3b8]"} ${fontRegular}`}>
+        <span
+          aria-hidden="true"
+          className={`shrink-0 text-xs tabular-nums opacity-0 transition group-focus-within/field:opacity-100 ${value.length >= maxLength ? "text-red-600" : "text-slate-400"} ${fontRegular}`}
+        >
           {maxLength - value.length}
         </span>
       )}
-      <button type="button" aria-label={`Suggest ${label.toLowerCase()} with AI`} aria-busy={busy} title={busy ? "Writing a suggestion…" : "Suggest with AI"} disabled={busy} onClick={suggest} className={`flex shrink-0 rounded-[6px] p-1 text-[#0d5c4b] transition hover:bg-[#eef7f3] ${busy ? "animate-pulse opacity-100" : reveal}`}>
+      <button
+        type="button"
+        aria-label={`Suggest ${label.toLowerCase()} with AI`}
+        aria-busy={busy}
+        title={busy ? "Writing a suggestion…" : "Suggest with AI"}
+        disabled={busy}
+        onClick={suggest}
+        className={`flex shrink-0 rounded-md p-1 text-primary-700 transition hover:bg-primary-100 ${busy ? "animate-pulse opacity-100" : reveal}`}
+      >
         <Icon path={SPARKLE} className="size-5" filled />
       </button>
-      <button type="button" aria-label={`Restore saved ${label.toLowerCase()}`} title={canRestore ? "Restore last saved text" : "No changes to restore"} disabled={!canRestore} onClick={() => onChange(original ?? "")} className={`flex shrink-0 p-1 text-[#64748b] disabled:cursor-not-allowed disabled:text-[#cbd5e1] ${reveal}`}>
-        <Icon path={HISTORY} className="size-[18px]" />
+      <button
+        type="button"
+        aria-label={`Restore saved ${label.toLowerCase()}`}
+        title={canRestore ? "Restore last saved text" : "No changes to restore"}
+        disabled={!canRestore}
+        onClick={() => onChange(original ?? "")}
+        className={`flex shrink-0 p-1 text-slate-500 disabled:cursor-not-allowed disabled:text-slate-300 ${reveal}`}
+      >
+        <Icon path={HISTORY} className="size-4.5" />
       </button>
       {onRemove && (
         <>
-          <span aria-hidden="true" className={`h-4 w-px shrink-0 bg-[#e2e8f0] ${reveal}`} />
-          <button type="button" aria-label={`Remove ${label.toLowerCase()}`} title="Remove" onClick={onRemove} className={`flex shrink-0 rounded-[6px] p-1 text-[#94a3b8] transition hover:bg-[#fef2f2] hover:text-[#dc2626] focus-visible:text-[#dc2626] ${reveal}`}>
+          <span
+            aria-hidden="true"
+            className={`h-4 w-px shrink-0 bg-slate-200 ${reveal}`}
+          />
+          <button
+            type="button"
+            aria-label={`Remove ${label.toLowerCase()}`}
+            title="Remove"
+            onClick={onRemove}
+            className={`flex shrink-0 rounded-md p-1 text-slate-400 transition hover:bg-red-50 hover:text-red-600 focus-visible:text-red-600 ${reveal}`}
+          >
             <Icon path={CLOSE} className="size-4" />
           </button>
         </>
@@ -314,22 +704,48 @@ function AiInput({ id, label, value, original, placeholder, maxLength, height = 
 }
 
 const GRIP = "M9 6h.01M9 12h.01M9 18h.01M15 6h.01M15 12h.01M15 18h.01";
-const TARGET = "M12 3a9 9 0 100 18 9 9 0 000-18zM12 7a5 5 0 100 10 5 5 0 000-10zM12 11a1 1 0 100 2 1 1 0 000-2z";
-const TOOLS = "M14.7 6.3a4 4 0 00-5.4 5.4L3 18l3 3 6.3-6.3a4 4 0 005.4-5.4l-2.5 2.5-2.4-.6-.6-2.4z";
-const USERS = "M9 11a4 4 0 100-8 4 4 0 000 8zM2 21v-1a6 6 0 016-6h2a6 6 0 016 6v1M16 3.1a4 4 0 010 7.8M22 21v-1a6 6 0 00-4-5.7";
+const TARGET =
+  "M12 3a9 9 0 100 18 9 9 0 000-18zM12 7a5 5 0 100 10 5 5 0 000-10zM12 11a1 1 0 100 2 1 1 0 000-2z";
+const TOOLS =
+  "M14.7 6.3a4 4 0 00-5.4 5.4L3 18l3 3 6.3-6.3a4 4 0 005.4-5.4l-2.5 2.5-2.4-.6-.6-2.4z";
+const USERS =
+  "M9 11a4 4 0 100-8 4 4 0 000 8zM2 21v-1a6 6 0 016-6h2a6 6 0 016 6v1M16 3.1a4 4 0 010 7.8M22 21v-1a6 6 0 00-4-5.7";
 const CHECK = "M5 12.5l4.5 4.5L19 7.5";
 
 // Every card uses the one brand green for its icon, progress bar and filled-row ticks.
 type Tone = { tile: string; ink: string; bar: string; track: string };
-const BRAND: Tone = { tile: "bg-[#e6f4ee]", ink: "text-[#0d5c4b]", bar: "bg-[#0d5c4b]", track: "bg-[#e6f4ee]" };
+const BRAND: Tone = {
+  tile: "bg-primary-200",
+  ink: "text-primary-700",
+  bar: "bg-primary-700",
+  track: "bg-primary-200",
+};
 
-function PointList({ label, rows, savedRows, examples, tone, onSuggestRow, onChange }: { label: string; rows: Point[]; savedRows: Point[]; examples: string[]; tone: Tone; onSuggestRow?: (id: string) => Promise<void>; onChange: (next: Point[]) => void }) {
+function PointList({
+  label,
+  rows,
+  savedRows,
+  examples,
+  tone,
+  onSuggestRow,
+  onChange,
+}: {
+  label: string;
+  rows: Point[];
+  savedRows: Point[];
+  examples: string[];
+  tone: Tone;
+  onSuggestRow?: (id: string) => Promise<void>;
+  onChange: (next: Point[]) => void;
+}) {
   // Focus requests carry a counter so asking for the same row twice still moves the cursor.
   const [focus, setFocus] = useState({ id: "", n: 0 });
   const [dragging, setDragging] = useState<number | null>(null);
   useEffect(() => {
     if (!focus.id) return;
-    const input = document.querySelector<HTMLInputElement>(`[data-point="${focus.id}"] input`);
+    const input = document.querySelector<HTMLInputElement>(
+      `[data-point="${focus.id}"] input`,
+    );
     if (!input) return;
     input.focus();
     input.setSelectionRange(input.value.length, input.value.length);
@@ -390,7 +806,10 @@ function PointList({ label, rows, savedRows, examples, tone, onSuggestRow, onCha
             >
               {/* Shows whether the row is filled; on hover it turns into the drag handle. */}
               <span className="relative hidden size-6 shrink-0 md:block">
-                <span aria-hidden="true" className={`absolute inset-0 flex items-center justify-center rounded-full transition ${rows.length > 1 ? "group-hover:opacity-0" : ""} ${done ? `${tone.tile} ${tone.ink}` : "border-[1.5px] border-dashed border-[#cbd5e1]"}`}>
+                <span
+                  aria-hidden="true"
+                  className={`absolute inset-0 flex items-center justify-center rounded-full transition ${rows.length > 1 ? "group-hover:opacity-0" : ""} ${done ? `${tone.tile} ${tone.ink}` : "border-2 border-dashed border-slate-300"}`}
+                >
                   {done && <Icon path={CHECK} className="size-3.5" />}
                 </span>
                 {rows.length > 1 && (
@@ -399,14 +818,18 @@ function PointList({ label, rows, savedRows, examples, tone, onSuggestRow, onCha
                     draggable
                     onDragStart={(e) => {
                       e.dataTransfer.effectAllowed = "move";
-                      e.dataTransfer.setDragImage(e.currentTarget.closest("li") as HTMLElement, 16, 18);
+                      e.dataTransfer.setDragImage(
+                        e.currentTarget.closest("li") as HTMLElement,
+                        16,
+                        18,
+                      );
                       setDragging(i);
                     }}
                     onDragEnd={() => setDragging(null)}
                     aria-label={`Reorder ${noun} ${i + 1}. In the field, Alt and the arrow keys also move it.`}
                     title="Drag to reorder"
                     tabIndex={-1}
-                    className="absolute inset-0 flex cursor-grab items-center justify-center rounded-[6px] text-[#64748b] opacity-0 transition hover:bg-[#f1f5f9] group-hover:opacity-100 active:cursor-grabbing"
+                    className="absolute inset-0 flex cursor-grab items-center justify-center rounded-md text-slate-500 opacity-0 transition hover:bg-slate-100 group-hover:opacity-100 active:cursor-grabbing"
                   >
                     <Icon path={GRIP} className="size-4" />
                   </button>
@@ -416,12 +839,16 @@ function PointList({ label, rows, savedRows, examples, tone, onSuggestRow, onCha
                 label={`${label} ${i + 1}`}
                 value={row.text}
                 original={savedRows.find((p) => p.id === row.id)?.text}
-                placeholder={examples[i] ? `e.g. ${examples[i]}` : `Add another ${noun}`}
+                placeholder={
+                  examples[i] ? `e.g. ${examples[i]}` : `Add another ${noun}`
+                }
                 maxLength={POINT_LIMIT}
                 height=""
                 counter
                 onKeyDown={(e) => onKey(e, i)}
-                onSuggest={onSuggestRow ? () => onSuggestRow(row.id) : undefined}
+                onSuggest={
+                  onSuggestRow ? () => onSuggestRow(row.id) : undefined
+                }
                 onRemove={
                   rows.length > 1
                     ? () => {
@@ -430,76 +857,184 @@ function PointList({ label, rows, savedRows, examples, tone, onSuggestRow, onCha
                       }
                     : undefined
                 }
-                onChange={(text) => onChange(rows.map((p) => (p.id === row.id ? { ...p, text } : p)))}
+                onChange={(text) =>
+                  onChange(
+                    rows.map((p) => (p.id === row.id ? { ...p, text } : p)),
+                  )
+                }
               />
             </li>
           );
         })}
       </ul>
       <div className="mt-3 flex flex-wrap items-center justify-between gap-x-4 gap-y-1 md:pl-8">
-        <button type="button" onClick={addRow} className={`flex h-9 items-center gap-1.5 rounded-[8px] border border-dashed border-[#cbd5e1] px-3 text-[14px] leading-[20px] text-[#334155] transition hover:border-[#94a3b8] hover:bg-[#f8fafc] ${fontMedium}`}>
+        <button
+          type="button"
+          onClick={addRow}
+          className={`flex h-9 items-center gap-1.5 rounded-lg border border-dashed border-slate-300 px-3 text-sm leading-5 text-slate-700 transition hover:border-slate-400 hover:bg-slate-50 ${fontMedium}`}
+        >
           <Icon path={PLUS} className="size-4" />
           Add {noun}
         </button>
-        <p className="field-help hidden md:block">Enter adds a line · Alt + ↑↓ reorders</p>
+        <p className="field-help hidden md:block">
+          Enter adds a line · Alt + ↑↓ reorders
+        </p>
       </div>
     </div>
   );
 }
 
 // The progress banner that opens a builder section.
-function ProgressBanner({ done, total, title, doneTitle, text }: { done: number; total: number; title: string; doneTitle: string; text: ReactNode }) {
+function ProgressBanner({
+  done,
+  total,
+  title,
+  doneTitle,
+  text,
+}: {
+  done: number;
+  total: number;
+  title: string;
+  doneTitle: string;
+  text: ReactNode;
+}) {
   return (
-    <div className="flex items-center gap-4 rounded-[16px] bg-gradient-to-r from-[#e6f4ee] via-[#f1f8f5] to-[#fdfdfd] p-4 md:p-5">
+    <div className="flex items-center gap-4 rounded-2xl bg-gradient-to-r from-primary-200 via-primary-50 to-slate-25 p-4 md:p-5">
       <div className="relative size-12 shrink-0">
-        <svg viewBox="0 0 36 36" className="size-12 -rotate-90" aria-hidden="true">
-          <circle cx="18" cy="18" r="15" fill="none" stroke="#ffffff" strokeWidth="4" />
-          <circle cx="18" cy="18" r="15" fill="none" stroke="#0d5c4b" strokeWidth="4" strokeLinecap="round" strokeDasharray={`${(done / total) * 94.25} 94.25`} className="transition-[stroke-dasharray] duration-500" />
+        <svg
+          viewBox="0 0 36 36"
+          className="size-12 -rotate-90"
+          aria-hidden="true"
+        >
+          <circle
+            cx="18"
+            cy="18"
+            r="15"
+            fill="none"
+            stroke="#ffffff"
+            strokeWidth="4"
+          />
+          <circle
+            cx="18"
+            cy="18"
+            r="15"
+            fill="none"
+            stroke="#0d5c4b"
+            strokeWidth="4"
+            strokeLinecap="round"
+            strokeDasharray={`${(done / total) * 94.25} 94.25`}
+            className="transition-all duration-500"
+          />
         </svg>
-        <span className={`absolute inset-0 flex items-center justify-center text-[13px] text-[#0d5c4b] ${fontSemi}`}>
+        <span
+          className={`absolute inset-0 flex items-center justify-center text-13 text-primary-700 ${fontSemi}`}
+        >
           {done}/{total}
         </span>
       </div>
       <div className="min-w-0">
-        <p className={`m-0 text-[15px] leading-[22px] text-[#0f172a] ${fontSemi}`}>{done === total ? doneTitle : title}</p>
-        <p className={`m-0 mt-0.5 text-[14px] leading-[20px] text-[#475569] [text-wrap:pretty] ${fontRegular}`}>{text}</p>
+        <p
+          className={`m-0 text-15 leading-5.5 text-slate-900 ${fontSemi}`}
+        >
+          {done === total ? doneTitle : title}
+        </p>
+        <p
+          className={`m-0 mt-0.5 text-sm leading-5 text-slate-600 text-pretty ${fontRegular}`}
+        >
+          {text}
+        </p>
       </div>
     </div>
   );
 }
 
 // `ai` renders the suggestions panel; the card owns whether it is open. Cards without `ai` get no button.
-function PointGroup({ icon, tone, title, description, done, min, unit, ai, aiOpen: aiOpenProp, onAiOpenChange, children }: { icon: string; tone: Tone; title: string; description: ReactNode; done: number; min: number; unit?: string; ai?: (close: () => void) => ReactNode; aiOpen?: boolean; onAiOpenChange?: (open: boolean) => void; children: ReactNode }) {
+function PointGroup({
+  icon,
+  tone,
+  title,
+  description,
+  done,
+  min,
+  unit,
+  ai,
+  aiOpen: aiOpenProp,
+  onAiOpenChange,
+  children,
+}: {
+  icon: string;
+  tone: Tone;
+  title: string;
+  description: ReactNode;
+  done: number;
+  min: number;
+  unit?: string;
+  ai?: (close: () => void) => ReactNode;
+  aiOpen?: boolean;
+  onAiOpenChange?: (open: boolean) => void;
+  children: ReactNode;
+}) {
   // Open state can be owned by the card or passed in, so something inside the card can open the AI panel too.
   const [ownOpen, setOwnOpen] = useState(false);
   const aiOpen = aiOpenProp ?? ownOpen;
-  const setAiOpen = (open: boolean) => (onAiOpenChange ? onAiOpenChange(open) : setOwnOpen(open));
+  const setAiOpen = (open: boolean) =>
+    onAiOpenChange ? onAiOpenChange(open) : setOwnOpen(open);
   const complete = done >= min;
-  const progress = complete ? `${done}${unit ?? " added"}` : `${done} of ${min}${unit ?? ""}`;
+  const progress = complete
+    ? `${done}${unit ?? " added"}`
+    : `${done} of ${min}${unit ?? ""}`;
   return (
-    <section className="rounded-[16px] border border-[#e8ecf1] bg-white p-4 shadow-[0_1px_2px_rgba(15,23,42,0.04),0_4px_16px_rgba(15,23,42,0.04)] md:p-6">
+    <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-card md:p-6">
       <div className="flex items-start gap-3.5">
-        <span aria-hidden="true" className={`flex size-11 shrink-0 items-center justify-center rounded-[12px] ${tone.tile} ${tone.ink}`}>
-          <Icon path={icon} className="size-[22px]" />
+        <span
+          aria-hidden="true"
+          className={`flex size-11 shrink-0 items-center justify-center rounded-xl ${tone.tile} ${tone.ink}`}
+        >
+          <Icon path={icon} className="size-5.5" />
         </span>
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-start justify-between gap-x-3 gap-y-2">
             <div className="min-w-0">
-              <h2 className={`m-0 text-[18px] leading-[26px] text-[#0f172a] ${fontSemi}`}>{title}</h2>
-              <p className={`mt-0.5 text-[14px] leading-[22px] text-[#64748b] [text-wrap:pretty] ${fontRegular}`}>{description}</p>
+              <h2
+                className={`m-0 text-lg leading-6.5 text-slate-900 ${fontSemi}`}
+              >
+                {title}
+              </h2>
+              <p
+                className={`mt-0.5 text-sm leading-5.5 text-slate-500 text-pretty ${fontRegular}`}
+              >
+                {description}
+              </p>
             </div>
             {ai && (
-              <button type="button" aria-expanded={aiOpen} onClick={() => setAiOpen(!aiOpen)} className={`flex h-9 shrink-0 items-center gap-1.5 rounded-full border px-3.5 text-[13px] leading-[20px] transition ${aiOpen ? "border-[#0d5c4b]/40 bg-[#eef7f3] text-[#0d5c4b]" : "border-[#e2e8f0] bg-white text-[#0f172a] hover:border-[#0d5c4b]/40 hover:bg-[#f3faf7]"} ${fontMedium}`}>
-                <Icon path={SPARKLE} className="size-4 text-[#0d5c4b]" filled />
+              <button
+                type="button"
+                aria-expanded={aiOpen}
+                onClick={() => setAiOpen(!aiOpen)}
+                className={`flex h-9 shrink-0 items-center gap-1.5 rounded-full border px-3.5 text-13 leading-5 transition ${aiOpen ? "border-primary-700/40 bg-primary-100 text-primary-700" : "border-slate-200 bg-white text-slate-900 hover:border-primary-700/40 hover:bg-primary-50"} ${fontMedium}`}
+              >
+                <Icon path={SPARKLE} className="size-4 text-primary-700" filled />
                 {aiOpen ? "Hide ideas" : "Suggest with AI"}
               </button>
             )}
           </div>
           <div className="mt-3 flex items-center gap-3">
-            <div className={`h-1.5 flex-1 overflow-hidden rounded-full ${tone.track}`} role="progressbar" aria-label={`${title} progress`} aria-valuemin={0} aria-valuemax={min} aria-valuenow={Math.min(done, min)}>
-              <div className={`h-full rounded-full transition-[width] duration-500 ${tone.bar}`} style={{ width: `${Math.min(100, (done / min) * 100)}%` }} />
+            <div
+              className={`h-1.5 flex-1 overflow-hidden rounded-full ${tone.track}`}
+              role="progressbar"
+              aria-label={`${title} progress`}
+              aria-valuemin={0}
+              aria-valuemax={min}
+              aria-valuenow={Math.min(done, min)}
+            >
+              <div
+                className={`h-full rounded-full transition-all duration-500 ${tone.bar}`}
+                style={{ width: `${Math.min(100, (done / min) * 100)}%` }}
+              />
             </div>
-            <span className={`flex shrink-0 items-center gap-1 text-[12px] leading-[16px] ${complete ? tone.ink : "text-[#64748b]"} ${fontMedium}`}>
+            <span
+              className={`flex shrink-0 items-center gap-1 text-xs leading-4 ${complete ? tone.ink : "text-slate-500"} ${fontMedium}`}
+            >
               {complete && <Icon path={CHECK} className="size-3.5" />}
               {progress}
             </span>
@@ -512,22 +1047,62 @@ function PointGroup({ icon, tone, title, description, done, min, unit, ai, aiOpe
   );
 }
 
-const REFRESH = "M20 11a8 8 0 00-14.900-4M4 4v4h4M4 13a8 8 0 0014.900 4M20 20v-4h-4";
+const REFRESH =
+  "M20 11a8 8 0 00-14.900-4M4 4v4h4M4 13a8 8 0 0014.900 4M20 20v-4h-4";
 
 // The green panel that holds AI drafts, with Regenerate and Close in its header.
-function AiPanel({ loading, note, onRegenerate, onClose, children, footer }: { loading: boolean; note: string; onRegenerate: () => void; onClose: () => void; children: ReactNode; footer?: ReactNode }) {
+function AiPanel({
+  loading,
+  note,
+  onRegenerate,
+  onClose,
+  children,
+  footer,
+}: {
+  loading: boolean;
+  note: string;
+  onRegenerate: () => void;
+  onClose: () => void;
+  children: ReactNode;
+  footer?: ReactNode;
+}) {
   return (
-    <div role="region" aria-label="AI suggestions" aria-busy={loading} className="pop-in rounded-[12px] border border-[#0d5c4b]/15 bg-[#f6fbf9] p-3 md:p-4">
+    <div
+      role="region"
+      aria-label="AI suggestions"
+      aria-busy={loading}
+      className="pop-in rounded-xl border border-primary-700/15 bg-primary-50 p-3 md:p-4"
+    >
       <div className="flex items-center gap-2">
-        <Icon path={SPARKLE} className={`size-4 shrink-0 text-[#0d5c4b] ${loading ? "animate-pulse" : ""}`} filled />
-        <p className={`m-0 min-w-0 flex-1 text-[13px] leading-[18px] text-[#0f172a] ${fontSemi}`}>
-          {loading ? "Writing suggestions…" : "AI suggestions"} <span className={`text-[#64748b] ${fontRegular}`}>· {note}</span>
+        <Icon
+          path={SPARKLE}
+          className={`size-4 shrink-0 text-primary-700 ${loading ? "animate-pulse" : ""}`}
+          filled
+        />
+        <p
+          className={`m-0 min-w-0 flex-1 text-13 leading-4.5 text-slate-900 ${fontSemi}`}
+        >
+          {loading ? "Writing suggestions…" : "AI suggestions"}{" "}
+          <span className={`text-slate-500 ${fontRegular}`}>· {note}</span>
         </p>
-        <button type="button" onClick={onRegenerate} disabled={loading} className={`flex h-8 items-center gap-1.5 rounded-[8px] px-2 text-[13px] leading-[18px] text-[#0d5c4b] transition hover:bg-[#e6f4ee] disabled:opacity-50 ${fontMedium}`}>
-          <Icon path={REFRESH} className={`size-4 ${loading ? "animate-spin" : ""}`} />
+        <button
+          type="button"
+          onClick={onRegenerate}
+          disabled={loading}
+          className={`flex h-8 items-center gap-1.5 rounded-lg px-2 text-13 leading-4.5 text-primary-700 transition hover:bg-primary-200 disabled:opacity-50 ${fontMedium}`}
+        >
+          <Icon
+            path={REFRESH}
+            className={`size-4 ${loading ? "animate-spin" : ""}`}
+          />
           <span className="hidden sm:inline">Regenerate</span>
         </button>
-        <button type="button" aria-label="Close suggestions" onClick={onClose} className="flex size-8 items-center justify-center rounded-[8px] text-[#64748b] transition hover:bg-[#e6f4ee] hover:text-[#0f172a]">
+        <button
+          type="button"
+          aria-label="Close suggestions"
+          onClick={onClose}
+          className="flex size-8 items-center justify-center rounded-lg text-slate-500 transition hover:bg-primary-200 hover:text-slate-900"
+        >
           <Icon path={CLOSE} className="size-4" />
         </button>
       </div>
@@ -535,8 +1110,13 @@ function AiPanel({ loading, note, onRegenerate, onClose, children, footer }: { l
         {loading ? (
           <div className="flex flex-col gap-2" aria-hidden="true">
             {["w-11/12", "w-4/5", "w-9/12"].map((w) => (
-              <span key={w} className="flex h-10 items-center rounded-[8px] bg-white px-3">
-                <span className={`h-2.5 animate-pulse rounded-full bg-[#e2e8f0] ${w}`} />
+              <span
+                key={w}
+                className="flex h-10 items-center rounded-lg bg-white px-3"
+              >
+                <span
+                  className={`h-2.5 animate-pulse rounded-full bg-slate-200 ${w}`}
+                />
               </span>
             ))}
           </div>
@@ -544,13 +1124,17 @@ function AiPanel({ loading, note, onRegenerate, onClose, children, footer }: { l
           children
         )}
       </div>
-      {!loading && footer && <div className="mt-3 flex flex-wrap items-center justify-end gap-2">{footer}</div>}
+      {!loading && footer && (
+        <div className="mt-3 flex flex-wrap items-center justify-end gap-2">
+          {footer}
+        </div>
+      )}
     </div>
   );
 }
 
-const aiPrimary = `flex h-9 items-center gap-1.5 rounded-[8px] bg-[#0d5c4b] px-3.5 text-[13px] leading-[18px] text-white transition hover:bg-[#0b4c3e] disabled:cursor-not-allowed disabled:opacity-50 ${fontMedium}`;
-const aiSecondary = `flex h-9 items-center rounded-[8px] border border-[#e2e8f0] bg-white px-3.5 text-[13px] leading-[18px] text-[#0f172a] transition hover:bg-[#f8fafc] ${fontMedium}`;
+const aiPrimary = `flex h-9 items-center gap-1.5 rounded-lg bg-primary-700 px-3.5 text-13 leading-4.5 text-white transition hover:bg-primary-800 disabled:cursor-not-allowed disabled:opacity-50 ${fontMedium}`;
+const aiSecondary = `flex h-9 items-center rounded-lg border border-slate-200 bg-white px-3.5 text-13 leading-4.5 text-slate-900 transition hover:bg-slate-50 ${fontMedium}`;
 
 // Loads drafts for a seed and reloads when Regenerate gives a new one. Late answers from an old seed are ignored.
 function useDrafts<T>(load: (seed: number) => Promise<T>) {
@@ -564,7 +1148,11 @@ function useDrafts<T>(load: (seed: number) => Promise<T>) {
       live = false;
     };
   }, [seed]);
-  return { data, loading: data === null, regenerate: () => setSeed((s) => s + 7919) };
+  return {
+    data,
+    loading: data === null,
+    regenerate: () => setSeed((s) => s + 7919),
+  };
 }
 
 const courseContext = (draft: Draft): CourseContext => ({
@@ -578,29 +1166,70 @@ const courseContext = (draft: Draft): CourseContext => ({
 });
 
 // AI ideas for a list: one click adds an idea to the list (into the first empty row), and it leaves the ideas.
-function PointSuggestions({ kind, draft, rows, onChange, close }: { kind: PointKind; draft: Draft; rows: Point[]; min: number; onChange: (next: Point[]) => void; close: () => void }) {
+function PointSuggestions({
+  kind,
+  draft,
+  rows,
+  onChange,
+  close,
+}: {
+  kind: PointKind;
+  draft: Draft;
+  rows: Point[];
+  min: number;
+  onChange: (next: Point[]) => void;
+  close: () => void;
+}) {
   const existing = rows.map((p) => p.text.trim()).filter(Boolean);
-  const { data, loading, regenerate } = useDrafts((seed) => suggestPoints(kind, courseContext(draft), existing, seed));
+  const { data, loading, regenerate } = useDrafts((seed) =>
+    suggestPoints(kind, courseContext(draft), existing, seed),
+  );
   const [added, setAdded] = useState<string[]>([]);
   useEffect(() => setAdded([]), [data]);
   const ideas = (data ?? []).filter((t) => !added.includes(t));
 
   const add = (list: string[]) => {
     const queue = [...list];
-    const next = rows.map((p) => (!p.text.trim() && queue.length ? { ...p, text: queue.shift()! } : p));
+    const next = rows.map((p) =>
+      !p.text.trim() && queue.length ? { ...p, text: queue.shift()! } : p,
+    );
     onChange([...next, ...queue.map((text) => ({ id: uid("point"), text }))]);
     setAdded((a) => [...a, ...list]);
   };
 
   return (
-    <div role="region" aria-label="Ideas" aria-busy={loading} className="pop-in rounded-[12px] border border-[#0d5c4b]/15 bg-[#f6fbf9] p-3 md:p-4">
+    <div
+      role="region"
+      aria-label="Ideas"
+      aria-busy={loading}
+      className="pop-in rounded-xl border border-primary-700/15 bg-primary-50 p-3 md:p-4"
+    >
       <div className="flex items-start gap-2">
-        <Icon path={SPARKLE} className={`mt-0.5 size-4 shrink-0 text-[#0d5c4b] ${loading ? "animate-pulse" : ""}`} filled />
+        <Icon
+          path={SPARKLE}
+          className={`mt-0.5 size-4 shrink-0 text-primary-700 ${loading ? "animate-pulse" : ""}`}
+          filled
+        />
         <div className="min-w-0 flex-1">
-          <p className={`m-0 text-[14px] leading-[20px] text-[#0f172a] ${fontSemi}`}>{loading ? "Finding ideas for your course…" : "Click an idea to add it"}</p>
-          <p className={`m-0 text-[13px] leading-[18px] text-[#64748b] ${fontRegular}`}>You can edit or remove it afterwards.</p>
+          <p
+            className={`m-0 text-sm leading-5 text-slate-900 ${fontSemi}`}
+          >
+            {loading
+              ? "Finding ideas for your course…"
+              : "Click an idea to add it"}
+          </p>
+          <p
+            className={`m-0 text-13 leading-4.5 text-slate-500 ${fontRegular}`}
+          >
+            You can edit or remove it afterwards.
+          </p>
         </div>
-        <button type="button" aria-label="Close ideas" onClick={close} className="flex size-8 shrink-0 items-center justify-center rounded-[8px] text-[#64748b] transition hover:bg-[#e6f4ee] hover:text-[#0f172a]">
+        <button
+          type="button"
+          aria-label="Close ideas"
+          onClick={close}
+          className="flex size-8 shrink-0 items-center justify-center rounded-lg text-slate-500 transition hover:bg-primary-200 hover:text-slate-900"
+        >
           <Icon path={CLOSE} className="size-4" />
         </button>
       </div>
@@ -609,9 +1238,14 @@ function PointSuggestions({ kind, draft, rows, onChange, close }: { kind: PointK
         {loading ? (
           <div className="flex flex-col gap-2" aria-hidden="true">
             {["w-10/12", "w-8/12", "w-9/12"].map((w) => (
-              <span key={w} className="flex h-10 items-center gap-2.5 rounded-[8px] bg-white px-3">
-                <span className="size-5 shrink-0 animate-pulse rounded-full bg-[#e2e8f0]" />
-                <span className={`h-2.5 animate-pulse rounded-full bg-[#e2e8f0] ${w}`} />
+              <span
+                key={w}
+                className="flex h-10 items-center gap-2.5 rounded-lg bg-white px-3"
+              >
+                <span className="size-5 shrink-0 animate-pulse rounded-full bg-slate-200" />
+                <span
+                  className={`h-2.5 animate-pulse rounded-full bg-slate-200 ${w}`}
+                />
               </span>
             ))}
           </div>
@@ -619,29 +1253,51 @@ function PointSuggestions({ kind, draft, rows, onChange, close }: { kind: PointK
           <ul className="m-0 flex list-none flex-col gap-1.5 p-0">
             {ideas.map((text) => (
               <li key={text}>
-                <button type="button" onClick={() => add([text])} className={`group flex w-full items-center gap-2.5 rounded-[8px] border border-transparent bg-white px-3 py-2.5 text-left text-[14px] leading-[20px] text-[#0f172a] shadow-[0_1px_2px_rgba(15,23,42,0.04)] transition hover:border-[#0d5c4b]/30 ${fontRegular}`}>
-                  <span className="flex size-5 shrink-0 items-center justify-center rounded-full bg-[#e6f4ee] text-[#0d5c4b] transition group-hover:bg-[#0d5c4b] group-hover:text-white">
+                <button
+                  type="button"
+                  onClick={() => add([text])}
+                  className={`group flex w-full items-center gap-2.5 rounded-lg border border-transparent bg-white px-3 py-2.5 text-left text-sm leading-5 text-slate-900 shadow-xs transition hover:border-primary-700/30 ${fontRegular}`}
+                >
+                  <span className="flex size-5 shrink-0 items-center justify-center rounded-full bg-primary-200 text-primary-700 transition group-hover:bg-primary-700 group-hover:text-white">
                     <Icon path={PLUS} className="size-3.5" />
                   </span>
                   <span className="min-w-0 flex-1">{text}</span>
-                  <span className={`shrink-0 text-[12px] text-[#0d5c4b] opacity-0 transition group-hover:opacity-100 group-focus-visible:opacity-100 ${fontMedium}`}>Add</span>
+                  <span
+                    className={`shrink-0 text-xs text-primary-700 opacity-0 transition group-hover:opacity-100 group-focus-visible:opacity-100 ${fontMedium}`}
+                  >
+                    Add
+                  </span>
                 </button>
               </li>
             ))}
           </ul>
         ) : (
-          <p className={`m-0 rounded-[8px] bg-white px-3 py-3 text-[14px] leading-[20px] text-[#475569] ${fontRegular}`}>{added.length ? "All ideas added. Edit them below so they sound like you." : "No new ideas right now. Try a different set."}</p>
+          <p
+            className={`m-0 rounded-lg bg-white px-3 py-3 text-sm leading-5 text-slate-600 ${fontRegular}`}
+          >
+            {added.length
+              ? "All ideas added. Edit them below so they sound like you."
+              : "No new ideas right now. Try a different set."}
+          </p>
         )}
       </div>
 
       {!loading && (
         <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
-          <button type="button" onClick={regenerate} className={`flex h-8 items-center gap-1.5 rounded-[8px] px-2 text-[13px] leading-[18px] text-[#0d5c4b] transition hover:bg-[#e6f4ee] ${fontMedium}`}>
+          <button
+            type="button"
+            onClick={regenerate}
+            className={`flex h-8 items-center gap-1.5 rounded-lg px-2 text-13 leading-4.5 text-primary-700 transition hover:bg-primary-200 ${fontMedium}`}
+          >
             <Icon path={REFRESH} className="size-4" />
             Show different ideas
           </button>
           {ideas.length > 1 && (
-            <button type="button" onClick={() => add(ideas)} className={`h-8 rounded-[8px] px-2 text-[13px] leading-[18px] text-[#0d5c4b] underline-offset-2 transition hover:underline ${fontMedium}`}>
+            <button
+              type="button"
+              onClick={() => add(ideas)}
+              className={`h-8 rounded-lg px-2 text-13 leading-4.5 text-primary-700 underline-offset-2 transition hover:underline ${fontMedium}`}
+            >
               Add all {ideas.length}
             </button>
           )}
@@ -652,20 +1308,43 @@ function PointSuggestions({ kind, draft, rows, onChange, close }: { kind: PointK
 }
 
 // Title and subtitle ideas; clicking one puts it in the field.
-function TitleSuggestions({ draft, update, close }: { draft: Draft; update: (patch: Partial<Draft>) => void; close: () => void }) {
+function TitleSuggestions({
+  draft,
+  update,
+  close,
+}: {
+  draft: Draft;
+  update: (patch: Partial<Draft>) => void;
+  close: () => void;
+}) {
   const { notify } = useApp();
-  const { data, loading, regenerate } = useDrafts((seed) => suggestTitles(courseContext(draft), seed));
+  const { data, loading, regenerate } = useDrafts((seed) =>
+    suggestTitles(courseContext(draft), seed),
+  );
   const option = (text: string, onUse: () => void, current: boolean) => (
     <li key={text}>
-      <button type="button" onClick={onUse} className={`group flex w-full items-center gap-3 rounded-[8px] border px-3 py-2.5 text-left text-[14px] leading-[20px] transition ${current ? "border-[#0d5c4b]/30 bg-white text-[#0f172a]" : "border-transparent bg-white/70 text-[#0f172a] hover:border-[#0d5c4b]/30 hover:bg-white"} ${fontRegular}`}>
+      <button
+        type="button"
+        onClick={onUse}
+        className={`group flex w-full items-center gap-3 rounded-lg border px-3 py-2.5 text-left text-sm leading-5 transition ${current ? "border-primary-700/30 bg-white text-slate-900" : "border-transparent bg-white/70 text-slate-900 hover:border-primary-700/30 hover:bg-white"} ${fontRegular}`}
+      >
         <span className="min-w-0 flex-1">{text}</span>
-        <span className={`shrink-0 text-[12px] text-[#0d5c4b] ${current ? "" : "opacity-0 transition group-hover:opacity-100 group-focus-visible:opacity-100"} ${fontMedium}`}>{current ? "Using" : "Use"}</span>
+        <span
+          className={`shrink-0 text-xs text-primary-700 ${current ? "" : "opacity-0 transition group-hover:opacity-100 group-focus-visible:opacity-100"} ${fontMedium}`}
+        >
+          {current ? "Using" : "Use"}
+        </span>
       </button>
     </li>
   );
-  const heading = `m-0 mb-1.5 text-[12px] leading-[16px] text-[#64748b] ${fontMedium}`;
+  const heading = `m-0 mb-1.5 text-xs leading-4 text-slate-500 ${fontMedium}`;
   return (
-    <AiPanel loading={loading} note="Pick one, then make it yours" onRegenerate={regenerate} onClose={close}>
+    <AiPanel
+      loading={loading}
+      note="Pick one, then make it yours"
+      onRegenerate={regenerate}
+      onClose={close}
+    >
       <p className={heading}>Titles</p>
       <ul className="m-0 flex list-none flex-col gap-1.5 p-0">
         {data?.titles.map((t) =>
@@ -697,34 +1376,71 @@ function TitleSuggestions({ draft, update, close }: { draft: Draft; update: (pat
 }
 
 // A full description draft to read first, then use, replace or add to what is already written.
-function DescriptionSuggestions({ draft, onInsert, close }: { draft: Draft; onInsert: (value: { text: string; html: string }) => void; close: () => void }) {
+function DescriptionSuggestions({
+  draft,
+  onInsert,
+  close,
+}: {
+  draft: Draft;
+  onInsert: (value: { text: string; html: string }) => void;
+  close: () => void;
+}) {
   const { notify } = useApp();
-  const { data, loading, regenerate } = useDrafts((seed) => suggestDescription(courseContext(draft), seed));
+  const { data, loading, regenerate } = useDrafts((seed) =>
+    suggestDescription(courseContext(draft), seed),
+  );
   const hasText = !!draft.description.text.trim();
   const use = (mode: "replace" | "append") => {
     if (!data) return;
-    onInsert(mode === "append" ? { text: `${draft.description.text}\n\n${data.text}`, html: `${draft.description.html}${data.html}` } : data);
-    notify(mode === "append" ? "Draft added to your description" : "Description drafted. Read it through and make it yours.");
+    onInsert(
+      mode === "append"
+        ? {
+            text: `${draft.description.text}\n\n${data.text}`,
+            html: `${draft.description.html}${data.html}`,
+          }
+        : data,
+    );
+    notify(
+      mode === "append"
+        ? "Draft added to your description"
+        : "Description drafted. Read it through and make it yours.",
+    );
     close();
   };
   return (
     <AiPanel
       loading={loading}
-      note={data ? `${wordCount(data.text)} words, written from your course details` : "Written from your course details"}
+      note={
+        data
+          ? `${wordCount(data.text)} words, written from your course details`
+          : "Written from your course details"
+      }
       onRegenerate={regenerate}
       onClose={close}
       footer={
         hasText ? (
           <>
-            <button type="button" onClick={() => use("append")} className={aiSecondary}>
+            <button
+              type="button"
+              onClick={() => use("append")}
+              className={aiSecondary}
+            >
               Add to end
             </button>
-            <button type="button" onClick={() => use("replace")} className={aiPrimary}>
+            <button
+              type="button"
+              onClick={() => use("replace")}
+              className={aiPrimary}
+            >
               Replace mine
             </button>
           </>
         ) : (
-          <button type="button" onClick={() => use("replace")} className={aiPrimary}>
+          <button
+            type="button"
+            onClick={() => use("replace")}
+            className={aiPrimary}
+          >
             <Icon path={CHECK} className="size-4" />
             Use this draft
           </button>
@@ -732,60 +1448,172 @@ function DescriptionSuggestions({ draft, onInsert, close }: { draft: Draft; onIn
       }
     >
       {data && (
-        <div className="max-h-[260px] overflow-y-auto rounded-[8px] bg-white px-4 py-3 [scrollbar-width:thin]">
-          <NoteBody note={data} className="text-[14px] leading-[22px]" tone="text-[#334155]" />
+        <div className="max-h-65 overflow-y-auto rounded-lg bg-white px-4 py-3 scrollbar-thin">
+          <NoteBody
+            note={data}
+            className="text-sm leading-5.5"
+            tone="text-slate-700"
+          />
         </div>
       )}
     </AiPanel>
   );
 }
 
-type SectionProps = { draft: Draft; saved: Draft; update: (patch: Partial<Draft>) => void; onExplain: () => void };
+type SectionProps = {
+  draft: Draft;
+  saved: Draft;
+  update: (patch: Partial<Draft>) => void;
+  onExplain: () => void;
+};
 
-const OBJECTIVE_EXAMPLES = ["Build a complete project from start to finish", "Explain the key ideas in plain language", "Avoid the most common beginner mistakes", "Use what you learn in real work"];
-const REQUIREMENT_EXAMPLES = ["A computer with internet access", "No coding experience needed"];
-const AUDIENCE_EXAMPLES = ["Beginners who want a practical start", "Professionals adding a new skill to their work"];
+const OBJECTIVE_EXAMPLES = [
+  "Build a complete project from start to finish",
+  "Explain the key ideas in plain language",
+  "Avoid the most common beginner mistakes",
+  "Use what you learn in real work",
+];
+const REQUIREMENT_EXAMPLES = [
+  "A computer with internet access",
+  "No coding experience needed",
+];
+const AUDIENCE_EXAMPLES = [
+  "Beginners who want a practical start",
+  "Professionals adding a new skill to their work",
+];
 
 function LearnersSection({ draft, saved, update, onExplain }: SectionProps) {
   const { notify } = useApp();
   // Row sparkle: write one new idea into that row, skipping anything already listed.
   const fillRow = (kind: PointKind) => async (id: string) => {
     const rows = draft[kind];
-    const [idea] = await suggestPoints(kind, courseContext(draft), rows.map((p) => p.text.trim()).filter(Boolean), Date.now() % 100000);
+    const [idea] = await suggestPoints(
+      kind,
+      courseContext(draft),
+      rows.map((p) => p.text.trim()).filter(Boolean),
+      Date.now() % 100000,
+    );
     if (!idea) return notify("No new ideas right now. Try again in a moment.");
-    update({ [kind]: rows.map((p) => (p.id === id ? { ...p, text: idea } : p)) } as Partial<Draft>);
+    update({
+      [kind]: rows.map((p) => (p.id === id ? { ...p, text: idea } : p)),
+    } as Partial<Draft>);
   };
-  const groups = [filled(draft.objectives) >= MIN_OBJECTIVES, filled(draft.requirements) >= 1, filled(draft.audience) >= 1];
+  const groups = [
+    filled(draft.objectives) >= MIN_OBJECTIVES,
+    filled(draft.requirements) >= 1,
+    filled(draft.audience) >= 1,
+  ];
   const doneGroups = groups.filter(Boolean).length;
   return (
     <div>
       <div className="min-w-0">
-        <div className="flex items-center gap-4 rounded-[16px] bg-gradient-to-r from-[#e6f4ee] via-[#f1f8f5] to-[#fdfdfd] p-4 md:p-5">
+        <div className="flex items-center gap-4 rounded-2xl bg-gradient-to-r from-primary-200 via-primary-50 to-slate-25 p-4 md:p-5">
           <div className="relative size-12 shrink-0">
-            <svg viewBox="0 0 36 36" className="size-12 -rotate-90" aria-hidden="true">
-              <circle cx="18" cy="18" r="15" fill="none" stroke="#ffffff" strokeWidth="4" />
-              <circle cx="18" cy="18" r="15" fill="none" stroke="#0d5c4b" strokeWidth="4" strokeLinecap="round" strokeDasharray={`${(doneGroups / 3) * 94.25} 94.25`} className="transition-[stroke-dasharray] duration-500" />
+            <svg
+              viewBox="0 0 36 36"
+              className="size-12 -rotate-90"
+              aria-hidden="true"
+            >
+              <circle
+                cx="18"
+                cy="18"
+                r="15"
+                fill="none"
+                stroke="#ffffff"
+                strokeWidth="4"
+              />
+              <circle
+                cx="18"
+                cy="18"
+                r="15"
+                fill="none"
+                stroke="#0d5c4b"
+                strokeWidth="4"
+                strokeLinecap="round"
+                strokeDasharray={`${(doneGroups / 3) * 94.25} 94.25`}
+                className="transition-all duration-500"
+              />
             </svg>
-            <span className={`absolute inset-0 flex items-center justify-center text-[13px] text-[#0d5c4b] ${fontSemi}`}>
+            <span
+              className={`absolute inset-0 flex items-center justify-center text-13 text-primary-700 ${fontSemi}`}
+            >
               {doneGroups}/3
             </span>
           </div>
           <div className="min-w-0">
-            <p className={`m-0 text-[15px] leading-[22px] text-[#0f172a] ${fontSemi}`}>{doneGroups === 3 ? "Your learners section is ready" : "Help the right students find you"}</p>
-            <p className={`m-0 mt-0.5 text-[14px] leading-[20px] text-[#475569] [text-wrap:pretty] ${fontRegular}`}>
+            <p
+              className={`m-0 text-15 leading-5.5 text-slate-900 ${fontSemi}`}
+            >
+              {doneGroups === 3
+                ? "Your learners section is ready"
+                : "Help the right students find you"}
+            </p>
+            <p
+              className={`m-0 mt-0.5 text-sm leading-5 text-slate-600 text-pretty ${fontRegular}`}
+            >
               Students read these on your course page before they enroll.
             </p>
           </div>
         </div>
         <div className="mt-5 flex flex-col gap-5">
           <div data-preview-target="objectives">
-            <PointGroup icon={TARGET} tone={BRAND} title="What students will learn" description="Start each one with an action, like Build, Write or Design." done={filled(draft.objectives)} min={MIN_OBJECTIVES} ai={(close) => <PointSuggestions kind="objectives" draft={draft} rows={draft.objectives} min={MIN_OBJECTIVES} onChange={(objectives) => update({ objectives })} close={close} />}>
-              <PointList label="Objective" tone={BRAND} examples={OBJECTIVE_EXAMPLES} onSuggestRow={fillRow("objectives")} rows={draft.objectives} savedRows={saved.objectives} onChange={(objectives) => update({ objectives })} />
+            <PointGroup
+              icon={TARGET}
+              tone={BRAND}
+              title="What students will learn"
+              description="Start each one with an action, like Build, Write or Design."
+              done={filled(draft.objectives)}
+              min={MIN_OBJECTIVES}
+              ai={(close) => (
+                <PointSuggestions
+                  kind="objectives"
+                  draft={draft}
+                  rows={draft.objectives}
+                  min={MIN_OBJECTIVES}
+                  onChange={(objectives) => update({ objectives })}
+                  close={close}
+                />
+              )}
+            >
+              <PointList
+                label="Objective"
+                tone={BRAND}
+                examples={OBJECTIVE_EXAMPLES}
+                onSuggestRow={fillRow("objectives")}
+                rows={draft.objectives}
+                savedRows={saved.objectives}
+                onChange={(objectives) => update({ objectives })}
+              />
             </PointGroup>
           </div>
           <div data-preview-target="requirements">
-            <PointGroup icon={TOOLS} tone={BRAND} title="Requirements" description="Skills, tools or knowledge students need first. If none, say so." done={filled(draft.requirements)} min={1} ai={(close) => <PointSuggestions kind="requirements" draft={draft} rows={draft.requirements} min={1} onChange={(requirements) => update({ requirements })} close={close} />}>
-              <PointList label="Requirement" tone={BRAND} examples={REQUIREMENT_EXAMPLES} onSuggestRow={fillRow("requirements")} rows={draft.requirements} savedRows={saved.requirements} onChange={(requirements) => update({ requirements })} />
+            <PointGroup
+              icon={TOOLS}
+              tone={BRAND}
+              title="Requirements"
+              description="Skills, tools or knowledge students need first. If none, say so."
+              done={filled(draft.requirements)}
+              min={1}
+              ai={(close) => (
+                <PointSuggestions
+                  kind="requirements"
+                  draft={draft}
+                  rows={draft.requirements}
+                  min={1}
+                  onChange={(requirements) => update({ requirements })}
+                  close={close}
+                />
+              )}
+            >
+              <PointList
+                label="Requirement"
+                tone={BRAND}
+                examples={REQUIREMENT_EXAMPLES}
+                onSuggestRow={fillRow("requirements")}
+                rows={draft.requirements}
+                savedRows={saved.requirements}
+                onChange={(requirements) => update({ requirements })}
+              />
             </PointGroup>
           </div>
           <div data-preview-target="audience">
@@ -796,16 +1624,37 @@ function LearnersSection({ draft, saved, update, onExplain }: SectionProps) {
               description={
                 <>
                   Name the people who will get the most from it.{" "}
-                  <button type="button" onClick={onExplain} className={inlineLink}>
+                  <button
+                    type="button"
+                    onClick={onExplain}
+                    className={inlineLink}
+                  >
                     See tips
                   </button>
                 </>
               }
               done={filled(draft.audience)}
               min={1}
-              ai={(close) => <PointSuggestions kind="audience" draft={draft} rows={draft.audience} min={1} onChange={(audience) => update({ audience })} close={close} />}
+              ai={(close) => (
+                <PointSuggestions
+                  kind="audience"
+                  draft={draft}
+                  rows={draft.audience}
+                  min={1}
+                  onChange={(audience) => update({ audience })}
+                  close={close}
+                />
+              )}
             >
-              <PointList label="Learner type" tone={BRAND} examples={AUDIENCE_EXAMPLES} onSuggestRow={fillRow("audience")} rows={draft.audience} savedRows={saved.audience} onChange={(audience) => update({ audience })} />
+              <PointList
+                label="Learner type"
+                tone={BRAND}
+                examples={AUDIENCE_EXAMPLES}
+                onSuggestRow={fillRow("audience")}
+                rows={draft.audience}
+                savedRows={saved.audience}
+                onChange={(audience) => update({ audience })}
+              />
             </PointGroup>
           </div>
         </div>
@@ -817,7 +1666,13 @@ function LearnersSection({ draft, saved, update, onExplain }: SectionProps) {
 const MAX_TOPICS = 3;
 
 // Searchable multi-select: type to filter, Enter picks the highlighted topic, Backspace in an empty box removes the last one.
-function TopicsField({ value, onChange }: { value: string[]; onChange: (next: string[]) => void }) {
+function TopicsField({
+  value,
+  onChange,
+}: {
+  value: string[];
+  onChange: (next: string[]) => void;
+}) {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [cursor, setCursor] = useState(0);
@@ -826,7 +1681,12 @@ function TopicsField({ value, onChange }: { value: string[]; onChange: (next: st
   const full = value.length >= MAX_TOPICS;
   const q = query.trim().toLowerCase();
   const matches = TOPIC_OPTIONS.filter((t) => t.toLowerCase().includes(q));
-  const custom = q && !TOPIC_OPTIONS.some((t) => t.toLowerCase() === q) && !value.some((t) => t.toLowerCase() === q) ? query.trim() : "";
+  const custom =
+    q &&
+    !TOPIC_OPTIONS.some((t) => t.toLowerCase() === q) &&
+    !value.some((t) => t.toLowerCase() === q)
+      ? query.trim()
+      : "";
   const options = [...matches, ...(custom ? [custom] : [])];
 
   useEffect(() => {
@@ -866,11 +1726,25 @@ function TopicsField({ value, onChange }: { value: string[]; onChange: (next: st
 
   return (
     <div ref={ref} className="relative">
-      <div className="field-box h-auto min-h-9 cursor-text flex-wrap gap-1.5 py-[5px] pl-1.5" onClick={() => inputRef.current?.focus()}>
+      <div
+        className="field-box h-auto min-h-9 cursor-text flex-wrap gap-1.5 py-1.25 pl-1.5"
+        onClick={() => inputRef.current?.focus()}
+      >
         {value.map((topic) => (
-          <span key={topic} className={`flex h-6 items-center gap-1 rounded-full border border-[#0d5c4b]/15 bg-[#eef7f3] pl-2.5 pr-1 text-[12.5px] leading-[16px] text-[#0d5c4b] ${fontMedium}`}>
+          <span
+            key={topic}
+            className={`flex h-6 items-center gap-1 rounded-full border border-primary-700/15 bg-primary-100 pl-2.5 pr-1 text-xs leading-4 text-primary-700 ${fontMedium}`}
+          >
             {topic}
-            <button type="button" aria-label={`Remove ${topic}`} onClick={(e) => (e.stopPropagation(), onChange(value.filter((t) => t !== topic)))} className="flex size-4 items-center justify-center rounded-full text-[#0d5c4b]/70 transition hover:bg-[#0d5c4b] hover:text-white">
+            <button
+              type="button"
+              aria-label={`Remove ${topic}`}
+              onClick={(e) => (
+                e.stopPropagation(),
+                onChange(value.filter((t) => t !== topic))
+              )}
+              className="flex size-4 items-center justify-center rounded-full text-primary-700/70 transition hover:bg-primary-700 hover:text-white"
+            >
               <Icon path="M7 7l10 10M17 7L7 17" className="size-3" />
             </button>
           </span>
@@ -881,7 +1755,9 @@ function TopicsField({ value, onChange }: { value: string[]; onChange: (next: st
           aria-label="Topics"
           aria-expanded={open}
           aria-controls="topic-options"
-          aria-activedescendant={open && options[cursor] ? `topic-option-${cursor}` : undefined}
+          aria-activedescendant={
+            open && options[cursor] ? `topic-option-${cursor}` : undefined
+          }
           value={query}
           onFocus={() => setOpen(true)}
           onChange={(e) => {
@@ -889,17 +1765,37 @@ function TopicsField({ value, onChange }: { value: string[]; onChange: (next: st
             setOpen(true);
           }}
           onKeyDown={onKey}
-          placeholder={full ? "" : value.length ? "Add another…" : "Search or add topics"}
-          className={`h-6 min-w-[120px] flex-1 bg-transparent px-1.5 text-[16px] leading-[20px] text-[#0f172a] outline-none placeholder:text-slate-400 md:text-[14px] ${fontRegular}`}
+          placeholder={
+            full ? "" : value.length ? "Add another…" : "Search or add topics"
+          }
+          className={`h-6 min-w-30 flex-1 bg-transparent px-1.5 text-base leading-5 text-slate-900 outline-none placeholder:text-slate-400 md:text-sm ${fontRegular}`}
         />
-        <span className={`shrink-0 pr-0.5 text-[12px] tabular-nums ${full ? "text-[#0d5c4b]" : "text-[#94a3b8]"} ${fontMedium}`}>
+        <span
+          className={`shrink-0 pr-0.5 text-xs tabular-nums ${full ? "text-primary-700" : "text-slate-400"} ${fontMedium}`}
+        >
           {value.length}/{MAX_TOPICS}
         </span>
       </div>
       {open && (
-        <div id="topic-options" role="listbox" aria-label="Topics" aria-multiselectable="true" className="pop-in absolute top-full z-20 mt-1.5 flex max-h-[260px] w-full flex-col gap-0.5 overflow-y-auto rounded-[12px] border border-slate-200 bg-white p-1.5 shadow-[0_1px_2px_rgba(15,23,42,0.05),0_16px_36px_-8px_rgba(15,23,42,0.2)]">
-          {full && <p className="field-help m-0 px-2.5 pb-1.5 pt-1">You've picked {MAX_TOPICS}. Remove one to choose another.</p>}
-          {options.length === 0 && <p className={`m-0 px-2.5 py-2 text-[14px] text-[#64748b] ${fontRegular}`}>No topics found</p>}
+        <div
+          id="topic-options"
+          role="listbox"
+          aria-label="Topics"
+          aria-multiselectable="true"
+          className="pop-in absolute top-full z-20 mt-1.5 flex max-h-65 w-full flex-col gap-0.5 overflow-y-auto rounded-xl border border-slate-200 bg-white p-1.5 shadow-popover"
+        >
+          {full && (
+            <p className="field-help m-0 px-2.5 pb-1.5 pt-1">
+              You've picked {MAX_TOPICS}. Remove one to choose another.
+            </p>
+          )}
+          {options.length === 0 && (
+            <p
+              className={`m-0 px-2.5 py-2 text-sm text-slate-500 ${fontRegular}`}
+            >
+              No topics found
+            </p>
+          )}
           {options.map((topic, i) => {
             const on = value.includes(topic);
             const blocked = full && !on;
@@ -914,10 +1810,18 @@ function TopicsField({ value, onChange }: { value: string[]; onChange: (next: st
                 onMouseDown={(e) => e.preventDefault()}
                 onMouseEnter={() => setCursor(i)}
                 onClick={() => !blocked && toggle(topic)}
-                className={`flex h-9 shrink-0 items-center gap-2.5 rounded-[8px] px-2.5 text-left text-[14px] leading-[20px] transition-colors ${i === cursor && !blocked ? "bg-[#f1f5f9]" : ""} ${blocked ? "cursor-not-allowed text-[#cbd5e1]" : "text-[#0f172a]"} ${fontRegular}`}
+                className={`flex h-9 shrink-0 items-center gap-2.5 rounded-lg px-2.5 text-left text-sm leading-5 transition-colors ${i === cursor && !blocked ? "bg-slate-100" : ""} ${blocked ? "cursor-not-allowed text-slate-300" : "text-slate-900"} ${fontRegular}`}
               >
-                <span className={`flex size-4 shrink-0 items-center justify-center rounded-[4px] border transition ${on ? "border-[#0d5c4b] bg-[#0d5c4b] text-white" : "border-slate-300 bg-white"}`}>{on && <Icon path="M5 12.5l4.5 4.5L19 7.5" className="size-3" />}</span>
-                <span className="min-w-0 flex-1 truncate">{topic === custom ? <>Add “{topic}”</> : topic}</span>
+                <span
+                  className={`flex size-4 shrink-0 items-center justify-center rounded-sm border transition ${on ? "border-primary-700 bg-primary-700 text-white" : "border-slate-300 bg-white"}`}
+                >
+                  {on && (
+                    <Icon path="M5 12.5l4.5 4.5L19 7.5" className="size-3" />
+                  )}
+                </span>
+                <span className="min-w-0 flex-1 truncate">
+                  {topic === custom ? <>Add “{topic}”</> : topic}
+                </span>
               </button>
             );
           })}
@@ -928,11 +1832,32 @@ function TopicsField({ value, onChange }: { value: string[]; onChange: (next: st
 }
 
 const TAG = "M3 12V4a1 1 0 011-1h8l9 9-9 9zM7.5 7.5h.01";
-const UPLOAD_CLOUD = "M7 18a4.500 4.500 0 01-.500-8.970A6 6 0 0118 8.500a4 4 0 01-1 7.900M12 12v8M9 15l3-3 3 3";
+const UPLOAD_CLOUD =
+  "M7 18a4.500 4.500 0 01-.500-8.970A6 6 0 0118 8.500a4 4 0 01-1 7.900M12 12v8M9 15l3-3 3 3";
 const SUBTITLE_LIMIT = 120;
 
 // A cover or promo video slot: drop a file on it or click to choose one.
-function MediaTile({ title, spec, filled, preview, badge, accept, onFile, onRemove, help }: { title: string; spec: string; filled: boolean; preview: ReactNode; badge?: string; accept: string; onFile: (file?: File) => void; onRemove?: () => void; help: ReactNode }) {
+function MediaTile({
+  title,
+  spec,
+  filled,
+  preview,
+  badge,
+  accept,
+  onFile,
+  onRemove,
+  help,
+}: {
+  title: string;
+  spec: string;
+  filled: boolean;
+  preview: ReactNode;
+  badge?: string;
+  accept: string;
+  onFile: (file?: File) => void;
+  onRemove?: () => void;
+  help: ReactNode;
+}) {
   const input = useRef<HTMLInputElement>(null);
   const [over, setOver] = useState(false);
   return (
@@ -948,35 +1873,69 @@ function MediaTile({ title, spec, filled, preview, badge, accept, onFile, onRemo
           setOver(false);
           onFile(e.dataTransfer.files?.[0]);
         }}
-        className={`group relative aspect-video overflow-hidden rounded-[12px] transition ${over ? "ring-2 ring-[#0d5c4b] ring-offset-2" : ""} ${filled ? "bg-[#0f172a]" : "border border-dashed border-[#cbd5e1] bg-[#f8fafc]"}`}
+        className={`group relative aspect-video overflow-hidden rounded-xl transition ${over ? "ring-2 ring-primary-700 ring-offset-2" : ""} ${filled ? "bg-slate-900" : "border border-dashed border-slate-300 bg-slate-50"}`}
       >
         {preview}
-        {badge && <span className={`absolute left-2 top-2 rounded-full bg-black/55 px-2 py-0.5 text-[11px] leading-[16px] text-white backdrop-blur-sm ${fontMedium}`}>{badge}</span>}
+        {badge && (
+          <span
+            className={`absolute left-2 top-2 rounded-full bg-black/55 px-2 py-0.5 text-11 leading-4 text-white backdrop-blur-sm ${fontMedium}`}
+          >
+            {badge}
+          </span>
+        )}
         {!filled && (
-          <button type="button" onClick={() => input.current?.click()} className="absolute inset-0 flex flex-col items-center justify-center gap-2 text-center transition hover:bg-[#f1f5f9]">
-            <span className="flex size-10 items-center justify-center rounded-full bg-white text-[#0d5c4b] shadow-[0_1px_3px_rgba(15,23,42,0.1)]">
+          <button
+            type="button"
+            onClick={() => input.current?.click()}
+            className="absolute inset-0 flex flex-col items-center justify-center gap-2 text-center transition hover:bg-slate-100"
+          >
+            <span className="flex size-10 items-center justify-center rounded-full bg-white text-primary-700 shadow-sm">
               <Icon path={UPLOAD_CLOUD} className="size-5" />
             </span>
-            <span className={`text-[13px] leading-[18px] text-[#0f172a] ${fontMedium}`}>
-              Drop a file or <span className="text-[#0d5c4b] underline">browse</span>
+            <span
+              className={`text-13 leading-4.5 text-slate-900 ${fontMedium}`}
+            >
+              Drop a file or{" "}
+              <span className="text-primary-700 underline">browse</span>
             </span>
           </button>
         )}
       </div>
-      <input ref={input} type="file" hidden aria-label={`Choose ${title.toLowerCase()}`} accept={accept} onChange={(e) => onFile(e.target.files?.[0])} />
+      <input
+        ref={input}
+        type="file"
+        hidden
+        aria-label={`Choose ${title.toLowerCase()}`}
+        accept={accept}
+        onChange={(e) => onFile(e.target.files?.[0])}
+      />
       <div className="mt-3 flex items-start justify-between gap-3">
         <div className="min-w-0">
-          <p className={`m-0 text-[14px] leading-[20px] text-[#0f172a] ${fontSemi}`}>{title}</p>
+          <p
+            className={`m-0 text-sm leading-5 text-slate-900 ${fontSemi}`}
+          >
+            {title}
+          </p>
           <p className="field-help m-0 mt-0.5">
             {spec} {help}
           </p>
         </div>
         <div className="flex shrink-0 items-center gap-1">
-          <button type="button" onClick={() => input.current?.click()} className={`h-8 rounded-[8px] border border-[#e2e8f0] bg-white px-3 text-[13px] leading-[18px] text-[#0f172a] transition hover:bg-[#f8fafc] ${fontMedium}`}>
+          <button
+            type="button"
+            onClick={() => input.current?.click()}
+            className={`h-8 rounded-lg border border-slate-200 bg-white px-3 text-13 leading-4.5 text-slate-900 transition hover:bg-slate-50 ${fontMedium}`}
+          >
             {filled ? "Replace" : "Upload"}
           </button>
           {onRemove && (
-            <button type="button" aria-label={`Remove ${title.toLowerCase()}`} title="Remove" onClick={onRemove} className="flex size-8 items-center justify-center rounded-[8px] text-[#94a3b8] transition hover:bg-[#fef2f2] hover:text-[#dc2626]">
+            <button
+              type="button"
+              aria-label={`Remove ${title.toLowerCase()}`}
+              title="Remove"
+              onClick={onRemove}
+              className="flex size-8 items-center justify-center rounded-lg text-slate-400 transition hover:bg-red-50 hover:text-red-600"
+            >
               <Icon path={TRASH} className="size-4" />
             </button>
           )}
@@ -986,7 +1945,17 @@ function MediaTile({ title, spec, filled, preview, badge, accept, onFile, onRemo
   );
 }
 
-function DetailsSection({ draft, saved, update, fallbackCover, onSupport }: SectionProps & { fallbackCover: string; guide: { title: string; text: string }; onSupport: () => void }) {
+function DetailsSection({
+  draft,
+  saved,
+  update,
+  fallbackCover,
+  onSupport,
+}: SectionProps & {
+  fallbackCover: string;
+  guide: { title: string; text: string };
+  onSupport: () => void;
+}) {
   const { notify } = useApp();
   const [videoUrl, setVideoUrl] = useState(draft.promoVideo?.url ?? "");
   const [expanded, setExpanded] = useState(false);
@@ -997,26 +1966,39 @@ function DetailsSection({ draft, saved, update, fallbackCover, onSupport }: Sect
 
   // Field sparkles: swap in the next suggested title or subtitle that differs from the current one.
   const suggestField = (field: "title" | "subtitle") => async () => {
-    const { titles, subtitles } = await suggestTitles(courseContext(draft), Date.now() % 100000);
-    const next = (field === "title" ? titles : subtitles).find((s) => s !== draft[field]);
+    const { titles, subtitles } = await suggestTitles(
+      courseContext(draft),
+      Date.now() % 100000,
+    );
+    const next = (field === "title" ? titles : subtitles).find(
+      (s) => s !== draft[field],
+    );
     if (next) update({ [field]: next } as Partial<Draft>);
     else notify("No new ideas right now. Try again in a moment.");
   };
   const words = wordCount(draft.description.text);
-  const label = `mb-1.5 flex items-center justify-between gap-3 text-[14px] leading-[20px] text-[#0f172a] ${fontMedium}`;
+  const label = `mb-1.5 flex items-center justify-between gap-3 text-sm leading-5 text-slate-900 ${fontMedium}`;
 
-  useEffect(() => () => {
-    if (videoUrl) URL.revokeObjectURL(videoUrl);
-  }, [videoUrl]);
+  useEffect(
+    () => () => {
+      if (videoUrl) URL.revokeObjectURL(videoUrl);
+    },
+    [videoUrl],
+  );
 
   const pickCover = (file?: File) => {
     if (!file) return;
-    if (!["image/webp", "image/jpeg", "image/png"].includes(file.type)) return notify("Use a .webp, .jpg, .jpeg or .png image");
-    if (file.size > BANNER_MAX_UPLOAD_BYTES) return notify("Please choose an image under 10 MB");
+    if (!["image/webp", "image/jpeg", "image/png"].includes(file.type))
+      return notify("Use a .webp, .jpg, .jpeg or .png image");
+    if (file.size > BANNER_MAX_UPLOAD_BYTES)
+      return notify("Please choose an image under 10 MB");
     // Banners are cropped to 16:9, resized to 1600 × 900 px and compressed under 500 KB.
     prepareBanner(file)
       .then(async ({ file: small, lowRes }) => {
-        if (lowRes) notify(`This image is smaller than ${BANNER_MIN.width} × ${BANNER_MIN.height} px, so it may look blurry`);
+        if (lowRes)
+          notify(
+            `This image is smaller than ${BANNER_MIN.width} × ${BANNER_MIN.height} px, so it may look blurry`,
+          );
         const url = await uploadFile(small);
         if (url) return update({ cover: url });
         const reader = new FileReader();
@@ -1029,7 +2011,8 @@ function DetailsSection({ draft, saved, update, fallbackCover, onSupport }: Sect
   const pickVideo = (file?: File) => {
     if (!file) return;
     if (!file.type.startsWith("video/")) return notify("Choose a video file");
-    if (file.size > MAX_VIDEO_MB * 1024 * 1024) return notify(`Videos must be under ${MAX_VIDEO_MB} MB`);
+    if (file.size > MAX_VIDEO_MB * 1024 * 1024)
+      return notify(`Videos must be under ${MAX_VIDEO_MB} MB`);
     setVideoUrl(URL.createObjectURL(file));
     update({ promoVideo: { name: file.name, size: file.size } });
     uploadFile(file)
@@ -1041,10 +2024,24 @@ function DetailsSection({ draft, saved, update, fallbackCover, onSupport }: Sect
       .catch(() => notify("Promo video upload failed. Please try again"));
   };
 
-  const basicsDone = [draft.title.trim(), draft.subtitle.trim(), draft.topics.length > 0].filter(Boolean).length;
-  const setupDone = [draft.category, draft.subCategory, draft.level, draft.language].filter(Boolean).length;
+  const basicsDone = [
+    draft.title.trim(),
+    draft.subtitle.trim(),
+    draft.topics.length > 0,
+  ].filter(Boolean).length;
+  const setupDone = [
+    draft.category,
+    draft.subCategory,
+    draft.level,
+    draft.language,
+  ].filter(Boolean).length;
   const mediaDone = [!!draft.cover, !!draft.promoVideo].filter(Boolean).length;
-  const groupsDone = [basicsDone === 3, words >= MIN_DESCRIPTION_WORDS, setupDone === 4, mediaDone === 2].filter(Boolean).length;
+  const groupsDone = [
+    basicsDone === 3,
+    words >= MIN_DESCRIPTION_WORDS,
+    setupDone === 4,
+    mediaDone === 2,
+  ].filter(Boolean).length;
 
   return (
     <div>
@@ -1064,17 +2061,43 @@ function DetailsSection({ draft, saved, update, fallbackCover, onSupport }: Sect
       />
       <div className="mt-5 flex flex-col gap-5">
         <div data-preview-target="banner">
-          <PointGroup icon={PENCIL} tone={BRAND} title="Basics" description="A clear title and subtitle help students find your course in search." done={basicsDone} min={3} ai={(close) => <TitleSuggestions draft={draft} update={update} close={close} />}>
+          <PointGroup
+            icon={PENCIL}
+            tone={BRAND}
+            title="Basics"
+            description="A clear title and subtitle help students find your course in search."
+            done={basicsDone}
+            min={3}
+            ai={(close) => (
+              <TitleSuggestions draft={draft} update={update} close={close} />
+            )}
+          >
             <div className="mt-5 flex flex-col gap-5">
               <div>
                 <label htmlFor="course-title" className={label}>
                   Title
-                  <span className={`field-help ${draft.title.length >= TITLE_LIMIT ? "!text-[#dc2626]" : ""}`}>
+                  <span
+                    className={`field-help ${draft.title.length >= TITLE_LIMIT ? "!text-red-600" : ""}`}
+                  >
                     {draft.title.length}/{TITLE_LIMIT}
                   </span>
                 </label>
-                <AiInput id="course-title" label="Title" height="" value={draft.title} original={saved.title} maxLength={TITLE_LIMIT} placeholder="e.g. UI/UX Design with Figma: From Wireframe to Prototype" onSuggest={suggestField("title")} onChange={(title) => update({ title })} />
-                {!draft.title.trim() && <p className="field-help mt-1.5 !text-[#dc2626]">Enter a course title</p>}
+                <AiInput
+                  id="course-title"
+                  label="Title"
+                  height=""
+                  value={draft.title}
+                  original={saved.title}
+                  maxLength={TITLE_LIMIT}
+                  placeholder="e.g. UI/UX Design with Figma: From Wireframe to Prototype"
+                  onSuggest={suggestField("title")}
+                  onChange={(title) => update({ title })}
+                />
+                {!draft.title.trim() && (
+                  <p className="field-help mt-1.5 !text-red-600">
+                    Enter a course title
+                  </p>
+                )}
               </div>
               <div>
                 <label htmlFor="course-subtitle" className={label}>
@@ -1083,22 +2106,45 @@ function DetailsSection({ draft, saved, update, fallbackCover, onSupport }: Sect
                     {draft.subtitle.length}/{SUBTITLE_LIMIT}
                   </span>
                 </label>
-                <AiInput id="course-subtitle" label="Subtitle" height="" value={draft.subtitle} original={saved.subtitle} maxLength={SUBTITLE_LIMIT} placeholder="e.g. Design and test real app screens, step by step" onSuggest={suggestField("subtitle")} onChange={(subtitle) => update({ subtitle })} />
-                <p className="field-help mt-1.5">Use one or two keywords and name the main skills students will gain.</p>
+                <AiInput
+                  id="course-subtitle"
+                  label="Subtitle"
+                  height=""
+                  value={draft.subtitle}
+                  original={saved.subtitle}
+                  maxLength={SUBTITLE_LIMIT}
+                  placeholder="e.g. Design and test real app screens, step by step"
+                  onSuggest={suggestField("subtitle")}
+                  onChange={(subtitle) => update({ subtitle })}
+                />
+                <p className="field-help mt-1.5">
+                  Use one or two keywords and name the main skills students will
+                  gain.
+                </p>
               </div>
               <div>
                 <p className={label}>
                   Topics
-                  <span className="field-help">Helps students find you in search</span>
+                  <span className="field-help">
+                    Helps students find you in search
+                  </span>
                 </p>
-                <TopicsField value={draft.topics} onChange={(topics) => update({ topics: topics.slice(0, 3) })} />
+                <TopicsField
+                  value={draft.topics}
+                  onChange={(topics) => update({ topics: topics.slice(0, 3) })}
+                />
               </div>
             </div>
           </PointGroup>
         </div>
 
         <div data-preview-target="overview">
-          <PointGroup icon={ARTICLE} tone={BRAND} title="Description" description="Say what students will learn, how you teach it and who it is for." done={words}
+          <PointGroup
+            icon={ARTICLE}
+            tone={BRAND}
+            title="Description"
+            description="Say what students will learn, how you teach it and who it is for."
+            done={words}
             min={MIN_DESCRIPTION_WORDS}
             unit=" words"
             aiOpen={descAiOpen}
@@ -1115,8 +2161,18 @@ function DetailsSection({ draft, saved, update, fallbackCover, onSupport }: Sect
             )}
           >
             <div className="mt-5">
-              {expanded && <div aria-hidden="true" onClick={() => setExpanded(false)} className="overlay-fade fixed inset-0 z-40 bg-[#0f172a]/50" />}
-              <div className={expanded ? "fixed inset-4 z-50 flex flex-col md:inset-10" : ""}>
+              {expanded && (
+                <div
+                  aria-hidden="true"
+                  onClick={() => setExpanded(false)}
+                  className="overlay-fade fixed inset-0 z-40 bg-slate-900/50"
+                />
+              )}
+              <div
+                className={
+                  expanded ? "fixed inset-4 z-50 flex flex-col md:inset-10" : ""
+                }
+              >
                 <NoteEditor
                   key={descKey}
                   modern
@@ -1125,20 +2181,56 @@ function DetailsSection({ draft, saved, update, fallbackCover, onSupport }: Sect
                   autoFocus={false}
                   initial={draft.description}
                   placeholder="Start with what students will be able to do after this course…"
-                  boxClass={expanded ? "flex-1 shadow-2xl" : "min-h-[240px] max-h-[560px]"}
+                  boxClass={
+                    expanded
+                      ? "flex-1 shadow-2xl"
+                      : "min-h-60 max-h-140"
+                  }
                   onCancel={() => setExpanded(false)}
-                  onChange={(text, html) => update({ description: { text, html } })}
+                  onChange={(text, html) =>
+                    update({ description: { text, html } })
+                  }
                   toolbarEnd={
                     <span className="flex items-center gap-1">
                       {!words && !descAiOpen && (
-                        <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => setDescAiOpen(true)} className={`flex h-8 items-center gap-1.5 rounded-full bg-[#eef7f3] px-3 text-[13px] leading-[18px] text-[#0d5c4b] transition hover:bg-[#e0f0e9] ${fontMedium}`}>
+                        <button
+                          type="button"
+                          onMouseDown={(e) => e.preventDefault()}
+                          onClick={() => setDescAiOpen(true)}
+                          className={`flex h-8 items-center gap-1.5 rounded-full bg-primary-100 px-3 text-13 leading-4.5 text-primary-700 transition hover:bg-primary-200 ${fontMedium}`}
+                        >
                           <Icon path={SPARKLE} className="size-4" filled />
                           Draft with AI
                         </button>
                       )}
-                      <span className={`hidden px-2 text-[12px] tabular-nums sm:inline ${words >= MIN_DESCRIPTION_WORDS ? "text-[#0d5c4b]" : "text-slate-400"} ${fontMedium}`}>{words ? `${words} words` : ""}</span>
-                      <button type="button" aria-label={expanded ? "Exit full screen" : "Expand description editor"} aria-pressed={expanded} title={expanded ? "Exit full screen" : "Write in full screen"} onMouseDown={(e) => e.preventDefault()} onClick={() => setExpanded((v) => !v)} className="flex size-8 items-center justify-center rounded-[8px] text-slate-500 transition hover:bg-slate-100 hover:text-slate-900">
-                        <HugeiconsIcon icon={expanded ? MinimizeScreenIcon : MaximizeScreenIcon} size={18} strokeWidth={1.8} aria-hidden="true" />
+                      <span
+                        className={`hidden px-2 text-xs tabular-nums sm:inline ${words >= MIN_DESCRIPTION_WORDS ? "text-primary-700" : "text-slate-400"} ${fontMedium}`}
+                      >
+                        {words ? `${words} words` : ""}
+                      </span>
+                      <button
+                        type="button"
+                        aria-label={
+                          expanded
+                            ? "Exit full screen"
+                            : "Expand description editor"
+                        }
+                        aria-pressed={expanded}
+                        title={
+                          expanded ? "Exit full screen" : "Write in full screen"
+                        }
+                        onMouseDown={(e) => e.preventDefault()}
+                        onClick={() => setExpanded((v) => !v)}
+                        className="flex size-8 items-center justify-center rounded-lg text-slate-500 transition hover:bg-slate-100 hover:text-slate-900"
+                      >
+                        <HugeiconsIcon
+                          icon={
+                            expanded ? MinimizeScreenIcon : MaximizeScreenIcon
+                          }
+                          size={18}
+                          strokeWidth={1.8}
+                          aria-hidden="true"
+                        />
                       </button>
                     </span>
                   }
@@ -1149,30 +2241,91 @@ function DetailsSection({ draft, saved, update, fallbackCover, onSupport }: Sect
         </div>
 
         <div data-preview-target="banner">
-          <PointGroup icon={TAG} tone={BRAND} title="Category and level" description="Puts your course in the right place when students browse." done={setupDone} min={4}>
+          <PointGroup
+            icon={TAG}
+            tone={BRAND}
+            title="Category and level"
+            description="Puts your course in the right place when students browse."
+            done={setupDone}
+            min={4}
+          >
             <div className="mt-5 grid gap-4 @lg:grid-cols-2">
-              <SelectField id="course-category" label="Category" value={draft.category} onChange={(category) => update({ category, subCategory: "" })} placeholder="Select a category" options={[...new Set([...categories.map((c) => c.name as string), ...(draft.category ? [draft.category] : [])])]} />
-              <SelectField id="course-subcategory" label="Sub category" value={draft.subCategory} onChange={(subCategory) => update({ subCategory })} placeholder={draft.category ? "Select a sub category" : "Choose a category first"} options={[...subs]} />
-              <SelectField id="course-level" label="Level" value={draft.level} onChange={(level) => update({ level })} placeholder="Select a level" options={LEVELS} />
-              <SelectField id="course-language" label="Language" value={draft.language} onChange={(language) => update({ language })} placeholder="Select a language" options={LANGUAGES} />
+              <SelectField
+                id="course-category"
+                label="Category"
+                value={draft.category}
+                onChange={(category) => update({ category, subCategory: "" })}
+                placeholder="Select a category"
+                options={[
+                  ...new Set([
+                    ...categories.map((c) => c.name as string),
+                    ...(draft.category ? [draft.category] : []),
+                  ]),
+                ]}
+              />
+              <SelectField
+                id="course-subcategory"
+                label="Sub category"
+                value={draft.subCategory}
+                onChange={(subCategory) => update({ subCategory })}
+                placeholder={
+                  draft.category
+                    ? "Select a sub category"
+                    : "Choose a category first"
+                }
+                options={[...subs]}
+              />
+              <SelectField
+                id="course-level"
+                label="Level"
+                value={draft.level}
+                onChange={(level) => update({ level })}
+                placeholder="Select a level"
+                options={LEVELS}
+              />
+              <SelectField
+                id="course-language"
+                label="Language"
+                value={draft.language}
+                onChange={(language) => update({ language })}
+                placeholder="Select a language"
+                options={LANGUAGES}
+              />
             </div>
           </PointGroup>
         </div>
 
         <div data-preview-target="card">
-          <PointGroup icon={IMAGE} tone={BRAND} title="Cover and promo video" description="Courses with a promo video get noticeably more enrollments." done={mediaDone} min={2}>
+          <PointGroup
+            icon={IMAGE}
+            tone={BRAND}
+            title="Cover and promo video"
+            description="Courses with a promo video get noticeably more enrollments."
+            done={mediaDone}
+            min={2}
+          >
             <div className="mt-5 grid gap-5 @lg:grid-cols-2">
               <MediaTile
                 title="Cover image"
                 spec="16:9, at least 750 × 422 px. JPG, PNG or WEBP, up to 10 MB."
                 filled
                 badge={draft.cover ? undefined : "Sample image"}
-                preview={<img src={draft.cover || fallbackCover} alt="Course cover" className="size-full object-cover" />}
+                preview={
+                  <img
+                    src={draft.cover || fallbackCover}
+                    alt="Course cover"
+                    className="size-full object-cover"
+                  />
+                }
                 accept=".webp,.jpg,.jpeg,.png"
                 onFile={pickCover}
                 onRemove={draft.cover ? () => update({ cover: "" }) : undefined}
                 help={
-                  <button type="button" onClick={onSupport} className={inlineLink}>
+                  <button
+                    type="button"
+                    onClick={onSupport}
+                    className={inlineLink}
+                  >
                     Guidelines
                   </button>
                 }
@@ -1183,22 +2336,39 @@ function DetailsSection({ draft, saved, update, fallbackCover, onSupport }: Sect
                 filled={!!draft.promoVideo}
                 preview={
                   videoUrl ? (
-                    <video src={videoUrl} controls aria-label="Promotional video preview" className="size-full object-contain" />
+                    <video
+                      src={videoUrl}
+                      controls
+                      aria-label="Promotional video preview"
+                      className="size-full object-contain"
+                    />
                   ) : draft.promoVideo ? (
                     <span className="flex size-full flex-col items-center justify-center gap-2 px-4 text-center text-white/80">
                       <Icon path={VIDEO} className="size-8" />
-                      <span className={`max-w-full truncate text-[13px] ${fontMedium}`}>{draft.promoVideo.name}</span>
+                      <span
+                        className={`max-w-full truncate text-13 ${fontMedium}`}
+                      >
+                        {draft.promoVideo.name}
+                      </span>
                     </span>
                   ) : null
                 }
                 accept="video/*"
                 onFile={pickVideo}
-                onRemove={draft.promoVideo ? () => {
-                  setVideoUrl("");
-                  update({ promoVideo: null });
-                } : undefined}
+                onRemove={
+                  draft.promoVideo
+                    ? () => {
+                        setVideoUrl("");
+                        update({ promoVideo: null });
+                      }
+                    : undefined
+                }
                 help={
-                  <button type="button" onClick={onSupport} className={inlineLink}>
+                  <button
+                    type="button"
+                    onClick={onSupport}
+                    className={inlineLink}
+                  >
                     How to make one
                   </button>
                 }
@@ -1220,10 +2390,10 @@ const KIND_ICONS: Record<LectureKind, string> = {
 const KINDS = Object.keys(KIND_ICONS) as LectureKind[];
 // Each content type gets its own soft colour, so a curriculum scans at a glance.
 const KIND_TONES: Record<LectureKind, string> = {
-  Video: "bg-[#eef7f3] text-[#0d5c4b]",
-  Quiz: "bg-[#fff7e6] text-[#b45309]",
-  Assignment: "bg-[#f3f0ff] text-[#6d28d9]",
-  Article: "bg-[#eff6ff] text-[#1d4ed8]",
+  Video: "bg-primary-100 text-primary-700",
+  Quiz: "bg-amber-50 text-amber-700",
+  Assignment: "bg-violet-50 text-violet-700",
+  Article: "bg-blue-50 text-blue-700",
 };
 const KIND_HINTS: Record<LectureKind, string> = {
   Video: "Teach a topic on camera or screen",
@@ -1231,31 +2401,87 @@ const KIND_HINTS: Record<LectureKind, string> = {
   Assignment: "Give hands-on practice",
   Article: "Add reading or notes",
 };
-const toSeconds = (duration?: string) => (duration ?? "").split(":").map(Number).reduce((total, part) => (Number.isFinite(part) ? total * 60 + part : total), 0);
+const toSeconds = (duration?: string) =>
+  (duration ?? "")
+    .split(":")
+    .map(Number)
+    .reduce(
+      (total, part) => (Number.isFinite(part) ? total * 60 + part : total),
+      0,
+    );
 const formatTotal = (seconds: number) => {
   const minutes = Math.round(seconds / 60);
-  return minutes >= 60 ? `${Math.floor(minutes / 60)}h ${minutes % 60}m` : `${minutes}m`;
+  return minutes >= 60
+    ? `${Math.floor(minutes / 60)}h ${minutes % 60}m`
+    : `${minutes}m`;
 };
 
 const sectionDate = (date: Date) => {
   const day = date.getDate();
   const tens = day % 100;
-  const suffix = tens >= 11 && tens <= 13 ? "th" : (["th", "st", "nd", "rd"][day % 10] ?? "th");
+  const suffix =
+    tens >= 11 && tens <= 13
+      ? "th"
+      : (["th", "st", "nd", "rd"][day % 10] ?? "th");
   return `${date.toLocaleDateString("en-US", { month: "short" })} ${day}${suffix}, ${date.getFullYear()}`;
 };
 // Counts past renamed and deleted rows, so two rows never get the same default name.
-const nextNumber = (titles: string[], pattern: RegExp) => String(Math.max(titles.length, ...titles.map((t) => Number(t.match(pattern)?.[1] ?? 0))) + 1).padStart(3, "0");
+const nextNumber = (titles: string[], pattern: RegExp) =>
+  String(
+    Math.max(
+      titles.length,
+      ...titles.map((t) => Number(t.match(pattern)?.[1] ?? 0)),
+    ) + 1,
+  ).padStart(3, "0");
 const formatDuration = (seconds: number) => {
   const total = Math.round(seconds);
   return `${String(Math.floor(total / 60)).padStart(2, "0")}:${String(total % 60).padStart(2, "0")}`;
 };
-const lectureName = (lecture: Lecture) => lecture.title || `New ${lecture.kind === "Video" ? "video" : lecture.kind} Lecture`;
+const lectureName = (lecture: Lecture) =>
+  lecture.title ||
+  `New ${lecture.kind === "Video" ? "video" : lecture.kind} Lecture`;
 
-function DragHandle({ label, vertical, onDragStart }: { label: string; vertical?: boolean; onDragStart: (e: DragEvent<HTMLSpanElement>) => void }) {
-  const dots = vertical ? [[5, 3], [11, 3], [5, 8], [11, 8], [5, 13], [11, 13]] : [[3, 5], [8, 5], [13, 5], [3, 11], [8, 11], [13, 11]];
+function DragHandle({
+  label,
+  vertical,
+  onDragStart,
+}: {
+  label: string;
+  vertical?: boolean;
+  onDragStart: (e: DragEvent<HTMLSpanElement>) => void;
+}) {
+  const dots = vertical
+    ? [
+        [5, 3],
+        [11, 3],
+        [5, 8],
+        [11, 8],
+        [5, 13],
+        [11, 13],
+      ]
+    : [
+        [3, 5],
+        [8, 5],
+        [13, 5],
+        [3, 11],
+        [8, 11],
+        [13, 11],
+      ];
   return (
-    <span role="img" aria-label={label} title="Drag to reorder" draggable onDragStart={onDragStart} className="flex size-5 shrink-0 cursor-grab items-center justify-center text-[#94a3b8] transition hover:text-[#475569] active:cursor-grabbing">
-      <svg viewBox="0 0 16 16" className="size-4" fill="currentColor" aria-hidden="true">
+    <span
+      role="img"
+      aria-label={label}
+      title="Drag to reorder"
+      draggable
+      onDragStart={onDragStart}
+      className="flex size-5 shrink-0 cursor-grab items-center justify-center text-slate-400 transition hover:text-slate-600 active:cursor-grabbing"
+    >
+      <svg
+        viewBox="0 0 16 16"
+        className="size-4"
+        fill="currentColor"
+        aria-hidden="true"
+      >
         {dots.map(([cx, cy]) => (
           <circle key={`${cx}-${cy}`} cx={cx} cy={cy} r="1.1" />
         ))}
@@ -1268,9 +2494,14 @@ function RowMenu({ label, items }: { label: string; items: ActionItem[] }) {
   return (
     <ActionMenu
       label={label}
-      triggerClass="flex size-9 shrink-0 items-center justify-center rounded-[8px] text-[#64748b] transition hover:bg-[#f1f5f9] hover:text-[#0f172a]"
+      triggerClass="flex size-9 shrink-0 items-center justify-center rounded-lg text-slate-500 transition hover:bg-slate-100 hover:text-slate-900"
       trigger={
-        <svg viewBox="0 0 24 24" className="size-5" fill="currentColor" aria-hidden="true">
+        <svg
+          viewBox="0 0 24 24"
+          className="size-5"
+          fill="currentColor"
+          aria-hidden="true"
+        >
           <circle cx="12" cy="5" r="1.6" />
           <circle cx="12" cy="12" r="1.6" />
           <circle cx="12" cy="19" r="1.6" />
@@ -1281,7 +2512,17 @@ function RowMenu({ label, items }: { label: string; items: ActionItem[] }) {
   );
 }
 
-function InlineTitle({ label, value, className, onDone }: { label: string; value: string; className: string; onDone: (next?: string) => void }) {
+function InlineTitle({
+  label,
+  value,
+  className,
+  onDone,
+}: {
+  label: string;
+  value: string;
+  className: string;
+  onDone: (next?: string) => void;
+}) {
   const [text, setText] = useState(value);
   const commit = () => onDone(text.trim() || undefined);
   return (
@@ -1301,20 +2542,51 @@ function InlineTitle({ label, value, className, onDone }: { label: string; value
   );
 }
 
-function CurriculumIntro({ onExplain, onSupport }: { onExplain: () => void; onSupport: () => void }) {
-  const link = "underline decoration-[#0d5c4b]/30 underline-offset-4 transition hover:text-[#0d5c4b] hover:decoration-[#0d5c4b]";
+function CurriculumIntro({
+  onExplain,
+  onSupport,
+}: {
+  onExplain: () => void;
+  onSupport: () => void;
+}) {
+  const link =
+    "underline decoration-primary-700/30 underline-offset-4 transition hover:text-primary-700 hover:decoration-primary-700";
   return (
-    <div className="flex items-start gap-4 rounded-[16px] border border-[#e2e8f0] bg-white p-5 shadow-[0_1px_2px_rgba(15,23,42,0.04)]">
-      <span aria-hidden="true" className="hidden size-12 shrink-0 items-center justify-center rounded-[12px] bg-[#eef7f3] text-[#0d5c4b] @lg:flex">
-        <svg viewBox="0 0 48 40" className="h-7 w-8" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <div className="flex items-start gap-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-xs">
+      <span
+        aria-hidden="true"
+        className="hidden size-12 shrink-0 items-center justify-center rounded-xl bg-primary-100 text-primary-700 @lg:flex"
+      >
+        <svg
+          viewBox="0 0 48 40"
+          className="h-7 w-8"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
           <path d="M8 29V12a2 2 0 012-2h22M40 21v8" />
           <path d="M3 31h42v2a2 2 0 01-2 2H5a2 2 0 01-2-2zM20 31v1h8v-1" />
-          <path d="M19 24c1-4 4-6 8-6v-3l6 5-6 5v-3c-3 0-5 .5-8 2z" fill="currentColor" />
-          <rect x="33" y="3" width="13" height="14" rx="2" fill="currentColor" stroke="none" />
+          <path
+            d="M19 24c1-4 4-6 8-6v-3l6 5-6 5v-3c-3 0-5 .5-8 2z"
+            fill="currentColor"
+          />
+          <rect
+            x="33"
+            y="3"
+            width="13"
+            height="14"
+            rx="2"
+            fill="currentColor"
+            stroke="none"
+          />
         </svg>
       </span>
       <div className="min-w-0 flex-1">
-        <p className={`m-0 text-[15px] leading-[26px] text-[#334155] ${fontRegular}`}>
+        <p
+          className={`m-0 text-15 leading-6.5 text-slate-700 ${fontRegular}`}
+        >
           Organise your course into sections,{" "}
           <button type="button" onClick={onExplain} className={link}>
             lectures
@@ -1329,9 +2601,18 @@ function CurriculumIntro({ onExplain, onSupport }: { onExplain: () => void; onSu
           </button>
           . Follow your course outline and give each section a clear name.
         </p>
-        <button type="button" onClick={onSupport} className={`mt-2 inline-flex items-center gap-1.5 text-[14px] leading-[20px] text-[#0d5c4b] transition hover:text-[#0b4c3e] hover:underline ${fontSemi}`}>
+        <button
+          type="button"
+          onClick={onSupport}
+          className={`mt-2 inline-flex items-center gap-1.5 text-sm leading-5 text-primary-700 transition hover:text-primary-800 hover:underline ${fontSemi}`}
+        >
           Learn more in the Support Center
-          <HugeiconsIcon icon={ArrowUpRight01Icon} size={16} strokeWidth={2} aria-hidden="true" />
+          <HugeiconsIcon
+            icon={ArrowUpRight01Icon}
+            size={16}
+            strokeWidth={2}
+            aria-hidden="true"
+          />
         </button>
       </div>
     </div>
@@ -1341,20 +2622,23 @@ function CurriculumIntro({ onExplain, onSupport }: { onExplain: () => void; onSu
 function EmptyArt() {
   const rows = [
     { path: PLAY, left: "left-0", top: "top-3" },
-    { path: QUIZ, left: "left-[30px]", top: "top-[52px]" },
-    { path: ASSIGNMENT, left: "left-0", top: "top-[92px]" },
+    { path: QUIZ, left: "left-7.5", top: "top-13" },
+    { path: ASSIGNMENT, left: "left-0", top: "top-23" },
   ];
   return (
-    <div aria-hidden="true" className="float-y relative h-[130px] w-[172px]">
-      <span className="absolute inset-y-0 left-[22px] w-[128px] rounded-[12px] bg-[#e3f1eb]" />
+    <div aria-hidden="true" className="float-y relative h-32.5 w-43">
+      <span className="absolute inset-y-0 left-5.5 w-32 rounded-xl bg-primary-200" />
       {rows.map((row) => (
-        <span key={row.path} className={`absolute flex w-[132px] items-center gap-2 ${row.left} ${row.top}`}>
-          <span className="flex size-7 shrink-0 items-center justify-center rounded-[8px] bg-[#0d5c4b] text-white shadow-[0_4px_10px_-4px_rgba(13,92,75,0.6)]">
+        <span
+          key={row.path}
+          className={`absolute flex w-33 items-center gap-2 ${row.left} ${row.top}`}
+        >
+          <span className="flex size-7 shrink-0 items-center justify-center rounded-lg bg-primary-700 text-white shadow-primary-chip">
             <Icon path={row.path} className="size-4" />
           </span>
-          <span className="flex h-8 flex-1 flex-col justify-center gap-1.5 rounded-[6px] bg-white px-2 shadow-[0_1px_2px_rgba(15,23,42,0.06)]">
-            <span className="h-1 w-7 rounded-full bg-[#94a3b8]" />
-            <span className="h-1 w-11 rounded-full bg-[#cbd5e1]" />
+          <span className="flex h-8 flex-1 flex-col justify-center gap-1.5 rounded-md bg-white px-2 shadow-xs">
+            <span className="h-1 w-7 rounded-full bg-slate-400" />
+            <span className="h-1 w-11 rounded-full bg-slate-300" />
           </span>
         </span>
       ))}
@@ -1362,7 +2646,25 @@ function EmptyArt() {
   );
 }
 
-function LectureDrawer({ lecture, context, uploadProgress, videoUrl, onCancel, onSave, onUpdateVideo, onLibrary }: { lecture: Lecture; context: LectureContext; uploadProgress?: number; videoUrl?: string; onCancel: () => void; onSave: (patch: Partial<Lecture>) => void; onUpdateVideo: () => void; onLibrary: () => void }) {
+function LectureDrawer({
+  lecture,
+  context,
+  uploadProgress,
+  videoUrl,
+  onCancel,
+  onSave,
+  onUpdateVideo,
+  onLibrary,
+}: {
+  lecture: Lecture;
+  context: LectureContext;
+  uploadProgress?: number;
+  videoUrl?: string;
+  onCancel: () => void;
+  onSave: (patch: Partial<Lecture>) => void;
+  onUpdateVideo: () => void;
+  onLibrary: () => void;
+}) {
   const { notify } = useApp();
   const [title, setTitle] = useState(lecture.title);
   const [preview, setPreview] = useState(!!lecture.preview);
@@ -1371,17 +2673,42 @@ function LectureDrawer({ lecture, context, uploadProgress, videoUrl, onCancel, o
   const [playing, setPlaying] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
   const busy = uploadProgress !== undefined;
+  // Uploads are only kept in memory for this session, so a saved lecture previews with a short sample clip.
+  const hasVideo = !!(videoUrl || lecture.file || lecture.duration);
+  const previewSrc = videoUrl || (hasVideo ? SAMPLE_VIDEO : "");
+  // There is no Cancel button: × closes, and asks first when something changed.
+  const [confirmClose, setConfirmClose] = useState(false);
+  const dirty =
+    title !== lecture.title ||
+    preview !== !!lecture.preview ||
+    description !== (lecture.description ?? "") ||
+    JSON.stringify(resources) !== JSON.stringify(lecture.resources ?? []);
+  const close = () => (dirty ? setConfirmClose(true) : onCancel());
+  const save = () =>
+    onSave({
+      title: title.trim() || lecture.title,
+      preview,
+      description,
+      resources,
+    });
   // AI drafts: written from the course, section and lecture details (see aiSuggest.ts).
   const [titleIdeas, setTitleIdeas] = useState<string[] | null>(null);
   const [titleLoading, setTitleLoading] = useState(false);
   const [descLoading, setDescLoading] = useState(false);
-  const [previousDescription, setPreviousDescription] = useState<string | null>(null);
+  const [previousDescription, setPreviousDescription] = useState<string | null>(
+    null,
+  );
   const typing = useRef<number | undefined>(undefined);
   useEffect(() => () => window.clearInterval(typing.current), []);
   const suggestTitle = async () => {
     setTitleLoading(true);
     try {
-      setTitleIdeas(await suggestLectureTitles({ ...context, lectureTitle: title }, Date.now() % 100000));
+      setTitleIdeas(
+        await suggestLectureTitles(
+          { ...context, lectureTitle: title },
+          Date.now() % 100000,
+        ),
+      );
     } finally {
       setTitleLoading(false);
     }
@@ -1389,7 +2716,11 @@ function LectureDrawer({ lecture, context, uploadProgress, videoUrl, onCancel, o
   const writeDescription = async () => {
     setDescLoading(true);
     try {
-      const text = await suggestLectureDescription({ ...context, lectureTitle: title }, Date.now() % 100000, LECTURE_DESCRIPTION_LIMIT);
+      const text = await suggestLectureDescription(
+        { ...context, lectureTitle: title },
+        Date.now() % 100000,
+        LECTURE_DESCRIPTION_LIMIT,
+      );
       setPreviousDescription(description);
       // Types the draft in quickly, like a model streaming its answer.
       let shown = 0;
@@ -1405,270 +2736,647 @@ function LectureDrawer({ lecture, context, uploadProgress, videoUrl, onCancel, o
       setDescLoading(false);
     }
   };
-  const aiLink = `flex items-center gap-1.5 rounded-full bg-[#f5f0ff] px-2.5 py-1 text-[12px] leading-[16px] text-[#6016fc] transition hover:bg-[#ece3ff] disabled:opacity-60 ${fontMedium}`;
-  const spinner = <span aria-hidden="true" className="size-3.5 animate-spin rounded-full border-2 border-current border-t-transparent" />;
-  // Compact cards: the whole drawer fits on one screen, so nothing needs scrolling.
-  const card = "rounded-[14px] border border-[#e2e8f0] bg-white p-4 shadow-[0_1px_2px_rgba(15,23,42,0.04)]";
-  const heading = `m-0 text-[15px] leading-[22px] text-[#0f172a] ${fontSemi}`;
-  const hint = `m-0 text-[12px] leading-[18px] text-[#64748b] ${fontRegular}`;
-  const options = [
-    { value: false, icon: LockIcon, title: "Locked", text: "Only enrolled students can watch it." },
-    { value: true, icon: ViewIcon, title: "Free preview", text: "Anyone can watch it before they enroll." },
-  ];
+  const aiLink = `flex items-center gap-1.5 rounded-full bg-violet-50 px-2.5 py-1 text-xs leading-4 text-ai-600 transition hover:bg-violet-100 disabled:opacity-60 ${fontMedium}`;
+  const spinner = (
+    <span
+      aria-hidden="true"
+      className="size-3.5 animate-spin rounded-full border-2 border-current border-t-transparent"
+    />
+  );
+  // Plain sections on one white page, separated by space and a hairline, so the eye follows one column.
+  const card = "py-6 first:pt-5";
+  const heading = `m-0 text-15 leading-5.5 text-slate-900 ${fontSemi}`;
+  const hint = `m-0 text-xs leading-4.5 text-slate-500 ${fontRegular}`;
 
   return (
-    <Shell title={`Edit ${lectureName(lecture)}`} variant="drawer" drawerWidth="max-w-[640px]" hideHeader onClose={onCancel}>
-      <div className="flex min-h-full flex-col bg-[#f8fafc]">
-        {/* Header: type, editable title, actions. */}
-        <div className="sticky top-0 z-10 flex flex-wrap items-center gap-3 border-b border-[#e2e8f0] bg-white px-5 py-3">
-          <span aria-hidden="true" className={`hidden size-10 shrink-0 items-center justify-center rounded-[12px] sm:flex ${KIND_TONES[lecture.kind]}`}>
-            <Icon path={KIND_ICONS[lecture.kind]} className="size-5" />
-          </span>
-          <div className="min-w-[220px] flex-1">
-            <div className="flex items-center gap-2.5">
-              <label htmlFor="lecture-title" className={`text-[11px] uppercase leading-[14px] tracking-[0.08em] text-[#0d5c4b] ${fontSemi}`}>
-                {lecture.kind} lecture
-              </label>
-              <button type="button" onClick={suggestTitle} disabled={titleLoading} className={aiLink}>
-                {titleLoading ? spinner : <Icon path={SPARKLE} className="size-3.5" filled />}
-                {titleLoading ? "Thinking…" : "Suggest titles"}
-              </button>
-            </div>
-            <input id="lecture-title" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Lecture title" className={`-ml-2 mt-0.5 h-8 w-full rounded-[8px] px-2 text-[18px] leading-[26px] text-[#0f172a] outline-none transition hover:bg-[#f8fafc] focus:bg-[#f8fafc] focus:ring-3 focus:ring-[#0d5c4b]/12 ${fontSemi}`} />
+    <Shell
+      title={`Edit ${lectureName(lecture)}`}
+      variant="drawer"
+      drawerWidth="max-w-160"
+      hideHeader
+      onClose={close}
+    >
+      <div className="flex min-h-full flex-col bg-white">
+        {/* Header: what this drawer is, plus close. The title itself is the first field below. */}
+        <div className="sticky top-0 z-10 flex items-center gap-2 border-b border-slate-100 bg-white/95 px-5 py-3 backdrop-blur-sm">
+          <div className="min-w-0 flex-1">
+            <p
+              className={`m-0 text-base leading-5.5 text-slate-900 ${fontSemi}`}
+            >
+              Edit lecture
+            </p>
+            <p
+              className={`m-0 text-xs leading-4 text-slate-500 ${fontRegular}`}
+            >
+              {lecture.kind}
+              {lecture.duration ? ` · ${lecture.duration}` : ""}
+            </p>
           </div>
-          <div className="flex items-center gap-2">
-            <button type="button" onClick={onCancel} className={`h-9 rounded-[10px] border border-[#e2e8f0] bg-white px-4 text-[14px] leading-[20px] text-[#334155] transition hover:bg-[#f8fafc] ${fontMedium}`}>
-              Cancel
-            </button>
-            <button type="button" onClick={() => onSave({ title: title.trim() || lecture.title, preview, description, resources })} className={`h-9 rounded-[10px] bg-[#0d5c4b] px-4 text-[14px] leading-[20px] text-white shadow-[0_1px_2px_rgba(13,92,75,0.25),0_8px_20px_-10px_rgba(13,92,75,0.6)] transition hover:bg-[#0b4c3e] ${fontMedium}`}>
-              Save lecture
-            </button>
-          </div>
-          {titleIdeas && (
-            <div className="pop-in flex w-full flex-wrap items-center gap-2 rounded-[12px] border border-[#e9dfff] bg-[#faf7ff] p-2.5">
-              <span className={`flex items-center gap-1.5 pl-1 text-[12px] leading-[16px] text-[#6016fc] ${fontSemi}`}>
-                <Icon path={SPARKLE} className="size-3.5" filled />
-                Pick a title
-              </span>
-              {titleIdeas.length === 0 && <span className={`text-[13px] text-[#64748b] ${fontRegular}`}>No new ideas. Try again.</span>}
-              {titleIdeas.map((idea) => (
-                <button
-                  key={idea}
-                  type="button"
-                  onClick={() => {
-                    setTitle(idea);
-                    setTitleIdeas(null);
-                  }}
-                  className={`rounded-full border border-[#e2e8f0] bg-white px-3 py-1.5 text-left text-[13px] leading-[18px] text-[#0f172a] transition hover:border-[#6016fc]/50 hover:text-[#6016fc] ${fontMedium}`}
-                >
-                  {idea}
-                </button>
-              ))}
-              <span className="ml-auto flex items-center gap-1">
-                <button type="button" onClick={suggestTitle} disabled={titleLoading} className={`rounded-[8px] px-2 py-1 text-[12px] leading-[16px] text-[#6016fc] transition hover:bg-[#f0e9ff] disabled:opacity-60 ${fontMedium}`}>
-                  {titleLoading ? "Thinking…" : "Try again"}
-                </button>
-                <button type="button" aria-label="Close title ideas" onClick={() => setTitleIdeas(null)} className="flex size-7 items-center justify-center rounded-[8px] text-[#64748b] transition hover:bg-[#f0e9ff]">
-                  <Icon path={CLOSE} className="size-4" />
-                </button>
-              </span>
-            </div>
-          )}
+          <button
+            type="button"
+            aria-label="Close"
+            title="Close"
+            onClick={close}
+            className="-mr-1.5 flex size-9 shrink-0 items-center justify-center rounded-10 text-slate-500 transition hover:bg-slate-100 hover:text-slate-900"
+          >
+            <Icon path={CLOSE} className="size-5" />
+          </button>
         </div>
 
-        {/* One compact column: video, access, description, resources. */}
-        <div className="flex flex-col gap-3 px-5 py-4">
-            {lecture.kind === "Video" && (
-              <section className={card}>
-                {playing && videoUrl ? (
-                  <video src={videoUrl} controls autoPlay aria-label="Lecture video" className="aspect-video w-full rounded-[10px] bg-[#0f172a]" />
+        {/* One column: title, video, access, description, resources. */}
+        <div className="flex flex-col divide-y divide-slate-100 px-5">
+          <section className={card}>
+            <label
+              htmlFor="lecture-title"
+              className={`mb-1.5 block ${heading}`}
+            >
+              Title
+            </label>
+            {/* A standard field, so it reads as editable; the sparkle inside suggests titles. */}
+            <div className="field-box h-11 pr-1.5">
+              <input
+                id="lecture-title"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                placeholder="e.g. Welcome to the course"
+                className={`min-w-0 flex-1 bg-transparent text-base leading-5.5 text-slate-900 outline-none placeholder:text-slate-400 md:text-15 ${fontMedium}`}
+              />
+              <button
+                type="button"
+                aria-label="Suggest titles with AI"
+                title="Suggest titles with AI"
+                aria-expanded={!!titleIdeas}
+                onClick={suggestTitle}
+                disabled={titleLoading}
+                className={`flex h-8 shrink-0 items-center gap-1.5 rounded-lg px-2 text-13 leading-4.5 text-primary-700 transition hover:bg-primary-100 ${titleIdeas || titleLoading ? "bg-primary-100" : ""} ${fontMedium}`}
+              >
+                {titleLoading ? (
+                  spinner
                 ) : (
-                  <div className="flex items-center gap-4">
-                    <button
-                      type="button"
-                      aria-label="Play video"
-                      title={busy ? "You can play it when processing is complete" : videoUrl ? "Play video" : "This video can only be previewed in the session it was uploaded"}
-                      disabled={busy || !videoUrl}
-                      onClick={() => setPlaying(true)}
-                      className="group relative flex aspect-video w-[180px] shrink-0 items-center justify-center overflow-hidden rounded-[10px] bg-[linear-gradient(135deg,#0f172a,#1e1b4b)] text-white disabled:cursor-not-allowed"
+                  <Icon path={SPARKLE} className="size-4" filled />
+                )}
+                <span className="hidden sm:inline">
+                  {titleLoading ? "Thinking…" : "Ideas"}
+                </span>
+              </button>
+            </div>
+            {titleIdeas && (
+              <div className="pop-in mt-2 flex flex-wrap items-center gap-1.5 rounded-xl bg-primary-50 p-2">
+                {titleIdeas.length === 0 && (
+                  <span
+                    className={`px-1.5 text-13 text-slate-500 ${fontRegular}`}
+                  >
+                    No new ideas. Try again.
+                  </span>
+                )}
+                {titleIdeas.map((idea) => (
+                  <button
+                    key={idea}
+                    type="button"
+                    onClick={() => {
+                      setTitle(idea);
+                      setTitleIdeas(null);
+                    }}
+                    className={`rounded-full border border-primary-700/15 bg-white px-3 py-1.5 text-left text-13 leading-4.5 text-slate-900 transition hover:border-primary-700/50 hover:text-primary-700 ${fontMedium}`}
+                  >
+                    {idea}
+                  </button>
+                ))}
+                <span className="ml-auto flex items-center gap-0.5">
+                  <button
+                    type="button"
+                    onClick={suggestTitle}
+                    disabled={titleLoading}
+                    className={`rounded-lg px-2 py-1 text-xs leading-4 text-primary-700 transition hover:bg-primary-200 disabled:opacity-60 ${fontMedium}`}
+                  >
+                    {titleLoading ? "Thinking…" : "More"}
+                  </button>
+                  <button
+                    type="button"
+                    aria-label="Close title ideas"
+                    onClick={() => setTitleIdeas(null)}
+                    className="flex size-7 items-center justify-center rounded-lg text-slate-500 transition hover:bg-primary-200"
+                  >
+                    <Icon path={CLOSE} className="size-4" />
+                  </button>
+                </span>
+              </div>
+            )}
+          </section>
+          {lecture.kind === "Video" && (
+            <section className={card}>
+              {playing && previewSrc ? (
+                <div className="relative overflow-hidden rounded-10 bg-slate-900">
+                  <video
+                    src={previewSrc}
+                    controls
+                    autoPlay
+                    playsInline
+                    aria-label="Lecture video"
+                    className="aspect-video w-full"
+                  />
+                  {!videoUrl && (
+                    <span
+                      className={`pointer-events-none absolute left-2.5 top-2.5 rounded-full bg-black/55 px-2.5 py-1 text-11 leading-3.5 text-white backdrop-blur-sm ${fontMedium}`}
                     >
-                      {videoUrl && <video src={videoUrl} preload="metadata" muted aria-hidden="true" tabIndex={-1} className="absolute inset-0 size-full object-cover" />}
-                      <span aria-hidden="true" className="absolute inset-0 bg-black/20" />
-                      <span className="relative flex size-10 items-center justify-center rounded-full bg-white/95 text-[#0d5c4b] shadow-[0_8px_20px_-6px_rgba(0,0,0,0.5)] transition group-enabled:group-hover:scale-105">
-                        <Icon path={PLAY} className="ml-0.5 size-5" filled />
+                      Sample video · your upload plays here after publishing
+                    </span>
+                  )}
+                  <button
+                    type="button"
+                    aria-label="Close preview"
+                    onClick={() => setPlaying(false)}
+                    className="absolute right-2.5 top-2.5 flex size-8 items-center justify-center rounded-full bg-black/55 text-white backdrop-blur-sm transition hover:bg-black/75"
+                  >
+                    <Icon path={CLOSE} className="size-4" />
+                  </button>
+                </div>
+              ) : (
+                <div className="flex items-center gap-4">
+                  <button
+                    type="button"
+                    aria-label={previewSrc ? "Preview video" : "Upload a video"}
+                    title={
+                      busy
+                        ? "You can preview it when processing is complete"
+                        : previewSrc
+                          ? "Preview video"
+                          : "Upload a video"
+                    }
+                    disabled={busy}
+                    onClick={() =>
+                      previewSrc ? setPlaying(true) : onUpdateVideo()
+                    }
+                    className="group relative flex aspect-video w-45 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-video-cover text-white ring-1 ring-black/5 transition hover:shadow-primary-glow disabled:cursor-not-allowed"
+                  >
+                    {videoUrl && (
+                      <video
+                        src={videoUrl}
+                        preload="metadata"
+                        muted
+                        aria-hidden="true"
+                        tabIndex={-1}
+                        className="absolute inset-0 size-full object-cover transition duration-300 group-hover:scale-105"
+                      />
+                    )}
+                    {/* Soft vignette so the button and the time label read on any frame. */}
+                    <span
+                      aria-hidden="true"
+                      className="absolute inset-0 bg-linear-to-b from-black/5 from-40% to-black/45"
+                    />
+                    {previewSrc ? (
+                      <span className="relative flex size-12 items-center justify-center rounded-full bg-white/20 ring-1 ring-white/50 backdrop-blur-md transition duration-200 group-enabled:group-hover:scale-110 group-enabled:group-hover:bg-white">
+                        <svg
+                          viewBox="0 0 24 24"
+                          className="ml-0.5 size-5 text-white transition group-enabled:group-hover:text-primary-700"
+                          fill="currentColor"
+                          aria-hidden="true"
+                        >
+                          <path d="M8 5.6v12.8c0 .9 1 1.5 1.8 1l10-6.4a1.2 1.2 0 000-2L9.8 4.6C9 4.1 8 4.7 8 5.6z" />
+                        </svg>
                       </span>
-                      {lecture.duration && <span className={`absolute bottom-1.5 right-1.5 rounded-[6px] bg-black/60 px-1.5 py-0.5 text-[11px] leading-[14px] tabular-nums ${fontMedium}`}>{lecture.duration}</span>}
-                    </button>
-                    <div className="min-w-0 flex-1">
-                      <p className={`m-0 truncate text-[14px] leading-[20px] text-[#0f172a] ${fontSemi}`} title={lecture.file}>
-                        {lecture.file ?? "No video yet"}
-                      </p>
-                      <p className={`${hint} mt-0.5`}>MP4, MOV or WEBM, up to {MAX_LECTURE_VIDEO_MB} MB</p>
-                      <div className="mt-2.5">
-                        <ActionMenu
-                          alignLeft
-                          label="Update Video"
-                          triggerClass={`flex h-8 items-center gap-1.5 rounded-[8px] border border-[#e2e8f0] bg-white px-2.5 text-[13px] leading-[18px] text-[#334155] transition hover:bg-[#f8fafc] ${fontMedium}`}
-                          trigger={
-                            <>
-                              Replace video
-                              <Icon path={DOWN} className="size-4" />
-                            </>
-                          }
-                          items={[
-                            { label: "Upload a new video", onClick: onUpdateVideo },
-                            { label: "Add from Library", onClick: onLibrary },
-                          ]}
-                        />
-                      </div>
+                    ) : (
+                      <span className="relative flex flex-col items-center gap-1.5">
+                        <span className="flex size-10 items-center justify-center rounded-full bg-white/15 ring-1 ring-white/40 backdrop-blur-md transition group-hover:bg-white group-hover:text-primary-700">
+                          <Icon
+                            path="M12 16V5M7 10l5-5 5 5M5 19h14"
+                            className="size-5"
+                          />
+                        </span>
+                        <span
+                          className={`text-11 leading-3.5 text-white/85 ${fontMedium}`}
+                        >
+                          Upload video
+                        </span>
+                      </span>
+                    )}
+                    {previewSrc && !busy && (
+                      <span
+                        className={`absolute bottom-1.5 left-1.5 rounded-md bg-black/55 px-1.5 py-0.5 text-11 leading-3.5 opacity-0 backdrop-blur-sm transition group-hover:opacity-100 ${fontMedium}`}
+                      >
+                        Preview
+                      </span>
+                    )}
+                    {lecture.duration && (
+                      <span
+                        className={`absolute bottom-1.5 right-1.5 rounded-md bg-black/60 px-1.5 py-0.5 text-11 leading-3.5 tabular-nums ${fontMedium}`}
+                      >
+                        {lecture.duration}
+                      </span>
+                    )}
+                  </button>
+                  <div className="min-w-0 flex-1">
+                    <p
+                      className={`m-0 truncate text-sm leading-5 text-slate-900 ${fontSemi}`}
+                      title={lecture.file}
+                    >
+                      {lecture.file ?? "No video yet"}
+                    </p>
+                    <p className={`${hint} mt-0.5`}>
+                      MP4, MOV or WEBM, up to {MAX_LECTURE_VIDEO_MB} MB
+                    </p>
+                    <div className="mt-2.5">
+                      <ActionMenu
+                        alignLeft
+                        label="Update Video"
+                        triggerClass={`flex h-8 items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-2.5 text-13 leading-4.5 text-slate-700 transition hover:bg-slate-50 ${fontMedium}`}
+                        trigger={
+                          <>
+                            Replace video
+                            <Icon path={DOWN} className="size-4" />
+                          </>
+                        }
+                        items={[
+                          {
+                            label: "Upload a new video",
+                            onClick: onUpdateVideo,
+                          },
+                          { label: "Add from Library", onClick: onLibrary },
+                        ]}
+                      />
                     </div>
                   </div>
-                )}
-                {busy && (
-                  <div role="status" className="mt-3">
-                    <p className={`m-0 flex items-center justify-between gap-3 text-[12px] leading-[18px] text-[#0d5c4b] ${fontMedium}`}>
-                      <span>{uploadProgress < 100 ? "Uploading your video…" : "Processing your video…"}</span>
-                      {uploadProgress < 100 && <span className="tabular-nums">{uploadProgress}%</span>}
-                    </p>
-                    <span aria-hidden="true" className="mt-1.5 block h-1.5 overflow-hidden rounded-full bg-[#d6ebe2]">
-                      <span className={`block h-full rounded-full bg-[#0d5c4b] transition-[width] ${uploadProgress >= 100 ? "animate-pulse" : ""}`} style={{ width: `${Math.min(uploadProgress, 100)}%` }} />
-                    </span>
-                  </div>
-                )}
-              </section>
-            )}
-            <section className={card}>
-              <h3 className={heading}>Who can watch</h3>
-              <p className={hint}>Free previews help students decide before they buy.</p>
-              <div className="mt-2.5 grid gap-2 sm:grid-cols-2" role="radiogroup" aria-label="Item preview">
-                {options.map((option) => {
-                  const on = preview === option.value;
-                  return (
-                    <label key={option.title} className={`flex cursor-pointer items-start gap-2.5 rounded-[12px] border p-3 transition has-[:focus-visible]:ring-3 has-[:focus-visible]:ring-[#0d5c4b]/20 ${on ? "border-[#0d5c4b] bg-[#f4faf7] shadow-[0_0_0_1px_#0d5c4b]" : "border-[#e2e8f0] bg-white hover:border-[#cbd5e1]"}`}>
-                      <input type="radio" name="lecture-preview" checked={on} onChange={() => setPreview(option.value)} className="sr-only" />
-                      <span className={`flex size-8 shrink-0 items-center justify-center rounded-[9px] ${on ? "bg-[#0d5c4b] text-white" : "bg-[#f1f5f9] text-[#475569]"}`}>
-                        <HugeiconsIcon icon={option.icon} size={16} strokeWidth={1.8} aria-hidden="true" />
-                      </span>
-                      <span className="min-w-0 flex-1">
-                        <span className={`block text-[13px] leading-[18px] text-[#0f172a] ${fontSemi}`}>{option.title}</span>
-                        <span className={`mt-0.5 block text-[12px] leading-[17px] text-[#64748b] ${fontRegular}`}>{option.text}</span>
-                      </span>
-                    </label>
-                  );
-                })}
-              </div>
-            </section>
-            <section className={card}>
-              <h3 className={heading}>
-                <label htmlFor="lecture-description">Description</label>
-              </h3>
-              <p className={hint}>Tell students what this lecture covers.</p>
-              {/* Composer: text, counter and AI in one box that lights up while typing. */}
-              <div className="mt-2.5 overflow-hidden rounded-[12px] border border-[#e2e8f0] bg-white shadow-[0_1px_2px_rgba(15,23,42,0.04)] transition focus-within:border-[#0d5c4b]/60 focus-within:shadow-[0_0_0_3px_rgba(13,92,75,0.12)] hover:border-[#cbd5e1]">
-                <textarea
-                  id="lecture-description"
-                  rows={lecture.kind === "Video" ? 4 : 7}
-                  maxLength={LECTURE_DESCRIPTION_LIMIT}
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
-                  placeholder="What will students learn or build in this lecture?"
-                  className={`block w-full resize-none bg-transparent px-3.5 pb-2 pt-3 text-[14px] leading-[22px] text-[#0f172a] outline-none placeholder:text-[#94a3b8] ${fontRegular}`}
-                />
-                <div className="flex items-center justify-between gap-3 border-t border-[#f1f5f9] bg-[#fbfcfd] px-2.5 py-2">
-                  <span className={`flex items-center gap-2 pl-1 text-[12px] leading-[16px] tabular-nums ${description.length > LECTURE_DESCRIPTION_LIMIT * 0.9 ? "text-[#b45309]" : "text-[#94a3b8]"} ${fontMedium}`}>
-                    {/* Ring fills as the limit gets closer. */}
-                    <svg viewBox="0 0 20 20" className="size-4 -rotate-90" aria-hidden="true">
-                      <circle cx="10" cy="10" r="8" fill="none" stroke="#e2e8f0" strokeWidth="2.5" />
-                      <circle cx="10" cy="10" r="8" fill="none" stroke={description.length > LECTURE_DESCRIPTION_LIMIT * 0.9 ? "#f59e0b" : "#0d5c4b"} strokeWidth="2.5" strokeLinecap="round" strokeDasharray={`${(description.length / LECTURE_DESCRIPTION_LIMIT) * 50.27} 50.27`} className="transition-[stroke-dasharray]" />
-                    </svg>
-                    {LECTURE_DESCRIPTION_LIMIT - description.length} characters left
-                  </span>
-                  <span className="flex items-center gap-1.5">
-                    {previousDescription !== null && !descLoading && (
-                      <button
-                        type="button"
-                        onClick={() => {
-                          window.clearInterval(typing.current);
-                          setDescription(previousDescription);
-                          setPreviousDescription(null);
-                        }}
-                        className={`h-8 rounded-[8px] px-2.5 text-[13px] leading-[18px] text-[#475569] transition hover:bg-[#f1f5f9] ${fontMedium}`}
-                      >
-                        Undo
-                      </button>
-                    )}
-                    <button type="button" onClick={writeDescription} disabled={descLoading} className={`flex h-8 items-center gap-1.5 rounded-[8px] bg-[linear-gradient(135deg,#7c3aed,#6016fc)] px-3 text-[13px] leading-[18px] text-white shadow-[0_6px_16px_-8px_rgba(96,22,252,0.7)] transition hover:brightness-110 disabled:opacity-70 ${fontMedium}`}>
-                      {descLoading ? spinner : <Icon path={SPARKLE} className="size-3.5" filled />}
-                      {descLoading ? "Writing…" : description.trim() ? "Rewrite with AI" : "Write with AI"}
-                    </button>
-                  </span>
                 </div>
-              </div>
-            </section>
-            <section className={card}>
-              <div className="flex items-center justify-between gap-3">
-                <div>
-                  <h3 className={heading}>Downloadable resources</h3>
-                  <p className={hint}>Slides, worksheets or source files.</p>
-                </div>
-                <button type="button" onClick={() => fileRef.current?.click()} className={`flex h-8 shrink-0 items-center gap-1.5 rounded-[8px] border border-[#e2e8f0] bg-white px-2.5 text-[13px] leading-[18px] text-[#334155] transition hover:border-[#0d5c4b]/50 hover:text-[#0d5c4b] ${fontMedium}`}>
-                  <HugeiconsIcon icon={Attachment01Icon} size={16} strokeWidth={1.8} aria-hidden="true" />
-                  Attach files
-                </button>
-              </div>
-              {resources.length > 0 ? (
-                // Long lists scroll inside this box, so the drawer itself stays still.
-                <ul className="mt-3 flex max-h-[176px] flex-col gap-1.5 overflow-y-auto">
-                  {resources.map((file) => (
-                    <li key={file.id} className="group flex items-center gap-2.5 rounded-[10px] border border-[#eef1f4] bg-[#fbfcfd] px-2.5 py-1.5">
-                      <span aria-hidden="true" className="flex size-7 shrink-0 items-center justify-center rounded-[8px] bg-[#eff6ff] text-[#1d4ed8]">
-                        <HugeiconsIcon icon={File02Icon} size={15} strokeWidth={1.8} />
-                      </span>
-                      <span className={`min-w-0 flex-1 truncate text-[13px] leading-[18px] text-[#0f172a] ${fontMedium}`}>{file.name}</span>
-                      <span className={`shrink-0 rounded-full bg-[#f1f5f9] px-1.5 py-0.5 text-[10px] uppercase leading-[14px] text-[#475569] ${fontSemi}`}>{file.name.split(".").pop()}</span>
-                      <button type="button" aria-label={`Remove ${file.name}`} onClick={() => setResources(resources.filter((f) => f.id !== file.id))} className="flex size-7 shrink-0 items-center justify-center rounded-[7px] text-[#64748b] opacity-0 transition hover:bg-[#fef2f2] hover:text-[#dc2626] focus:opacity-100 group-hover:opacity-100 pointer-coarse:opacity-100">
-                        <Icon path={TRASH} className="size-4" />
-                      </button>
-                    </li>
-                  ))}
-                </ul>
-              ) : (
-                <button type="button" onClick={() => fileRef.current?.click()} className={`mt-3 flex h-11 w-full items-center justify-center gap-2 rounded-[10px] border border-dashed border-[#cbd5e1] bg-[#fbfcfd] text-[13px] leading-[18px] text-[#64748b] transition hover:border-[#0d5c4b]/50 hover:bg-[#f4faf7] hover:text-[#0d5c4b] ${fontRegular}`}>
-                  No files yet. Click to attach.
-                </button>
               )}
-              <input
-                ref={fileRef}
-                type="file"
-                multiple
-                hidden
-                aria-label="Choose resource files"
-                onChange={(e) => {
-                  const picked = [...(e.target.files ?? [])].map((f) => ({ id: uid("resource"), name: f.name }));
-                  setResources((list) => [...list, ...picked]);
-                  e.target.value = "";
-                }}
-              />
+              {busy && (
+                <div role="status" className="mt-3">
+                  <p
+                    className={`m-0 flex items-center justify-between gap-3 text-xs leading-4.5 text-primary-700 ${fontMedium}`}
+                  >
+                    <span>
+                      {uploadProgress < 100
+                        ? "Uploading your video…"
+                        : "Processing your video…"}
+                    </span>
+                    {uploadProgress < 100 && (
+                      <span className="tabular-nums">{uploadProgress}%</span>
+                    )}
+                  </p>
+                  <span
+                    aria-hidden="true"
+                    className="mt-1.5 block h-1.5 overflow-hidden rounded-full bg-primary-300"
+                  >
+                    <span
+                      className={`block h-full rounded-full bg-primary-700 transition-all ${uploadProgress >= 100 ? "animate-pulse" : ""}`}
+                      style={{ width: `${Math.min(uploadProgress, 100)}%` }}
+                    />
+                  </span>
+                </div>
+              )}
             </section>
+          )}
+          {/* Access is a single yes/no, so it is one switch row instead of two option cards. */}
+          <section
+            className={`${card} flex items-center justify-between gap-4`}
+          >
+            <div className="min-w-0">
+              <h3 className={heading}>Free preview</h3>
+              <p className={hint}>
+                {preview
+                  ? "Anyone can watch this lecture before they enroll."
+                  : "Only enrolled students can watch this lecture."}
+              </p>
+            </div>
+            <Toggle
+              on={preview}
+              label="Free preview"
+              onChange={() => setPreview((v) => !v)}
+            />
+          </section>
+          <section className={card}>
+            <h3 className={heading}>
+              <label htmlFor="lecture-description">Description</label>
+            </h3>
+            <p className={hint}>Tell students what this lecture covers.</p>
+            {/* Composer: text, counter and AI in one box that lights up while typing. */}
+            <div className="mt-2.5 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-xs transition focus-within:border-primary-700/60 focus-within:ring-3 focus-within:ring-primary-700/12 hover:border-slate-300">
+              <textarea
+                id="lecture-description"
+                rows={lecture.kind === "Video" ? 4 : 7}
+                maxLength={LECTURE_DESCRIPTION_LIMIT}
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                placeholder="What will students learn or build in this lecture?"
+                className={`block w-full resize-none bg-transparent px-3.5 pb-2 pt-3 text-sm leading-5.5 text-slate-900 outline-none placeholder:text-slate-400 ${fontRegular}`}
+              />
+              <div className="flex items-center justify-between gap-3 border-t border-slate-100 bg-slate-25 px-2.5 py-2">
+                <span
+                  className={`flex items-center gap-2 pl-1 text-xs leading-4 tabular-nums ${description.length > LECTURE_DESCRIPTION_LIMIT * 0.9 ? "text-amber-700" : "text-slate-400"} ${fontMedium}`}
+                >
+                  {/* Ring fills as the limit gets closer. */}
+                  <svg
+                    viewBox="0 0 20 20"
+                    className="size-4 -rotate-90"
+                    aria-hidden="true"
+                  >
+                    <circle
+                      cx="10"
+                      cy="10"
+                      r="8"
+                      fill="none"
+                      stroke="#e2e8f0"
+                      strokeWidth="2.5"
+                    />
+                    <circle
+                      cx="10"
+                      cy="10"
+                      r="8"
+                      fill="none"
+                      stroke={
+                        description.length > LECTURE_DESCRIPTION_LIMIT * 0.9
+                          ? "#f59e0b"
+                          : "#0d5c4b"
+                      }
+                      strokeWidth="2.5"
+                      strokeLinecap="round"
+                      strokeDasharray={`${(description.length / LECTURE_DESCRIPTION_LIMIT) * 50.27} 50.27`}
+                      className="transition-all"
+                    />
+                  </svg>
+                  {LECTURE_DESCRIPTION_LIMIT - description.length} characters
+                  left
+                </span>
+                <span className="flex items-center gap-1.5">
+                  {previousDescription !== null && !descLoading && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        window.clearInterval(typing.current);
+                        setDescription(previousDescription);
+                        setPreviousDescription(null);
+                      }}
+                      className={`h-8 rounded-lg px-2.5 text-13 leading-4.5 text-slate-600 transition hover:bg-slate-100 ${fontMedium}`}
+                    >
+                      Undo
+                    </button>
+                  )}
+                  <button
+                    type="button"
+                    onClick={writeDescription}
+                    disabled={descLoading}
+                    className={`flex h-8 items-center gap-1.5 rounded-lg px-2.5 text-13 leading-4.5 text-primary-700 transition hover:bg-primary-100 disabled:opacity-70 ${fontMedium}`}
+                  >
+                    {descLoading ? (
+                      spinner
+                    ) : (
+                      <Icon path={SPARKLE} className="size-3.5" filled />
+                    )}
+                    {descLoading
+                      ? "Writing…"
+                      : description.trim()
+                        ? "Rewrite with AI"
+                        : "Write with AI"}
+                  </button>
+                </span>
+              </div>
+            </div>
+          </section>
+          <section className={card}>
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <h3 className={heading}>Downloadable resources</h3>
+                <p className={hint}>Slides, worksheets or source files.</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => fileRef.current?.click()}
+                className={`flex h-8 shrink-0 items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-2.5 text-13 leading-4.5 text-slate-700 transition hover:border-primary-700/50 hover:text-primary-700 ${fontMedium}`}
+              >
+                <HugeiconsIcon
+                  icon={Attachment01Icon}
+                  size={16}
+                  strokeWidth={1.8}
+                  aria-hidden="true"
+                />
+                Attach files
+              </button>
+            </div>
+            {resources.length > 0 ? (
+              // Long lists scroll inside this box, so the drawer itself stays still.
+              <ul className="mt-3 flex max-h-44 flex-col gap-1.5 overflow-y-auto">
+                {resources.map((file) => (
+                  <li
+                    key={file.id}
+                    className="group flex items-center gap-2.5 rounded-10 border border-slate-150 bg-slate-25 px-2.5 py-1.5"
+                  >
+                    <span
+                      aria-hidden="true"
+                      className="flex size-7 shrink-0 items-center justify-center rounded-lg bg-blue-50 text-blue-700"
+                    >
+                      <HugeiconsIcon
+                        icon={File02Icon}
+                        size={15}
+                        strokeWidth={1.8}
+                      />
+                    </span>
+                    <span
+                      className={`min-w-0 flex-1 truncate text-13 leading-4.5 text-slate-900 ${fontMedium}`}
+                    >
+                      {file.name}
+                    </span>
+                    <span
+                      className={`shrink-0 rounded-full bg-slate-100 px-1.5 py-0.5 text-10 uppercase leading-3.5 text-slate-600 ${fontSemi}`}
+                    >
+                      {file.name.split(".").pop()}
+                    </span>
+                    <button
+                      type="button"
+                      aria-label={`Remove ${file.name}`}
+                      onClick={() =>
+                        setResources(resources.filter((f) => f.id !== file.id))
+                      }
+                      className="flex size-7 shrink-0 items-center justify-center rounded-md text-slate-500 opacity-0 transition hover:bg-red-50 hover:text-red-600 focus:opacity-100 group-hover:opacity-100 pointer-coarse:opacity-100"
+                    >
+                      <Icon path={TRASH} className="size-4" />
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <button
+                type="button"
+                onClick={() => fileRef.current?.click()}
+                className={`mt-3 flex h-11 w-full items-center justify-center gap-2 rounded-10 border border-dashed border-slate-300 bg-slate-25 text-13 leading-4.5 text-slate-500 transition hover:border-primary-700/50 hover:bg-primary-50 hover:text-primary-700 ${fontRegular}`}
+              >
+                No files yet. Click to attach.
+              </button>
+            )}
+            <input
+              ref={fileRef}
+              type="file"
+              multiple
+              hidden
+              aria-label="Choose resource files"
+              onChange={(e) => {
+                const picked = [...(e.target.files ?? [])].map((f) => ({
+                  id: uid("resource"),
+                  name: f.name,
+                }));
+                setResources((list) => [...list, ...picked]);
+                e.target.value = "";
+              }}
+            />
+          </section>
+        </div>
+        {/* Actions live in a footer that stays at the bottom of the drawer. */}
+        <div className="sticky bottom-0 z-10 mt-auto flex items-center gap-3 border-t border-slate-150 bg-white/95 px-5 py-3 backdrop-blur-sm">
+          <p
+            className={`m-0 min-w-0 flex-1 truncate text-13 leading-4.5 ${dirty ? "text-amber-700" : "text-slate-400"} ${fontRegular}`}
+          >
+            {dirty ? "Unsaved changes" : "No changes yet"}
+          </p>
+          <button
+            type="button"
+            onClick={close}
+            className={`h-10 rounded-10 px-4 text-sm leading-5 text-slate-600 transition hover:bg-slate-100 hover:text-slate-900 ${fontMedium}`}
+          >
+            Cancel
+          </button>
+          <button
+            type="button"
+            onClick={save}
+            className={`h-10 rounded-10 bg-primary-700 px-5 text-sm leading-5 text-white shadow-primary-button transition hover:bg-primary-800 ${fontMedium}`}
+          >
+            Save lecture
+          </button>
         </div>
       </div>
+      {confirmClose && (
+        <ConfirmDialog
+          title="Discard your lecture changes?"
+          body="Anything you changed since opening this lecture will be lost."
+          confirmLabel="Discard changes"
+          onClose={() => setConfirmClose(false)}
+          onConfirm={onCancel}
+        />
+      )}
     </Shell>
   );
 }
 
-const blankOption = (correct = false): QuizOption => ({ id: uid("option"), text: "", explanation: "", correct, saved: false });
-const blankQuestion = (): QuizQuestion => ({ id: uid("question"), text: "", relatedLecture: "", required: false, randomise: false, multiple: false, options: [blankOption(true), blankOption()] });
+const blankOption = (correct = false): QuizOption => ({
+  id: uid("option"),
+  text: "",
+  explanation: "",
+  correct,
+  saved: false,
+});
+const questionKind = (q: QuizQuestion): QuestionKind => q.type ?? (q.multiple ? "multi" : "choice");
+// What each question type is called, how it is marked and what the editor says about it.
+const QUESTION_KINDS: Record<QuestionKind, { label: string; hint: string; icon: string; list: string; help: string; add: string; min: number }> = {
+  choice: { label: "Multiple choice", hint: "One correct answer", icon: "M12 21a9 9 0 100-18 9 9 0 000 18zM12 15a3 3 0 100-6 3 3 0 000 6z", list: "Answers", help: "Click the circle next to the correct answer.", add: "Add answer", min: 2 },
+  multi: { label: "Checkboxes", hint: "Several correct answers", icon: "M5 4h14a1 1 0 011 1v14a1 1 0 01-1 1H5a1 1 0 01-1-1V5a1 1 0 011-1zM8 12l3 3 5-6", list: "Answers", help: "Tick every correct answer.", add: "Add answer", min: 2 },
+  truefalse: { label: "True or false", hint: "A statement to judge", icon: "M3 12l3 3 5-6M14 9l6 6M20 9l-6 6", list: "Answer", help: "Pick whether the statement is true or false.", add: "", min: 2 },
+  blank: { label: "Fill in the blank", hint: "Learners type the missing word", icon: "M4 7h16M4 17h5M15 17h5M10 17h4", list: "Accepted answers", help: "Any of these counts as correct. Capital letters are ignored.", add: "Add another accepted answer", min: 1 },
+  order: { label: "Put in order", hint: "Learners arrange the steps", icon: "M10 6h10M10 12h10M10 18h10M4 6h2M4 12h2M4 18h2", list: "Items in the correct order", help: "Learners see these shuffled and put them back in this order.", add: "Add item", min: 2 },
+};
+const KIND_ORDER: QuestionKind[] = ["choice", "multi", "truefalse", "blank", "order"];
+const trueFalseOptions = (trueIsCorrect = true): QuizOption[] => [
+  { ...blankOption(trueIsCorrect), text: "True", saved: true },
+  { ...blankOption(!trueIsCorrect), text: "False", saved: true },
+];
+const blankQuestion = (kind: QuestionKind = "choice"): QuizQuestion => ({
+  id: uid("question"),
+  type: kind,
+  text: "",
+  relatedLecture: "",
+  required: false,
+  randomise: false,
+  multiple: kind === "multi",
+  options:
+    kind === "truefalse"
+      ? trueFalseOptions()
+      : kind === "blank"
+        ? [blankOption(true)]
+        : kind === "order"
+          ? [blankOption(true), blankOption(true), blankOption(true)]
+          : [blankOption(true), blankOption()],
+});
+// What is still missing before a question is ready, or "" when it is ready.
+const questionMissing = (q: QuizQuestion) => {
+  const kind = questionKind(q);
+  const written = q.options.filter((o) => o.text.trim()).length;
+  if (!q.text.trim()) return kind === "truefalse" ? "Write the statement" : "Write the question";
+  if (kind === "blank") return written < 1 ? "Add an accepted answer" : "";
+  if (kind === "order") return written < 2 ? "Add at least two items" : "";
+  if (written < 2) return "Add at least two answers";
+  return q.options.some((o) => o.correct && o.text.trim()) ? "" : "Mark the correct answer";
+};
 // A question is ready when it has text, at least two written answers and a correct one among them.
-const questionReady = (q: QuizQuestion) => !!q.text.trim() && q.options.filter((o) => o.text.trim()).length >= 2 && q.options.some((o) => o.correct && o.text.trim());
-const fromDraft = (d: QuizDraft): QuizQuestion => ({ ...blankQuestion(), text: d.text, options: d.options.map((o) => ({ id: uid("option"), text: o.text, explanation: o.explanation, correct: o.correct, saved: true })) });
+const questionReady = (q: QuizQuestion) => !questionMissing(q);
+const fromDraft = (d: QuizDraft): QuizQuestion => ({
+  ...blankQuestion(),
+  text: d.text,
+  options: d.options.map((o) => ({
+    id: uid("option"),
+    text: o.text,
+    explanation: o.explanation,
+    correct: o.correct,
+    saved: true,
+  })),
+});
 
-function QuizDrawer({ lecture, context, lectureOptions, onCancel, onSave }: { lecture: Lecture; context: LectureContext; lectureOptions: { id: string; label: string }[]; onCancel: () => void; onSave: (patch: Partial<Lecture>) => void }) {
+// The left-rail id for the instructions page, so it can share selection with the questions.
+const QUIZ_INSTRUCTIONS = "__instructions";
+const QUIZ_RULES_TEMPLATE = [
+  "Read each question carefully before you answer.",
+  "Answer on your own. Do not use AI tools or search the internet.",
+  "Some questions have more than one correct answer. Tick every one that applies.",
+  "Your answers are saved when you move to the next question.",
+  "Finish every required question before you submit.",
+];
+const quizRulesHtml = () =>
+  `<ol>${QUIZ_RULES_TEMPLATE.map((r) => `<li>${r}</li>`).join("")}</ol>`;
+
+function QuizDrawer({
+  lecture,
+  context,
+  lectureOptions,
+  onCancel,
+  onSave,
+}: {
+  lecture: Lecture;
+  context: LectureContext;
+  lectureOptions: { id: string; label: string }[];
+  onCancel: () => void;
+  onSave: (patch: Partial<Lecture>) => void;
+}) {
   const { notify } = useApp();
-  const defaults: QuizSettings = { passScore: "", retakes: true, shuffle: false };
+  const defaults: QuizSettings = {
+    passScore: "",
+    retakes: true,
+    shuffle: false,
+  };
   const [title, setTitle] = useState(lecture.title);
-  const [questions, setQuestions] = useState<QuizQuestion[]>(lecture.questions ?? []);
-  const [settings, setSettings] = useState<QuizSettings>(lecture.quizSettings ?? defaults);
-  const [activeId, setActiveId] = useState(lecture.questions?.[0]?.id ?? "");
+  const [questions, setQuestions] = useState<QuizQuestion[]>(
+    lecture.questions ?? [],
+  );
+  const [settings, setSettings] = useState<QuizSettings>(
+    lecture.quizSettings ?? defaults,
+  );  const [activeId, setActiveId] = useState(lecture.questions?.[0]?.id ?? "");
+  const [typeMenu, setTypeMenu] = useState(false);
+  // The settings panel can fold away to give the question more room. The choice is remembered.
+  const [settingsOpen, setSettingsOpenState] = useState(() => {
+    try {
+      return localStorage.getItem("thkee.quizSettingsPanel") !== "closed";
+    } catch {
+      return true;
+    }
+  });
+  const setSettingsOpen = (open: boolean) => {
+    setSettingsOpenState(open);
+    try {
+      localStorage.setItem("thkee.quizSettingsPanel", open ? "open" : "closed");
+    } catch {
+      /* storage can be unavailable */
+    }
+  };
+  const [instructions, setInstructions] = useState(
+    lecture.quizInstructions ?? { text: "", html: "" },
+  );
+  const [rulesKey, setRulesKey] = useState(0);
+  const onInstructions = activeId === QUIZ_INSTRUCTIONS;
+  const hasInstructions = !!instructions.text.trim();
   const [openExplain, setOpenExplain] = useState<Record<string, boolean>>({});
   const [confirmLeave, setConfirmLeave] = useState(false);
   const [removingId, setRemovingId] = useState("");
@@ -1676,13 +3384,30 @@ function QuizDrawer({ lecture, context, lectureOptions, onCancel, onSave }: { le
   const [titleIdeas, setTitleIdeas] = useState<string[] | null>(null);
   const answerRefs = useRef<Record<string, HTMLInputElement | null>>({});
   const focusNext = useRef("");
-  const activeIndex = questions.findIndex((q) => q.id === activeId);
-  const active = questions[activeIndex];
+  const activeIndex = questions.findIndex((q) => q.id === activeId);  const active = questions[activeIndex];
+  const kind = active ? questionKind(active) : "choice";
+  const meta = QUESTION_KINDS[kind];
+  // Choice-style questions mark correct answers; blanks and ordering treat every row as correct.
+  const marks = kind === "choice" || kind === "multi" || kind === "truefalse";
   const ready = questions.filter(questionReady).length;
-  const dirty = title !== lecture.title || JSON.stringify(questions) !== JSON.stringify(lecture.questions ?? []) || JSON.stringify(settings) !== JSON.stringify(lecture.quizSettings ?? defaults);
+  const dirty =
+    title !== lecture.title ||
+    JSON.stringify(questions) !== JSON.stringify(lecture.questions ?? []) ||
+    JSON.stringify(settings) !==
+      JSON.stringify(lecture.quizSettings ?? defaults) ||
+    instructions.html !== (lecture.quizInstructions?.html ?? "");
   const close = () => (dirty ? setConfirmLeave(true) : onCancel());
-  const patchActive = (patch: Partial<QuizQuestion>) => setQuestions((list) => list.map((q) => (q.id === activeId ? { ...q, ...patch } : q)));
-  const patchOption = (id: string, patch: Partial<QuizOption>) => active && patchActive({ options: active.options.map((o) => (o.id === id ? { ...o, ...patch } : o)) });
+  const patchActive = (patch: Partial<QuizQuestion>) =>
+    setQuestions((list) =>
+      list.map((q) => (q.id === activeId ? { ...q, ...patch } : q)),
+    );
+  const patchOption = (id: string, patch: Partial<QuizOption>) =>
+    active &&
+    patchActive({
+      options: active.options.map((o) =>
+        o.id === id ? { ...o, ...patch } : o,
+      ),
+    });
 
   // Puts the cursor in a new answer after it appears.
   useEffect(() => {
@@ -1690,66 +3415,171 @@ function QuizDrawer({ lecture, context, lectureOptions, onCancel, onSave }: { le
     focusNext.current = "";
   });
 
-  const addQuestion = () => {
-    const question = blankQuestion();
+  // Only one empty question at a time: if one exists, take the instructor there instead of adding another.
+  const isBlank = (q: QuizQuestion) =>
+    !q.text.trim() && (questionKind(q) === "truefalse" || q.options.every((o) => !o.text.trim()));
+  const addQuestion = (kind: QuestionKind = "choice") => {
+    setTypeMenu(false);
+    const blank = questions.find(isBlank);
+    if (blank) {
+      setActiveId(blank.id);
+      notify("Finish this question before adding a new one");
+      window.setTimeout(
+        () => document.getElementById("quiz-question")?.focus(),
+        0,
+      );
+      return;
+    }    const question = blankQuestion(kind);
     setQuestions((list) => [...list, question]);
     setActiveId(question.id);
+    window.setTimeout(
+      () => document.getElementById("quiz-question")?.focus(),
+      0,
+    );
   };
   const addAnswer = () => {
-    if (!active) return;
-    const option = blankOption();
+    if (!active) return;    const option = blankOption(!marks);
     focusNext.current = option.id;
     patchActive({ options: [...active.options, option] });
-  };
-  const removeAnswer = (id: string) => {
-    if (!active || active.options.length <= 2) return;
+  };  const removeAnswer = (id: string) => {
+    if (!active || active.options.length <= QUESTION_KINDS[questionKind(active)].min) return;
     const options = active.options.filter((o) => o.id !== id);
-    if (!options.some((o) => o.correct)) options[0] = { ...options[0], correct: true };
+    if (!options.some((o) => o.correct))
+      options[0] = { ...options[0], correct: true };
     patchActive({ options });
   };
   const removeQuestion = (id: string) => {
     const index = questions.findIndex((q) => q.id === id);
     const next = questions.filter((q) => q.id !== id);
     setQuestions(next);
-    if (id === activeId) setActiveId(next[Math.min(index, next.length - 1)]?.id ?? "");
+    if (id === activeId)
+      setActiveId(next[Math.min(index, next.length - 1)]?.id ?? "");
     setRemovingId("");
   };
   const setCorrect = (optionId: string) => {
     if (!active) return;
-    if (!active.multiple) return patchActive({ options: active.options.map((o) => ({ ...o, correct: o.id === optionId })) });
+    if (!active.multiple)
+      return patchActive({
+        options: active.options.map((o) => ({
+          ...o,
+          correct: o.id === optionId,
+        })),
+      });
     const target = active.options.find((o) => o.id === optionId);
-    if (target?.correct && active.options.filter((o) => o.correct).length === 1) return notify("Keep at least one correct answer");
-    patchActive({ options: active.options.map((o) => (o.id === optionId ? { ...o, correct: !o.correct } : o)) });
+    if (target?.correct && active.options.filter((o) => o.correct).length === 1)
+      return notify("Keep at least one correct answer");
+    patchActive({
+      options: active.options.map((o) =>
+        o.id === optionId ? { ...o, correct: !o.correct } : o,
+      ),
+    });
   };
   const setMultiple = (multiple: boolean) => {
     if (!active || active.multiple === multiple) return;
     if (multiple) return patchActive({ multiple: true });
     const firstCorrect = active.options.find((o) => o.correct)?.id;
-    patchActive({ multiple: false, options: active.options.map((o) => ({ ...o, correct: o.id === firstCorrect })) });
+    patchActive({
+      multiple: false,
+      options: active.options.map((o) => ({
+        ...o,
+        correct: o.id === firstCorrect,
+      })),
+    });
+  };  // Switching type keeps what was written where it still makes sense.
+  const setKind = (kind: QuestionKind) => {
+    if (!active || questionKind(active) === kind) return;
+    const from = questionKind(active);
+    const written = active.options.filter((o) => o.text.trim());
+    let options: QuizOption[];
+    if (kind === "truefalse") {
+      const firstCorrect = active.options.find((o) => o.correct)?.text.trim().toLowerCase();
+      options = trueFalseOptions(firstCorrect !== "false");
+    } else if (kind === "blank" || kind === "order") {
+      const keep = from === "truefalse" ? [] : written;
+      const min = kind === "blank" ? 1 : 3;
+      options = [...keep, ...Array.from({ length: Math.max(0, min - keep.length) }, () => blankOption())].map((o) => ({ ...o, correct: true }));
+    } else {
+      const base = from === "blank" || from === "order" ? [...written, ...Array.from({ length: Math.max(0, 2 - written.length) }, () => blankOption())] : active.options;
+      const firstCorrect = Math.max(0, base.findIndex((o) => o.correct));
+      options = kind === "multi" && from === "multi" ? base : base.map((o, i) => ({ ...o, correct: i === firstCorrect }));
+    }
+    patchActive({ type: kind, multiple: kind === "multi", options });
+  };
+  const moveAnswer = (index: number, step: number) => active && patchActive({ options: move(active.options, index, step) });
+  const insertBlank = () => {
+    const el = document.getElementById("quiz-question") as HTMLTextAreaElement | null;
+    if (!active || !el) return;
+    const start = el.selectionStart ?? active.text.length;
+    const end = el.selectionEnd ?? start;
+    const before = active.text.slice(0, start);
+    const gap = before && !before.endsWith(" ") ? " " : "";
+    patchActive({ text: `${before}${gap}___ ${active.text.slice(end).replace(/^ /, "")}` });
+    window.setTimeout(() => {
+      el.focus();
+      const at = before.length + gap.length + 4;
+      el.setSelectionRange(at, at);
+    }, 0);
   };
   const duplicate = (question: QuizQuestion, i: number) => {
-    const copy = { ...question, id: uid("question"), options: question.options.map((o) => ({ ...o, id: uid("option") })) };
-    setQuestions((list) => [...list.slice(0, i + 1), copy, ...list.slice(i + 1)]);
+    const copy = {
+      ...question,
+      id: uid("question"),
+      options: question.options.map((o) => ({ ...o, id: uid("option") })),
+    };
+    setQuestions((list) => [
+      ...list.slice(0, i + 1),
+      copy,
+      ...list.slice(i + 1),
+    ]);
     setActiveId(copy.id);
   };
   const aiContext = (): LectureContext => {
     const related = lectureOptions.find((o) => o.id === active?.relatedLecture);
-    return { ...context, kind: "Quiz", lectureTitle: related ? related.label.replace(/^Lecture \d+ : /, "") : title };
+    return {
+      ...context,
+      kind: "Quiz",
+      lectureTitle: related
+        ? related.label.replace(/^Lecture \d+ : /, "")
+        : title,
+    };
   };
   const generate = async (count: number) => {
     setAiBusy(count === 1 ? "one" : "set");
     try {
-      const drafts = await suggestQuizQuestions(aiContext(), count, Date.now() % 100000, questions.map((q) => q.text));
-      if (!drafts.length) return notify("No new questions to suggest. Try changing the quiz title");
+      const drafts = await suggestQuizQuestions(
+        aiContext(),
+        count,
+        Date.now() % 100000,
+        questions.map((q) => q.text),
+      );
+      if (!drafts.length)
+        return notify(
+          "No new questions to suggest. Try changing the quiz title",
+        );
       const made = drafts.map(fromDraft);
       // One question fills the current empty question; otherwise new questions are added at the end.
-      if (count === 1 && active && !active.text.trim() && active.options.every((o) => !o.text.trim())) {
-        setQuestions((list) => list.map((q) => (q.id === active.id ? { ...made[0], id: active.id, relatedLecture: q.relatedLecture } : q)));
+      if (
+        count === 1 &&
+        active &&
+        !active.text.trim() &&
+        active.options.every((o) => !o.text.trim())
+      ) {
+        setQuestions((list) =>
+          list.map((q) =>
+            q.id === active.id
+              ? { ...made[0], id: active.id, relatedLecture: q.relatedLecture }
+              : q,
+          ),
+        );
       } else {
         setQuestions((list) => [...list, ...made]);
         setActiveId(made[0].id);
       }
-      notify(made.length === 1 ? "Question added. Check the answers before you save" : `${made.length} questions added. Check the answers before you save`);
+      notify(
+        made.length === 1
+          ? "Question added. Check the answers before you save"
+          : `${made.length} questions added. Check the answers before you save`,
+      );
     } finally {
       setAiBusy("");
     }
@@ -1757,186 +3587,464 @@ function QuizDrawer({ lecture, context, lectureOptions, onCancel, onSave }: { le
   const suggestTitle = async () => {
     setAiBusy("title");
     try {
-      setTitleIdeas(await suggestLectureTitles({ ...context, kind: "Quiz", lectureTitle: title }, Date.now() % 100000));
+      setTitleIdeas(
+        await suggestLectureTitles(
+          { ...context, kind: "Quiz", lectureTitle: title },
+          Date.now() % 100000,
+        ),
+      );
     } finally {
       setAiBusy("");
     }
   };
   const saveAll = () => {
     // Saves every question as it is. Empty extra answers are dropped, and each question keeps one correct answer.
-    const clean = questions.map((q) => {
-      const written = q.options.filter((o) => o.text.trim());
-      let options = (written.length >= 2 ? written : q.options).map((o) => ({ ...o, text: o.text.trim(), explanation: o.explanation.trim(), saved: true }));
-      if (!options.some((o) => o.correct)) options = options.map((o, i) => ({ ...o, correct: i === 0 }));
-      return { ...q, text: q.text.trim(), options };
+    const clean = questions
+      .filter((q) => !isBlank(q))
+      .map((q) => {        const kind = questionKind(q);
+        const written = q.options.filter((o) => o.text.trim());
+        let options = (written.length >= QUESTION_KINDS[kind].min ? written : q.options).map((o) => ({
+          ...o,
+          text: o.text.trim(),
+          explanation: o.explanation.trim(),
+          saved: true,
+        }));        if (kind === "blank" || kind === "order") options = options.map((o) => ({ ...o, correct: true }));
+        else if (!options.some((o) => o.correct))
+          options = options.map((o, i) => ({ ...o, correct: i === 0 }));
+        return { ...q, type: kind, text: q.text.trim(), options };
+      });
+    onSave({
+      title: title.trim() || lecture.title,
+      questions: clean,
+      quizSettings: settings,
+      quizInstructions: instructions.text.trim() ? instructions : undefined,
     });
-    onSave({ title: title.trim() || lecture.title, questions: clean, quizSettings: settings });
   };
 
-  const aiChip = `flex items-center gap-1.5 rounded-full bg-[#f5f0ff] px-2.5 py-1 text-[12px] leading-[16px] text-[#6016fc] transition hover:bg-[#ece3ff] disabled:opacity-60 ${fontMedium}`;
-  const aiButton = `flex h-9 items-center gap-1.5 rounded-[10px] bg-[linear-gradient(135deg,#7c3aed,#6016fc)] px-3.5 text-[13px] leading-[18px] text-white shadow-[0_6px_16px_-8px_rgba(96,22,252,0.7)] transition hover:brightness-110 disabled:opacity-70 ${fontMedium}`;
-  const spinner = <span aria-hidden="true" className="size-3.5 animate-spin rounded-full border-2 border-current border-t-transparent" />;
-  const pill = (on: boolean) => `h-8 rounded-[8px] px-3 text-[13px] leading-[18px] transition ${on ? `bg-white text-[#0f172a] shadow-[0_1px_2px_rgba(15,23,42,0.12)] ${fontSemi}` : `text-[#64748b] hover:text-[#0f172a] ${fontMedium}`}`;
+  const aiChip = `flex items-center gap-1.5 rounded-full bg-violet-50 px-2.5 py-1 text-xs leading-4 text-ai-600 transition hover:bg-violet-100 disabled:opacity-60 ${fontMedium}`;
+  const aiButton = `flex h-9 items-center gap-1.5 rounded-10 bg-linear-135 from-violet-600 to-ai-600 px-3.5 text-13 leading-4.5 text-white shadow-ai-button transition hover:brightness-110 disabled:opacity-70 ${fontMedium}`;
+  const spinner = (
+    <span
+      aria-hidden="true"
+      className="size-3.5 animate-spin rounded-full border-2 border-current border-t-transparent"
+    />
+  );
+  const pill = (on: boolean) =>
+    `h-8 rounded-lg px-3 text-13 leading-4.5 transition ${on ? `bg-white text-slate-900 shadow-sm ${fontSemi}` : `text-slate-500 hover:text-slate-900 ${fontMedium}`}`;
   const check = (on: boolean, label: string, change: () => void) => (
-    <label className={`flex cursor-pointer items-center gap-2 text-[13px] leading-[18px] text-[#334155] ${fontMedium}`}>
+    <label
+      className={`flex cursor-pointer items-center gap-2 text-13 leading-4.5 text-slate-700 ${fontMedium}`}
+    >
       <Toggle on={on} label={label} onChange={change} />
       {label}
     </label>
   );
 
-  return (
-    <Shell title={`Edit ${lectureName(lecture)}`} variant="drawer" drawerWidth="xl:max-w-[1180px]" hideHeader onClose={close}>
-      <div className="@container flex min-h-full flex-col bg-[#f8fafc]">
-        {/* Header: quiz title, progress and one save button. */}
-        <header className="sticky top-0 z-20 border-b border-[#e2e8f0] bg-white/95 px-5 py-3 backdrop-blur @3xl:px-6">
-          <div className="flex flex-wrap items-center gap-3">
-            <span aria-hidden="true" className={`hidden size-10 shrink-0 items-center justify-center rounded-[12px] sm:flex ${KIND_TONES.Quiz}`}>
-              <Icon path={KIND_ICONS.Quiz} className="size-5" />
-            </span>
-            <div className="min-w-[200px] flex-1">
-              <div className="flex items-center gap-2.5">
-                <label htmlFor="quiz-title" className={`text-[11px] uppercase leading-[14px] tracking-[0.08em] text-[#b45309] ${fontSemi}`}>
-                  Quiz
-                </label>
-                <button type="button" onClick={suggestTitle} disabled={aiBusy === "title"} className={aiChip}>
-                  {aiBusy === "title" ? spinner : <Icon path={SPARKLE} className="size-3.5" filled />}
-                  {aiBusy === "title" ? "Thinking…" : "Suggest titles"}
-                </button>
-              </div>
-              <input id="quiz-title" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Quiz title" className={`-ml-2 mt-0.5 h-8 w-full rounded-[8px] px-2 text-[18px] leading-[26px] text-[#0f172a] outline-none transition hover:bg-[#f8fafc] focus:bg-[#f8fafc] focus:ring-3 focus:ring-[#0d5c4b]/12 ${fontSemi}`} />
-            </div>
-            {questions.length > 0 && (
-              <span className={`hidden items-center gap-2 rounded-full bg-[#f1f5f9] px-3 py-1.5 text-[12px] leading-[16px] text-[#334155] @3xl:flex ${fontMedium}`}>
-                <span aria-hidden="true" className="h-1.5 w-16 overflow-hidden rounded-full bg-[#e2e8f0]">
-                  <span className="block h-full rounded-full bg-[#0d5c4b] transition-[width]" style={{ width: `${(ready / questions.length) * 100}%` }} />
-                </span>
-                {ready} of {questions.length} ready
-              </span>
-            )}
-            <div className="flex items-center gap-2">
-              <button type="button" onClick={close} className={`h-9 rounded-[10px] border border-[#e2e8f0] bg-white px-4 text-[14px] leading-[20px] text-[#334155] transition hover:bg-[#f8fafc] ${fontMedium}`}>
-                Cancel
-              </button>
-              <button type="button" onClick={saveAll} className={`h-9 rounded-[10px] bg-[#0d5c4b] px-4 text-[14px] leading-[20px] text-white shadow-[0_1px_2px_rgba(13,92,75,0.25),0_8px_20px_-10px_rgba(13,92,75,0.6)] transition hover:bg-[#0b4c3e] ${fontMedium}`}>
-                Save quiz
-              </button>
-            </div>
-          </div>
-          {titleIdeas && (
-            <div className="pop-in mt-3 flex flex-wrap items-center gap-2 rounded-[12px] border border-[#e9dfff] bg-[#faf7ff] p-2.5">
-              <span className={`pl-1 text-[12px] leading-[16px] text-[#6016fc] ${fontSemi}`}>Pick a title</span>
-              {titleIdeas.map((idea) => (
-                <button key={idea} type="button" onClick={() => (setTitle(idea), setTitleIdeas(null))} className={`rounded-full border border-[#e2e8f0] bg-white px-3 py-1.5 text-[13px] leading-[18px] text-[#0f172a] transition hover:border-[#6016fc]/50 hover:text-[#6016fc] ${fontMedium}`}>
-                  {idea}
-                </button>
-              ))}
-              <button type="button" aria-label="Close title ideas" onClick={() => setTitleIdeas(null)} className="ml-auto flex size-7 items-center justify-center rounded-[8px] text-[#64748b] transition hover:bg-[#f0e9ff]">
-                <Icon path={CLOSE} className="size-4" />
-              </button>
-            </div>
+  const sideTitle = `m-0 text-11 uppercase leading-3.5 tracking-label text-slate-500 ${fontSemi}`;
+  // Quiz title: a standard labelled field (like the lecture drawer) that lives in the left column.
+  const titleField = (
+    <div>
+      <label htmlFor="quiz-title" className={sideTitle}>
+        Title
+      </label>
+      <div className="field-box mt-2 h-10 pr-1">
+        <input
+          id="quiz-title"
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+          placeholder="e.g. Check your knowledge"
+          className={`min-w-0 flex-1 bg-transparent text-base leading-5.5 text-slate-900 outline-none placeholder:text-slate-400 md:text-sm ${fontSemi}`}
+        />
+        <button
+          type="button"
+          aria-label="Suggest titles with AI"
+          title="Suggest titles with AI"
+          aria-expanded={!!titleIdeas}
+          onClick={suggestTitle}
+          disabled={aiBusy === "title"}
+          className={`flex size-8 shrink-0 items-center justify-center rounded-lg text-primary-700 transition hover:bg-primary-100 ${titleIdeas || aiBusy === "title" ? "bg-primary-100" : ""}`}
+        >
+          {aiBusy === "title" ? (
+            spinner
+          ) : (
+            <Icon path={SPARKLE} className="size-4" filled />
           )}
-        </header>
+        </button>
+      </div>
+      {titleIdeas && (
+        <div className="pop-in mt-2 flex flex-col gap-1 rounded-xl bg-primary-50 p-1.5">
+          {titleIdeas.length === 0 && (
+            <span
+              className={`px-2 py-1 text-xs text-slate-500 ${fontRegular}`}
+            >
+              No new ideas. Try again.
+            </span>
+          )}
+          {titleIdeas.map((idea) => (
+            <button
+              key={idea}
+              type="button"
+              onClick={() => {
+                setTitle(idea);
+                setTitleIdeas(null);
+              }}
+              className={`rounded-lg px-2 py-1.5 text-left text-13 leading-4.5 text-slate-900 transition hover:bg-white hover:text-primary-700 ${fontMedium}`}
+            >
+              {idea}
+            </button>
+          ))}
+          <span className="flex items-center justify-between px-1">
+            <button
+              type="button"
+              onClick={suggestTitle}
+              disabled={aiBusy === "title"}
+              className={`rounded-lg px-1.5 py-1 text-xs leading-4 text-primary-700 transition hover:bg-primary-200 disabled:opacity-60 ${fontMedium}`}
+            >
+              {aiBusy === "title" ? "Thinking…" : "More ideas"}
+            </button>
+            <button
+              type="button"
+              aria-label="Close title ideas"
+              onClick={() => setTitleIdeas(null)}
+              className="flex size-6 items-center justify-center rounded-md text-slate-500 transition hover:bg-primary-200"
+            >
+              <Icon path={CLOSE} className="size-3.5" />
+            </button>
+          </span>
+        </div>
+      )}
+    </div>
+  );
+
+  return (
+    <Shell
+      title={`Edit ${lectureName(lecture)}`}
+      variant="drawer"
+      drawerWidth="xl:max-w-295"
+      hideHeader
+      onClose={close}
+    >
+      {/* Flat layout: header, a slim question rail, the editor, and one action bar at the bottom. */}
+      <div className="@container flex min-h-full flex-col bg-white">
+        {/* Header matches the lecture drawer: what this is, plus close. The title is the first field below. */}
+        <div className="sticky top-0 z-20 flex items-center gap-2 border-b border-slate-100 bg-white/95 px-5 py-3 backdrop-blur-sm">
+          <div className="min-w-0 flex-1">
+            <p
+              className={`m-0 text-base leading-5.5 text-slate-900 ${fontSemi}`}
+            >
+              Edit quiz
+            </p>
+            <p
+              className={`m-0 text-xs leading-4 text-slate-500 ${fontRegular}`}
+            >
+              Quiz · {questions.length}{" "}
+              {questions.length === 1 ? "question" : "questions"}
+              {questions.length > 0 && ` · ${ready} ready`}
+            </p>
+          </div>
+          <button
+            type="button"
+            aria-label="Close"
+            title="Close"
+            onClick={close}
+            className="-mr-1.5 flex size-9 shrink-0 items-center justify-center rounded-10 text-slate-500 transition hover:bg-slate-100 hover:text-slate-900"
+          >
+            <Icon path={CLOSE} className="size-5" />
+          </button>
+        </div>
 
         {questions.length === 0 ? (
-          <div className="mx-auto flex w-full max-w-[560px] flex-col items-center px-5 py-14 text-center">
-            <span aria-hidden="true" className={`float-y flex size-16 items-center justify-center rounded-[18px] ${KIND_TONES.Quiz} shadow-[0_12px_30px_-14px_rgba(180,83,9,0.5)]`}>
+          <div className="mx-auto flex w-full max-w-140 flex-1 flex-col items-center justify-center px-5 py-14 text-center">
+            <div className="mb-10 w-full max-w-90 text-left">
+              {titleField}
+            </div>
+            <span
+              aria-hidden="true"
+              className={`float-y flex size-16 items-center justify-center rounded-18 ${KIND_TONES.Quiz}`}
+            >
               <Icon path={KIND_ICONS.Quiz} className="size-8" />
             </span>
-            <h3 className={`m-0 mt-5 text-[22px] leading-[30px] text-[#0f172a] ${fontSemi}`}>Build your quiz</h3>
-            <p className={`m-0 mt-2 text-[14px] leading-[22px] text-[#475569] ${fontRegular}`}>Write your own questions, or let AI draft a set from your course. You can edit every question before you save.</p>
+            <h3
+              className={`m-0 mt-5 text-22 leading-7.5 text-slate-900 ${fontSemi}`}
+            >
+              Build your quiz
+            </h3>
+            <p
+              className={`m-0 mt-2 text-sm leading-5.5 text-slate-600 ${fontRegular}`}
+            >
+              Write your own questions, or let AI draft a set from your course.
+              You can edit every question before you save.
+            </p>
             <div className="mt-6 flex flex-wrap justify-center gap-3">
-              <button type="button" onClick={addQuestion} className={`flex h-11 items-center gap-2 rounded-[10px] bg-[#0d5c4b] px-5 text-[14px] leading-[20px] text-white shadow-[0_8px_20px_-10px_rgba(13,92,75,0.6)] transition hover:bg-[#0b4c3e] ${fontMedium}`}>
-                <Icon path={PLUS} className="size-[18px]" />
+              <button
+                type="button"
+                onClick={() => addQuestion()}
+                className={`flex h-11 items-center gap-2 rounded-10 bg-primary-700 px-5 text-sm leading-5 text-white transition hover:bg-primary-800 ${fontMedium}`}
+              >
+                <Icon path={PLUS} className="size-4.5" />
                 Write a question
               </button>
-              <button type="button" onClick={() => generate(3)} disabled={!!aiBusy} className={`${aiButton} h-11 px-5 text-[14px]`}>
-                {aiBusy === "set" ? spinner : <Icon path={SPARKLE} className="size-4" filled />}
-                {aiBusy === "set" ? "Writing questions…" : "Generate 3 questions with AI"}
+              <button
+                type="button"
+                onClick={() => generate(3)}
+                disabled={!!aiBusy}
+                className={`${aiButton} h-11 px-5 text-sm`}
+              >
+                {aiBusy === "set" ? (
+                  spinner
+                ) : (
+                  <Icon path={SPARKLE} className="size-4" filled />
+                )}
+                {aiBusy === "set"
+                  ? "Writing questions…"
+                  : "Generate 3 questions with AI"}
               </button>
             </div>
           </div>
         ) : (
-          <div className="grid flex-1 items-start gap-4 p-4 @4xl:grid-cols-[260px_minmax(0,1fr)] @4xl:gap-5 @4xl:p-5">
-            {/* Left: question list and quiz settings. */}
-            <aside className="flex flex-col gap-4 @4xl:sticky @4xl:top-[88px]">
-              <div className="rounded-[14px] border border-[#e2e8f0] bg-white p-2 shadow-[0_1px_2px_rgba(15,23,42,0.04)]">
-                <p className={`m-0 px-2 pb-1.5 pt-1 text-[11px] uppercase leading-[14px] tracking-[0.08em] text-[#64748b] ${fontSemi}`}>
-                  Questions · {questions.length}
-                </p>
-                <ol className="flex max-h-[44vh] flex-col gap-0.5 overflow-y-auto">
+          <div className="flex flex-1 flex-col @4xl:flex-row @4xl:flex-wrap @6xl:flex-nowrap">
+            {/* Left rail: questions and quiz settings, separated by lines instead of cards. */}
+            <aside className="flex shrink-0 flex-col gap-5 border-b border-slate-150 p-5 @4xl:w-75 @4xl:border-b-0 @4xl:border-r">
+              {titleField}
+              {/* Instructions: its own page in the rail, read by learners before they start. */}
+              <button
+                type="button"
+                aria-current={onInstructions ? "true" : undefined}
+                onClick={() => setActiveId(QUIZ_INSTRUCTIONS)}
+                className={`-mx-2 -my-1 flex items-center gap-2.5 rounded-10 px-2 py-2 text-left transition ${onInstructions ? "bg-primary-100" : "hover:bg-slate-50"}`}
+              >
+                <span
+                  aria-hidden="true"
+                  className={`flex size-6 shrink-0 items-center justify-center rounded-md ${KIND_TONES.Article}`}
+                >
+                  <Icon path={KIND_ICONS.Article} className="size-3.5" />
+                </span>
+                <span className="min-w-0 flex-1">
+                  <span
+                    className={`block text-13 leading-4.5 text-slate-900 ${onInstructions ? fontSemi : fontMedium}`}
+                  >
+                    Instructions
+                  </span>
+                  <span
+                    className={`block truncate text-xs leading-4 ${hasInstructions ? "text-slate-500" : "text-slate-400"} ${fontRegular}`}
+                  >
+                    {hasInstructions
+                      ? "Shown before the quiz starts"
+                      : "Optional · not added yet"}
+                  </span>
+                </span>
+              </button>
+              <div className="border-t border-slate-150 pt-4">
+                <p className={sideTitle}>Questions · {questions.length}</p>
+                <ol className="-mx-2 mt-2 flex flex-col gap-0.5">
                   {questions.map((question, i) => {
                     const selected = question.id === activeId;
                     const ok = questionReady(question);
+                    // What is still missing, shown as the badge tooltip.
+                    const missing = questionMissing(question) || "Ready";
+                    const badge = selected
+                      ? ok
+                        ? "bg-primary-700 text-white"
+                        : "bg-amber-500 text-white"
+                      : ok
+                        ? "bg-primary-200 text-primary-700"
+                        : "bg-amber-50 text-amber-700 ring-1 ring-inset ring-amber-500/40";
                     return (
-                      <li key={question.id} className={`group flex items-center gap-1 rounded-[10px] pr-1 transition ${selected ? "bg-[#eef7f3]" : "hover:bg-[#f8fafc]"}`}>
-                        <button type="button" aria-current={selected ? "true" : undefined} onClick={() => setActiveId(question.id)} className="flex min-w-0 flex-1 items-center gap-2.5 px-2 py-2 text-left">
-                          <span className={`flex size-6 shrink-0 items-center justify-center rounded-full text-[11px] leading-[14px] tabular-nums ${selected ? "bg-[#0d5c4b] text-white" : "bg-[#f1f5f9] text-[#475569]"} ${fontSemi}`}>{i + 1}</span>
-                          <span className={`min-w-0 flex-1 truncate text-[13px] leading-[18px] ${question.text.trim() ? "text-[#0f172a]" : "text-[#94a3b8]"} ${selected ? fontSemi : fontRegular}`}>{question.text.trim() || "Untitled question"}</span>
-                          <span aria-label={ok ? "Ready" : "Needs work"} title={ok ? "Ready" : "Add the question, two answers and a correct answer"} className={`size-2 shrink-0 rounded-full ${ok ? "bg-[#10b981]" : "bg-[#f59e0b]"}`} />
+                      <li
+                        key={question.id}
+                        className={`group/row relative rounded-10 transition ${selected ? "bg-primary-100" : "hover:bg-slate-50"}`}
+                      >
+                        <button
+                          type="button"
+                          aria-current={selected ? "true" : undefined}
+                          onClick={() => setActiveId(question.id)}
+                          className="flex w-full min-w-0 items-start gap-2.5 px-2 py-2 text-left"
+                        >
+                          <span
+                            title={ok ? "Ready" : missing}
+                            aria-label={`Question ${i + 1}, ${ok ? "ready" : `needs work: ${missing.toLowerCase()}`}`}
+                            className={`flex size-6 shrink-0 items-center justify-center rounded-full text-11 leading-3.5 tabular-nums ${badge} ${fontSemi}`}
+                          >
+                            {i + 1}
+                          </span>
+                          <span
+                            className={`min-w-0 flex-1 line-clamp-2 pt-0.75 text-13 leading-4.5 ${!question.text.trim() ? "text-slate-400" : selected ? "text-slate-900" : "text-slate-500 group-hover/row:text-slate-700"} ${selected ? fontSemi : fontRegular}`}
+                          >
+                            {question.text.trim() || "Untitled question"}
+                          </span>
                         </button>
-                        <RowMenu
-                          label={`More actions for question ${i + 1}`}
-                          items={[
-                            { label: "Duplicate", onClick: () => duplicate(question, i) },
-                            { label: "Move up", disabled: i === 0, onClick: () => setQuestions((list) => move(list, i, -1)) },
-                            { label: "Move down", disabled: i === questions.length - 1, onClick: () => setQuestions((list) => move(list, i, 1)) },
-                            { label: "Delete question", danger: true, onClick: () => setRemovingId(question.id) },
-                          ]}
-                        />
+                        {/* The menu floats over the end of the row on hover, so no space is reserved for it. */}
+                        <span
+                          className={`absolute inset-y-0 right-0 flex items-center rounded-r-10 bg-gradient-to-l pl-8 pr-1 opacity-0 transition-opacity group-hover/row:opacity-100 focus-within:opacity-100 pointer-coarse:opacity-100 ${selected ? "from-primary-100 via-primary-100" : "from-slate-50 via-slate-50"}`}
+                        >
+                          <RowMenu
+                            label={`More actions for question ${i + 1}`}
+                            items={[
+                              {
+                                label: "Duplicate",
+                                onClick: () => duplicate(question, i),
+                              },
+                              {
+                                label: "Move up",
+                                disabled: i === 0,
+                                onClick: () =>
+                                  setQuestions((list) => move(list, i, -1)),
+                              },
+                              {
+                                label: "Move down",
+                                disabled: i === questions.length - 1,
+                                onClick: () =>
+                                  setQuestions((list) => move(list, i, 1)),
+                              },
+                              {
+                                label: "Delete question",
+                                danger: true,
+                                onClick: () => setRemovingId(question.id),
+                              },
+                            ]}
+                          />
+                        </span>
                       </li>
                     );
                   })}
                 </ol>
-                <div className="mt-1.5 grid gap-1.5 border-t border-[#f1f5f9] pt-2">
-                  <button type="button" onClick={addQuestion} className={`flex h-9 items-center justify-center gap-1.5 rounded-[10px] border border-dashed border-[#cbd5e1] text-[13px] leading-[18px] text-[#334155] transition hover:border-[#0d5c4b]/50 hover:bg-[#f4faf7] hover:text-[#0d5c4b] ${fontMedium}`}>
-                    <Icon path={PLUS} className="size-4" />
+                <div className="-mx-2 mt-1 flex flex-col gap-0.5">
+                  <button
+                    type="button"
+                    aria-expanded={typeMenu}
+                    onClick={() => setTypeMenu((v) => !v)}
+                    className={`flex h-9 items-center gap-2 rounded-10 px-2 text-13 leading-4.5 transition hover:bg-primary-50 hover:text-primary-700 ${typeMenu ? "bg-primary-50 text-primary-700" : "text-slate-700"} ${fontMedium}`}
+                  >
+                    <Icon path={PLUS} className={`size-4 transition-transform ${typeMenu ? "rotate-45" : ""}`} />
                     Add question
                   </button>
-                  <button type="button" onClick={() => generate(3)} disabled={!!aiBusy} className={`flex h-9 items-center justify-center gap-1.5 rounded-[10px] text-[13px] leading-[18px] text-[#6016fc] transition hover:bg-[#f5f0ff] disabled:opacity-60 ${fontMedium}`}>
-                    {aiBusy === "set" ? spinner : <Icon path={SPARKLE} className="size-3.5" filled />}
+                  {/* Pick a type first, so the editor opens ready for that kind of question. */}
+                  {typeMenu && (
+                    <div className="pop-in mb-1 flex flex-col gap-0.5 rounded-xl border border-slate-200 bg-white p-1 shadow-[0_12px_28px_-16px_rgba(15,23,42,0.35)]">
+                      {KIND_ORDER.map((kind) => (
+                        <button
+                          key={kind}
+                          type="button"
+                          onClick={() => addQuestion(kind)}
+                          className="flex items-center gap-2.5 rounded-lg px-2 py-1.5 text-left transition hover:bg-slate-50"
+                        >
+                          <span aria-hidden="true" className="flex size-7 shrink-0 items-center justify-center rounded-lg bg-primary-50 text-primary-700">
+                            <Icon path={QUESTION_KINDS[kind].icon} className="size-4" />
+                          </span>
+                          <span className="min-w-0">
+                            <span className={`block text-13 leading-4.5 text-slate-900 ${fontMedium}`}>{QUESTION_KINDS[kind].label}</span>
+                            <span className={`block text-xs leading-4 text-slate-500 ${fontRegular}`}>{QUESTION_KINDS[kind].hint}</span>
+                          </span>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => generate(3)}
+                    disabled={!!aiBusy}
+                    className={`flex h-9 items-center gap-2 rounded-10 px-2 text-13 leading-4.5 text-ai-600 transition hover:bg-violet-50 disabled:opacity-60 ${fontMedium}`}
+                  >
+                    {aiBusy === "set" ? (
+                      spinner
+                    ) : (
+                      <Icon path={SPARKLE} className="size-3.5" filled />
+                    )}
                     {aiBusy === "set" ? "Writing…" : "Add 3 with AI"}
                   </button>
                 </div>
               </div>
-
-              <div className="rounded-[14px] border border-[#e2e8f0] bg-white p-4 shadow-[0_1px_2px_rgba(15,23,42,0.04)]">
-                <p className={`m-0 text-[11px] uppercase leading-[14px] tracking-[0.08em] text-[#64748b] ${fontSemi}`}>Quiz settings</p>
-                <label htmlFor="quiz-pass" className={`mt-3 flex items-center justify-between gap-3 text-[13px] leading-[18px] text-[#334155] ${fontMedium}`}>
-                  Pass score
-                  <span className="flex items-center gap-1">
-                    <input id="quiz-pass" type="number" min={0} max={100} value={settings.passScore} onChange={(e) => setSettings((v) => ({ ...v, passScore: e.target.value }))} placeholder="—" className="field h-8 w-16 text-right" />
-                    <span className="text-[#64748b]">%</span>
-                  </span>
-                </label>
-                <div className="mt-3 flex flex-col gap-2.5">
-                  {check(settings.retakes, "Allow retakes", () => setSettings((v) => ({ ...v, retakes: !v.retakes })))}
-                  {check(settings.shuffle, "Shuffle questions", () => setSettings((v) => ({ ...v, shuffle: !v.shuffle })))}
-                </div>
-              </div>
             </aside>
 
-            {/* Right: the question being edited. */}
-            {active && (
-              <section className="rounded-[16px] border border-[#e2e8f0] bg-white shadow-[0_1px_2px_rgba(15,23,42,0.04),0_12px_28px_-20px_rgba(15,23,42,0.25)]">
-                <div className="flex flex-wrap items-center gap-3 border-b border-[#f1f5f9] px-5 py-3">
-                  <p className={`m-0 text-[12px] leading-[16px] text-[#64748b] ${fontMedium}`}>
-                    Question <span className="text-[#0f172a]">{activeIndex + 1}</span> of {questions.length}
-                  </p>
-                  <div role="radiogroup" aria-label="Answer type" className="flex rounded-[10px] bg-[#f1f5f9] p-0.5">
-                    <button type="button" role="radio" aria-checked={!active.multiple} onClick={() => setMultiple(false)} className={pill(!active.multiple)}>
-                      One correct answer
-                    </button>
-                    <button type="button" role="radio" aria-checked={active.multiple} onClick={() => setMultiple(true)} className={pill(active.multiple)}>
-                      Several correct
+            {onInstructions && (
+              <section className="min-w-0 flex-1 bg-[#f4f6f8] px-4 py-6 @4xl:px-8 @4xl:py-8">
+                <div className="relative mx-auto max-w-170 overflow-hidden rounded-2xl bg-white p-5 shadow-[0_1px_2px_rgba(15,23,42,0.05),0_16px_40px_-20px_rgba(15,23,42,0.22)] ring-1 ring-slate-200/80 @4xl:p-7">
+                  <span aria-hidden="true" className="absolute inset-x-0 top-0 h-1 bg-[linear-gradient(90deg,#0d5c4b,#10b981)]" />
+                  <div className="flex flex-wrap items-start gap-3">
+                    <div className="min-w-0 flex-1">
+                      <h3
+                        className={`m-0 text-xl leading-7 text-slate-900 ${fontSemi}`}
+                      >
+                        Instructions
+                      </h3>
+                      <p
+                        className={`m-0 mt-1 text-13 leading-5 text-slate-500 ${fontRegular}`}
+                      >
+                        Learners see these on the start screen, right before the
+                        first question.
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setInstructions({
+                          text: QUIZ_RULES_TEMPLATE.join("\n"),
+                          html: quizRulesHtml(),
+                        });
+                        setRulesKey((k) => k + 1);
+                      }}
+                      className={`flex h-8 items-center gap-1.5 rounded-full border border-slate-200 bg-white px-3 text-xs leading-4 text-slate-700 transition hover:border-primary-700/40 hover:text-primary-700 ${fontMedium}`}
+                    >
+                      <Icon path={KIND_ICONS.Article} className="size-3.5" />
+                      {hasInstructions
+                        ? "Replace with standard rules"
+                        : "Use standard rules"}
                     </button>
                   </div>
-                  <button type="button" onClick={() => generate(1)} disabled={!!aiBusy} className={`${aiChip} ml-auto`}>
-                    {aiBusy === "one" ? spinner : <Icon path={SPARKLE} className="size-3.5" filled />}
-                    {aiBusy === "one" ? "Writing…" : active.text.trim() ? "New question with AI" : "Write with AI"}
-                  </button>
+                  <div className="mt-4 flex">
+                    <NoteEditor
+                      key={rulesKey}
+                      modern
+                      hideActions
+                      hideUnderline
+                      autoFocus={false}
+                      initial={instructions}
+                      placeholder="e.g. 1. Answer on your own. 2. You have one attempt…"
+                      boxClass="min-h-65"
+                      onChange={(text, html) => setInstructions({ text, html })}
+                    />
+                  </div>
+                  <p
+                    className={`m-0 mt-3 text-xs leading-4.5 text-slate-400 ${fontRegular}`}
+                  >
+                    Tip: a numbered list of 3 to 6 short rules reads best. Leave
+                    it empty to skip this screen.
+                  </p>
                 </div>
+              </section>
+            )}
+            {/* The question being edited, on the page itself instead of inside a card. */}
+            {active && (
+              <section className="min-w-0 flex-1 bg-[#f4f6f8] px-4 py-6 @4xl:px-8 @4xl:py-8">
+                <div className="relative mx-auto max-w-170 overflow-hidden rounded-2xl bg-white p-5 shadow-[0_1px_2px_rgba(15,23,42,0.05),0_16px_40px_-20px_rgba(15,23,42,0.22)] ring-1 ring-slate-200/80 @4xl:p-7">
+                  <span aria-hidden="true" className="absolute inset-x-0 top-0 h-1 bg-[linear-gradient(90deg,#0d5c4b,#10b981)]" />
+                  <div className="flex flex-wrap items-center gap-3">
+                    <p
+                      className={`m-0 text-xs leading-4 text-slate-500 ${fontMedium}`}
+                    >
+                      Question{" "}
+                      <span className="text-slate-900">{activeIndex + 1}</span>{" "}
+                      of {questions.length}
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => generate(1)}
+                      disabled={!!aiBusy}
+                      className={`${aiChip} ml-auto`}
+                    >
+                      {aiBusy === "one" ? (
+                        spinner
+                      ) : (
+                        <Icon path={SPARKLE} className="size-3.5" filled />
+                      )}
+                      {aiBusy === "one"
+                        ? "Writing…"
+                        : active.text.trim()
+                          ? "New question with AI"
+                          : "Write with AI"}
+                    </button>
+                  </div>
 
-                <div className="p-5">
                   <label htmlFor="quiz-question" className="sr-only">
                     Question
                   </label>
@@ -1945,129 +4053,1218 @@ function QuizDrawer({ lecture, context, lectureOptions, onCancel, onSave }: { le
                     rows={2}
                     value={active.text}
                     onChange={(e) => patchActive({ text: e.target.value })}
-                    placeholder="Type your question…"
-                    className={`block w-full resize-none rounded-[12px] border border-transparent bg-[#f8fafc] px-4 py-3 text-[18px] leading-[28px] text-[#0f172a] outline-none transition placeholder:text-[#94a3b8] hover:border-[#e2e8f0] focus:border-[#0d5c4b]/50 focus:bg-white focus:shadow-[0_0_0_3px_rgba(13,92,75,0.12)] ${fontSemi}`}
-                  />
-
-                  <div className="mt-5 flex items-center justify-between gap-3">
-                    <p className={`m-0 text-[13px] leading-[18px] text-[#0f172a] ${fontSemi}`}>Answers</p>
-                    <p className={`m-0 text-[12px] leading-[16px] text-[#64748b] ${fontRegular}`}>{active.multiple ? "Tick every correct answer." : "Click the circle next to the correct answer."}</p>
+                    placeholder={kind === "truefalse" ? "Type a statement, e.g. Frames can hold other frames." : kind === "blank" ? "e.g. In Figma, a ___ holds the layout of a screen." : kind === "order" ? "e.g. Put these steps in order to publish a prototype." : "Type your question…"}
+                    className={`field-sizing-content mt-3 block min-h-[44px] w-full resize-none border-0 border-b-2 border-transparent bg-transparent px-0 pb-2 pt-1 text-[22px] leading-[32px] tracking-[-0.2px] text-slate-900 outline-none transition placeholder:text-slate-300 hover:border-slate-100 focus:border-[#0d5c4b]/40 ${fontSemi}`}
+                  />                  {kind === "blank" && (
+                    <div className="mt-2 flex flex-wrap items-center gap-2">
+                      <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={insertBlank} className={`flex h-7 items-center gap-1.5 rounded-full border border-dashed border-primary-700/40 px-2.5 text-xs leading-4 text-primary-700 transition hover:bg-primary-50 ${fontMedium}`}>
+                        <Icon path={PLUS} className="size-3.5" />
+                        Insert blank
+                      </button>
+                      <span className={`text-xs leading-4 ${active.text.includes("___") ? "text-slate-500" : "text-amber-600"} ${fontRegular}`}>
+                        {active.text.includes("___") ? "Learners type into the ___ gap." : "Add ___ where the missing word goes."}
+                      </span>
+                    </div>
+                  )}
+                  <div className="mt-6 flex items-center justify-between gap-3">
+                    <p
+                      className={`m-0 text-13 leading-4.5 text-slate-900 ${fontSemi}`}
+                    >                      {meta.list}
+                    </p>
+                    <p
+                      className={`m-0 text-xs leading-4 text-slate-500 ${fontRegular}`}
+                    >
+                      {meta.help}
+                    </p>
                   </div>
-                  <ol role={active.multiple ? "group" : "radiogroup"} aria-label="Answer options" className="mt-2.5 flex flex-col gap-2">
+                  {/* Answers are simple rows with dividers; the correct one is tinted green. */}
+                  <ol
+                    role={active.multiple ? "group" : "radiogroup"}
+                    aria-label="Answer options"
+                    className="mt-2 flex flex-col divide-y divide-slate-150 overflow-hidden rounded-14 border border-slate-200 bg-white shadow-xs"
+                  >
                     {active.options.map((option, i) => {
                       const letter = String.fromCharCode(65 + i);
-                      const showExplain = openExplain[option.id] || !!option.explanation;
+                      const showExplain =
+                        openExplain[option.id] || !!option.explanation;
                       return (
-                        <li key={option.id} className={`rounded-[12px] border transition ${option.correct ? "border-[#10b981]/60 bg-[#f0fbf6]" : "border-[#e2e8f0] bg-white hover:border-[#cbd5e1]"}`}>
-                          <div className="flex items-center gap-3 px-3 py-2">
+                        <li
+                          key={option.id}
+                          className={`group/row px-3 transition-colors ${marks && option.correct ? "bg-primary-50" : "hover:bg-slate-25"}`}
+                        >
+                          <div className="flex items-center gap-3 py-2">                            {marks ? (
                             <button
                               type="button"
                               role={active.multiple ? "checkbox" : "radio"}
                               aria-checked={option.correct}
                               aria-label={`Mark answer ${letter} as correct`}
                               onClick={() => setCorrect(option.id)}
-                              className={`flex size-6 shrink-0 items-center justify-center border-2 transition ${active.multiple ? "rounded-[7px]" : "rounded-full"} ${option.correct ? "border-[#10b981] bg-[#10b981] text-white" : "border-[#cbd5e1] bg-white text-transparent hover:border-[#10b981] hover:text-[#10b981]/40"}`}
-                            >
-                              <Icon path="M6 12.500l4 4 8-9" className="size-3.5" />
+                              className={`flex size-6 shrink-0 items-center justify-center border-2 transition ${active.multiple ? "rounded-md" : "rounded-full"} ${option.correct ? "border-emerald-500 bg-emerald-500 text-white" : "border-slate-300 bg-white text-transparent hover:border-emerald-500 hover:text-emerald-500/40"}`}
+                            >                              <Icon
+                                path="M6 12.500l4 4 8-9"
+                                className="size-3.5"
+                              />
                             </button>
-                            <span className={`flex size-7 shrink-0 items-center justify-center rounded-[8px] text-[12px] leading-[16px] ${option.correct ? "bg-white text-[#047857]" : "bg-[#f1f5f9] text-[#475569]"} ${fontSemi}`}>{letter}</span>
+                            ) : (
+                              <span aria-hidden="true" className={`flex size-6 shrink-0 items-center justify-center rounded-full bg-primary-50 text-xs tabular-nums text-primary-700 ${fontSemi}`}>
+                                {kind === "order" ? i + 1 : <Icon path="M6 12.500l4 4 8-9" className="size-3.5" />}
+                              </span>
+                            )}                            {marks && (
+                            <span
+                              className={`w-4 shrink-0 text-xs leading-4 ${option.correct ? "text-emerald-700" : "text-slate-400"} ${fontSemi}`}
+                            >
+                              {letter}
+                            </span>
+                            )}
                             <input
                               ref={(el) => {
                                 answerRefs.current[option.id] = el;
-                              }}
-                              aria-label={`Answer ${letter}`}
+                              }}                              aria-label={kind === "order" ? `Item ${i + 1}` : kind === "blank" ? `Accepted answer ${i + 1}` : `Answer ${letter}`}
+                              readOnly={kind === "truefalse"}
                               value={option.text}
-                              onChange={(e) => patchOption(option.id, { text: e.target.value, saved: true })}
+                              onChange={(e) =>
+                                patchOption(option.id, {
+                                  text: e.target.value,
+                                  saved: true,
+                                })
+                              }
                               onKeyDown={(e) => {
-                                if (e.key === "Enter" && i === active.options.length - 1 && option.text.trim()) {
+                                if (
+                                  e.key === "Enter" &&
+                                  i === active.options.length - 1 &&
+                                  option.text.trim()
+                                ) {
                                   e.preventDefault();
                                   addAnswer();
                                 }
-                              }}
-                              placeholder={`Answer ${letter}`}
-                              className={`h-9 min-w-0 flex-1 bg-transparent text-[15px] leading-[22px] text-[#0f172a] outline-none placeholder:text-[#94a3b8] ${fontMedium}`}
-                            />
-                            {option.correct && <span className={`hidden shrink-0 rounded-full bg-[#10b981]/15 px-2 py-0.5 text-[11px] leading-[14px] text-[#047857] sm:block ${fontSemi}`}>Correct</span>}
-                            {!showExplain && (
-                              <button type="button" onClick={() => setOpenExplain((all) => ({ ...all, [option.id]: true }))} className={`hidden shrink-0 rounded-[8px] px-2 py-1 text-[12px] leading-[16px] text-[#64748b] transition hover:bg-[#f1f5f9] hover:text-[#0f172a] sm:block ${fontMedium}`}>
-                                + Why
-                              </button>
+                              }}                              placeholder={kind === "order" ? `Step ${i + 1}` : kind === "blank" ? (i === 0 ? "e.g. frame" : "Another spelling or word") : `Answer ${letter}`}
+                              className={`h-9 min-w-0 flex-1 bg-transparent text-15 leading-5.5 text-slate-900 outline-none placeholder:text-slate-400 ${fontMedium}`}
+                            />                            {marks && option.correct && (
+                              <span
+                                className={`hidden shrink-0 text-11 leading-3.5 text-emerald-700 sm:block ${fontSemi}`}
+                              >
+                                Correct
+                              </span>
                             )}
-                            <button type="button" aria-label={`Remove answer ${letter}`} disabled={active.options.length <= 2} title={active.options.length <= 2 ? "A question needs at least two answers" : "Remove answer"} onClick={() => removeAnswer(option.id)} className="flex size-8 shrink-0 items-center justify-center rounded-[8px] text-[#94a3b8] transition hover:bg-[#fef2f2] hover:text-[#dc2626] disabled:pointer-events-none disabled:opacity-30">
-                              <Icon path={TRASH} className="size-4" />
-                            </button>
+                            <span className="flex items-center opacity-0 transition-opacity group-hover/row:opacity-100 focus-within:opacity-100 pointer-coarse:opacity-100">
+                              {!showExplain && (
+                                <button
+                                  type="button"
+                                  onClick={() =>
+                                    setOpenExplain((all) => ({
+                                      ...all,
+                                      [option.id]: true,
+                                    }))
+                                  }
+                                  className={`shrink-0 rounded-lg px-2 py-1 text-xs leading-4 text-slate-500 transition hover:bg-slate-100 hover:text-slate-900 ${fontMedium}`}
+                                >
+                                  + Why
+                                </button>
+                              )}                              {kind === "order" && (
+                                <>
+                                  <button type="button" aria-label={`Move item ${i + 1} up`} title="Move up" disabled={i === 0} onClick={() => moveAnswer(i, -1)} className="flex size-8 shrink-0 items-center justify-center rounded-lg text-slate-400 transition hover:bg-slate-100 hover:text-slate-900 disabled:pointer-events-none disabled:opacity-30">
+                                    <Icon path="M6 15l6-6 6 6" className="size-4" />
+                                  </button>
+                                  <button type="button" aria-label={`Move item ${i + 1} down`} title="Move down" disabled={i === active.options.length - 1} onClick={() => moveAnswer(i, 1)} className="flex size-8 shrink-0 items-center justify-center rounded-lg text-slate-400 transition hover:bg-slate-100 hover:text-slate-900 disabled:pointer-events-none disabled:opacity-30">
+                                    <Icon path="M6 9l6 6 6-6" className="size-4" />
+                                  </button>
+                                </>
+                              )}
+                              {kind !== "truefalse" && (
+                              <button
+                                type="button"
+                                aria-label={`Remove answer ${letter}`}
+                                disabled={active.options.length <= meta.min}
+                                title={
+                                  active.options.length <= meta.min
+                                    ? "This question needs at least this many rows"
+                                    : "Remove"
+                                }
+                                onClick={() => removeAnswer(option.id)}
+                                className="flex size-8 shrink-0 items-center justify-center rounded-lg text-slate-400 transition hover:bg-red-50 hover:text-red-600 disabled:pointer-events-none disabled:opacity-30"
+                              >                                <Icon path={TRASH} className="size-4" />
+                              </button>
+                              )}
+                            </span>
                           </div>
                           {showExplain && (
-                            <div className="border-t border-dashed border-[#e2e8f0] px-3 py-2 pl-[88px]">
-                              <input aria-label={`Why answer ${letter} is right or wrong`} value={option.explanation} onChange={(e) => patchOption(option.id, { explanation: e.target.value })} placeholder="Why is this right or wrong? Students see this after they answer." className={`h-8 w-full bg-transparent text-[13px] leading-[20px] text-[#475569] outline-none placeholder:text-[#94a3b8] ${fontRegular}`} />
+                            <div className="pb-2 pl-16 pr-2">
+                              <input
+                                aria-label={`Why answer ${letter} is right or wrong`}
+                                value={option.explanation}
+                                onChange={(e) =>
+                                  patchOption(option.id, {
+                                    explanation: e.target.value,
+                                  })
+                                }
+                                placeholder="Why is this right or wrong? Students see this after they answer."
+                                className={`h-7 w-full bg-transparent text-13 leading-5 text-slate-600 outline-none placeholder:text-slate-400 ${fontRegular}`}
+                              />
                             </div>
                           )}
                         </li>
                       );
                     })}
-                  </ol>
-                  <button type="button" onClick={addAnswer} disabled={active.options.length >= 8} className={`mt-2 flex h-10 w-full items-center justify-center gap-1.5 rounded-[12px] border border-dashed border-[#cbd5e1] text-[13px] leading-[18px] text-[#334155] transition hover:border-[#0d5c4b]/50 hover:bg-[#f4faf7] hover:text-[#0d5c4b] disabled:opacity-40 ${fontMedium}`}>
-                    <Icon path={PLUS} className="size-4" />
-                    Add answer
-                    <span className={`text-[#94a3b8] ${fontRegular}`}>· or press Enter</span>
+                  </ol>                  {kind !== "truefalse" && (
+                  <button
+                    type="button"
+                    onClick={addAnswer}
+                    disabled={active.options.length >= 8}
+                    className={`mt-2 flex h-9 items-center gap-1.5 rounded-10 px-2 text-13 leading-4.5 text-slate-700 transition hover:bg-primary-50 hover:text-primary-700 disabled:opacity-40 ${fontMedium}`}
+                  >                    <Icon path={PLUS} className="size-4" />
+                    {meta.add}
+                    <span className={`text-slate-400 ${fontRegular}`}>
+                      · or press Enter
+                    </span>
                   </button>
-
-                  <div className="mt-5 grid gap-4 rounded-[12px] bg-[#f8fafc] p-4 @2xl:grid-cols-[minmax(0,1fr)_auto] @2xl:items-end">
-                    <div>
-                      <label htmlFor="quiz-related" className={`block text-[12px] leading-[16px] text-[#334155] ${fontSemi}`}>
-                        Related lecture <span className={`text-[#94a3b8] ${fontRegular}`}>(optional)</span>
-                      </label>
-                      <select id="quiz-related" value={active.relatedLecture} onChange={(e) => patchActive({ relatedLecture: e.target.value })} className="field mt-1.5 h-9">
-                        <option value="">Students who get it wrong can rewatch…</option>
-                        {lectureOptions.map((option) => (
-                          <option key={option.id} value={option.id}>
-                            {option.label}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                    <div className="flex flex-wrap items-center gap-x-5 gap-y-2.5 @2xl:pb-1">
-                      {check(active.required, "Required", () => patchActive({ required: !active.required }))}
-                      {check(active.randomise, "Shuffle answers", () => patchActive({ randomise: !active.randomise }))}
-                    </div>
-                  </div>
-                </div>
-
-                <div className="flex items-center justify-between gap-3 border-t border-[#f1f5f9] px-5 py-3">
-                  <button type="button" onClick={() => setRemovingId(active.id)} className={`flex h-9 items-center gap-1.5 rounded-[10px] px-3 text-[13px] leading-[18px] text-[#64748b] transition hover:bg-[#fef2f2] hover:text-[#dc2626] ${fontMedium}`}>
-                    <Icon path={TRASH} className="size-4" />
-                    Delete question
-                  </button>
-                  <div className="flex items-center gap-2">
-                    <button type="button" disabled={activeIndex <= 0} onClick={() => setActiveId(questions[activeIndex - 1].id)} className={`h-9 rounded-[10px] border border-[#e2e8f0] bg-white px-3.5 text-[13px] leading-[18px] text-[#334155] transition hover:bg-[#f8fafc] disabled:opacity-40 ${fontMedium}`}>
-                      Previous
-                    </button>
-                    {activeIndex < questions.length - 1 ? (
-                      <button type="button" onClick={() => setActiveId(questions[activeIndex + 1].id)} className={`h-9 rounded-[10px] bg-[#0f172a] px-3.5 text-[13px] leading-[18px] text-white transition hover:bg-[#1e293b] ${fontMedium}`}>
-                        Next question
-                      </button>
-                    ) : (
-                      <button type="button" onClick={addQuestion} className={`flex h-9 items-center gap-1.5 rounded-[10px] bg-[#0f172a] px-3.5 text-[13px] leading-[18px] text-white transition hover:bg-[#1e293b] ${fontMedium}`}>
-                        <Icon path={PLUS} className="size-4" />
-                        Next question
-                      </button>
-                    )}
-                  </div>
+                  )}
                 </div>
               </section>
             )}
+            {/* Right: settings for this question and for the whole quiz. */}
+            {/* Settings only make sense next to a question, so the instructions page gets the full width. */}
+            {/* Folded settings: a slim strip with one button to bring them back. */}
+            {active && !settingsOpen && (
+              <aside className="flex shrink-0 basis-full items-center border-t border-slate-150 px-5 py-3 @6xl:w-14 @6xl:basis-auto @6xl:flex-col @6xl:border-l @6xl:border-t-0 @6xl:px-0 @6xl:py-4">
+                <button
+                  type="button"
+                  aria-label="Show settings"
+                  title="Show settings"
+                  onClick={() => setSettingsOpen(true)}
+                  className={`flex h-9 items-center gap-2 rounded-10 px-2 text-13 leading-4.5 text-slate-600 transition hover:bg-slate-100 hover:text-slate-900 @6xl:w-9 @6xl:justify-center @6xl:px-0 ${fontMedium}`}
+                >
+                  <Icon path="M4 5h16v14H4zM15 5v14" className="size-4.5 shrink-0" />
+                  <span className="@6xl:sr-only">Show settings</span>
+                </button>
+                <span aria-hidden="true" className={`ml-2 truncate text-xs leading-4 text-slate-400 @6xl:ml-0 @6xl:mt-3 @6xl:[writing-mode:vertical-rl] ${fontMedium}`}>
+                  {meta.label}
+                </span>
+              </aside>
+            )}
+            {active && settingsOpen && (
+              <aside className="flex shrink-0 basis-full flex-col gap-6 border-t border-slate-150 p-5 @6xl:w-70 @6xl:basis-auto @6xl:border-l @6xl:border-t-0">
+                {active && (
+                  <div>
+                    <div className="-mt-1.5 flex items-center justify-between gap-2">
+                      <p className={sideTitle}>This question</p>
+                      <button
+                        type="button"
+                        aria-label="Hide settings"
+                        title="Hide settings"
+                        onClick={() => setSettingsOpen(false)}
+                        className="-mr-2 flex size-8 items-center justify-center rounded-lg text-slate-400 transition hover:bg-slate-100 hover:text-slate-900"
+                      >
+                        <Icon path="M4 5h16v14H4zM15 5v14" className="size-4.5" />
+                      </button>
+                    </div>                    <p
+                      className={`m-0 mt-3 text-13 leading-4.5 text-slate-700 ${fontMedium}`}
+                    >
+                      Question type
+                    </p>
+                    <div role="radiogroup" aria-label="Question type" className="mt-2 flex flex-col gap-0.5 rounded-xl bg-slate-100 p-0.5">
+                      {KIND_ORDER.map((k) => (
+                        <button
+                          key={k}
+                          type="button"
+                          role="radio"
+                          aria-checked={kind === k}
+                          onClick={() => setKind(k)}
+                          className={`flex h-8 items-center gap-2 rounded-lg px-2 text-left text-13 leading-4.5 transition ${kind === k ? `bg-white text-slate-900 shadow-[0_1px_2px_rgba(15,23,42,0.12)] ${fontSemi}` : `text-slate-500 hover:text-slate-900 ${fontMedium}`}`}
+                        >
+                          <Icon path={QUESTION_KINDS[k].icon} className={`size-4 shrink-0 ${kind === k ? "text-primary-700" : ""}`} />
+                          {QUESTION_KINDS[k].label}
+                        </button>
+                      ))}
+                    </div>
+                    <div className="mt-4 flex flex-col gap-2.5">
+                      {check(active.required, "Required", () =>
+                        patchActive({ required: !active.required }),
+                      )}
+                      {check(active.randomise, "Shuffle answers", () =>
+                        patchActive({ randomise: !active.randomise }),
+                      )}
+                    </div>
+                    <label
+                      htmlFor="quiz-related"
+                      className={`mt-4 block text-13 leading-4.5 text-slate-700 ${fontMedium}`}
+                    >
+                      Related lecture{" "}
+                      <span className={`text-slate-400 ${fontRegular}`}>
+                        (optional)
+                      </span>
+                    </label>
+                    <select
+                      id="quiz-related"
+                      value={active.relatedLecture}
+                      onChange={(e) =>
+                        patchActive({ relatedLecture: e.target.value })
+                      }
+                      className="field mt-1.5 h-9 w-full"
+                    >
+                      <option value="">None</option>
+                      {lectureOptions.map((option) => (
+                        <option key={option.id} value={option.id}>
+                          {option.label}
+                        </option>
+                      ))}
+                    </select>
+                    <p className="field-help mt-1.5">
+                      Students who get it wrong can rewatch it.
+                    </p>
+                  </div>
+                )}
+                <div className={active ? "border-t border-slate-150 pt-5" : ""}>
+                  <p className={sideTitle}>Whole quiz</p>
+                  <div
+                    className={`mt-3 flex items-center justify-between gap-3 text-13 leading-4.5 text-slate-700 ${fontMedium}`}
+                  >
+                    <label htmlFor="quiz-pass">Pass score</label>
+                    {/* Stepper: − and + move by 5, the number can also be typed. Empty means no minimum score. */}
+                    <span className="flex h-8 items-center rounded-10 border border-slate-200 bg-white shadow-xs focus-within:border-primary-700/60 focus-within:ring-3 focus-within:ring-primary-700/12">
+                      <button
+                        type="button"
+                        aria-label="Lower pass score"
+                        disabled={
+                          settings.passScore !== "" &&
+                          Number(settings.passScore) <= 0
+                        }
+                        onClick={() =>
+                          setSettings((v) => ({
+                            ...v,
+                            passScore: String(
+                              Math.max(
+                                0,
+                                (v.passScore === ""
+                                  ? 70
+                                  : Number(v.passScore)) - 5,
+                              ),
+                            ),
+                          }))
+                        }
+                        className="flex h-full w-7 items-center justify-center rounded-l-10 text-slate-500 transition hover:bg-slate-100 hover:text-slate-900 disabled:opacity-30"
+                      >
+                        <Icon path="M6 12h12" className="size-3.5" />
+                      </button>
+                      <span className="flex items-baseline border-x border-slate-150 px-1.5">
+                        <input
+                          id="quiz-pass"
+                          inputMode="numeric"
+                          value={settings.passScore}
+                          onChange={(e) => {
+                            const digits = e.target.value
+                              .replace(/\D/g, "")
+                              .slice(0, 3);
+                            setSettings((v) => ({
+                              ...v,
+                              passScore:
+                                digits === ""
+                                  ? ""
+                                  : String(Math.min(100, Number(digits))),
+                            }));
+                          }}
+                          placeholder="—"
+                          className={`w-7 bg-transparent text-right text-13 tabular-nums text-slate-900 outline-none placeholder:text-slate-400 ${fontSemi}`}
+                        />
+                        <span className="pl-0.5 text-xs text-slate-500">
+                          %
+                        </span>
+                      </span>
+                      <button
+                        type="button"
+                        aria-label="Raise pass score"
+                        disabled={Number(settings.passScore) >= 100}
+                        onClick={() =>
+                          setSettings((v) => ({
+                            ...v,
+                            passScore: String(
+                              Math.min(
+                                100,
+                                (v.passScore === ""
+                                  ? 65
+                                  : Number(v.passScore)) + 5,
+                              ),
+                            ),
+                          }))
+                        }
+                        className="flex h-full w-7 items-center justify-center rounded-r-10 text-slate-500 transition hover:bg-slate-100 hover:text-slate-900 disabled:opacity-30"
+                      >
+                        <Icon path="M12 6v12M6 12h12" className="size-3.5" />
+                      </button>
+                    </span>
+                  </div>
+                  <div className="mt-3 flex flex-col gap-2.5">
+                    {check(settings.retakes, "Allow retakes", () =>
+                      setSettings((v) => ({ ...v, retakes: !v.retakes })),
+                    )}
+                    {check(settings.shuffle, "Shuffle questions", () =>
+                      setSettings((v) => ({ ...v, shuffle: !v.shuffle })),
+                    )}
+                  </div>
+                </div>
+              </aside>
+            )}
           </div>
         )}
+
+        {/* One action bar at the bottom: question tools on the left, navigation and save on the right. */}
+        <footer className="sticky bottom-0 z-20 mt-auto flex flex-wrap items-center gap-2 border-t border-slate-150 bg-white/95 px-5 py-3 backdrop-blur">
+          {active && (
+            <button
+              type="button"
+              onClick={() => setRemovingId(active.id)}
+              className={`-ml-3 flex h-9 items-center gap-1.5 rounded-10 px-3 text-13 leading-4.5 text-slate-500 transition hover:bg-red-50 hover:text-red-600 ${fontMedium}`}
+            >
+              <Icon path={TRASH} className="size-4" />
+              Delete question
+            </button>
+          )}
+          <span className="flex-1" />
+          {onInstructions && questions.length > 0 && (
+            <div className="flex items-center gap-1">
+              <button
+                type="button"
+                onClick={() => setActiveId(questions[0].id)}
+                className={`h-9 rounded-10 px-3 text-13 leading-4.5 text-slate-700 transition hover:bg-slate-100 ${fontMedium}`}
+              >
+                First question →
+              </button>
+              <span aria-hidden="true" className="mx-2 h-6 w-px bg-slate-200" />
+            </div>
+          )}
+          {active && (
+            <div className="flex items-center gap-1">
+              <button
+                type="button"
+                onClick={() =>
+                  activeIndex <= 0
+                    ? setActiveId(QUIZ_INSTRUCTIONS)
+                    : setActiveId(questions[activeIndex - 1].id)
+                }
+                className={`h-9 rounded-10 px-3 text-13 leading-4.5 text-slate-700 transition hover:bg-slate-100 disabled:opacity-40 ${fontMedium}`}
+              >
+                ← Previous
+              </button>
+              <button
+                type="button"
+                onClick={() =>
+                  activeIndex < questions.length - 1
+                    ? setActiveId(questions[activeIndex + 1].id)
+                    : addQuestion()
+                }
+                className={`h-9 rounded-10 px-3 text-13 leading-4.5 text-slate-700 transition hover:bg-slate-100 ${fontMedium}`}
+              >
+                {activeIndex < questions.length - 1
+                  ? "Next →"
+                  : "+ New question"}
+              </button>
+              <span aria-hidden="true" className="mx-2 h-6 w-px bg-slate-200" />
+            </div>
+          )}
+          <button
+            type="button"
+            onClick={close}
+            className={`h-10 rounded-10 border border-slate-200 bg-white px-4 text-sm leading-5 text-slate-700 transition hover:bg-slate-50 ${fontMedium}`}
+          >
+            Cancel
+          </button>
+          <button
+            type="button"
+            onClick={saveAll}
+            className={`h-10 rounded-10 bg-primary-700 px-5 text-sm leading-5 text-white shadow-primary-button transition hover:bg-primary-800 ${fontMedium}`}
+          >
+            Save quiz
+          </button>
+        </footer>
       </div>
-      {confirmLeave && <ConfirmDialog title="Discard your quiz changes?" body="Anything you changed since opening this quiz will be lost." confirmLabel="Discard changes" onClose={() => setConfirmLeave(false)} onConfirm={onCancel} />}
-      {removingId && <ConfirmDialog title="Delete this question?" body="This question and its answers will be removed from the quiz." confirmLabel="Delete" onClose={() => setRemovingId("")} onConfirm={() => removeQuestion(removingId)} />}
+      {confirmLeave && (
+        <ConfirmDialog
+          title="Discard your quiz changes?"
+          body="Anything you changed since opening this quiz will be lost."
+          confirmLabel="Discard changes"
+          onClose={() => setConfirmLeave(false)}
+          onConfirm={onCancel}
+        />
+      )}
+      {removingId && (
+        <ConfirmDialog
+          title="Delete this question?"
+          body="This question and its answers will be removed from the quiz."
+          confirmLabel="Delete"
+          onClose={() => setRemovingId("")}
+          onConfirm={() => removeQuestion(removingId)}
+        />
+      )}
     </Shell>
   );
 }
 
-type DragItem = { type: "section"; id: string } | { type: "lecture"; id: string; sectionId: string };
+// Article lectures: a focused writing page, like a document, with the same header and bottom bar as the quiz.
+// Assignment editor: instructions, open questions with a model answer, and files learners download.
+type AssignAnswer = "text" | "textfiles" | "files";
+type AssignQuestion = { id: string; answer: AssignAnswer; prompt: { text: string; html: string }; model: { text: string; html: string } };
+type AssignFile = { id: string; name: string; size: number; url?: string };
+type AssignmentData = { instructions: { text: string; html: string }; questions: AssignQuestion[]; files: AssignFile[] };
+const ASSIGN_ANSWERS: Record<AssignAnswer, { label: string; hint: string; icon: string }> = {
+  text: { label: "Text", hint: "Learners write the answer in the editor.", icon: "M4 20h4L19 9l-4-4L4 16v4zM14 6l4 4" },
+  textfiles: { label: "Text and files", hint: "Learners write an answer and can attach files.", icon: "M4 20h4L19 9l-4-4L4 16v4zM14 6l4 4M15 20h5" },
+  files: { label: "File only", hint: "Learners upload a file as their answer.", icon: "M12 16V4M7 9l5-5 5 5M4 16v3a1 1 0 001 1h14a1 1 0 001-1v-3" },
+};
+const ASSIGN_INSTRUCTIONS = "__instructions";
+const FILE_ICON = "M14 3H7a1 1 0 00-1 1v16a1 1 0 001 1h10a1 1 0 001-1V7l-4-4zM14 3v4h4";
+const blankAssignQuestion = (): AssignQuestion => ({ id: uid("aq"), answer: "text", prompt: { text: "", html: "" }, model: { text: "", html: "" } });
+const formatBytes = (n: number) => (n >= 1048576 ? `${(n / 1048576).toFixed(1)} MB` : `${Math.max(1, Math.round(n / 1024))} KB`);
+const MAX_ASSIGN_FILES = 10;
+const MAX_ASSIGN_FILE_BYTES = 50 * 1048576;
 
-function CurriculumSection({ draft, update, onExplain, onSupport, uploads }: SectionProps & { onSupport: () => void; uploads: Uploads }) {
+function AssignmentDrawer({ lecture, context, onCancel, onSave }: { lecture: Lecture; context: LectureContext; onCancel: () => void; onSave: (patch: Partial<Lecture>) => void }) {
+  const { notify } = useApp();
+  const initial: AssignmentData = lecture.assignment ?? { instructions: { text: "", html: "" }, questions: [blankAssignQuestion()], files: [] };
+  const [title, setTitle] = useState(lecture.title);
+  const [data, setData] = useState<AssignmentData>(initial);
+  const [activeId, setActiveId] = useState(initial.questions[0]?.id ?? ASSIGN_INSTRUCTIONS);
+  const [confirmLeave, setConfirmLeave] = useState(false);
+  const [removingId, setRemovingId] = useState("");
+  const [uploading, setUploading] = useState(0);
+  const [dragOver, setDragOver] = useState(false);
+  const [settingsOpen, setSettingsOpenState] = useState(() => {
+    try {
+      return localStorage.getItem("thkee.assignSettingsPanel") !== "closed";
+    } catch {
+      return true;
+    }
+  });
+  const setSettingsOpen = (open: boolean) => {
+    setSettingsOpenState(open);
+    try {
+      localStorage.setItem("thkee.assignSettingsPanel", open ? "open" : "closed");
+    } catch {
+      /* storage can be unavailable */
+    }
+  };
+  const fileInput = useRef<HTMLInputElement | null>(null);
+  // AI drafts replace editor content, so editors are re-mounted with a new key after each one.
+  const [rev, setRev] = useState(0);
+  const [aiBusy, setAiBusy] = useState<"" | "title" | "instructions" | "one" | "set">("");
+  const [titleIdeas, setTitleIdeas] = useState<string[] | null>(null);
+  const [undoInstructions, setUndoInstructions] = useState<{ text: string; html: string } | null>(null);
+  const aiCtx = (): LectureContext => ({ ...context, kind: "Assignment", lectureTitle: title });
+  const fromAssignDraft = (d: AssignmentDraft): AssignQuestion => ({ id: uid("aq"), answer: d.answer, prompt: d.prompt, model: d.model });
+  const { questions, files, instructions } = data;
+  const onInstructions = activeId === ASSIGN_INSTRUCTIONS;
+  const activeIndex = questions.findIndex((q) => q.id === activeId);
+  const active = questions[activeIndex];
+  const written = questions.filter((q) => q.prompt.text.trim()).length;
+  const dirty = title !== lecture.title || JSON.stringify(data) !== JSON.stringify(initial);
+  const close = () => (dirty ? setConfirmLeave(true) : onCancel());
+  const patchQuestion = (id: string, patch: Partial<AssignQuestion>) => setData((d) => ({ ...d, questions: d.questions.map((q) => (q.id === id ? { ...q, ...patch } : q)) }));
+  const addQuestion = () => {
+    const blank = questions.find((q) => !q.prompt.text.trim());
+    if (blank) {
+      setActiveId(blank.id);
+      notify("Finish this question before adding a new one");
+      return;
+    }
+    const q = blankAssignQuestion();
+    setData((d) => ({ ...d, questions: [...d.questions, q] }));
+    setActiveId(q.id);
+  };
+  const removeQuestion = (id: string) => {
+    const index = questions.findIndex((q) => q.id === id);
+    const next = questions.filter((q) => q.id !== id);
+    setData((d) => ({ ...d, questions: next }));
+    if (id === activeId) setActiveId(next[Math.min(index, next.length - 1)]?.id ?? ASSIGN_INSTRUCTIONS);
+    setRemovingId("");
+  };
+  const addFiles = async (list: FileList | null) => {
+    if (!list) return;
+    const picked = Array.from(list);
+    const room = MAX_ASSIGN_FILES - files.length;
+    if (room <= 0) return notify(`Up to ${MAX_ASSIGN_FILES} files`);
+    const tooBig = picked.filter((f) => f.size > MAX_ASSIGN_FILE_BYTES);
+    if (tooBig.length) notify(`${tooBig[0].name} is over 50 MB`);
+    const ok = picked.filter((f) => f.size <= MAX_ASSIGN_FILE_BYTES).slice(0, room);
+    setUploading((n) => n + ok.length);
+    for (const file of ok) {
+      let url: string | undefined;
+      try {
+        url = (await uploadFile(file)) ?? undefined;
+      } catch {
+        url = undefined;
+      }
+      setData((d) => ({ ...d, files: [...d.files, { id: uid("af"), name: file.name, size: file.size, url }] }));
+      setUploading((n) => n - 1);
+    }
+  };
+  const suggestTitle = async () => {
+    setAiBusy("title");
+    try {
+      setTitleIdeas(await suggestLectureTitles(aiCtx(), Date.now() % 100000));
+    } finally {
+      setAiBusy("");
+    }
+  };
+  const writeInstructions = async () => {
+    setAiBusy("instructions");
+    try {
+      const draft = await suggestAssignmentInstructions(aiCtx(), Date.now() % 100000);
+      if (instructions.text.trim()) setUndoInstructions(instructions);
+      setData((d) => ({ ...d, instructions: draft }));
+      setRev((r) => r + 1);
+    } finally {
+      setAiBusy("");
+    }
+  };
+  const generate = async (count: number) => {
+    setAiBusy(count === 1 ? "one" : "set");
+    try {
+      const drafts = await suggestAssignmentQuestions(aiCtx(), count, Date.now() % 100000, questions.map((q) => q.prompt.text));
+      if (!drafts.length) return notify("No new questions to suggest. Try changing the title");
+      const made = drafts.map(fromAssignDraft);
+      const empty = active && !active.prompt.text.trim() && !active.model.text.trim() ? active : null;
+      // One question fills the open empty question; otherwise new ones are added at the end.
+      if (count === 1 && empty) {
+        setData((d) => ({ ...d, questions: d.questions.map((q) => (q.id === empty.id ? { ...made[0], id: empty.id } : q)) }));
+      } else {
+        const blankIds = new Set(questions.filter((q) => !q.prompt.text.trim() && !q.model.text.trim()).map((q) => q.id));
+        setData((d) => ({ ...d, questions: [...d.questions.filter((q) => !blankIds.has(q.id)), ...made] }));
+        setActiveId(made[0].id);
+      }
+      setRev((r) => r + 1);
+      notify(made.length === 1 ? "Question added. Check it before you save" : `${made.length} questions added. Check them before you save`);
+    } finally {
+      setAiBusy("");
+    }
+  };
+  const saveAll = () => {
+    onSave({
+      title: title.trim() || lecture.title,
+      assignment: { ...data, questions: questions.filter((q) => q.prompt.text.trim() || q.model.text.trim()) },
+    });
+  };
+
+  const sideTitle = `m-0 text-11 uppercase leading-3.5 tracking-[0.08em] text-slate-500 ${fontSemi}`;
+  const PANEL = "M4 5h16v14H4zM15 5v14";
+  const spinner = <span aria-hidden="true" className="size-3.5 animate-spin rounded-full border-2 border-current border-t-transparent" />;
+  const aiChip = `flex items-center gap-1.5 rounded-full bg-violet-50 px-2.5 py-1 text-xs leading-4 text-violet-700 transition hover:bg-violet-100 disabled:opacity-60 ${fontMedium}`;
+  const card = "relative mx-auto max-w-170 overflow-hidden rounded-2xl bg-white p-5 shadow-[0_1px_2px_rgba(15,23,42,0.05),0_16px_40px_-20px_rgba(15,23,42,0.22)] ring-1 ring-slate-200/80 @4xl:p-7";
+  const stripe = <span aria-hidden="true" className="absolute inset-x-0 top-0 h-1 bg-[linear-gradient(90deg,#6d28d9,#a78bfa)]" />;
+  const label = `m-0 text-13 leading-4.5 text-slate-900 ${fontSemi}`;
+
+  return (
+    <Shell title={`Edit ${lectureName(lecture)}`} variant="drawer" drawerWidth="xl:max-w-[1180px]" hideHeader onClose={close}>
+      <div className="@container flex min-h-full flex-col bg-white">
+        <div className="sticky top-0 z-20 flex items-center gap-2 border-b border-slate-100 bg-white/95 px-5 py-3 backdrop-blur-sm">
+          <div className="min-w-0 flex-1">
+            <p className={`m-0 text-base leading-5.5 text-slate-900 ${fontSemi}`}>Edit assignment</p>
+            <p className={`m-0 text-xs leading-4 text-slate-500 ${fontRegular}`}>
+              Assignment · {questions.length} {questions.length === 1 ? "question" : "questions"} · {files.length} {files.length === 1 ? "file" : "files"}
+            </p>
+          </div>
+          <button type="button" aria-label="Close" title="Close" onClick={close} className="-mr-1.5 flex size-9 shrink-0 items-center justify-center rounded-10 text-slate-500 transition hover:bg-slate-100 hover:text-slate-900">
+            <Icon path={CLOSE} className="size-5" />
+          </button>
+        </div>
+
+        <div className="flex flex-1 flex-col @4xl:flex-row @4xl:flex-wrap @6xl:flex-nowrap">
+          {/* Left rail: title, instructions and the question list. */}
+          <aside className="flex shrink-0 flex-col gap-5 border-b border-slate-150 p-5 @4xl:w-75 @4xl:border-b-0 @4xl:border-r">
+            <div>
+              <label htmlFor="assign-title" className={sideTitle}>Title</label>
+              <div className="field-box mt-2 h-10 pr-1">
+                <input id="assign-title" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="e.g. Design a login screen" className={`min-w-0 flex-1 bg-transparent text-base leading-5.5 text-slate-900 outline-none placeholder:text-slate-400 md:text-sm ${fontSemi}`} />
+                <button type="button" aria-label="Suggest titles with AI" title="Suggest titles with AI" aria-expanded={!!titleIdeas} onClick={suggestTitle} disabled={aiBusy === "title"} className={`flex size-8 shrink-0 items-center justify-center rounded-lg text-primary-700 transition hover:bg-primary-100 ${titleIdeas || aiBusy === "title" ? "bg-primary-100" : ""}`}>
+                  {aiBusy === "title" ? spinner : <Icon path={SPARKLE} className="size-4" filled />}
+                </button>
+              </div>
+              {titleIdeas && (
+                <div className="pop-in mt-2 flex flex-col gap-1 rounded-xl bg-primary-50 p-1.5">
+                  {titleIdeas.length === 0 && <span className={`px-2 py-1 text-xs text-slate-500 ${fontRegular}`}>No new ideas. Try again.</span>}
+                  {titleIdeas.map((idea) => (
+                    <button key={idea} type="button" onClick={() => { setTitle(idea); setTitleIdeas(null); }} className={`rounded-lg px-2 py-1.5 text-left text-13 leading-4.5 text-slate-900 transition hover:bg-white hover:text-primary-700 ${fontMedium}`}>
+                      {idea}
+                    </button>
+                  ))}
+                  <span className="flex items-center justify-between px-1">
+                    <button type="button" onClick={suggestTitle} disabled={aiBusy === "title"} className={`rounded-lg px-1.5 py-1 text-xs leading-4 text-primary-700 transition hover:bg-primary-200 disabled:opacity-60 ${fontMedium}`}>
+                      {aiBusy === "title" ? "Thinking…" : "More ideas"}
+                    </button>
+                    <button type="button" aria-label="Close title ideas" onClick={() => setTitleIdeas(null)} className="flex size-6 items-center justify-center rounded-md text-slate-500 transition hover:bg-primary-200">
+                      <Icon path={CLOSE} className="size-3.5" />
+                    </button>
+                  </span>
+                </div>
+              )}
+            </div>
+            <button type="button" aria-current={onInstructions ? "true" : undefined} onClick={() => setActiveId(ASSIGN_INSTRUCTIONS)} className={`-mx-2 -my-1 flex items-center gap-2.5 rounded-10 px-2 py-2 text-left transition ${onInstructions ? "bg-primary-100" : "hover:bg-slate-50"}`}>
+              <span aria-hidden="true" className={`flex size-6 shrink-0 items-center justify-center rounded-md ${KIND_TONES.Article}`}>
+                <Icon path={KIND_ICONS.Article} className="size-3.5" />
+              </span>
+              <span className="min-w-0 flex-1">
+                <span className={`block text-13 leading-4.5 text-slate-900 ${onInstructions ? fontSemi : fontMedium}`}>Instructions</span>
+                <span className={`block truncate text-xs leading-4 ${instructions.text.trim() ? "text-slate-500" : "text-slate-400"} ${fontRegular}`}>
+                  {instructions.text.trim() ? "Shown before the questions" : "Optional · not added yet"}
+                </span>
+              </span>
+            </button>
+            <div className="border-t border-slate-150 pt-4">
+              <p className={sideTitle}>Questions · {questions.length}</p>
+              <ol className="-mx-2 mt-2 flex flex-col gap-0.5">
+                {questions.map((q, i) => {
+                  const selected = q.id === activeId;
+                  const ok = !!q.prompt.text.trim();
+                  return (
+                    <li key={q.id} className={`group/row relative rounded-10 transition ${selected ? "bg-primary-100" : "hover:bg-slate-50"}`}>
+                      <button type="button" aria-current={selected ? "true" : undefined} onClick={() => setActiveId(q.id)} className="flex w-full min-w-0 items-start gap-2.5 px-2 py-2 text-left">
+                        <span title={ok ? "Ready" : "Write the question"} className={`flex size-6 shrink-0 items-center justify-center rounded-full text-11 leading-3.5 tabular-nums ${selected ? (ok ? "bg-primary-700 text-white" : "bg-amber-500 text-white") : ok ? "bg-primary-200 text-primary-700" : "bg-amber-50 text-amber-700 ring-1 ring-inset ring-amber-500/40"} ${fontSemi}`}>
+                          {i + 1}
+                        </span>
+                        <span className="min-w-0 flex-1 pt-0.5">
+                          <span className={`line-clamp-2 text-13 leading-4.5 ${!ok ? "text-slate-400" : selected ? "text-slate-900" : "text-slate-500 group-hover/row:text-slate-700"} ${selected ? fontSemi : fontRegular}`}>{q.prompt.text.trim() || "Untitled question"}</span>
+                          <span className={`mt-0.5 block text-11 leading-3.5 text-slate-400 ${fontRegular}`}>{ASSIGN_ANSWERS[q.answer].label}</span>
+                        </span>
+                      </button>
+                      <span className={`absolute inset-y-0 right-0 flex items-center rounded-r-10 bg-gradient-to-l pl-8 pr-1 opacity-0 transition-opacity group-hover/row:opacity-100 focus-within:opacity-100 pointer-coarse:opacity-100 ${selected ? "from-primary-100 via-primary-100" : "from-slate-50 via-slate-50"}`}>
+                        <RowMenu
+                          label={`More actions for question ${i + 1}`}
+                          items={[
+                            { label: "Move up", disabled: i === 0, onClick: () => setData((d) => ({ ...d, questions: move(d.questions, i, -1) })) },
+                            { label: "Move down", disabled: i === questions.length - 1, onClick: () => setData((d) => ({ ...d, questions: move(d.questions, i, 1) })) },
+                            { label: "Delete question", danger: true, onClick: () => setRemovingId(q.id) },
+                          ]}
+                        />
+                      </span>
+                    </li>
+                  );
+                })}
+              </ol>
+              <div className="-mx-2 mt-1 flex flex-col gap-0.5">
+                <button type="button" onClick={addQuestion} className={`flex h-9 items-center gap-2 rounded-10 px-2 text-13 leading-4.5 text-slate-700 transition hover:bg-primary-50 hover:text-primary-700 ${fontMedium}`}>
+                  <Icon path={PLUS} className="size-4" />
+                  Add question
+                </button>
+                <button type="button" onClick={() => generate(3)} disabled={!!aiBusy} className={`flex h-9 items-center gap-2 rounded-10 px-2 text-13 leading-4.5 text-violet-700 transition hover:bg-violet-50 disabled:opacity-60 ${fontMedium}`}>
+                  {aiBusy === "set" ? spinner : <Icon path={SPARKLE} className="size-3.5" filled />}
+                  {aiBusy === "set" ? "Writing…" : "Add 3 with AI"}
+                </button>
+              </div>
+            </div>
+          </aside>
+
+          {/* Centre: one white sheet on a grey canvas, so the eye lands on the work. */}
+          <section className="min-w-0 flex-1 bg-[#f4f6f8] px-4 py-6 @4xl:px-8 @4xl:py-8">
+            {onInstructions ? (
+              <div className={card}>
+                {stripe}
+                <div className="flex flex-wrap items-start gap-3">
+                  <div className="min-w-0 flex-1">
+                    <h3 className={`m-0 text-xl leading-7 text-slate-900 ${fontSemi}`}>Instructions</h3>
+                    <p className={`m-0 mt-1 text-13 leading-5 text-slate-500 ${fontRegular}`}>Learners read these first. Say what to build, how it is checked and when it is due.</p>
+                  </div>
+                  <span className="flex items-center gap-1">
+                    {undoInstructions && (
+                      <button type="button" onClick={() => { setData((d) => ({ ...d, instructions: undoInstructions })); setUndoInstructions(null); setRev((r) => r + 1); }} className={`rounded-full px-2.5 py-1 text-xs leading-4 text-slate-600 transition hover:bg-slate-100 ${fontMedium}`}>
+                        Undo
+                      </button>
+                    )}
+                    <button type="button" onClick={writeInstructions} disabled={!!aiBusy} className={aiChip}>
+                      {aiBusy === "instructions" ? spinner : <Icon path={SPARKLE} className="size-3.5" filled />}
+                      {aiBusy === "instructions" ? "Writing…" : instructions.text.trim() ? "Rewrite with AI" : "Write with AI"}
+                    </button>
+                  </span>
+                </div>
+                <div className="mt-4 flex">
+                  <NoteEditor key={`assign-instructions-${rev}`} modern hideActions hideUnderline autoFocus={false} initial={instructions} placeholder="e.g. Design a login screen for a food delivery app. Share a Figma link and a short note on your choices." boxClass="min-h-[260px]" onChange={(text, html) => setData((d) => ({ ...d, instructions: { text, html } }))} />
+                </div>
+              </div>
+            ) : active ? (
+              <div className={card}>
+                {stripe}
+                <div className="flex flex-wrap items-center gap-3">
+                  <p className={`m-0 text-xs leading-4 text-slate-500 ${fontMedium}`}>
+                    Question <span className="text-slate-900">{activeIndex + 1}</span> of {questions.length}
+                  </p>
+                  <button type="button" onClick={() => generate(1)} disabled={!!aiBusy} className={`${aiChip} ml-auto`}>
+                    {aiBusy === "one" ? spinner : <Icon path={SPARKLE} className="size-3.5" filled />}
+                    {aiBusy === "one" ? "Writing…" : active.prompt.text.trim() ? "New question with AI" : "Write with AI"}
+                  </button>
+                </div>
+                <div className="mt-4 flex flex-wrap items-baseline justify-between gap-2">
+                  <p className={label}>The question</p>
+                  <span className={`flex items-center gap-1.5 text-xs leading-4 text-slate-500 ${fontRegular}`}>
+                    <Icon path={ASSIGN_ANSWERS[active.answer].icon} className="size-3.5 text-violet-600" />
+                    {ASSIGN_ANSWERS[active.answer].hint}
+                  </span>
+                </div>
+                <div className="mt-2 flex">
+                  <NoteEditor key={`${active.id}-prompt-${rev}`} modern hideActions hideUnderline autoFocus={false} initial={active.prompt} placeholder="Write the question…" boxClass="min-h-[140px]" onChange={(text, html) => patchQuestion(active.id, { prompt: { text, html } })} />
+                </div>
+                <p className={`${label} mt-5`}>
+                  Model answer <span className={`text-slate-400 ${fontRegular}`}>(optional)</span>
+                </p>
+                <p className={`m-0 mt-0.5 text-xs leading-4 text-slate-500 ${fontRegular}`}>Learners see this after they submit.</p>
+                <div className="mt-2 flex">
+                  <NoteEditor key={`${active.id}-model-${rev}`} modern hideActions hideUnderline autoFocus={false} initial={active.model} placeholder="Write the model answer…" boxClass="min-h-[120px]" onChange={(text, html) => patchQuestion(active.id, { model: { text, html } })} />
+                </div>
+              </div>
+            ) : (
+              <div className={`${card} text-center`}>
+                {stripe}
+                <p className={`m-0 text-base text-slate-900 ${fontSemi}`}>No questions yet</p>
+                <button type="button" onClick={addQuestion} className={`mx-auto mt-4 flex h-10 items-center gap-2 rounded-10 bg-primary-700 px-4 text-sm text-white transition hover:bg-primary-800 ${fontMedium}`}>
+                  <Icon path={PLUS} className="size-4" />
+                  Add a question
+                </button>
+              </div>
+            )}
+          </section>
+
+          {/* Right: answer type and assignment files. Folds away like the quiz panel. */}
+          {!settingsOpen ? (
+            <aside className="flex shrink-0 basis-full items-center border-t border-slate-150 px-5 py-3 @6xl:w-14 @6xl:basis-auto @6xl:flex-col @6xl:border-l @6xl:border-t-0 @6xl:px-0 @6xl:py-4">
+              <button type="button" aria-label="Show settings" title="Show settings" onClick={() => setSettingsOpen(true)} className={`flex h-9 items-center gap-2 rounded-10 px-2 text-13 leading-4.5 text-slate-600 transition hover:bg-slate-100 hover:text-slate-900 @6xl:w-9 @6xl:justify-center @6xl:px-0 ${fontMedium}`}>
+                <Icon path={PANEL} className="size-4.5 shrink-0" />
+                <span className="@6xl:sr-only">Show settings</span>
+              </button>
+            </aside>
+          ) : (
+            <aside className="flex shrink-0 basis-full flex-col gap-6 border-t border-slate-150 p-5 @6xl:w-70 @6xl:basis-auto @6xl:border-l @6xl:border-t-0">
+              <div className="-mt-1.5 flex items-center justify-between gap-2">
+                <p className={sideTitle}>{active && !onInstructions ? "This question" : "Assignment"}</p>
+                <button type="button" aria-label="Hide settings" title="Hide settings" onClick={() => setSettingsOpen(false)} className="-mr-2 flex size-8 items-center justify-center rounded-lg text-slate-400 transition hover:bg-slate-100 hover:text-slate-900">
+                  <Icon path={PANEL} className="size-4.5" />
+                </button>
+              </div>
+              {active && !onInstructions && (
+                <div className="-mt-3">
+                  <p className={`m-0 text-13 leading-4.5 text-slate-700 ${fontMedium}`}>How learners answer</p>
+                  <div role="radiogroup" aria-label="How learners answer" className="mt-2 flex flex-col gap-0.5 rounded-xl bg-slate-100 p-0.5">
+                    {(Object.keys(ASSIGN_ANSWERS) as AssignAnswer[]).map((k) => (
+                      <button key={k} type="button" role="radio" aria-checked={active.answer === k} onClick={() => patchQuestion(active.id, { answer: k })} className={`flex h-8 items-center gap-2 rounded-lg px-2 text-left text-13 leading-4.5 transition ${active.answer === k ? `bg-white text-slate-900 shadow-[0_1px_2px_rgba(15,23,42,0.12)] ${fontSemi}` : `text-slate-500 hover:text-slate-900 ${fontMedium}`}`}>
+                        <Icon path={ASSIGN_ANSWERS[k].icon} className={`size-4 shrink-0 ${active.answer === k ? "text-violet-600" : ""}`} />
+                        {ASSIGN_ANSWERS[k].label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+              <div className={active && !onInstructions ? "border-t border-slate-150 pt-5" : "-mt-3"}>
+                <div className="flex items-baseline justify-between gap-2">
+                  <p className={`m-0 text-13 leading-4.5 text-slate-700 ${fontMedium}`}>Files for learners</p>
+                  <span className={`text-11 leading-3.5 text-slate-400 ${fontRegular}`}>Optional</span>
+                </div>
+                {files.length > 0 && (
+                  <ul className="mt-2 flex flex-col gap-1">
+                    {files.map((f) => (
+                      <li key={f.id} className="group/file flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-2 py-1.5">
+                        <Icon path={FILE_ICON} className="size-4 shrink-0 text-violet-600" />
+                        <span className="min-w-0 flex-1">
+                          <span className={`block truncate text-xs leading-4 text-slate-900 ${fontMedium}`}>{f.name}</span>
+                          <span className={`block text-11 leading-3.5 text-slate-400 ${fontRegular}`}>{formatBytes(f.size)}{f.url ? "" : " · not uploaded in preview mode"}</span>
+                        </span>
+                        <button type="button" aria-label={`Remove ${f.name}`} onClick={() => setData((d) => ({ ...d, files: d.files.filter((x) => x.id !== f.id) }))} className="flex size-7 shrink-0 items-center justify-center rounded-md text-slate-400 opacity-0 transition hover:bg-red-50 hover:text-red-600 group-hover/file:opacity-100 focus-visible:opacity-100 pointer-coarse:opacity-100">
+                          <Icon path={TRASH} className="size-3.5" />
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+                <button
+                  type="button"
+                  onClick={() => fileInput.current?.click()}
+                  onDragOver={(e) => {
+                    e.preventDefault();
+                    setDragOver(true);
+                  }}
+                  onDragLeave={() => setDragOver(false)}
+                  onDrop={(e) => {
+                    e.preventDefault();
+                    setDragOver(false);
+                    addFiles(e.dataTransfer.files);
+                  }}
+                  disabled={files.length >= MAX_ASSIGN_FILES}
+                  className={`mt-2 flex w-full flex-col items-center gap-1 rounded-xl border border-dashed px-3 py-4 text-center transition disabled:opacity-50 ${dragOver ? "border-violet-500 bg-violet-50" : "border-slate-300 hover:border-violet-400 hover:bg-violet-50/50"}`}
+                >
+                  <Icon path={ASSIGN_ANSWERS.files.icon} className="size-5 text-violet-600" />
+                  <span className={`text-13 leading-4.5 text-slate-900 ${fontMedium}`}>{uploading ? `Uploading ${uploading}…` : "Drop files or choose"}</span>
+                  <span className={`text-11 leading-3.5 text-slate-500 ${fontRegular}`}>PDF, Word, Excel, slides, images, ZIP · up to 50 MB</span>
+                </button>
+                <input ref={fileInput} type="file" multiple hidden accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.png,.jpg,.jpeg,.webp,.zip,.fig" onChange={(e) => {
+                  addFiles(e.target.files);
+                  e.target.value = "";
+                }} />
+              </div>
+              {/* A compact read-out of what learners get. */}
+              <div className="border-t border-slate-150 pt-5">
+                <p className={sideTitle}>What learners see</p>
+                <dl className="mt-3 grid grid-cols-3 gap-1.5">
+                  {[
+                    { n: written, l: "Questions" },
+                    { n: files.length, l: "Files" },
+                    { n: questions.filter((q) => q.answer !== "text").length, l: "File answers" },
+                  ].map((s) => (
+                    <div key={s.l} className="rounded-lg bg-slate-50 px-2 py-2">
+                      <dd className={`m-0 text-base leading-5 tabular-nums text-slate-900 ${fontSemi}`}>{s.n}</dd>
+                      <dt className={`mt-0.5 text-11 leading-3.5 text-slate-500 ${fontRegular}`}>{s.l}</dt>
+                    </div>
+                  ))}
+                </dl>
+                <p className={`m-0 mt-3 text-xs leading-4.5 text-slate-500 ${fontRegular}`}>
+                  Learners read the instructions, answer each question and submit. {questions.some((q) => q.model.text.trim()) ? "They see your model answer right after." : "Add a model answer to show them after they submit."}
+                </p>
+              </div>
+            </aside>
+          )}
+        </div>
+
+        <footer className="sticky bottom-0 z-20 mt-auto flex flex-wrap items-center gap-2 border-t border-slate-150 bg-white/95 px-5 py-3 backdrop-blur">
+          {active && !onInstructions && (
+            <button type="button" onClick={() => setRemovingId(active.id)} className={`-ml-3 flex h-9 items-center gap-1.5 rounded-10 px-3 text-13 leading-4.5 text-slate-500 transition hover:bg-red-50 hover:text-red-600 ${fontMedium}`}>
+              <Icon path={TRASH} className="size-4" />
+              Delete question
+            </button>
+          )}
+          <span className="flex-1" />
+          <div className="flex items-center gap-1">
+            {active && !onInstructions && (
+              <button type="button" onClick={() => setActiveId(activeIndex <= 0 ? ASSIGN_INSTRUCTIONS : questions[activeIndex - 1].id)} className={`h-9 rounded-10 px-3 text-13 leading-4.5 text-slate-700 transition hover:bg-slate-100 ${fontMedium}`}>
+                ← Previous
+              </button>
+            )}
+            <button
+              type="button"
+              onClick={() => (onInstructions ? (questions[0] ? setActiveId(questions[0].id) : addQuestion()) : activeIndex < questions.length - 1 ? setActiveId(questions[activeIndex + 1].id) : addQuestion())}
+              className={`h-9 rounded-10 px-3 text-13 leading-4.5 text-slate-700 transition hover:bg-slate-100 ${fontMedium}`}
+            >
+              {onInstructions ? (questions[0] ? "First question →" : "+ New question") : activeIndex < questions.length - 1 ? "Next →" : "+ New question"}
+            </button>
+            <span aria-hidden="true" className="mx-2 h-6 w-px bg-slate-200" />
+          </div>
+          <button type="button" onClick={close} className={`h-10 rounded-10 border border-slate-200 bg-white px-4 text-sm leading-5 text-slate-700 transition hover:bg-slate-50 ${fontMedium}`}>
+            Cancel
+          </button>
+          <button type="button" onClick={saveAll} className={`h-10 rounded-10 bg-primary-700 px-5 text-sm leading-5 text-white shadow-[0_1px_2px_rgba(13,92,75,0.25),0_8px_20px_-10px_rgba(13,92,75,0.6)] transition hover:bg-primary-800 ${fontMedium}`}>
+            Save assignment
+          </button>
+        </footer>
+      </div>
+      {confirmLeave && <ConfirmDialog title="Discard your assignment changes?" body="Anything you changed since opening this assignment will be lost." confirmLabel="Discard changes" onClose={() => setConfirmLeave(false)} onConfirm={onCancel} />}
+      {removingId && <ConfirmDialog title="Delete this question?" body="The question and its model answer will be removed." confirmLabel="Delete" onClose={() => setRemovingId("")} onConfirm={() => removeQuestion(removingId)} />}
+    </Shell>
+  );
+}
+
+function ArticleDrawer({
+  lecture,
+  context,
+  onCancel,
+  onSave,
+}: {
+  lecture: Lecture;
+  context: LectureContext;
+  onCancel: () => void;
+  onSave: (patch: Partial<Lecture>) => void;
+}) {
+  const { notify } = useApp();
+  const [title, setTitle] = useState(lecture.title);
+  const [body, setBody] = useState(lecture.article ?? { text: "", html: "" });
+  const [preview, setPreview] = useState(!!lecture.preview);
+  // The editor reads its starting text on mount, so an AI draft or undo remounts it.
+  const [bodyKey, setBodyKey] = useState(0);
+  const [previous, setPrevious] = useState<{
+    text: string;
+    html: string;
+  } | null>(null);
+  const [aiBusy, setAiBusy] = useState<"" | "title" | "body">("");
+  const [titleIdeas, setTitleIdeas] = useState<string[] | null>(null);
+  const [confirmLeave, setConfirmLeave] = useState(false);
+  const words = body.text.trim() ? body.text.trim().split(/\s+/).length : 0;
+  const minutes = Math.max(1, Math.ceil(words / 200));
+  const dirty =
+    title !== lecture.title ||
+    preview !== !!lecture.preview ||
+    body.html !== (lecture.article?.html ?? "");
+  const close = () => (dirty ? setConfirmLeave(true) : onCancel());
+  const spinner = (
+    <span
+      aria-hidden="true"
+      className="size-3.5 animate-spin rounded-full border-2 border-current border-t-transparent"
+    />
+  );
+  const label = `m-0 text-11 uppercase leading-3.5 tracking-label text-slate-500 ${fontSemi}`;
+
+  const suggestTitle = async () => {
+    setAiBusy("title");
+    try {
+      setTitleIdeas(
+        await suggestLectureTitles(
+          { ...context, kind: "Article", lectureTitle: title },
+          Date.now() % 100000,
+        ),
+      );
+    } finally {
+      setAiBusy("");
+    }
+  };
+  const writeBody = async () => {
+    setAiBusy("body");
+    try {
+      const draft = await suggestArticle(
+        { ...context, kind: "Article", lectureTitle: title },
+        Date.now() % 100000,
+      );
+      setPrevious(body);
+      setBody(draft);
+      setBodyKey((k) => k + 1);
+      notify("Draft added. Edit it so it sounds like you");
+    } catch {
+      notify("Could not write a draft. Please try again");
+    } finally {
+      setAiBusy("");
+    }
+  };
+  const undo = () => {
+    if (!previous) return;
+    setBody(previous);
+    setPrevious(null);
+    setBodyKey((k) => k + 1);
+  };
+
+  return (
+    <Shell
+      title={`Edit ${lectureName(lecture)}`}
+      variant="drawer"
+      drawerWidth="max-w-240"
+      hideHeader
+      onClose={close}
+    >
+      <div className="flex min-h-full flex-col bg-white">
+        <div className="sticky top-0 z-20 flex items-center gap-2 border-b border-slate-100 bg-white/95 px-5 py-3 backdrop-blur-sm">
+          <div className="min-w-0 flex-1">
+            <p
+              className={`m-0 text-base leading-5.5 text-slate-900 ${fontSemi}`}
+            >
+              Edit article
+            </p>
+            <p
+              className={`m-0 text-xs leading-4 text-slate-500 ${fontRegular}`}
+            >
+              Article lecture
+            </p>
+          </div>
+          <button
+            type="button"
+            aria-label="Close"
+            title="Close"
+            onClick={close}
+            className="-mr-1.5 flex size-9 shrink-0 items-center justify-center rounded-10 text-slate-500 transition hover:bg-slate-100 hover:text-slate-900"
+          >
+            <Icon path={CLOSE} className="size-5" />
+          </button>
+        </div>
+
+        {/* A writing page, in the style of Notion and Medium: big title on the page, text flowing below, no boxes. */}
+        <div className="mx-auto flex w-full max-w-190 flex-1 flex-col px-6 pb-8 pt-5">
+          <div className="flex flex-wrap items-center gap-2">
+            <span
+              className={`flex items-center gap-1.5 rounded-full px-2.5 py-1 text-11 uppercase leading-3.5 tracking-label ${KIND_TONES.Article} ${fontSemi}`}
+            >
+              <Icon path={KIND_ICONS.Article} className="size-3.5" />
+              Article
+            </span>
+            {context.sectionTitle && (
+              <span
+                className={`truncate text-xs leading-4 text-slate-400 ${fontRegular}`}
+              >
+                in {context.sectionTitle}
+              </span>
+            )}
+          </div>
+          <label htmlFor="article-title" className="sr-only">
+            Title
+          </label>
+          <div className="group/title mt-2 flex items-start gap-2">
+            <textarea
+              id="article-title"
+              rows={1}
+              value={title}
+              onChange={(e) => setTitle(e.target.value.replace(/\n/g, " "))}
+              placeholder="Untitled article"
+              className={`field-sizing-content min-w-0 flex-1 resize-none overflow-hidden bg-transparent text-26 leading-8.5 tracking-tight text-slate-900 outline-none placeholder:text-slate-300 ${fontHeading}`}
+            />
+            <button
+              type="button"
+              aria-label="Suggest titles with AI"
+              title="Suggest titles with AI"
+              aria-expanded={!!titleIdeas}
+              onClick={suggestTitle}
+              disabled={aiBusy === "title"}
+              className={`mt-1 flex h-8 shrink-0 items-center gap-1.5 rounded-full px-2.5 text-xs leading-4 text-primary-700 transition hover:bg-primary-100 ${titleIdeas || aiBusy === "title" ? "bg-primary-100" : "opacity-60 group-hover/title:opacity-100 focus-visible:opacity-100"} ${fontMedium}`}
+            >
+              {aiBusy === "title" ? (
+                spinner
+              ) : (
+                <Icon path={SPARKLE} className="size-3.5" filled />
+              )}
+              {aiBusy === "title" ? "Thinking…" : "Ideas"}
+            </button>
+          </div>
+          {titleIdeas && (
+            <div className="pop-in mt-2 flex flex-wrap items-center gap-1.5 rounded-xl bg-primary-50 p-2">
+              {titleIdeas.length === 0 && (
+                <span
+                  className={`px-1.5 text-13 text-slate-500 ${fontRegular}`}
+                >
+                  No new ideas. Try again.
+                </span>
+              )}
+              {titleIdeas.map((idea) => (
+                <button
+                  key={idea}
+                  type="button"
+                  onClick={() => {
+                    setTitle(idea);
+                    setTitleIdeas(null);
+                  }}
+                  className={`rounded-full border border-primary-700/15 bg-white px-3 py-1.5 text-left text-13 leading-4.5 text-slate-900 transition hover:border-primary-700/50 hover:text-primary-700 ${fontMedium}`}
+                >
+                  {idea}
+                </button>
+              ))}
+              <span className="ml-auto flex items-center gap-0.5">
+                <button
+                  type="button"
+                  onClick={suggestTitle}
+                  disabled={aiBusy === "title"}
+                  className={`rounded-lg px-2 py-1 text-xs leading-4 text-primary-700 transition hover:bg-primary-200 disabled:opacity-60 ${fontMedium}`}
+                >
+                  {aiBusy === "title" ? "Thinking…" : "More"}
+                </button>
+                <button
+                  type="button"
+                  aria-label="Close title ideas"
+                  onClick={() => setTitleIdeas(null)}
+                  className="flex size-7 items-center justify-center rounded-lg text-slate-500 transition hover:bg-primary-200"
+                >
+                  <Icon path={CLOSE} className="size-4" />
+                </button>
+              </span>
+            </div>
+          )}
+
+          {/* Meta line: reading stats and the AI writer. */}
+          <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-2 border-b border-slate-100 pb-3">
+            <span
+              className={`text-13 leading-4.5 text-slate-500 ${fontRegular}`}
+            >
+              {words
+                ? `${words} ${words === 1 ? "word" : "words"} · ${minutes} min read`
+                : "Start writing below"}
+            </span>
+            <span className="flex-1" />
+            {previous && aiBusy !== "body" && (
+              <button
+                type="button"
+                onClick={undo}
+                className={`h-8 rounded-full px-3 text-13 leading-4.5 text-slate-600 transition hover:bg-slate-100 ${fontMedium}`}
+              >
+                Undo
+              </button>
+            )}
+            <button
+              type="button"
+              onClick={writeBody}
+              disabled={aiBusy === "body"}
+              className={`flex h-8 items-center gap-1.5 rounded-full bg-linear-135 from-violet-600 to-ai-600 px-3.5 text-13 leading-4.5 text-white shadow-ai-button transition hover:brightness-110 disabled:opacity-70 ${fontMedium}`}
+            >
+              {aiBusy === "body" ? (
+                spinner
+              ) : (
+                <Icon path={SPARKLE} className="size-3.5" filled />
+              )}
+              {aiBusy === "body"
+                ? "Writing…"
+                : words
+                  ? "Rewrite with AI"
+                  : "Write with AI"}
+            </button>
+          </div>
+
+          <NoteEditor
+            key={bodyKey}
+            modern
+            page
+            extras
+            hideActions
+            hideUnderline
+            autoFocus={false}
+            initial={body}
+            placeholder="Write your article. Use headings, lists and links to keep it easy to scan…"
+            boxClass="min-h-90 flex-1"
+            onChange={(text, html) => setBody({ text, html })}
+          />
+        </div>
+
+        <footer className="sticky bottom-0 z-20 mt-auto flex flex-wrap items-center gap-3 border-t border-slate-100 bg-white/95 px-5 py-3 backdrop-blur">
+          <label
+            className={`flex cursor-pointer items-center gap-2 text-13 leading-4.5 text-slate-700 ${fontMedium}`}
+          >
+            <Toggle
+              on={preview}
+              label="Free preview"
+              onChange={() => setPreview((v) => !v)}
+            />
+            Free preview
+            <span className={`hidden text-slate-400 sm:inline ${fontRegular}`}>
+              · anyone can read it before enrolling
+            </span>
+          </label>
+          <span className="flex-1" />
+          <button
+            type="button"
+            onClick={close}
+            className={`h-10 rounded-10 border border-slate-200 bg-white px-4 text-sm leading-5 text-slate-700 transition hover:bg-slate-50 ${fontMedium}`}
+          >
+            Cancel
+          </button>
+          <button
+            type="button"
+            onClick={() =>
+              onSave({
+                title: title.trim() || lecture.title,
+                article: body,
+                preview,
+              })
+            }
+            className={`h-10 rounded-10 bg-primary-700 px-5 text-sm leading-5 text-white shadow-primary-button transition hover:bg-primary-800 ${fontMedium}`}
+          >
+            Save article
+          </button>
+        </footer>
+      </div>
+      {confirmLeave && (
+        <ConfirmDialog
+          title="Discard your article changes?"
+          body="Anything you changed since opening this article will be lost."
+          confirmLabel="Discard changes"
+          onClose={() => setConfirmLeave(false)}
+          onConfirm={onCancel}
+        />
+      )}
+    </Shell>
+  );
+}
+
+type DragItem =
+  | { type: "section"; id: string }
+  | { type: "lecture"; id: string; sectionId: string };
+
+function CurriculumSection({
+  draft,
+  update,
+  onExplain,
+  onSupport,
+  uploads,
+}: SectionProps & { onSupport: () => void; uploads: Uploads }) {
   const { notify } = useApp();
   const sections = draft.curriculum;
   const latest = useRef(sections);
@@ -2075,30 +5272,68 @@ function CurriculumSection({ draft, update, onExplain, onSupport, uploads }: Sec
   const fileRef = useRef<HTMLInputElement>(null);
   const dragging = useRef<DragItem | null>(null);
   const [dropId, setDropId] = useState("");
-  const [adding, setAdding] = useState<{ sectionId: string; step: "types" | "video" } | null>(null);
+  const [adding, setAdding] = useState<{
+    sectionId: string;
+    step: "types" | "video";
+  } | null>(null);
   const [renaming, setRenaming] = useState("");
-  const [library, setLibrary] = useState<{ sectionId?: string; lectureId?: string } | null>(null);
+  const [library, setLibrary] = useState<{
+    sectionId?: string;
+    lectureId?: string;
+  } | null>(null);
   const [editingId, setEditingId] = useState("");
   const pickTarget = useRef<{ sectionId?: string; lectureId?: string }>({});
-  const [removing, setRemoving] = useState<{ title: string; body: string; run: () => void } | null>(null);
+  const [removing, setRemoving] = useState<{
+    title: string;
+    body: string;
+    run: () => void;
+  } | null>(null);
   const setSections = (curriculum: CourseSection[]) => update({ curriculum });
-  const patchSection = (id: string, patch: Partial<CourseSection>) => setSections(latest.current.map((s) => (s.id === id ? { ...s, ...patch } : s)));
+  const patchSection = (id: string, patch: Partial<CourseSection>) =>
+    setSections(
+      latest.current.map((s) => (s.id === id ? { ...s, ...patch } : s)),
+    );
 
   const addSection = () => {
-    const section = { id: uid("section"), title: `Section ${nextNumber(sections.map((s) => s.title), /^Section (\d+)/)} - ${sectionDate(new Date())}`, lectures: [] };
+    const section = {
+      id: uid("section"),
+      title: `Section ${nextNumber(
+        sections.map((s) => s.title),
+        /^Section (\d+)/,
+      )} - ${sectionDate(new Date())}`,
+      lectures: [],
+    };
     setSections([...sections, section]);
     setAdding({ sectionId: section.id, step: "types" });
   };
 
-  const patchLecture = (id: string, patch: Partial<Lecture>) => setSections(latest.current.map((s) => ({ ...s, lectures: s.lectures.map((l) => (l.id === id ? { ...l, ...patch } : l)) })));
+  const patchLecture = (id: string, patch: Partial<Lecture>) =>
+    setSections(
+      latest.current.map((s) => ({
+        ...s,
+        lectures: s.lectures.map((l) => (l.id === id ? { ...l, ...patch } : l)),
+      })),
+    );
 
-  const addLecture = (sectionId: string, kind: LectureKind, video?: { file: string; duration?: string }) => {
+  const addLecture = (
+    sectionId: string,
+    kind: LectureKind,
+    video?: { file: string; duration?: string },
+  ) => {
     const section = latest.current.find((s) => s.id === sectionId);
     if (!section) return "";
     const id = uid("lecture");
     const name = kind === "Video" ? "video" : kind;
-    const number = nextNumber(section.lectures.filter((l) => l.kind === kind).map((l) => l.title), new RegExp(`^New ${name} Lecture - (\\d+)`));
-    patchSection(sectionId, { lectures: [...section.lectures, { id, title: `New ${name} Lecture - ${number}`, kind, ...video }] });
+    const number = nextNumber(
+      section.lectures.filter((l) => l.kind === kind).map((l) => l.title),
+      new RegExp(`^New ${name} Lecture - (\\d+)`),
+    );
+    patchSection(sectionId, {
+      lectures: [
+        ...section.lectures,
+        { id, title: `New ${name} Lecture - ${number}`, kind, ...video },
+      ],
+    });
     setAdding(null);
     return id;
   };
@@ -2111,21 +5346,32 @@ function CurriculumSection({ draft, update, onExplain, onSupport, uploads }: Sec
     if (fileRef.current) fileRef.current.value = "";
     if (!file) return;
     if (!file.type.startsWith("video/")) return notify("Choose a video file");
-    if (file.size > MAX_LECTURE_VIDEO_MB * 1024 * 1024) return notify(`Videos must be under ${MAX_LECTURE_VIDEO_MB} MB`);
+    if (file.size > MAX_LECTURE_VIDEO_MB * 1024 * 1024)
+      return notify(`Videos must be under ${MAX_LECTURE_VIDEO_MB} MB`);
     const { sectionId, lectureId } = pickTarget.current;
-    if (lectureId) patchLecture(lectureId, { file: file.name, duration: undefined });
-    const id = lectureId ?? (sectionId ? addLecture(sectionId, "Video", { file: file.name }) : "");
+    if (lectureId)
+      patchLecture(lectureId, { file: file.name, duration: undefined });
+    const id =
+      lectureId ??
+      (sectionId ? addLecture(sectionId, "Video", { file: file.name }) : "");
     if (id) uploads.start(file, id);
   };
 
   const libraryVideos = () => {
-    const stored = Object.values(load<Record<string, StoredDetails>>(COURSE_DETAILS_KEY, {})).flatMap((d) => d.curriculum ?? []);
+    const stored = Object.values(
+      load<Record<string, StoredDetails>>(COURSE_DETAILS_KEY, {}),
+    ).flatMap((d) => d.curriculum ?? []);
     const seen = new Map<string, Lecture>();
-    [...sections, ...stored].forEach((s) => s.lectures.forEach((l) => l.file && !seen.has(l.file) && seen.set(l.file, l)));
+    [...sections, ...stored].forEach((s) =>
+      s.lectures.forEach(
+        (l) => l.file && !seen.has(l.file) && seen.set(l.file, l),
+      ),
+    );
     return [...seen.values()];
   };
 
-  const moveLectureBy = (section: CourseSection, index: number, by: number) => patchSection(section.id, { lectures: move(section.lectures, index, by) });
+  const moveLectureBy = (section: CourseSection, index: number, by: number) =>
+    patchSection(section.id, { lectures: move(section.lectures, index, by) });
   const dropOnSection = (targetId: string) => {
     const item = dragging.current;
     if (!item) return;
@@ -2134,32 +5380,61 @@ function CurriculumSection({ draft, update, onExplain, onSupport, uploads }: Sec
       const to = sections.findIndex((s) => s.id === targetId);
       if (from !== to) setSections(move(sections, from, to - from));
     } else if (item.sectionId !== targetId) {
-      const lecture = sections.find((s) => s.id === item.sectionId)?.lectures.find((l) => l.id === item.id);
-      if (lecture) setSections(sections.map((s) => (s.id === item.sectionId ? { ...s, lectures: s.lectures.filter((l) => l.id !== item.id) } : s.id === targetId ? { ...s, lectures: [...s.lectures, lecture] } : s)));
+      const lecture = sections
+        .find((s) => s.id === item.sectionId)
+        ?.lectures.find((l) => l.id === item.id);
+      if (lecture)
+        setSections(
+          sections.map((s) =>
+            s.id === item.sectionId
+              ? { ...s, lectures: s.lectures.filter((l) => l.id !== item.id) }
+              : s.id === targetId
+                ? { ...s, lectures: [...s.lectures, lecture] }
+                : s,
+          ),
+        );
     }
   };
   const dropOnLecture = (targetSectionId: string, targetId: string) => {
     const item = dragging.current;
     if (item?.type !== "lecture" || item.id === targetId) return;
-    const lecture = sections.find((s) => s.id === item.sectionId)?.lectures.find((l) => l.id === item.id);
+    const lecture = sections
+      .find((s) => s.id === item.sectionId)
+      ?.lectures.find((l) => l.id === item.id);
     if (!lecture) return;
     if (item.sectionId === targetSectionId) {
-      const list = sections.find((s) => s.id === targetSectionId)?.lectures ?? [];
+      const list =
+        sections.find((s) => s.id === targetSectionId)?.lectures ?? [];
       const from = list.findIndex((l) => l.id === item.id);
-      patchSection(targetSectionId, { lectures: move(list, from, list.findIndex((l) => l.id === targetId) - from) });
+      patchSection(targetSectionId, {
+        lectures: move(
+          list,
+          from,
+          list.findIndex((l) => l.id === targetId) - from,
+        ),
+      });
       return;
     }
     setSections(
       sections.map((s) => {
-        if (s.id === item.sectionId) return { ...s, lectures: s.lectures.filter((l) => l.id !== item.id) };
+        if (s.id === item.sectionId)
+          return { ...s, lectures: s.lectures.filter((l) => l.id !== item.id) };
         if (s.id !== targetSectionId) return s;
         const lectures = [...s.lectures];
-        lectures.splice(lectures.findIndex((l) => l.id === targetId), 0, lecture);
+        lectures.splice(
+          lectures.findIndex((l) => l.id === targetId),
+          0,
+          lecture,
+        );
         return { ...s, lectures };
       }),
     );
   };
-  const startDrag = (item: DragItem, row: HTMLElement | null, e: DragEvent<HTMLSpanElement>) => {
+  const startDrag = (
+    item: DragItem,
+    row: HTMLElement | null,
+    e: DragEvent<HTMLSpanElement>,
+  ) => {
     dragging.current = item;
     e.dataTransfer.effectAllowed = "move";
     e.dataTransfer.setData("text/plain", item.id);
@@ -2170,65 +5445,134 @@ function CurriculumSection({ draft, update, onExplain, onSupport, uploads }: Sec
     setDropId("");
   };
 
-  const closeButton = "flex size-9 shrink-0 items-center justify-center rounded-[8px] bg-[#f8fafc] text-[#1e293b] transition hover:bg-[#f1f5f9]";
-  const editing = sections.flatMap((s) => s.lectures).find((l) => l.id === editingId);
-  const helper = `text-center text-[16px] leading-[28px] text-[#334155] ${fontRegular}`;
-  const helperLink = `underline transition hover:text-[#475569] ${fontSemi}`;
-  const dashed = `flex h-[54px] min-w-0 flex-1 items-center justify-center gap-2.5 rounded-[8px] border border-dashed border-[#475569] bg-white px-3 text-[16px] leading-[24px] text-[#1e293b] transition hover:bg-[#f8fafc] ${fontRegular}`;
+  const closeButton =
+    "flex size-9 shrink-0 items-center justify-center rounded-lg bg-slate-50 text-slate-800 transition hover:bg-slate-100";
+  const editing = sections
+    .flatMap((s) => s.lectures)
+    .find((l) => l.id === editingId);
+  const helper = `text-center text-base leading-7 text-slate-700 ${fontRegular}`;
+  const helperLink = `underline transition hover:text-slate-600 ${fontSemi}`;
+  const dashed = `flex h-13.5 min-w-0 flex-1 items-center justify-center gap-2.5 rounded-lg border border-dashed border-slate-600 bg-white px-3 text-base leading-6 text-slate-800 transition hover:bg-slate-50 ${fontRegular}`;
 
   const allLectures = sections.flatMap((s) => s.lectures);
-  const totalVideo = allLectures.reduce((sum, l) => sum + (l.kind === "Video" ? toSeconds(l.duration) : 0), 0);
-  const kindCounts = KINDS.map((kind) => ({ kind, count: allLectures.filter((l) => l.kind === kind).length })).filter((k) => k.count > 0);
-  const panel = "mx-3 mb-3 rounded-[14px] border border-[#e2e8f0] bg-[#f8fafc] p-4 sm:mx-4 sm:mb-4 sm:p-5";
-  const panelHelp = `m-0 text-[14px] leading-[22px] text-[#475569] ${fontRegular}`;
-  const dashedRow = `flex w-full items-center justify-center gap-2 rounded-[10px] border border-dashed border-[#cbd5e1] bg-white text-[14px] leading-[20px] text-[#334155] transition hover:border-[#0d5c4b]/50 hover:bg-[#f4faf7] hover:text-[#0d5c4b] ${fontMedium}`;
-  const uploadTile = `group flex min-h-[64px] min-w-0 flex-1 items-center gap-3 rounded-[12px] border border-dashed border-[#9fc9b8] bg-white px-4 text-left text-[15px] leading-[22px] text-[#0f172a] transition hover:border-[#0d5c4b] hover:bg-[#f4faf7] ${fontMedium}`;
+  const totalVideo = allLectures.reduce(
+    (sum, l) => sum + (l.kind === "Video" ? toSeconds(l.duration) : 0),
+    0,
+  );
+  const panel =
+    "mx-3 mb-3 rounded-14 border border-slate-200 bg-slate-50 p-4 sm:mx-4 sm:mb-4 sm:p-5";
+  const panelHelp = `m-0 text-sm leading-5.5 text-slate-600 ${fontRegular}`;
+  // Row tools (drag, rename, menu) appear on hover or keyboard focus, and always on touch screens.
+  const revealOnHead =
+    "flex opacity-0 transition-opacity duration-150 group-hover/head:opacity-100 focus-within:opacity-100 pointer-coarse:opacity-100";
+  const revealOnRow =
+    "flex opacity-0 transition-opacity duration-150 group-hover/row:opacity-100 focus-within:opacity-100 pointer-coarse:opacity-100";
+  const dashedRow = `flex w-full items-center justify-center gap-2 rounded-10 border border-dashed border-slate-300 bg-white text-sm leading-5 text-slate-700 transition hover:border-primary-700/50 hover:bg-primary-50 hover:text-primary-700 ${fontMedium}`;
+  const uploadTile = `group flex min-h-16 min-w-0 flex-1 items-center gap-3 rounded-xl border border-dashed border-primary-400 bg-white px-4 text-left text-15 leading-5.5 text-slate-900 transition hover:border-primary-700 hover:bg-primary-50 ${fontMedium}`;
 
   return (
-    <div className="max-w-[830px]">
-      <CurriculumIntro onExplain={onExplain} onSupport={onSupport} />
-      <input ref={fileRef} type="file" hidden aria-label="Choose lecture video" accept="video/*" onChange={(e) => pickVideo(e.target.files?.[0])} />
+    <div className="max-w-207.5">
+      <input
+        ref={fileRef}
+        type="file"
+        hidden
+        aria-label="Choose lecture video"
+        accept="video/*"
+        onChange={(e) => pickVideo(e.target.files?.[0])}
+      />
       {sections.length === 0 ? (
-        <div className="mt-6 flex flex-col items-center gap-5 rounded-[20px] border border-dashed border-[#cfe3da] bg-[linear-gradient(180deg,#f4faf7_0%,#ffffff_100%)] px-6 py-14 text-center">
-          <EmptyArt />
-          <div>
-            <h2 className={`m-0 text-[22px] leading-[30px] text-[#0f172a] ${fontSemi}`}>No lectures yet</h2>
-            <p className={`m-0 mx-auto mt-1.5 max-w-[380px] text-[14px] leading-[22px] text-[#475569] ${fontRegular}`}>Start with a section, then add videos, quizzes, assignments and articles.</p>
+        <>
+          {/* The intro only helps before anything is built, so it shows with the empty state. */}
+          <CurriculumIntro onExplain={onExplain} onSupport={onSupport} />
+          <div className="mt-6 flex flex-col items-center gap-5 rounded-20 border border-dashed border-primary-300 bg-linear-to-b from-primary-50 to-white px-6 py-14 text-center">
+            <EmptyArt />
+            <div>
+              <h2
+                className={`m-0 text-22 leading-7.5 text-slate-900 ${fontSemi}`}
+              >
+                No lectures yet
+              </h2>
+              <p
+                className={`m-0 mx-auto mt-1.5 max-w-95 text-sm leading-5.5 text-slate-600 ${fontRegular}`}
+              >
+                Start with a section, then add videos, quizzes, assignments and
+                articles.
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={addSection}
+              className={`flex h-11 items-center gap-2 rounded-10 bg-primary-700 px-5 text-15 leading-5.5 text-white shadow-primary-button transition hover:bg-primary-800 ${fontMedium}`}
+            >
+              <Icon path={PLUS} className="size-5" />
+              Create your first lecture
+            </button>
           </div>
-          <button type="button" onClick={addSection} className={`flex h-11 items-center gap-2 rounded-[10px] bg-[#0d5c4b] px-5 text-[15px] leading-[22px] text-white shadow-[0_1px_2px_rgba(13,92,75,0.25),0_8px_20px_-10px_rgba(13,92,75,0.6)] transition hover:bg-[#0b4c3e] ${fontMedium}`}>
-            <Icon path={PLUS} className="size-5" />
-            Create your first lecture
-          </button>
-        </div>
+        </>
       ) : (
         <>
-          {/* Course outline at a glance. */}
-          <div className={`mt-6 flex flex-wrap items-center gap-2 text-[13px] leading-[18px] text-[#334155] ${fontMedium}`}>
-            <span className="rounded-full bg-[#0f172a] px-3 py-1.5 text-white">
-              {sections.length} {sections.length === 1 ? "section" : "sections"}
-            </span>
-            <span className="rounded-full border border-[#e2e8f0] bg-white px-3 py-1.5">
-              {allLectures.length} {allLectures.length === 1 ? "lecture" : "lectures"}
-            </span>
-            {kindCounts.map(({ kind, count }) => (
-              <span key={kind} className={`flex items-center gap-1.5 rounded-full px-3 py-1.5 ${KIND_TONES[kind]}`}>
-                <Icon path={KIND_ICONS[kind]} className="size-3.5" />
-                {count} {kind === "Quiz" ? (count === 1 ? "quiz" : "quizzes") : `${kind.toLowerCase()}${count === 1 ? "" : "s"}`}
-              </span>
-            ))}
-            {totalVideo > 0 && <span className="rounded-full border border-[#e2e8f0] bg-white px-3 py-1.5">{formatTotal(totalVideo)} of video</span>}
-          </div>
+          {/* One quiet summary line; each section header shows its own counts. */}
+          <p
+            className={`m-0 text-13 leading-5 text-slate-500 ${fontRegular}`}
+          >
+            {sections.length} {sections.length === 1 ? "section" : "sections"} ·{" "}
+            {allLectures.length}{" "}
+            {allLectures.length === 1 ? "lecture" : "lectures"}
+            {totalVideo > 0 && ` · ${formatTotal(totalVideo)} of video`}
+          </p>
 
-          <ol className="mt-4 flex flex-col gap-4">
+          <ol className="mt-3 flex flex-col gap-4">
             {sections.map((section, i) => {
-              const title = section.title || `Section ${String(i + 1).padStart(3, "0")}`;
-              const step = adding?.sectionId === section.id ? adding.step : section.lectures.length === 0 ? "types" : null;
-              const sectionVideo = section.lectures.reduce((sum, l) => sum + (l.kind === "Video" ? toSeconds(l.duration) : 0), 0);
+              const title =
+                section.title || `Section ${String(i + 1).padStart(3, "0")}`;
+              const step =
+                adding?.sectionId === section.id
+                  ? adding.step
+                  : section.lectures.length === 0
+                    ? "types"
+                    : null;
+              const sectionVideo = section.lectures.reduce(
+                (sum, l) =>
+                  sum + (l.kind === "Video" ? toSeconds(l.duration) : 0),
+                0,
+              );
               const sectionItems: ActionItem[] = [
-                { label: "Add lecture", onClick: () => setAdding({ sectionId: section.id, step: "types" }) },
-                { label: "Move up", disabled: i === 0, onClick: () => setSections(move(sections, i, -1)) },
-                { label: "Move down", disabled: i === sections.length - 1, onClick: () => setSections(move(sections, i, 1)) },
-                { label: "Delete section", danger: true, onClick: () => (section.lectures.length ? setRemoving({ title: "Delete this section?", body: `"${title}" and its ${section.lectures.length} ${section.lectures.length === 1 ? "lecture" : "lectures"} will be removed.`, run: () => setSections(latest.current.filter((s) => s.id !== section.id)) }) : setSections(sections.filter((s) => s.id !== section.id))) },
+                {
+                  label: "Add lecture",
+                  onClick: () =>
+                    setAdding({ sectionId: section.id, step: "types" }),
+                },
+                {
+                  label: "Rename",
+                  onClick: () => setRenaming(section.id),
+                },
+                {
+                  label: "Move up",
+                  disabled: i === 0,
+                  onClick: () => setSections(move(sections, i, -1)),
+                },
+                {
+                  label: "Move down",
+                  disabled: i === sections.length - 1,
+                  onClick: () => setSections(move(sections, i, 1)),
+                },
+                {
+                  label: "Delete section",
+                  danger: true,
+                  onClick: () =>
+                    section.lectures.length
+                      ? setRemoving({
+                          title: "Delete this section?",
+                          body: `"${title}" and its ${section.lectures.length} ${section.lectures.length === 1 ? "lecture" : "lectures"} will be removed.`,
+                          run: () =>
+                            setSections(
+                              latest.current.filter((s) => s.id !== section.id),
+                            ),
+                        })
+                      : setSections(
+                          sections.filter((s) => s.id !== section.id),
+                        ),
+                },
               ];
               return (
                 <li
@@ -2238,22 +5582,37 @@ function CurriculumSection({ draft, update, onExplain, onSupport, uploads }: Sec
                     e.preventDefault();
                     setDropId(section.id);
                   }}
-                  onDragLeave={() => setDropId((id) => (id === section.id ? "" : id))}
+                  onDragLeave={() =>
+                    setDropId((id) => (id === section.id ? "" : id))
+                  }
                   onDrop={(e) => {
                     e.preventDefault();
                     dropOnSection(section.id);
                     endDrag();
                   }}
                   onDragEnd={endDrag}
-                  className={`overflow-hidden rounded-[16px] border bg-white shadow-[0_1px_2px_rgba(15,23,42,0.04),0_12px_28px_-20px_rgba(15,23,42,0.25)] transition-[border-color,box-shadow] ${dropId === section.id ? "border-[#0d5c4b]/50 ring-3 ring-[#0d5c4b]/10" : "border-[#e2e8f0]"}`}
+                  className={`rounded-2xl border bg-white shadow-section transition ${dropId === section.id ? "border-primary-700/50 ring-3 ring-primary-700/10" : "border-slate-200"}`}
                 >
-                  <div className={`flex items-center gap-3 bg-[linear-gradient(180deg,#fbfcfd,#f6f8fa)] px-3 py-3.5 sm:px-4 ${section.lectures.length > 0 || step ? "border-b border-[#eef1f4]" : ""}`}>
-                    <DragHandle label={`Drag ${title}`} onDragStart={(e) => startDrag({ type: "section", id: section.id }, e.currentTarget.closest("li"), e)} />
+                  <div
+                    className={`group/head flex items-center gap-3 bg-linear-to-b from-slate-25 to-slate-50 px-3 py-3.5 sm:px-4 ${section.lectures.length > 0 || step ? "border-b border-slate-150" : ""}`}
+                  >
+                    <span className={revealOnHead}>
+                      <DragHandle
+                        label={`Drag ${title}`}
+                        onDragStart={(e) =>
+                          startDrag(
+                            { type: "section", id: section.id },
+                            e.currentTarget.closest("li"),
+                            e,
+                          )
+                        }
+                      />
+                    </span>
                     {renaming === section.id ? (
                       <InlineTitle
                         label="Section title"
                         value={section.title}
-                        className="max-w-[420px]"
+                        className="max-w-105"
                         onDone={(next) => {
                           if (next) patchSection(section.id, { title: next });
                           setRenaming("");
@@ -2261,22 +5620,41 @@ function CurriculumSection({ draft, update, onExplain, onSupport, uploads }: Sec
                       />
                     ) : (
                       <div className="min-w-0 flex-1">
-                        <p className={`m-0 text-[11px] uppercase leading-[14px] tracking-[0.08em] text-[#0d5c4b] ${fontSemi}`}>Section {String(i + 1).padStart(2, "0")}</p>
-                        <h2 className={`m-0 mt-0.5 truncate text-[17px] leading-[26px] text-[#0f172a] ${fontSemi}`}>{title}</h2>
+                        <p
+                          className={`m-0 text-11 uppercase leading-3.5 tracking-label text-primary-700 ${fontSemi}`}
+                        >
+                          Section {String(i + 1).padStart(2, "0")}
+                        </p>
+                        <h2
+                          role="button"
+                          tabIndex={0}
+                          onClick={() => setRenaming(section.id)}
+                          onKeyDown={(e) => e.key === "Enter" && setRenaming(section.id)}
+                          className={`m-0 mt-0.5 cursor-text truncate text-17 leading-6.5 text-slate-900 hover:text-primary-700 ${fontSemi}`}
+                          title="Click to rename"
+                        >
+                          {title}
+                        </h2>
                       </div>
                     )}
                     {renaming === section.id && <span className="flex-1" />}
                     {renaming !== section.id && section.lectures.length > 0 && (
-                      <span className={`hidden shrink-0 text-[13px] leading-[18px] text-[#64748b] sm:block ${fontRegular}`}>
-                        {section.lectures.length} {section.lectures.length === 1 ? "lecture" : "lectures"}
+                      <span
+                        className={`hidden shrink-0 text-13 leading-4.5 text-slate-500 sm:block ${fontRegular}`}
+                      >
+                        {section.lectures.length}{" "}
+                        {section.lectures.length === 1 ? "lecture" : "lectures"}
                         {sectionVideo > 0 && ` · ${formatTotal(sectionVideo)}`}
                       </span>
                     )}
-                    <button type="button" aria-label={`Rename ${title}`} title="Rename" onClick={() => setRenaming(section.id)} className={iconButton}>
-                      <Icon path={PENCIL} className="size-[18px]" />
-                    </button>
                     {section.lectures.length > 0 && step ? (
-                      <button type="button" aria-label={`Stop adding a lecture to ${title}`} title="Close" onClick={() => setAdding(null)} className={closeButton}>
+                      <button
+                        type="button"
+                        aria-label={`Stop adding a lecture to ${title}`}
+                        title="Close"
+                        onClick={() => setAdding(null)}
+                        className={closeButton}
+                      >
                         <Icon path={CLOSE} className="size-5" />
                       </button>
                     ) : section.lectures.length === 0 && sections.length > 1 ? (
@@ -2285,7 +5663,9 @@ function CurriculumSection({ draft, update, onExplain, onSupport, uploads }: Sec
                         aria-label={`Remove ${title}`}
                         title="Remove section"
                         onClick={() => {
-                          setSections(sections.filter((s) => s.id !== section.id));
+                          setSections(
+                            sections.filter((s) => s.id !== section.id),
+                          );
                           setAdding(null);
                         }}
                         className={closeButton}
@@ -2293,7 +5673,12 @@ function CurriculumSection({ draft, update, onExplain, onSupport, uploads }: Sec
                         <Icon path={CLOSE} className="size-5" />
                       </button>
                     ) : (
-                      <RowMenu label={`More actions for ${title}`} items={sectionItems} />
+                      <span className={revealOnHead}>
+                        <RowMenu
+                          label={`More actions for ${title}`}
+                          items={sectionItems}
+                        />
+                      </span>
                     )}
                   </div>
                   {section.lectures.length > 0 && (
@@ -2301,13 +5686,44 @@ function CurriculumSection({ draft, update, onExplain, onSupport, uploads }: Sec
                       {section.lectures.map((lecture, j) => {
                         const name = lectureName(lecture);
                         const progress = uploads.progress[lecture.id];
-                        const uploading = progress !== undefined && progress < 100;
+                        const uploading =
+                          progress !== undefined && progress < 100;
                         const lectureItems: ActionItem[] = [
-                          { label: "Edit lecture", onClick: () => setEditingId(lecture.id) },
-                          { label: "Rename", onClick: () => setRenaming(lecture.id) },
-                          { label: "Move up", disabled: j === 0, onClick: () => moveLectureBy(section, j, -1) },
-                          { label: "Move down", disabled: j === section.lectures.length - 1, onClick: () => moveLectureBy(section, j, 1) },
-                          { label: "Delete lecture", danger: true, onClick: () => setRemoving({ title: "Delete this lecture?", body: `"${name}" will be removed from this section.`, run: () => patchSection(section.id, { lectures: (latest.current.find((s) => s.id === section.id)?.lectures ?? []).filter((l) => l.id !== lecture.id) }) }) },
+                          {
+                            label: "Edit lecture",
+                            onClick: () => setEditingId(lecture.id),
+                          },
+                          {
+                            label: "Rename",
+                            onClick: () => setRenaming(lecture.id),
+                          },
+                          {
+                            label: "Move up",
+                            disabled: j === 0,
+                            onClick: () => moveLectureBy(section, j, -1),
+                          },
+                          {
+                            label: "Move down",
+                            disabled: j === section.lectures.length - 1,
+                            onClick: () => moveLectureBy(section, j, 1),
+                          },
+                          {
+                            label: "Delete lecture",
+                            danger: true,
+                            onClick: () =>
+                              setRemoving({
+                                title: "Delete this lecture?",
+                                body: `"${name}" will be removed from this section.`,
+                                run: () =>
+                                  patchSection(section.id, {
+                                    lectures: (
+                                      latest.current.find(
+                                        (s) => s.id === section.id,
+                                      )?.lectures ?? []
+                                    ).filter((l) => l.id !== lecture.id),
+                                  }),
+                              }),
+                          },
                         ];
                         return (
                           <li
@@ -2326,70 +5742,142 @@ function CurriculumSection({ draft, update, onExplain, onSupport, uploads }: Sec
                               dropOnLecture(section.id, lecture.id);
                               endDrag();
                             }}
-                            className={`group flex items-center gap-3 rounded-[10px] px-2 py-2 transition-colors ${dropId === lecture.id ? "bg-[#eef7f3]" : "hover:bg-[#f8fafc]"}`}
+                            className={`group group/row flex items-center gap-3 rounded-10 px-2 py-2 transition-colors ${dropId === lecture.id ? "bg-primary-100" : "hover:bg-slate-50"}`}
                           >
-                            <DragHandle
-                              vertical
-                              label={`Drag ${name}`}
-                              onDragStart={(e) => {
-                                e.stopPropagation();
-                                startDrag({ type: "lecture", id: lecture.id, sectionId: section.id }, e.currentTarget.closest("li"), e);
-                              }}
-                            />
-                            <span aria-hidden="true" className={`hidden w-7 shrink-0 text-[12px] leading-[16px] text-[#94a3b8] tabular-nums sm:block ${fontMedium}`}>
+                            <span className={revealOnRow}>
+                              <DragHandle
+                                vertical
+                                label={`Drag ${name}`}
+                                onDragStart={(e) => {
+                                  e.stopPropagation();
+                                  startDrag(
+                                    {
+                                      type: "lecture",
+                                      id: lecture.id,
+                                      sectionId: section.id,
+                                    },
+                                    e.currentTarget.closest("li"),
+                                    e,
+                                  );
+                                }}
+                              />
+                            </span>
+                            <span
+                              aria-hidden="true"
+                              className={`hidden w-7 shrink-0 text-xs leading-4 text-slate-400 tabular-nums sm:block ${fontMedium}`}
+                            >
                               {i + 1}.{j + 1}
                             </span>
-                            <span className={`flex size-9 shrink-0 items-center justify-center rounded-[10px] ${KIND_TONES[lecture.kind]}`} title={lecture.kind}>
-                              <Icon path={KIND_ICONS[lecture.kind]} className="size-[18px]" />
+                            <span
+                              className={`flex size-9 shrink-0 items-center justify-center rounded-10 ${KIND_TONES[lecture.kind]}`}
+                              title={lecture.kind}
+                            >
+                              <Icon
+                                path={KIND_ICONS[lecture.kind]}
+                                className="size-4.5"
+                              />
                             </span>
                             {renaming === lecture.id ? (
                               <InlineTitle
                                 label="Lecture title"
                                 value={lecture.title}
-                                className="max-w-[420px]"
+                                className="max-w-105"
                                 onDone={(next) => {
-                                  if (next) patchSection(section.id, { lectures: section.lectures.map((l) => (l.id === lecture.id ? { ...l, title: next } : l)) });
+                                  if (next)
+                                    patchSection(section.id, {
+                                      lectures: section.lectures.map((l) =>
+                                        l.id === lecture.id
+                                          ? { ...l, title: next }
+                                          : l,
+                                      ),
+                                    });
                                   setRenaming("");
                                 }}
                               />
                             ) : (
                               <div className="min-w-0 flex-1">
-                                <p className={`m-0 truncate text-[15px] leading-[22px] text-[#0f172a] ${fontMedium}`}>
-                                  <span className="sr-only">{lecture.kind}: </span>
-                                  <button type="button" onClick={() => setEditingId(lecture.id)} className="text-left transition hover:text-[#0d5c4b] hover:underline">
+                                <p
+                                  className={`m-0 truncate text-sm leading-5.5 text-slate-900 ${fontMedium}`}
+                                >
+                                  <span className="sr-only">
+                                    {lecture.kind}:{" "}
+                                  </span>
+                                  <button
+                                    type="button"
+                                    onClick={() => setEditingId(lecture.id)}
+                                    className="text-left transition hover:text-primary-700 hover:underline"
+                                  >
                                     {name}
                                   </button>
                                 </p>
-                                <p className={`m-0 mt-0.5 flex items-center gap-2 text-[12px] leading-[16px] text-[#64748b] ${fontRegular}`}>
+                                <p
+                                  className={`m-0 mt-0.5 flex items-center gap-2 text-xs leading-4 text-slate-500 ${fontRegular}`}
+                                >
                                   <span>{lecture.kind}</span>
                                   {uploading ? (
                                     <>
-                                      <span aria-hidden="true" className="h-1 w-20 overflow-hidden rounded-full bg-[#e2e8f0]">
-                                        <span className="block h-full rounded-full bg-[#0d5c4b] transition-[width]" style={{ width: `${progress}%` }} />
+                                      <span
+                                        aria-hidden="true"
+                                        className="h-1 w-20 overflow-hidden rounded-full bg-slate-200"
+                                      >
+                                        <span
+                                          className="block h-full rounded-full bg-primary-700 transition-all"
+                                          style={{ width: `${progress}%` }}
+                                        />
                                       </span>
-                                      <span className="tabular-nums">{progress}%</span>
+                                      <span className="tabular-nums">
+                                        {progress}%
+                                      </span>
                                     </>
                                   ) : progress === 100 ? (
-                                    <span className="text-[#b45309]">· Processing…</span>
+                                    <span className="text-amber-700">
+                                      · Processing…
+                                    </span>
                                   ) : (
-                                    lecture.duration && <span className="tabular-nums">· {lecture.duration}</span>
+                                    lecture.duration && (
+                                      <span className="tabular-nums">
+                                        · {lecture.duration}
+                                      </span>
+                                    )
                                   )}
-                                  {lecture.kind === "Quiz" && !!lecture.questions?.length && <span>· {lecture.questions.length} {lecture.questions.length === 1 ? "question" : "questions"}</span>}
+                                  {lecture.kind === "Quiz" &&
+                                    !!lecture.questions?.length && (
+                                      <span>
+                                        · {lecture.questions.length}{" "}
+                                        {lecture.questions.length === 1
+                                          ? "question"
+                                          : "questions"}
+                                      </span>
+                                    )}
                                 </p>
                               </div>
                             )}
-                            {renaming === lecture.id && <span className="flex-1" />}
-                            <RowMenu label={`More actions for ${name}`} items={lectureItems} />
+                            {renaming === lecture.id && (
+                              <span className="flex-1" />
+                            )}
+                            <span className={revealOnRow}>
+                              <RowMenu
+                                label={`More actions for ${name}`}
+                                items={lectureItems}
+                              />
+                            </span>
                           </li>
                         );
                       })}
                     </ol>
                   )}
                   {step === "types" && (
-                    <div className={`${panel} ${section.lectures.length === 0 ? "mt-3 sm:mt-4" : ""}`}>
+                    <div
+                      className={`${panel} ${section.lectures.length === 0 ? "mt-3 sm:mt-4" : ""}`}
+                    >
                       <p className={panelHelp}>
-                        Choose the main content type. You can add files or links as resources later.{" "}
-                        <button type="button" onClick={onExplain} className={`text-[#0d5c4b] underline decoration-[#0d5c4b]/30 underline-offset-4 transition hover:decoration-[#0d5c4b] ${fontSemi}`}>
+                        Choose the main content type. You can add files or links
+                        as resources later.{" "}
+                        <button
+                          type="button"
+                          onClick={onExplain}
+                          className={`text-primary-700 underline decoration-primary-700/30 underline-offset-4 transition hover:decoration-primary-700 ${fontSemi}`}
+                        >
                           About content types
                         </button>
                       </p>
@@ -2398,15 +5886,35 @@ function CurriculumSection({ draft, update, onExplain, onSupport, uploads }: Sec
                           <button
                             key={kind}
                             type="button"
-                            onClick={() => (kind === "Video" ? setAdding({ sectionId: section.id, step: "video" }) : addLecture(section.id, kind))}
-                            className="group flex items-center gap-3 rounded-[12px] border border-[#e2e8f0] bg-white p-3 text-left shadow-[0_1px_2px_rgba(15,23,42,0.04)] transition hover:-translate-y-px hover:border-[#0d5c4b]/40 hover:shadow-[0_8px_20px_-12px_rgba(13,92,75,0.45)] @3xl:flex-col @3xl:items-start"
+                            onClick={() =>
+                              kind === "Video"
+                                ? setAdding({
+                                    sectionId: section.id,
+                                    step: "video",
+                                  })
+                                : addLecture(section.id, kind)
+                            }
+                            className="group flex items-center gap-3 rounded-xl border border-slate-200 bg-white p-3 text-left shadow-xs transition hover:-translate-y-px hover:border-primary-700/40 hover:shadow-primary-hover @3xl:flex-col @3xl:items-start"
                           >
-                            <span className={`flex size-10 shrink-0 items-center justify-center rounded-[10px] ${KIND_TONES[kind]}`}>
-                              <Icon path={KIND_ICONS[kind]} className="size-5" />
+                            <span
+                              className={`flex size-10 shrink-0 items-center justify-center rounded-10 ${KIND_TONES[kind]}`}
+                            >
+                              <Icon
+                                path={KIND_ICONS[kind]}
+                                className="size-5"
+                              />
                             </span>
                             <span className="min-w-0">
-                              <span className={`block text-[15px] leading-[22px] text-[#0f172a] ${fontSemi}`}>{kind}</span>
-                              <span className={`block text-[12px] leading-[17px] text-[#64748b] ${fontRegular}`}>{KIND_HINTS[kind]}</span>
+                              <span
+                                className={`block text-15 leading-5.5 text-slate-900 ${fontSemi}`}
+                              >
+                                {kind}
+                              </span>
+                              <span
+                                className={`block text-xs leading-4.25 text-slate-500 ${fontRegular}`}
+                              >
+                                {KIND_HINTS[kind]}
+                              </span>
                             </span>
                           </button>
                         ))}
@@ -2414,36 +5922,64 @@ function CurriculumSection({ draft, update, onExplain, onSupport, uploads }: Sec
                     </div>
                   )}
                   {step === "video" && (
-                    <div className={`${panel} ${section.lectures.length === 0 ? "mt-3 sm:mt-4" : ""}`}>
+                    <div
+                      className={`${panel} ${section.lectures.length === 0 ? "mt-3 sm:mt-4" : ""}`}
+                    >
                       <div className="flex items-center justify-between gap-3">
                         <p className={panelHelp}>
                           Upload a video from your computer or your library.{" "}
-                          <button type="button" onClick={onSupport} className={`text-[#0d5c4b] underline decoration-[#0d5c4b]/30 underline-offset-4 transition hover:decoration-[#0d5c4b] ${fontSemi}`}>
+                          <button
+                            type="button"
+                            onClick={onSupport}
+                            className={`text-primary-700 underline decoration-primary-700/30 underline-offset-4 transition hover:decoration-primary-700 ${fontSemi}`}
+                          >
                             About the video library
                           </button>
                         </p>
-                        <button type="button" onClick={() => setAdding({ sectionId: section.id, step: "types" })} className={`flex h-8 shrink-0 items-center gap-1.5 rounded-[8px] px-2.5 text-[13px] leading-[18px] text-[#334155] transition hover:bg-[#e2e8f0] ${fontMedium}`}>
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setAdding({ sectionId: section.id, step: "types" })
+                          }
+                          className={`flex h-8 shrink-0 items-center gap-1.5 rounded-lg px-2.5 text-13 leading-4.5 text-slate-700 transition hover:bg-slate-200 ${fontMedium}`}
+                        >
                           <Icon path="M15 6l-6 6 6 6" className="size-4" />
                           Back
                         </button>
                       </div>
                       <div className="mt-4 flex flex-col items-stretch gap-3 @2xl:flex-row">
-                        <button type="button" onClick={() => chooseVideo({ sectionId: section.id })} className={uploadTile}>
-                          <span className="flex size-10 shrink-0 items-center justify-center rounded-[10px] bg-[#eef7f3] text-[#0d5c4b] transition group-hover:bg-[#0d5c4b] group-hover:text-white">
+                        <button
+                          type="button"
+                          onClick={() => chooseVideo({ sectionId: section.id })}
+                          className={uploadTile}
+                        >
+                          <span className="flex size-10 shrink-0 items-center justify-center rounded-10 bg-primary-100 text-primary-700 transition group-hover:bg-primary-700 group-hover:text-white">
                             <Icon path={UPLOAD} className="size-5" />
                           </span>
                           <span className="min-w-0">
                             <span className="block">Upload video</span>
-                            <span className={`block text-[12px] leading-[17px] text-[#64748b] ${fontRegular}`}>MP4, MOV or WEBM from your computer</span>
+                            <span
+                              className={`block text-xs leading-4.25 text-slate-500 ${fontRegular}`}
+                            >
+                              MP4, MOV or WEBM from your computer
+                            </span>
                           </span>
                         </button>
-                        <button type="button" onClick={() => setLibrary({ sectionId: section.id })} className={uploadTile}>
-                          <span className="flex size-10 shrink-0 items-center justify-center rounded-[10px] bg-[#eef7f3] text-[#0d5c4b] transition group-hover:bg-[#0d5c4b] group-hover:text-white">
+                        <button
+                          type="button"
+                          onClick={() => setLibrary({ sectionId: section.id })}
+                          className={uploadTile}
+                        >
+                          <span className="flex size-10 shrink-0 items-center justify-center rounded-10 bg-primary-100 text-primary-700 transition group-hover:bg-primary-700 group-hover:text-white">
                             <Icon path={LIBRARY} className="size-5" />
                           </span>
                           <span className="min-w-0">
                             <span className="block">Add from library</span>
-                            <span className={`block text-[12px] leading-[17px] text-[#64748b] ${fontRegular}`}>Reuse a video from any of your courses</span>
+                            <span
+                              className={`block text-xs leading-4.25 text-slate-500 ${fontRegular}`}
+                            >
+                              Reuse a video from any of your courses
+                            </span>
                           </span>
                         </button>
                       </div>
@@ -2451,8 +5987,14 @@ function CurriculumSection({ draft, update, onExplain, onSupport, uploads }: Sec
                   )}
                   {!step && (
                     <div className="px-3 pb-3 sm:px-4 sm:pb-4">
-                      <button type="button" onClick={() => setAdding({ sectionId: section.id, step: "types" })} className={`h-11 ${dashedRow}`}>
-                        <Icon path={PLUS} className="size-[18px]" />
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setAdding({ sectionId: section.id, step: "types" })
+                        }
+                        className={`h-11 ${dashedRow}`}
+                      >
+                        <Icon path={PLUS} className="size-4.5" />
                         Add lecture
                       </button>
                     </div>
@@ -2462,8 +6004,12 @@ function CurriculumSection({ draft, update, onExplain, onSupport, uploads }: Sec
             })}
           </ol>
           {sections.every((s) => s.lectures.length > 0) && !adding && (
-            <button type="button" onClick={addSection} className={`mt-4 h-12 rounded-[14px] ${dashedRow}`}>
-              <Icon path={PLUS} className="size-[18px]" />
+            <button
+              type="button"
+              onClick={addSection}
+              className={`mt-4 h-12 rounded-14 ${dashedRow}`}
+            >
+              <Icon path={PLUS} className="size-4.5" />
               Add New Section
             </button>
           )}
@@ -2474,10 +6020,27 @@ function CurriculumSection({ draft, update, onExplain, onSupport, uploads }: Sec
           key={editing.id}
           lecture={editing}
           context={(() => {
-            const home = sections.find((sec) => sec.lectures.some((l) => l.id === editing.id));
-            return { course: courseContext(draft), sectionTitle: home?.title ?? "", lectureTitle: editing.title, kind: editing.kind, siblings: home?.lectures.filter((l) => l.id !== editing.id).map((l) => l.title) ?? [] };
+            const home = sections.find((sec) =>
+              sec.lectures.some((l) => l.id === editing.id),
+            );
+            return {
+              course: courseContext(draft),
+              sectionTitle: home?.title ?? "",
+              lectureTitle: editing.title,
+              kind: editing.kind,
+              siblings:
+                home?.lectures
+                  .filter((l) => l.id !== editing.id)
+                  .map((l) => l.title) ?? [],
+            };
           })()}
-          lectureOptions={sections.flatMap((s) => s.lectures).filter((l) => l.kind !== "Quiz").map((l, i) => ({ id: l.id, label: `Lecture ${i + 1} : ${lectureName(l)}` }))}
+          lectureOptions={sections
+            .flatMap((s) => s.lectures)
+            .filter((l) => l.kind !== "Quiz")
+            .map((l, i) => ({
+              id: l.id,
+              label: `Lecture ${i + 1} : ${lectureName(l)}`,
+            }))}
           onCancel={() => setEditingId("")}
           onSave={(patch) => {
             patchLecture(editing.id, patch);
@@ -2485,13 +6048,71 @@ function CurriculumSection({ draft, update, onExplain, onSupport, uploads }: Sec
           }}
         />
       )}
-      {editing && editing.kind !== "Quiz" && (
-        <LectureDrawer
+      {editing?.kind === "Article" && (
+        <ArticleDrawer
+          key={editing.id}
+          lecture={editing}
+          context={(() => {
+            const home = sections.find((sec) =>
+              sec.lectures.some((l) => l.id === editing.id),
+            );
+            return {
+              course: courseContext(draft),
+              sectionTitle: home?.title ?? "",
+              lectureTitle: editing.title,
+              kind: editing.kind,
+              siblings:
+                home?.lectures
+                  .filter((l) => l.id !== editing.id)
+                  .map((l) => l.title) ?? [],
+            };
+          })()}
+          onCancel={() => setEditingId("")}
+          onSave={(patch) => {
+            patchLecture(editing.id, patch);
+            setEditingId("");
+          }}
+        />
+      )}
+      {editing?.kind === "Assignment" && (
+        <AssignmentDrawer
           key={editing.id}
           lecture={editing}
           context={(() => {
             const home = sections.find((sec) => sec.lectures.some((l) => l.id === editing.id));
-            return { course: courseContext(draft), sectionTitle: home?.title ?? "", lectureTitle: editing.title, kind: editing.kind, siblings: home?.lectures.filter((l) => l.id !== editing.id).map((l) => l.title) ?? [] };
+            return {
+              course: courseContext(draft),
+              sectionTitle: home?.title ?? "",
+              lectureTitle: editing.title,
+              kind: editing.kind,
+              siblings: home?.lectures.filter((l) => l.id !== editing.id).map((l) => l.title) ?? [],
+            };
+          })()}
+          onCancel={() => setEditingId("")}
+          onSave={(patch) => {
+            patchLecture(editing.id, patch);
+            setEditingId("");
+          }}
+        />
+      )}
+      {editing && editing.kind !== "Quiz" && editing.kind !== "Article" && editing.kind !== "Assignment" && (
+        <LectureDrawer
+          key={editing.id}
+          lecture={editing}
+          context={(() => {
+            const home = sections.find((sec) =>
+              sec.lectures.some((l) => l.id === editing.id),
+            );
+            return {
+              course: courseContext(draft),
+              sectionTitle: home?.title ?? "",
+              lectureTitle: editing.title,
+              kind: editing.kind,
+              siblings:
+                home?.lectures
+                  .filter((l) => l.id !== editing.id)
+                  .map((l) => l.title) ?? [],
+            };
           })()}
           uploadProgress={uploads.progress[editing.id]}
           videoUrl={editing.file ? uploads.urls[editing.file] : undefined}
@@ -2505,9 +6126,19 @@ function CurriculumSection({ draft, update, onExplain, onSupport, uploads }: Sec
         />
       )}
       {library && (
-        <Shell title="Add from Library" onClose={() => setLibrary(null)} width="max-w-[520px]" radius="sm:rounded-[12px]">
+        <Shell
+          title="Add from Library"
+          onClose={() => setLibrary(null)}
+          width="max-w-130"
+          radius="sm:rounded-xl"
+        >
           {libraryVideos().length === 0 ? (
-            <p className={`px-6 py-10 text-center text-[14px] leading-[22px] text-[#64748b] ${fontRegular}`}>Your library is empty. Videos you upload to any course appear here.</p>
+            <p
+              className={`px-6 py-10 text-center text-sm leading-5.5 text-slate-500 ${fontRegular}`}
+            >
+              Your library is empty. Videos you upload to any course appear
+              here.
+            </p>
           ) : (
             <ul className="flex flex-col p-3">
               {libraryVideos().map((video) => (
@@ -2515,18 +6146,33 @@ function CurriculumSection({ draft, update, onExplain, onSupport, uploads }: Sec
                   <button
                     type="button"
                     onClick={() => {
-                      const picked = { file: video.file ?? "", duration: video.duration };
-                      if (library.lectureId) patchLecture(library.lectureId, picked);
-                      else if (library.sectionId) addLecture(library.sectionId, "Video", picked);
+                      const picked = {
+                        file: video.file ?? "",
+                        duration: video.duration,
+                      };
+                      if (library.lectureId)
+                        patchLecture(library.lectureId, picked);
+                      else if (library.sectionId)
+                        addLecture(library.sectionId, "Video", picked);
                       setLibrary(null);
                     }}
-                    className="flex w-full items-center gap-3 rounded-[8px] p-2 text-left transition hover:bg-[#f8fafc]"
+                    className="flex w-full items-center gap-3 rounded-lg p-2 text-left transition hover:bg-slate-50"
                   >
-                    <span className="flex size-9 shrink-0 items-center justify-center rounded-[8px] bg-[#f1f5f9] text-[#334155]">
+                    <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-slate-100 text-slate-700">
                       <Icon path={PLAY} className="size-5" />
                     </span>
-                    <span className={`min-w-0 flex-1 truncate text-[14px] leading-[20px] text-[#1e293b] ${fontMedium}`}>{video.file}</span>
-                    {video.duration && <span className={`shrink-0 text-[13px] text-[#94a3b8] ${fontRegular}`}>{video.duration}</span>}
+                    <span
+                      className={`min-w-0 flex-1 truncate text-sm leading-5 text-slate-800 ${fontMedium}`}
+                    >
+                      {video.file}
+                    </span>
+                    {video.duration && (
+                      <span
+                        className={`shrink-0 text-13 text-slate-400 ${fontRegular}`}
+                      >
+                        {video.duration}
+                      </span>
+                    )}
                   </button>
                 </li>
               ))}
@@ -2558,14 +6204,34 @@ function PromotionsSection({ draft, update }: SectionProps) {
   const cleanCode = code.trim().toUpperCase();
   const percentValue = Number(percent);
   const duplicate = draft.coupons.some((c) => c.code === cleanCode);
-  const codeError = !attempted ? "" : !cleanCode ? "Enter a coupon code" : duplicate ? "You already have this code" : "";
-  const percentError = attempted && !(percentValue >= 1 && percentValue <= 100) ? "Enter a discount from 1 to 100" : "";
+  const codeError = !attempted
+    ? ""
+    : !cleanCode
+      ? "Enter a coupon code"
+      : duplicate
+        ? "You already have this code"
+        : "";
+  const percentError =
+    attempted && !(percentValue >= 1 && percentValue <= 100)
+      ? "Enter a discount from 1 to 100"
+      : "";
   const dateError = attempted && !expires ? "Choose an end date" : "";
 
   const addCoupon = () => {
     setAttempted(true);
-    if (!cleanCode || duplicate || !(percentValue >= 1 && percentValue <= 100) || !expires) return;
-    update({ coupons: [...draft.coupons, { id: uid("coupon"), code: cleanCode, percent: percentValue, expires }] });
+    if (
+      !cleanCode ||
+      duplicate ||
+      !(percentValue >= 1 && percentValue <= 100) ||
+      !expires
+    )
+      return;
+    update({
+      coupons: [
+        ...draft.coupons,
+        { id: uid("coupon"), code: cleanCode, percent: percentValue, expires },
+      ],
+    });
     setCode("");
     setPercent("");
     setExpires("");
@@ -2574,37 +6240,109 @@ function PromotionsSection({ draft, update }: SectionProps) {
 
   return (
     <>
-      <h2 className={`m-0 text-[20px] leading-[28px] text-[#1e293b] ${fontMedium}`}>Coupons</h2>
-      <p className={`mt-1 text-[14px] leading-[24px] text-[#475569] ${fontRegular}`}>Create a code that gives students a discount until the date you choose.</p>
+      <h2
+        className={`m-0 text-xl leading-7 text-slate-800 ${fontMedium}`}
+      >
+        Coupons
+      </h2>
+      <p
+        className={`mt-1 text-sm leading-6 text-slate-600 ${fontRegular}`}
+      >
+        Create a code that gives students a discount until the date you choose.
+      </p>
       <div className="mt-5 grid items-start gap-4 sm:grid-cols-3">
-        <TextField id="coupon-code" label="Coupon code" value={code} onChange={setCode} placeholder="e.g. LAUNCH20" error={codeError} />
-        <TextField id="coupon-percent" label="Discount (%)" type="number" value={percent} onChange={setPercent} placeholder="20" error={percentError} />
-        <DateField id="coupon-expires" label="Ends on" value={expires} onChange={setExpires} error={dateError} min={todayIso()} />
+        <TextField
+          id="coupon-code"
+          label="Coupon code"
+          value={code}
+          onChange={setCode}
+          placeholder="e.g. LAUNCH20"
+          error={codeError}
+        />
+        <TextField
+          id="coupon-percent"
+          label="Discount (%)"
+          type="number"
+          value={percent}
+          onChange={setPercent}
+          placeholder="20"
+          error={percentError}
+        />
+        <DateField
+          id="coupon-expires"
+          label="Ends on"
+          value={expires}
+          onChange={setExpires}
+          error={dateError}
+          min={todayIso()}
+        />
       </div>
-      <button type="button" onClick={addCoupon} className={`mt-4 flex h-10 items-center gap-2 rounded-[8px] border border-[#cbd5e1] bg-white px-4 text-[14px] leading-[20px] text-[#1e293b] transition hover:bg-[#f8fafc] ${fontMedium}`}>
-        <Icon path={PLUS} className="size-[18px] text-[#64748b]" />
+      <button
+        type="button"
+        onClick={addCoupon}
+        className={`mt-4 flex h-10 items-center gap-2 rounded-lg border border-slate-300 bg-white px-4 text-sm leading-5 text-slate-800 transition hover:bg-slate-50 ${fontMedium}`}
+      >
+        <Icon path={PLUS} className="size-4.5 text-slate-500" />
         Add coupon
       </button>
       {draft.coupons.length > 0 && (
-        <ul className="mt-5 flex flex-col divide-y divide-[#e2e8f0] rounded-[12px] border border-[#e2e8f0] bg-white">
+        <ul className="mt-5 flex flex-col divide-y divide-slate-200 rounded-xl border border-slate-200 bg-white">
           {draft.coupons.map((coupon) => (
-            <li key={coupon.id} className="flex items-center justify-between gap-3 px-4 py-2.5">
-              <p className={`min-w-0 text-[14px] leading-[20px] text-[#475569] ${fontRegular}`}>
-                <span className={`text-[#1e293b] ${fontSemi}`}>{coupon.code}</span> · {coupon.percent}% off, ends {new Date(`${coupon.expires}T00:00`).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}
+            <li
+              key={coupon.id}
+              className="flex items-center justify-between gap-3 px-4 py-2.5"
+            >
+              <p
+                className={`min-w-0 text-sm leading-5 text-slate-600 ${fontRegular}`}
+              >
+                <span className={`text-slate-800 ${fontSemi}`}>
+                  {coupon.code}
+                </span>{" "}
+                · {coupon.percent}% off, ends{" "}
+                {new Date(`${coupon.expires}T00:00`).toLocaleDateString(
+                  "en-GB",
+                  { day: "numeric", month: "short", year: "numeric" },
+                )}
               </p>
-              <button type="button" aria-label={`Remove coupon ${coupon.code}`} onClick={() => update({ coupons: draft.coupons.filter((c) => c.id !== coupon.id) })} className={`${iconButton} text-[#ef4444] hover:bg-[#fef2f2] hover:text-[#dc2626]`}>
-                <Icon path={TRASH} className="size-[18px]" />
+              <button
+                type="button"
+                aria-label={`Remove coupon ${coupon.code}`}
+                onClick={() =>
+                  update({
+                    coupons: draft.coupons.filter((c) => c.id !== coupon.id),
+                  })
+                }
+                className={`${iconButton} text-red-500 hover:bg-red-50 hover:text-red-600`}
+              >
+                <Icon path={TRASH} className="size-4.5" />
               </button>
             </li>
           ))}
         </ul>
       )}
-      <hr className="my-8 border-[#e2e8f0]" />
-      <h2 className={`m-0 text-[20px] leading-[28px] text-[#1e293b] ${fontMedium}`}>Deals Program</h2>
-      <p className={`mt-1 text-[14px] leading-[24px] text-[#475569] ${fontRegular}`}>Thkee can promote your course to a wider audience at a discount through targeted campaigns. There is no up-front cost, and you can change this at any time.</p>
+      <hr className="my-8 border-slate-200" />
+      <h2
+        className={`m-0 text-xl leading-7 text-slate-800 ${fontMedium}`}
+      >
+        Deals Program
+      </h2>
+      <p
+        className={`mt-1 text-sm leading-6 text-slate-600 ${fontRegular}`}
+      >
+        Thkee can promote your course to a wider audience at a discount through
+        targeted campaigns. There is no up-front cost, and you can change this
+        at any time.
+      </p>
       <div className="mt-4">
-        <Checkbox checked={draft.dealsAgreed} onChange={() => update({ dealsAgreed: !draft.dealsAgreed })}>
-          <span className={`text-[14px] leading-[20px] text-[#334155] ${fontRegular}`}>Include this course in the Thkee Deals Program.</span>
+        <Checkbox
+          checked={draft.dealsAgreed}
+          onChange={() => update({ dealsAgreed: !draft.dealsAgreed })}
+        >
+          <span
+            className={`text-sm leading-5 text-slate-700 ${fontRegular}`}
+          >
+            Include this course in the Thkee Deals Program.
+          </span>
         </Checkbox>
       </div>
     </>
@@ -2615,79 +6353,361 @@ function PricingSection({ draft, update }: SectionProps) {
   const free = priceIsValid(draft.price) && Number(draft.price) === 0;
   return (
     <>
-      <p className={`text-[16px] leading-[28px] text-[#475569] ${fontRegular}`}>Set what students pay for this course. Coupons from Promotions are taken off this price.</p>
-      <div className="mt-6 max-w-[320px]">
-        <TextField id="course-price" label="Price (USD)" required type="number" value={draft.price} onChange={(price) => update({ price })} placeholder="0 for a free course" error={priceIsValid(draft.price) ? "" : "Enter a price of 0 or more"} hint={free ? "This course will be free." : "Enter 0 to make this course free."} />
+      <p className={`text-base leading-7 text-slate-600 ${fontRegular}`}>
+        Set what students pay for this course. Coupons from Promotions are taken
+        off this price.
+      </p>
+      <div className="mt-6 max-w-80">
+        <TextField
+          id="course-price"
+          label="Price (USD)"
+          required
+          type="number"
+          value={draft.price}
+          onChange={(price) => update({ price })}
+          placeholder="0 for a free course"
+          error={priceIsValid(draft.price) ? "" : "Enter a price of 0 or more"}
+          hint={
+            free
+              ? "This course will be free."
+              : "Enter 0 to make this course free."
+          }
+        />
       </div>
     </>
   );
 }
 
-function TipsSection({ draft, courseId }: { draft: Draft; courseId: string }) {
+// Where each checklist step lives, in the order an instructor builds a course.
+const STEP_GROUPS: { section: string; label: string }[] = [
+  { section: "intended-learners", label: "Intended learners" },
+  { section: "details", label: "Course details" },
+  { section: "curriculum", label: "Curriculum" },
+  { section: "pricing", label: "Pricing" },
+];
+// A short playbook. Each tip has one concrete thing to try, and instructors tick off what they have applied.
+const PLAYBOOK: { topic: string; tips: { id: string; title: string; text: string; try: string }[] }[] = [
+  {
+    topic: "Plan",
+    tips: [
+      { id: "outcome", title: "Start with the outcome", text: "Decide what students can do at the end, then work back to the lectures that get them there.", try: "Write one sentence: after this course, you can…" },
+      { id: "short", title: "Keep lectures short", text: "One idea per lecture makes a course easy to follow and easy to come back to.", try: "Split any lecture longer than 10 minutes into two." },
+      { id: "first-win", title: "Show the first win early", text: "Let students make or solve something in the first section so they want to continue.", try: "Add a 5 minute hands-on task to section 1." },
+    ],
+  },
+  {
+    topic: "Record",
+    tips: [
+      { id: "audio", title: "Sound matters more than video", text: "Students forgive a plain camera. They leave when the audio is hard to hear.", try: "Record 30 seconds and listen back with headphones." },
+      { id: "screen", title: "Zoom in on what matters", text: "Small screen text is hard to read on a phone. Enlarge the part you are explaining.", try: "Set your screen to 125% zoom before you record." },
+      { id: "script", title: "Plan, then talk", text: "A short outline keeps you on track and still sounds natural.", try: "Write 3 to 5 bullet points for your next lecture." },
+    ],
+  },
+  {
+    topic: "Engage",
+    tips: [
+      { id: "practice", title: "Practice in every section", text: "A quiz or assignment after each section helps students check what they learned.", try: "Add a 3 question quiz at the end of each section." },
+      { id: "welcome", title: "Make the welcome personal", text: "A short intro about who you are and what is coming builds trust from the start.", try: "Record a 1 minute welcome lecture." },
+      { id: "reply", title: "Answer questions fast", text: "Quick replies in Q&A keep students moving and lead to better reviews.", try: "Check Q&A once a day in the first month." },
+    ],
+  },
+];
+
+function TipsSection({ draft, courseId, status, onSubmit }: { draft: Draft; courseId: string; status: CourseStatus; onSubmit?: () => void }) {
   const items = checklist(draft);
   const done = items.filter((item) => item.done).length;
+  const ready = done === items.length;
+  const next = items.find((item) => !item.done);
+  const pct = Math.round((done / items.length) * 100);
+  const [openGroups, setOpenGroups] = useState<Record<string, boolean>>(() =>
+    Object.fromEntries(STEP_GROUPS.map((g) => [g.section, items.some((i) => i.section === g.section && !i.done)])),
+  );
+  const [topic, setTopic] = useState(PLAYBOOK[0].topic);
+  const [openTip, setOpenTip] = useState("");
+  const [applied, setApplied] = useStoredState<string[]>(`thkee.tipsApplied.${courseId}`, []);
+  const allTips = PLAYBOOK.flatMap((t) => t.tips);
+  const tips = PLAYBOOK.find((t) => t.topic === topic)?.tips ?? [];
+  const R = 34;
+  const C = 2 * Math.PI * R;
   return (
-    <>
-      <h2 className={`m-0 text-[20px] leading-[28px] text-[#1e293b] ${fontMedium}`}>Ready to submit?</h2>
-      <p className={`mt-1 text-[14px] leading-[24px] text-[#475569] ${fontRegular}`}>
-        {done} of {items.length} steps are finished.
-      </p>
-      <ul className="mt-4 flex flex-col divide-y divide-[#e2e8f0] rounded-[12px] border border-[#e2e8f0] bg-white">
-        {items.map((item) => (
-          <li key={item.label}>
-            <button type="button" onClick={() => openCourseEditor(courseId, item.section)} className="flex w-full items-center gap-3 px-4 py-3 text-left transition hover:bg-[#f8fafc]">
-              <Icon path={CHECK_CIRCLE} className={`size-5 shrink-0 ${item.done ? "text-[#059669]" : "text-[#cbd5e1]"}`} />
-              <span className={`min-w-0 flex-1 text-[14px] leading-[20px] ${item.done ? "text-[#64748b]" : "text-[#1e293b]"} ${fontRegular}`}>
-                <span className="sr-only">{item.done ? "Done: " : "To do: "}</span>
-                {item.label}
-              </span>
-            </button>
-          </li>
-        ))}
-      </ul>
-      <h2 className={`m-0 mt-10 text-[20px] leading-[28px] text-[#1e293b] ${fontMedium}`}>Organizing your course</h2>
-      <div className="mt-4 grid gap-4 sm:grid-cols-2">
-        {TIPS.map((tip) => (
-          <div key={tip.title} className="rounded-[12px] border border-[#e2e8f0] bg-white p-4">
-            <p className={`text-[14px] leading-[20px] text-[#1e293b] ${fontSemi}`}>{tip.title}</p>
-            <p className={`mt-1 text-[14px] leading-[22px] text-[#475569] ${fontRegular}`}>{tip.text}</p>
+    <div className="flex flex-col gap-8">
+      {/* Hero: one number, one sentence and the next action. */}
+      <section className="relative overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-[0_1px_2px_rgba(15,23,42,0.04)]">
+        <div aria-hidden="true" className="absolute inset-0 bg-[radial-gradient(120%_120%_at_100%_0%,#e7f5ef_0%,transparent_55%)]" />
+        <div className="relative flex items-center gap-5 p-5 sm:p-6">
+          <div className="relative size-[84px] shrink-0">
+            <svg viewBox="0 0 80 80" className="size-full -rotate-90" aria-hidden="true">
+              <circle cx="40" cy="40" r={R} fill="none" stroke="#e2e8f0" strokeWidth="7" />
+              <circle cx="40" cy="40" r={R} fill="none" stroke={ready ? "#10b981" : "#0d5c4b"} strokeWidth="7" strokeLinecap="round" strokeDasharray={C} strokeDashoffset={C * (1 - done / items.length)} className="transition-[stroke-dashoffset] duration-700 ease-out" />
+            </svg>
+            <span className="absolute inset-0 flex flex-col items-center justify-center">
+              {ready ? (
+                <Icon path="M6 12.5l4 4 8-9" className="size-7 text-emerald-600" />
+              ) : (
+                <>
+                  <span className={`text-lg leading-5 text-slate-900 tabular-nums ${fontSemi}`}>{pct}%</span>
+                  <span className={`text-11 leading-3.5 text-slate-500 ${fontRegular}`}>done</span>
+                </>
+              )}
+            </span>
           </div>
-        ))}
-      </div>
-    </>
+          <div className="min-w-0 flex-1">
+            <p className={`m-0 text-11 uppercase leading-3.5 tracking-[0.08em] ${ready ? "text-emerald-700" : "text-primary-700"} ${fontSemi}`}>
+              {ready ? (status === "pending" ? "In review" : status === "published" ? "Live" : "Ready for review") : `${items.length - done} ${items.length - done === 1 ? "step" : "steps"} left`}
+            </p>
+            <h2 className={`m-0 mt-1 text-xl leading-7 text-slate-900 ${fontSemi}`}>
+              {ready ? (status === "pending" ? "Your course is with our review team" : status === "published" ? "Your course is live" : "Your course is ready to submit") : "Finish these steps to submit"}
+            </h2>
+            <p className={`m-0 mt-1 text-sm leading-5.5 text-slate-600 ${fontRegular}`}>
+              {ready ? (status === "published" ? "Keep it fresh. The playbook below has ideas to try next." : "Our team checks every course within 2 working days.") : `Next: ${next?.label.toLowerCase()}.`}
+            </p>
+            <div className="mt-4 flex flex-wrap gap-2">
+              {ready ? (
+                onSubmit && (
+                  <button type="button" onClick={onSubmit} className={`flex h-10 items-center gap-2 rounded-10 bg-primary-700 px-4 text-sm leading-5 text-white shadow-[0_8px_20px_-10px_rgba(13,92,75,0.7)] transition hover:bg-primary-800 ${fontMedium}`}>
+                    Submit for review
+                    <Icon path="M5 12h14M13 6l6 6-6 6" className="size-4" />
+                  </button>
+                )
+              ) : (
+                next && (
+                  <button type="button" onClick={() => openCourseEditor(courseId, next.section)} className={`flex h-10 items-center gap-2 rounded-10 bg-primary-700 px-4 text-sm leading-5 text-white shadow-[0_8px_20px_-10px_rgba(13,92,75,0.7)] transition hover:bg-primary-800 ${fontMedium}`}>
+                    Continue
+                    <Icon path="M5 12h14M13 6l6 6-6 6" className="size-4" />
+                  </button>
+                )
+              )}
+            </div>
+          </div>
+          <img src="/illustrations/course-checklist.svg" alt="" aria-hidden="true" className="float-y hidden h-[150px] w-auto shrink-0 sm:block" />
+        </div>
+        {/* One segment per step, so progress reads at a glance. */}
+        <div className="relative flex gap-1 px-5 pb-5 sm:px-6">
+          {items.map((item) => (
+            <span key={item.label} title={item.label} className={`h-1.5 flex-1 rounded-full transition-colors duration-500 ${item.done ? "bg-emerald-500" : "bg-slate-200"}`} />
+          ))}
+        </div>
+      </section>
+
+      {/* Checklist grouped by setup page. Groups with work left start open. */}
+      <section>
+        <h3 className={`m-0 text-base leading-6 text-slate-900 ${fontSemi}`}>Checklist</h3>
+        <ul className="mt-3 flex flex-col divide-y divide-slate-150 overflow-hidden rounded-2xl border border-slate-200 bg-white">
+          {STEP_GROUPS.map((group) => {
+            const groupItems = items.filter((i) => i.section === group.section);
+            const groupDone = groupItems.filter((i) => i.done).length;
+            const complete = groupDone === groupItems.length;
+            const open = !!openGroups[group.section];
+            return (
+              <li key={group.section}>
+                <button
+                  type="button"
+                  aria-expanded={open}
+                  onClick={() => setOpenGroups((g) => ({ ...g, [group.section]: !open }))}
+                  className="flex w-full items-center gap-3 px-4 py-3 text-left transition hover:bg-slate-25"
+                >
+                  <span className={`flex size-7 shrink-0 items-center justify-center rounded-full ${complete ? "bg-emerald-500 text-white" : "bg-amber-50 text-amber-700 ring-1 ring-inset ring-amber-200"}`}>
+                    {complete ? <Icon path="M6 12.5l4 4 8-9" className="size-4" /> : <span className={`text-xs tabular-nums ${fontSemi}`}>{groupItems.length - groupDone}</span>}
+                  </span>
+                  <span className={`min-w-0 flex-1 text-sm leading-5 text-slate-900 ${fontMedium}`}>{group.label}</span>
+                  <span className={`text-xs leading-4 tabular-nums ${complete ? "text-emerald-700" : "text-slate-500"} ${fontMedium}`}>
+                    {groupDone}/{groupItems.length}
+                  </span>
+                  <Icon path="M6 9l6 6 6-6" className={`size-4 text-slate-400 transition-transform ${open ? "rotate-180" : ""}`} />
+                </button>
+                {open && (
+                  <ul className="pop-in flex flex-col pb-2">
+                    {groupItems.map((item) => (
+                      <li key={item.label}>
+                        <button
+                          type="button"
+                          onClick={() => openCourseEditor(courseId, item.section)}
+                          className="group/step flex w-full items-center gap-3 py-2 pl-14 pr-4 text-left transition hover:bg-slate-25"
+                        >
+                          <Icon path={CHECK_CIRCLE} className={`size-4.5 shrink-0 ${item.done ? "text-emerald-600" : "text-slate-300"}`} />
+                          <span className={`min-w-0 flex-1 text-sm leading-5 ${item.done ? "text-slate-500" : "text-slate-800"} ${fontRegular}`}>
+                            <span className="sr-only">{item.done ? "Done: " : "To do: "}</span>
+                            {item.label}
+                          </span>
+                          {!item.done && (
+                            <span className={`flex items-center gap-1 text-xs leading-4 text-primary-700 opacity-0 transition group-hover/step:opacity-100 group-focus-visible/step:opacity-100 pointer-coarse:opacity-100 ${fontMedium}`}>
+                              Fix
+                              <Icon path="M9 6l6 6-6 6" className="size-3.5" />
+                            </span>
+                          )}
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </li>
+            );
+          })}
+        </ul>
+      </section>
+
+      {/* Playbook: tabs by stage, tips open to show one thing to try, and a tick to mark it applied. */}
+      <section>
+        <div className="flex flex-wrap items-end justify-between gap-3">
+          <div>
+            <h3 className={`m-0 text-base leading-6 text-slate-900 ${fontSemi}`}>Course playbook</h3>
+            <p className={`m-0 mt-0.5 text-13 leading-5 text-slate-500 ${fontRegular}`}>
+              {applied.length} of {allTips.length} tips applied
+            </p>
+          </div>
+          <div role="tablist" aria-label="Playbook topics" className="flex rounded-10 bg-slate-100 p-0.5">
+            {PLAYBOOK.map((t) => {
+              const count = t.tips.filter((tip) => applied.includes(tip.id)).length;
+              return (
+                <button
+                  key={t.topic}
+                  type="button"
+                  role="tab"
+                  aria-selected={topic === t.topic}
+                  onClick={() => setTopic(t.topic)}
+                  className={`flex h-8 items-center gap-1.5 rounded-lg px-3 text-13 leading-4.5 transition ${topic === t.topic ? `bg-white text-slate-900 shadow-[0_1px_2px_rgba(15,23,42,0.12)] ${fontSemi}` : `text-slate-500 hover:text-slate-900 ${fontMedium}`}`}
+                >
+                  {t.topic}
+                  <span className={`text-11 tabular-nums ${count === t.tips.length ? "text-emerald-600" : "text-slate-400"}`}>
+                    {count}/{t.tips.length}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+        <ul key={topic} className="fade-up mt-3 flex flex-col gap-2">
+          {tips.map((tip, i) => {
+            const open = openTip === tip.id;
+            const isApplied = applied.includes(tip.id);
+            return (
+              <li key={tip.id} className={`rounded-xl border bg-white transition ${open ? "border-primary-700/25 shadow-[0_10px_28px_-18px_rgba(13,92,75,0.45)]" : "border-slate-200 hover:border-slate-300"}`}>
+                <div className="flex items-start gap-3 px-4 py-3">
+                  <button
+                    type="button"
+                    role="checkbox"
+                    aria-checked={isApplied}
+                    aria-label={`Mark "${tip.title}" as applied`}
+                    onClick={() => setApplied((list) => (isApplied ? list.filter((x) => x !== tip.id) : [...list, tip.id]))}
+                    className={`mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-md border-2 transition ${isApplied ? "border-emerald-500 bg-emerald-500 text-white" : "border-slate-300 text-transparent hover:border-emerald-500"}`}
+                  >
+                    <Icon path="M6 12.5l4 4 8-9" className="size-3.5" />
+                  </button>
+                  <button type="button" aria-expanded={open} onClick={() => setOpenTip(open ? "" : tip.id)} className="min-w-0 flex-1 text-left">
+                    <span className="flex items-center gap-2">
+                      <span className={`text-xs tabular-nums text-slate-400 ${fontSemi}`}>0{i + 1}</span>
+                      <span className={`min-w-0 flex-1 text-sm leading-5 ${isApplied ? "text-slate-500 line-through decoration-slate-300" : "text-slate-900"} ${fontSemi}`}>{tip.title}</span>
+                      <Icon path="M6 9l6 6 6-6" className={`size-4 shrink-0 text-slate-400 transition-transform ${open ? "rotate-180" : ""}`} />
+                    </span>
+                    <span className={`mt-1 block text-13 leading-5 text-slate-600 ${fontRegular}`}>{tip.text}</span>
+                  </button>
+                </div>
+                {open && (
+                  <div className="pop-in mb-3 ml-12 mr-4 flex items-start gap-2 rounded-lg bg-primary-50 px-3 py-2.5">
+                    <Icon path={SPARKLE} className="mt-0.5 size-3.5 shrink-0 text-primary-700" filled />
+                    <p className={`m-0 text-13 leading-5 text-primary-800 ${fontMedium}`}>
+                      <span className={fontSemi}>Try this: </span>
+                      {tip.try}
+                    </p>
+                  </div>
+                )}
+              </li>
+            );
+          })}
+        </ul>
+      </section>
+    </div>
   );
 }
 
 // Rich guide card: Liniqo illustration, a short message, and up to two links.
 type GuideLink = { label: string; onClick: () => void };
-function RichGuide({ eyebrow, title, text, image, primary, secondary }: { eyebrow: string; title: string; text: string; image: string; primary: GuideLink; secondary?: GuideLink }) {
-  const arrow = <HugeiconsIcon icon={ArrowUpRight01Icon} size={16} strokeWidth={2} aria-hidden="true" />;
+function RichGuide({
+  eyebrow,
+  title,
+  text,
+  image,
+  primary,
+  secondary,
+}: {
+  eyebrow: string;
+  title: string;
+  text: string;
+  image: string;
+  primary: GuideLink;
+  secondary?: GuideLink;
+}) {
+  const arrow = (
+    <HugeiconsIcon
+      icon={ArrowUpRight01Icon}
+      size={16}
+      strokeWidth={2}
+      aria-hidden="true"
+    />
+  );
   return (
-    <aside className="@container relative rounded-[16px] border border-b-[3px] border-r-[3px] border-[#cfe3da] bg-[linear-gradient(135deg,#eaf5f0_0%,#f4faf7_55%,#ffffff_100%)] p-6">
+    <aside className="@container relative rounded-2xl border border-b-3 border-r-3 border-primary-300 bg-linear-135 from-primary-100 via-primary-50 via-55% to-white p-6">
       {/* Soft green shapes, kept inside the rounded card. */}
-      <span aria-hidden="true" className="pointer-events-none absolute inset-0 overflow-hidden rounded-[14px]">
-        <span className="absolute -right-20 -top-24 size-72 rounded-full bg-[#0d5c4b]/[0.06]" />
-        <span className="absolute -bottom-28 right-24 size-56 rounded-full bg-[#12b981]/[0.06]" />
-        <span className="absolute inset-y-0 right-0 w-1/2 opacity-[0.14] [background-image:radial-gradient(#0d5c4b_1px,transparent_1px)] [background-size:14px_14px] [mask-image:linear-gradient(to_left,black,transparent)]" />
+      <span
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0 overflow-hidden rounded-14"
+      >
+        <span className="absolute -right-20 -top-24 size-72 rounded-full bg-primary-700/6" />
+        <span className="absolute -bottom-28 right-24 size-56 rounded-full bg-emerald-500/6" />
+        <span className="absolute inset-y-0 right-0 w-1/2 opacity-14 dot-grid" />
       </span>
-      <svg viewBox="0 0 24 48" className="absolute -top-3 right-8 h-10 w-5 text-[#0f172a]" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" aria-hidden="true">
+      <svg
+        viewBox="0 0 24 48"
+        className="absolute -top-3 right-8 h-10 w-5 text-slate-900"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2.4"
+        strokeLinecap="round"
+        aria-hidden="true"
+      >
         <path d="M17 12v24a5 5 0 01-10 0V9a3.5 3.5 0 017 0v25a1.5 1.5 0 01-3 0V13" />
       </svg>
       <div className="relative flex flex-col gap-5 @xl:flex-row @xl:items-center @xl:gap-7">
-        <span className="flex size-[132px] shrink-0 items-center justify-center rounded-[16px] bg-white shadow-[0_1px_2px_rgba(13,92,75,0.08),0_8px_24px_-12px_rgba(13,92,75,0.25)] ring-1 ring-[#d4e8df] @xl:size-[150px]">
-          <img src={image} alt="" width={1000} height={1000} className="float-y size-[124px] @xl:size-[140px]" />
+        <span className="flex size-33 shrink-0 items-center justify-center rounded-2xl bg-white shadow-primary-tile ring-1 ring-primary-300 @xl:size-37.5">
+          <img
+            src={image}
+            alt=""
+            width={1000}
+            height={1000}
+            className="float-y size-31 @xl:size-35"
+          />
         </span>
         <div className="min-w-0">
-          <p className={`m-0 inline-flex rounded-full bg-white/70 px-2.5 py-1 text-[11px] uppercase leading-[14px] tracking-[0.08em] text-[#0d5c4b] ring-1 ring-[#cfe3da] ${fontSemi}`}>{eyebrow}</p>
-          <h2 className={`m-0 mt-2.5 text-[20px] leading-[28px] text-[#0f172a] ${fontSemi}`}>{title}</h2>
-          <p className={`m-0 mt-1.5 max-w-[460px] text-[14px] leading-[24px] text-[#334155] ${fontRegular}`}>{text}</p>
+          <p
+            className={`m-0 inline-flex rounded-full bg-white/70 px-2.5 py-1 text-11 uppercase leading-3.5 tracking-label text-primary-700 ring-1 ring-primary-300 ${fontSemi}`}
+          >
+            {eyebrow}
+          </p>
+          <h2
+            className={`m-0 mt-2.5 text-xl leading-7 text-slate-900 ${fontSemi}`}
+          >
+            {title}
+          </h2>
+          <p
+            className={`m-0 mt-1.5 max-w-115 text-sm leading-6 text-slate-700 ${fontRegular}`}
+          >
+            {text}
+          </p>
           <div className="mt-4 flex flex-wrap items-center gap-x-5 gap-y-3">
-            <button type="button" onClick={primary.onClick} className={`flex h-9 items-center gap-1.5 rounded-[8px] bg-[#0d5c4b] px-3.5 text-[14px] leading-[20px] text-white shadow-[0_1px_2px_rgba(13,92,75,0.25)] transition hover:bg-[#0b4c3e] ${fontMedium}`}>
+            <button
+              type="button"
+              onClick={primary.onClick}
+              className={`flex h-9 items-center gap-1.5 rounded-lg bg-primary-700 px-3.5 text-sm leading-5 text-white shadow-primary-xs transition hover:bg-primary-800 ${fontMedium}`}
+            >
               {primary.label}
               {arrow}
             </button>
             {secondary && (
-              <button type="button" onClick={secondary.onClick} className={`flex items-center gap-1.5 text-[14px] leading-[20px] text-[#0d5c4b] transition hover:text-[#0b4c3e] hover:underline ${fontMedium}`}>
+              <button
+                type="button"
+                onClick={secondary.onClick}
+                className={`flex items-center gap-1.5 text-sm leading-5 text-primary-700 transition hover:text-primary-800 hover:underline ${fontMedium}`}
+              >
                 {secondary.label}
                 {arrow}
               </button>
@@ -2699,7 +6719,13 @@ function RichGuide({ eyebrow, title, text, image, primary, secondary }: { eyebro
   );
 }
 
-function PricingGuide({ onCoupons, onTips }: { onCoupons: () => void; onTips: () => void }) {
+function PricingGuide({
+  onCoupons,
+  onTips,
+}: {
+  onCoupons: () => void;
+  onTips: () => void;
+}) {
   return (
     <RichGuide
       eyebrow="Pricing tips"
@@ -2731,11 +6757,35 @@ function PromotionsGuide({ onTips }: { onTips: () => void }) {
   );
 }
 
-function GuideCard({ title, text, linkLabel = "See Course Organization", icon, inlineIcon, onOpen }: { title: string; text: string; linkLabel?: string; icon?: ReactNode; inlineIcon?: boolean; onOpen: () => void }) {
+function GuideCard({
+  title,
+  text,
+  linkLabel = "See Course Organization",
+  icon,
+  inlineIcon,
+  onOpen,
+}: {
+  title: string;
+  text: string;
+  linkLabel?: string;
+  icon?: ReactNode;
+  inlineIcon?: boolean;
+  onOpen: () => void;
+}) {
   const art = icon ?? (
-    <svg viewBox="0 0 66 50" className="h-[50px] w-[66px] text-[#0b3fb0]" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden="true">
+    <svg
+      viewBox="0 0 66 50"
+      className="h-12.5 w-16.5 text-blue-800"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.6"
+      aria-hidden="true"
+    >
       <rect x="1" y="1" width="64" height="48" rx="3" />
-      <path d="M1 10h64M9 5.5h.01M14 5.5h.01M19 5.5h.01" strokeLinecap="round" />
+      <path
+        d="M1 10h64M9 5.5h.01M14 5.5h.01M19 5.5h.01"
+        strokeLinecap="round"
+      />
       <rect x="8" y="16" width="22" height="26" />
       <path d="M8 16l22 26M30 16L8 42" />
       <rect x="36" y="16" width="22" height="11" fill="currentColor" />
@@ -2743,23 +6793,47 @@ function GuideCard({ title, text, linkLabel = "See Course Organization", icon, i
     </svg>
   );
   return (
-    <aside className="relative rounded-[16px] border-b-[3px] border-r-[3px] border-[#e2e8f0] bg-[#f8fafc] p-6 @4xl:sticky @4xl:top-[88px]">
-      <svg viewBox="0 0 24 48" className="absolute -top-3 right-8 h-10 w-5 text-[#0f172a]" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" aria-hidden="true">
+    <aside className="relative rounded-2xl border-b-3 border-r-3 border-slate-200 bg-slate-50 p-6 @4xl:sticky @4xl:top-22">
+      <svg
+        viewBox="0 0 24 48"
+        className="absolute -top-3 right-8 h-10 w-5 text-slate-900"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2.4"
+        strokeLinecap="round"
+        aria-hidden="true"
+      >
         <path d="M17 12v24a5 5 0 01-10 0V9a3.5 3.5 0 017 0v25a1.5 1.5 0 01-3 0V13" />
       </svg>
       {inlineIcon ? (
         <div className="flex items-center gap-3">
           {art}
-          <h2 className={`m-0 text-[20px] leading-[28px] text-[#0f172a] ${fontSemi}`}>{title}</h2>
+          <h2
+            className={`m-0 text-xl leading-7 text-slate-900 ${fontSemi}`}
+          >
+            {title}
+          </h2>
         </div>
       ) : (
         <>
           {art}
-          <h2 className={`m-0 mt-5 text-[20px] leading-[28px] text-[#0f172a] ${fontSemi}`}>{title}</h2>
+          <h2
+            className={`m-0 mt-5 text-xl leading-7 text-slate-900 ${fontSemi}`}
+          >
+            {title}
+          </h2>
         </>
       )}
-      <p className={`mt-3 text-[14px] leading-[24px] text-[#334155] ${fontRegular}`}>{text}</p>
-      <button type="button" onClick={onOpen} className={`mt-5 flex items-center gap-3 text-[14px] leading-[20px] text-[#0f172a] transition hover:text-[#976002] ${fontSemi}`}>
+      <p
+        className={`mt-3 text-sm leading-6 text-slate-700 ${fontRegular}`}
+      >
+        {text}
+      </p>
+      <button
+        type="button"
+        onClick={onOpen}
+        className={`mt-5 flex items-center gap-3 text-sm leading-5 text-slate-900 transition hover:text-secondary-800 ${fontSemi}`}
+      >
         {linkLabel}
         <Icon path="M7 17L17 7M8 7h9v9" className="size-4" />
       </button>
@@ -2767,7 +6841,12 @@ function GuideCard({ title, text, linkLabel = "See Course Organization", icon, i
   );
 }
 
-const toDraft = (course: InstructorCourse, details: Details): Draft => ({ ...details, title: course.title, category: course.category, price: course.price === "Free" ? "0" : course.price.replace(/[^0-9.]/g, "") });
+const toDraft = (course: InstructorCourse, details: Details): Draft => ({
+  ...details,
+  title: course.title,
+  category: course.category,
+  price: course.price === "Free" ? "0" : course.price.replace(/[^0-9.]/g, ""),
+});
 
 const STATUS_TEXT: Record<CourseStatus, string> = {
   draft: "This course is not published on the Thkee marketplace.",
@@ -2776,33 +6855,67 @@ const STATUS_TEXT: Record<CourseStatus, string> = {
   rejected: "This course needs changes before it can be published.",
 };
 
-function SettingsSection({ course, status, settings, onChange }: { course: InstructorCourse; status: CourseStatus; settings: CourseSettings; onChange: (patch: Partial<CourseSettings>) => void }) {
+function SettingsSection({
+  course,
+  status,
+  settings,
+  onChange,
+}: {
+  course: InstructorCourse;
+  status: CourseStatus;
+  settings: CourseSettings;
+  onChange: (patch: Partial<CourseSettings>) => void;
+}) {
   const { notify } = useApp();
   const [deleting, setDeleting] = useState(false);
   const hasStudents = course.purchases > 0;
   const published = status === "published";
-  const heading = `m-0 text-[16px] leading-[24px] text-[#0f172a] ${fontSemi}`;
-  const text = `text-[14px] leading-[22px] text-[#64748b] ${fontRegular}`;
-  const row = "flex flex-col gap-3 px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:gap-6";
-  const outline = `h-9 shrink-0 rounded-[8px] border border-[#cbd5e1] bg-white px-4 text-[14px] leading-[20px] text-[#1e293b] transition hover:bg-[#f8fafc] ${fontMedium}`;
+  const heading = `m-0 text-base leading-6 text-slate-900 ${fontSemi}`;
+  const text = `text-sm leading-5.5 text-slate-500 ${fontRegular}`;
+  const row =
+    "flex flex-col gap-3 px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:gap-6";
+  const outline = `h-9 shrink-0 rounded-lg border border-slate-300 bg-white px-4 text-sm leading-5 text-slate-800 transition hover:bg-slate-50 ${fontMedium}`;
 
-  const toggleNotice = (key: "qaDigest" | "lectureReady" | "monthlyEnrollments") => {
+  const toggleNotice = (
+    key: "qaDigest" | "lectureReady" | "monthlyEnrollments",
+  ) => {
     onChange({ [key]: !settings[key] });
     notify("Email notifications updated");
   };
 
   const remove = () => {
-    saveInstructorCourses(loadInstructorCourses().filter((c) => c.id !== course.id));
-    const { [course.id]: _gone, ...rest } = load<Record<string, StoredDetails>>(COURSE_DETAILS_KEY, {});
+    saveInstructorCourses(
+      loadInstructorCourses().filter((c) => c.id !== course.id),
+    );
+    const { [course.id]: _gone, ...rest } = load<Record<string, StoredDetails>>(
+      COURSE_DETAILS_KEY,
+      {},
+    );
     save(COURSE_DETAILS_KEY, rest);
     openInstructorCourses();
     notify("Course deleted");
   };
 
-  const notices: { key: "qaDigest" | "lectureReady" | "monthlyEnrollments"; label: string; tip: string }[] = [
-    { key: "qaDigest", label: "Daily Q&A digest", tip: "One email a day with new student questions on this course." },
-    { key: "lectureReady", label: "Email me when a lecture is ready", tip: "We email you when an uploaded video has finished processing." },
-    { key: "monthlyEnrollments", label: "Monthly update on new enrollments", tip: "A summary of how many students enrolled this month." },
+  const notices: {
+    key: "qaDigest" | "lectureReady" | "monthlyEnrollments";
+    label: string;
+    tip: string;
+  }[] = [
+    {
+      key: "qaDigest",
+      label: "Daily Q&A digest",
+      tip: "One email a day with new student questions on this course.",
+    },
+    {
+      key: "lectureReady",
+      label: "Email me when a lecture is ready",
+      tip: "We email you when an uploaded video has finished processing.",
+    },
+    {
+      key: "monthlyEnrollments",
+      label: "Monthly update on new enrollments",
+      tip: "A summary of how many students enrolled this month.",
+    },
   ];
 
   return (
@@ -2815,17 +6928,29 @@ function SettingsSection({ course, status, settings, onChange }: { course: Instr
           </div>
           <StatusPill status={status} />
         </div>
-        <div className="divide-y divide-[#e2e8f0] rounded-[12px] border border-[#e2e8f0] bg-white">
+        <div className="divide-y divide-slate-200 rounded-xl border border-slate-200 bg-white">
           <div className={row}>
             <div className="min-w-0">
-              <p className={`text-[14px] leading-[20px] text-[#0f172a] ${fontMedium}`}>{settings.unlisted ? "Unlisted" : "Listed in search"}</p>
-              <p className={text}>{settings.unlisted ? "New students can't find this course in search. Students who already enrolled keep their access." : "Unlist to hide this course from search. Students who already enrolled keep their access."}</p>
+              <p
+                className={`text-sm leading-5 text-slate-900 ${fontMedium}`}
+              >
+                {settings.unlisted ? "Unlisted" : "Listed in search"}
+              </p>
+              <p className={text}>
+                {settings.unlisted
+                  ? "New students can't find this course in search. Students who already enrolled keep their access."
+                  : "Unlist to hide this course from search. Students who already enrolled keep their access."}
+              </p>
             </div>
             <button
               type="button"
               onClick={() => {
                 onChange({ unlisted: !settings.unlisted });
-                notify(settings.unlisted ? "Course is listed in search again" : "Course unlisted");
+                notify(
+                  settings.unlisted
+                    ? "Course is listed in search again"
+                    : "Course unlisted",
+                );
               }}
               className={outline}
             >
@@ -2834,17 +6959,30 @@ function SettingsSection({ course, status, settings, onChange }: { course: Instr
           </div>
           <div className={row}>
             <div className="min-w-0">
-              <p className={`text-[14px] leading-[20px] text-[#b91c1c] ${fontMedium}`}>Delete course</p>
-              <p className={text}>{hasStudents ? `${course.purchases} ${course.purchases === 1 ? "student has" : "students have"} enrolled. We promise students lifetime access, so this course can't be deleted.` : "Permanently delete this course and everything in it. This can't be undone."}</p>
+              <p
+                className={`text-sm leading-5 text-red-700 ${fontMedium}`}
+              >
+                Delete course
+              </p>
+              <p className={text}>
+                {hasStudents
+                  ? `${course.purchases} ${course.purchases === 1 ? "student has" : "students have"} enrolled. We promise students lifetime access, so this course can't be deleted.`
+                  : "Permanently delete this course and everything in it. This can't be undone."}
+              </p>
             </div>
-            <button type="button" disabled={hasStudents} onClick={() => setDeleting(true)} className={`h-9 shrink-0 rounded-[8px] bg-[#dc2626] px-4 text-[14px] leading-[20px] text-white transition hover:bg-[#b91c1c] disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-[#dc2626] ${fontMedium}`}>
+            <button
+              type="button"
+              disabled={hasStudents}
+              onClick={() => setDeleting(true)}
+              className={`h-9 shrink-0 rounded-lg bg-red-600 px-4 text-sm leading-5 text-white transition hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-red-600 ${fontMedium}`}
+            >
               Delete
             </button>
           </div>
         </div>
       </section>
 
-      <section className="flex flex-col gap-4 border-t border-[#e2e8f0] pt-8">
+      <section className="flex flex-col gap-4 border-t border-slate-200 pt-8">
         <div>
           <h2 className={heading}>Email notifications</h2>
           <p className={text}>Choose which emails you get about this course.</p>
@@ -2852,8 +6990,15 @@ function SettingsSection({ course, status, settings, onChange }: { course: Instr
         <div className="flex flex-col gap-3">
           {notices.map((n) => (
             <div key={n.key} className="flex items-center gap-1.5">
-              <Checkbox checked={settings[n.key]} onChange={() => toggleNotice(n.key)}>
-                <span className={`text-[14px] leading-[20px] text-[#1e293b] ${fontRegular}`}>{n.label}</span>
+              <Checkbox
+                checked={settings[n.key]}
+                onChange={() => toggleNotice(n.key)}
+              >
+                <span
+                  className={`text-sm leading-5 text-slate-800 ${fontRegular}`}
+                >
+                  {n.label}
+                </span>
               </Checkbox>
               <InfoTip text={n.tip} />
             </div>
@@ -2861,17 +7006,29 @@ function SettingsSection({ course, status, settings, onChange }: { course: Instr
         </div>
       </section>
 
-      <section className="flex flex-col gap-4 border-t border-[#e2e8f0] pt-8">
+      <section className="flex flex-col gap-4 border-t border-slate-200 pt-8">
         <div>
           <h2 className={heading}>Enrollment privacy</h2>
           <p className={text}>Control who can enroll in this course.</p>
         </div>
         {published ? (
-          <div role="radiogroup" aria-label="Enrollment privacy" className="grid gap-3 sm:grid-cols-2">
+          <div
+            role="radiogroup"
+            aria-label="Enrollment privacy"
+            className="grid gap-3 sm:grid-cols-2"
+          >
             {(
               [
-                { value: "public", title: "Public", body: "Anyone on Thkee can find and enroll in this course." },
-                { value: "private", title: "Private", body: "Only people you invite can enroll." },
+                {
+                  value: "public",
+                  title: "Public",
+                  body: "Anyone on Thkee can find and enroll in this course.",
+                },
+                {
+                  value: "private",
+                  title: "Private",
+                  body: "Only people you invite can enroll.",
+                },
               ] as const
             ).map((o) => {
               const on = settings.privacy === o.value;
@@ -2885,11 +7042,21 @@ function SettingsSection({ course, status, settings, onChange }: { course: Instr
                     onChange({ privacy: o.value });
                     notify("Enrollment privacy updated");
                   }}
-                  className={`flex items-start gap-3 rounded-[12px] border p-4 text-left transition ${on ? "border-[#0d5c4b] bg-[#eef7f3]" : "border-[#e2e8f0] bg-white hover:border-[#cbd5e1]"}`}
+                  className={`flex items-start gap-3 rounded-xl border p-4 text-left transition ${on ? "border-primary-700 bg-primary-100" : "border-slate-200 bg-white hover:border-slate-300"}`}
                 >
-                  <span className={`mt-0.5 flex size-4 shrink-0 items-center justify-center rounded-full border-2 ${on ? "border-[#0d5c4b]" : "border-[#cbd5e1]"}`}>{on && <span className="size-1.5 rounded-full bg-[#0d5c4b]" />}</span>
+                  <span
+                    className={`mt-0.5 flex size-4 shrink-0 items-center justify-center rounded-full border-2 ${on ? "border-primary-700" : "border-slate-300"}`}
+                  >
+                    {on && (
+                      <span className="size-1.5 rounded-full bg-primary-700" />
+                    )}
+                  </span>
                   <span>
-                    <span className={`block text-[14px] leading-[20px] text-[#0f172a] ${fontMedium}`}>{o.title}</span>
+                    <span
+                      className={`block text-sm leading-5 text-slate-900 ${fontMedium}`}
+                    >
+                      {o.title}
+                    </span>
                     <span className={`block ${text}`}>{o.body}</span>
                   </span>
                 </button>
@@ -2897,51 +7064,97 @@ function SettingsSection({ course, status, settings, onChange }: { course: Instr
             })}
           </div>
         ) : (
-          <div className="flex items-start gap-3 rounded-[12px] border border-[#e2e8f0] bg-[#f8fafc] p-4 sm:max-w-[460px]">
-            <Icon path="M12 3a9 9 0 100 18 9 9 0 000-18zM12 8v4M12 16h.01" className="mt-0.5 size-[18px] shrink-0 text-[#64748b]" />
+          <div className="flex items-start gap-3 rounded-xl border border-slate-200 bg-slate-50 p-4 sm:max-w-115">
+            <Icon
+              path="M12 3a9 9 0 100 18 9 9 0 000-18zM12 8v4M12 16h.01"
+              className="mt-0.5 size-4.5 shrink-0 text-slate-500"
+            />
             <div>
-              <p className={`text-[14px] leading-[20px] text-[#0f172a] ${fontMedium}`}>Publish to enable privacy settings</p>
-              <p className={text}>Privacy settings become available after your course is published for the first time.</p>
+              <p
+                className={`text-sm leading-5 text-slate-900 ${fontMedium}`}
+              >
+                Publish to enable privacy settings
+              </p>
+              <p className={text}>
+                Privacy settings become available after your course is published
+                for the first time.
+              </p>
             </div>
           </div>
         )}
       </section>
 
-      {deleting && <ConfirmDialog title="Delete this course?" body={`"${course.title}" and all its lectures, quizzes and settings will be permanently deleted.`} confirmLabel="Delete course" onClose={() => setDeleting(false)} onConfirm={remove} />}
+      {deleting && (
+        <ConfirmDialog
+          title="Delete this course?"
+          body={`"${course.title}" and all its lectures, quizzes and settings will be permanently deleted.`}
+          confirmLabel="Delete course"
+          onClose={() => setDeleting(false)}
+          onConfirm={remove}
+        />
+      )}
     </div>
   );
 }
 
-function Editor({ course, stored, section }: { course: InstructorCourse; stored?: StoredDetails; section: string }) {
+function Editor({
+  course,
+  stored,
+  section,
+}: {
+  course: InstructorCourse;
+  stored?: StoredDetails;
+  section: string;
+}) {
   const { notify, user } = useApp();
-  const [showPreview, setShowPreview] = useStoredState("thkee.builderPreview", true);
+  const [showPreview, setShowPreview] = useStoredState(
+    "thkee.builderPreview",
+    true,
+  );
   // Width of the live preview as a share of the builder area; the divider between the columns changes it.
-  const [previewPct, setPreviewPct] = useStoredState("thkee.builderSplit", PREVIEW_DEFAULT);
+  const [previewPct, setPreviewPct] = useStoredState(
+    "thkee.builderSplit",
+    PREVIEW_DEFAULT,
+  );
   const splitRef = useRef<HTMLDivElement>(null);
   const [fullPreview, setFullPreview] = useState(false);
   const [focusAnchor, setFocusAnchor] = useState<PreviewAnchor | null>(null);
   useEffect(() => setFocusAnchor(null), [section]);
   useEffect(() => {
     if (!fullPreview) return;
-    const close = (e: globalThis.KeyboardEvent) => e.key === "Escape" && setFullPreview(false);
+    const close = (e: globalThis.KeyboardEvent) =>
+      e.key === "Escape" && setFullPreview(false);
     document.addEventListener("keydown", close);
     return () => document.removeEventListener("keydown", close);
   }, [fullPreview]);
-  const [initial] = useState(() => toDraft(course, { ...blankDetails(), ...stored }));
+  const [initial] = useState(() =>
+    toDraft(course, { ...blankDetails(), ...stored }),
+  );
   const [draft, setDraft] = useState(initial);
   const [saved, setSaved] = useState(initial);
   const [status, setStatus] = useState<CourseStatus>(course.status);
-  const [allSettings, setAllSettings] = useStoredState<Record<string, CourseSettings>>(COURSE_SETTINGS_KEY, {});
+  const [allSettings, setAllSettings] = useStoredState<
+    Record<string, CourseSettings>
+  >(COURSE_SETTINGS_KEY, {});
   const settings = { ...DEFAULT_COURSE_SETTINGS, ...allSettings[course.id] };
-  const changeSettings = (patch: Partial<CourseSettings>) => setAllSettings((all) => ({ ...all, [course.id]: { ...DEFAULT_COURSE_SETTINGS, ...all[course.id], ...patch } }));
+  const changeSettings = (patch: Partial<CourseSettings>) =>
+    setAllSettings((all) => ({
+      ...all,
+      [course.id]: { ...DEFAULT_COURSE_SETTINGS, ...all[course.id], ...patch },
+    }));
   const [savedAt, setSavedAt] = useState(stored?.savedAt);
   const [now, setNow] = useState(() => Date.now());
   const [leaving, setLeaving] = useState(false);
   const [explaining, setExplaining] = useState(false);
-  const update = (patch: Partial<Draft>) => setDraft((d) => ({ ...d, ...patch }));
-  const [uploadProgress, setUploadProgress] = useState<Record<string, number>>({});
+  const update = (patch: Partial<Draft>) =>
+    setDraft((d) => ({ ...d, ...patch }));
+  const [uploadProgress, setUploadProgress] = useState<Record<string, number>>(
+    {},
+  );
   // Lecture videos the owner uploaded to the server, by file name.
-  const [videoUrls, setVideoUrls] = useState<Record<string, string>>(() => load<Record<string, string>>(VIDEO_URLS_KEY, {}));
+  const [videoUrls, setVideoUrls] = useState<Record<string, string>>(() =>
+    load<Record<string, string>>(VIDEO_URLS_KEY, {}),
+  );
   const uploadTimers = useRef(new Map<string, number>());
   const createdUrls = useRef<string[]>([]);
   useEffect(() => {
@@ -2963,7 +7176,10 @@ function Editor({ course, stored, section }: { course: InstructorCourse; stored?
     uploadFile(file)
       .then((serverUrl) => {
         if (!serverUrl) return;
-        save(VIDEO_URLS_KEY, { ...load<Record<string, string>>(VIDEO_URLS_KEY, {}), [file.name]: serverUrl });
+        save(VIDEO_URLS_KEY, {
+          ...load<Record<string, string>>(VIDEO_URLS_KEY, {}),
+          [file.name]: serverUrl,
+        });
         setVideoUrls((urls) => ({ ...urls, [file.name]: serverUrl }));
       })
       .catch(() => notify(`Upload failed for ${file.name}. Please try again`));
@@ -2972,7 +7188,15 @@ function Editor({ course, stored, section }: { course: InstructorCourse; stored?
     probe.onloadedmetadata = () => {
       if (!Number.isFinite(probe.duration)) return;
       const duration = formatDuration(probe.duration);
-      setDraft((d) => ({ ...d, curriculum: d.curriculum.map((s) => ({ ...s, lectures: s.lectures.map((l) => (l.id === lectureId ? { ...l, duration } : l)) })) }));
+      setDraft((d) => ({
+        ...d,
+        curriculum: d.curriculum.map((s) => ({
+          ...s,
+          lectures: s.lectures.map((l) =>
+            l.id === lectureId ? { ...l, duration } : l,
+          ),
+        })),
+      }));
     };
     probe.src = url;
     const previous = uploadTimers.current.get(lectureId);
@@ -3031,11 +7255,26 @@ function Editor({ course, stored, section }: { course: InstructorCourse; stored?
     saveInstructorCourses(
       loadInstructorCourses().map((c) =>
         c.id === course.id
-          ? { ...c, ...(title.trim() ? { title: title.trim() } : {}), category, status: nextStatus, ...(priceIsValid(price) ? { price: priceValue === 0 ? "Free" : `$${priceValue.toFixed(2)}` } : {}), updated: todayLabel() }
+          ? {
+              ...c,
+              ...(title.trim() ? { title: title.trim() } : {}),
+              category,
+              status: nextStatus,
+              ...(priceIsValid(price)
+                ? {
+                    price:
+                      priceValue === 0 ? "Free" : `$${priceValue.toFixed(2)}`,
+                  }
+                : {}),
+              updated: todayLabel(),
+            }
           : c,
       ),
     );
-    save(COURSE_DETAILS_KEY, { ...load<Record<string, StoredDetails>>(COURSE_DETAILS_KEY, {}), [course.id]: { ...details, savedAt: stamp } });
+    save(COURSE_DETAILS_KEY, {
+      ...load<Record<string, StoredDetails>>(COURSE_DETAILS_KEY, {}),
+      [course.id]: { ...details, savedAt: stamp },
+    });
     if (!auto) setDraft(clean);
     setSaved(clean);
     setStatus(nextStatus);
@@ -3049,7 +7288,8 @@ function Editor({ course, stored, section }: { course: InstructorCourse; stored?
   const autoSave = status !== "published";
   const latestSave = useRef(() => {});
   latestSave.current = () => {
-    if (autoSave && JSON.stringify(draft) !== JSON.stringify(saved)) persist(status, true);
+    if (autoSave && JSON.stringify(draft) !== JSON.stringify(saved))
+      persist(status, true);
   };
   useEffect(() => {
     if (!autoSave || !dirty) return;
@@ -3085,9 +7325,23 @@ function Editor({ course, stored, section }: { course: InstructorCourse; stored?
     if (persist("pending")) notify("Submitted for review");
   };
 
-  const statusAction = status === "published" ? { label: "Unpublish course", onClick: () => persist("draft") && notify("Course unpublished") } : status === "pending" ? null : { label: "Submit for review", onClick: submit };
-  const navItem = (active: boolean) => `flex h-8 shrink-0 items-center gap-2 rounded-[6px] px-2.5 text-left text-[13px] leading-[18px] transition-colors md:w-full ${active ? `bg-[#eef7f3] text-[#0d5c4b] ${fontMedium}` : `text-[#475569] hover:bg-[#f1f5f9] hover:text-[#0f172a] ${fontRegular}`}`;
-  const props: SectionProps = { draft, saved, update, onExplain: () => setExplaining(true) };
+  const statusAction =
+    status === "published"
+      ? {
+          label: "Unpublish course",
+          onClick: () => persist("draft") && notify("Course unpublished"),
+        }
+      : status === "pending"
+        ? null
+        : { label: "Submit for review", onClick: submit };
+  const navItem = (active: boolean) =>
+    `flex h-8 shrink-0 items-center gap-2 rounded-md px-2.5 text-left text-13 leading-4.5 transition-colors md:w-full ${active ? `bg-primary-100 text-primary-700 ${fontMedium}` : `text-slate-600 hover:bg-slate-100 hover:text-slate-900 ${fontRegular}`}`;
+  const props: SectionProps = {
+    draft,
+    saved,
+    update,
+    onExplain: () => setExplaining(true),
+  };
 
   // Course builder: the student course page, redrawn from the draft beside the form.
   const builder = !UTILITY_SECTIONS.includes(current.id);
@@ -3114,23 +7368,48 @@ function Editor({ course, stored, section }: { course: InstructorCourse; stored?
   const anchor = focusAnchor ?? SECTION_ANCHOR[current.id] ?? null;
   const trackFocus = (e: FocusEvent<HTMLDivElement>) => {
     const el = e.target as HTMLElement;
-    const target = el.closest<HTMLElement>("[data-preview-target]")?.dataset.previewTarget as PreviewAnchor | undefined;
-    setFocusAnchor(target ?? (el.closest("[contenteditable]") ? "overview" : FIELD_ANCHOR[el.id] ?? null));
+    const target = el.closest<HTMLElement>("[data-preview-target]")?.dataset
+      .previewTarget as PreviewAnchor | undefined;
+    setFocusAnchor(
+      target ??
+        (el.closest("[contenteditable]")
+          ? "overview"
+          : (FIELD_ANCHOR[el.id] ?? null)),
+    );
   };
 
   return (
-    <div className="flex min-h-[100dvh] flex-col bg-white">
+    <div className="flex min-h-dvh flex-col bg-white">
       {/* One calm row: back, course name with its state underneath, and the two actions. */}
-      <header className="sticky top-0 z-30 flex h-16 items-center gap-3 border-b border-[#e2e8f0] bg-white px-3 md:px-5">
-        <button type="button" aria-label="Back to my courses" title="Back to my courses" onClick={() => (dirty && !autoSave ? setLeaving(true) : openInstructorCourses())} className="flex size-9 shrink-0 items-center justify-center rounded-[8px] border border-[#e2e8f0] text-[#334155] transition hover:bg-[#f8fafc] hover:text-[#0f172a]">
-          <Icon path="M15 6l-6 6 6 6" className="size-[18px]" />
+      <header className="sticky top-0 z-30 flex h-16 items-center gap-3 border-b border-slate-200 bg-white px-3 md:px-5">
+        <button
+          type="button"
+          aria-label="Back to my courses"
+          title="Back to my courses"
+          onClick={() =>
+            dirty && !autoSave ? setLeaving(true) : openInstructorCourses()
+          }
+          className="flex size-9 shrink-0 items-center justify-center rounded-lg border border-slate-200 text-slate-700 transition hover:bg-slate-50 hover:text-slate-900"
+        >
+          <Icon path="M15 6l-6 6 6 6" className="size-4.5" />
         </button>
         <div className="min-w-0 flex-1">
-          <p className={`m-0 truncate text-[15px] leading-[20px] text-[#0f172a] ${fontSemi}`}>{draft.title || "Untitled course"}</p>
-          <p className={`m-0 mt-0.5 flex min-w-0 items-center gap-1.5 text-[12px] leading-[16px] text-[#64748b] ${fontRegular}`}>
+          <p
+            className={`m-0 truncate text-15 leading-5 text-slate-900 ${fontSemi}`}
+          >
+            {draft.title || "Untitled course"}
+          </p>
+          <p
+            className={`m-0 mt-0.5 flex min-w-0 items-center gap-1.5 text-xs leading-4 text-slate-500 ${fontRegular}`}
+          >
             <span className="flex shrink-0 items-center gap-1.5">
-              <span className="size-1.5 rounded-full" style={{ backgroundColor: STATUS_DOT[status] }} />
-              <span className={`text-[#334155] ${fontMedium}`}>{STATUS_LABEL[status]}</span>
+              <span
+                className="size-1.5 rounded-full"
+                style={{ backgroundColor: STATUS_DOT[status] }}
+              />
+              <span className={`text-slate-700 ${fontMedium}`}>
+                {STATUS_LABEL[status]}
+              </span>
             </span>
             {settings.unlisted && (
               <>
@@ -3142,95 +7421,205 @@ function Editor({ course, stored, section }: { course: InstructorCourse; stored?
         </div>
         <div className="flex shrink-0 items-center gap-2">
           {/* Save status, top right: saving, saved, or unsaved for published courses. */}
-          <p aria-live="polite" className={`m-0 mr-1 hidden items-center gap-1.5 text-[13px] leading-[18px] sm:flex ${dirty && !autoSave ? "text-[#b45309]" : "text-[#64748b]"} ${fontRegular}`}>
+          <p
+            aria-live="polite"
+            className={`m-0 mr-1 hidden items-center gap-1.5 text-13 leading-4.5 sm:flex ${dirty && !autoSave ? "text-amber-700" : "text-slate-500"} ${fontRegular}`}
+          >
             {dirty && autoSave ? (
               <>
-                <span aria-hidden="true" className="size-3.5 animate-spin rounded-full border-2 border-[#cbd5e1] border-t-[#0d5c4b]" />
+                <span
+                  aria-hidden="true"
+                  className="size-3.5 animate-spin rounded-full border-2 border-slate-300 border-t-primary-700"
+                />
                 Saving…
               </>
             ) : dirty ? (
               <>
-                <span aria-hidden="true" className="size-1.5 rounded-full bg-[#f59e0b]" />
+                <span
+                  aria-hidden="true"
+                  className="size-1.5 rounded-full bg-amber-500"
+                />
                 Unsaved changes
               </>
             ) : (
               <>
-                <Icon path="M7 18a4.5 4.5 0 01-.6-8.96A6 6 0 0117.8 8.6 4.5 4.5 0 0117.5 18H7zM9.5 13l2 2 3.5-3.5" className="size-[18px] text-[#0d5c4b]" />
+                <Icon
+                  path="M7 18a4.5 4.5 0 01-.6-8.96A6 6 0 0117.8 8.6 4.5 4.5 0 0117.5 18H7zM9.5 13l2 2 3.5-3.5"
+                  className="size-4.5 text-primary-700"
+                />
                 {savedLabel(savedAt, course.updated, now)}
               </>
             )}
           </p>
-          <button type="button" aria-label="Preview as a student" onClick={() => setFullPreview(true)} className={`flex h-9 items-center gap-2 rounded-[8px] border border-[#e2e8f0] bg-white px-2.5 text-[14px] leading-[20px] text-[#0f172a] transition hover:bg-[#f8fafc] sm:px-3 ${fontMedium}`}>
-            <Icon path={EYE} className="size-[18px] text-[#475569]" />
+          <button
+            type="button"
+            aria-label="Preview as a student"
+            onClick={() => setFullPreview(true)}
+            className={`flex h-9 items-center gap-2 rounded-lg border border-slate-200 bg-white px-2.5 text-sm leading-5 text-slate-900 transition hover:bg-slate-50 sm:px-3 ${fontMedium}`}
+          >
+            <Icon path={EYE} className="size-4.5 text-slate-600" />
             <span className="hidden sm:inline">Preview</span>
           </button>
-          <div className="flex h-9 rounded-[8px] bg-[#0d5c4b] text-white shadow-[0_1px_2px_rgba(13,92,75,0.25)]">
-            <button type="button" onClick={saveNow} disabled={!dirty} className={`flex items-center gap-1.5 rounded-l-[8px] pl-3.5 pr-3 text-[14px] leading-[20px] transition hover:bg-[#0b4c3e] disabled:cursor-default disabled:hover:bg-transparent ${fontMedium}`}>
-              {!dirty && <Icon path="M5 12.5l4.5 4.5L19 7.5" className="size-4" />}
+          <div className="flex h-9 rounded-lg bg-primary-700 text-white shadow-primary-xs">
+            <button
+              type="button"
+              onClick={saveNow}
+              disabled={!dirty}
+              className={`flex items-center gap-1.5 rounded-l-lg pl-3.5 pr-3 text-sm leading-5 transition hover:bg-primary-800 disabled:cursor-default disabled:hover:bg-transparent ${fontMedium}`}
+            >
+              {!dirty && (
+                <Icon path="M5 12.5l4.5 4.5L19 7.5" className="size-4" />
+              )}
               {dirty ? (autoSave ? "Saving…" : "Save") : "Saved"}
             </button>
             <span aria-hidden="true" className="my-2 w-px bg-white/25" />
-            <ActionMenu label="More save options" triggerClass="flex h-9 items-center rounded-r-[8px] px-2 transition hover:bg-[#0b4c3e]" trigger={<Icon path="M6 9l6 6 6-6" className="size-4" />} items={[{ label: "Save and continue", onClick: saveAndNext }, ...(statusAction ? [statusAction] : [])]} />
+            <ActionMenu
+              label="More save options"
+              triggerClass="flex h-9 items-center rounded-r-lg px-2 transition hover:bg-primary-800"
+              trigger={<Icon path="M6 9l6 6 6-6" className="size-4" />}
+              items={[
+                { label: "Save and continue", onClick: saveAndNext },
+                ...(statusAction ? [statusAction] : []),
+              ]}
+            />
           </div>
         </div>
       </header>
       <div className="flex min-h-0 flex-1 flex-col md:flex-row">
-        <aside className="flex shrink-0 flex-col gap-4 border-b border-[#e2e8f0] bg-[#f8fafc] p-3 md:sticky md:top-16 md:h-[calc(100dvh-64px)] md:w-[212px] md:gap-3 md:overflow-y-auto md:border-b-0 md:border-r md:px-3 md:py-4">
+        <aside className="flex shrink-0 flex-col gap-4 border-b border-slate-200 bg-slate-50 p-3 md:sticky md:top-16 md:h-below-header md:w-53 md:gap-3 md:overflow-y-auto md:border-b-0 md:border-r md:px-3 md:py-4">
           <div className="flex flex-col gap-3">
             <div className="hidden px-2.5 pb-1 md:block">
               <div className="flex items-baseline justify-between gap-2">
-                <p className={`text-[12px] leading-[16px] text-[#0f172a] ${fontSemi}`}>Course setup</p>
-                <p className={`text-[11px] leading-[16px] text-[#64748b] ${fontRegular}`}>
+                <p
+                  className={`text-xs leading-4 text-slate-900 ${fontSemi}`}
+                >
+                  Course setup
+                </p>
+                <p
+                  className={`text-11 leading-4 text-slate-500 ${fontRegular}`}
+                >
                   {steps.filter((s) => s.done).length} of {steps.length} done
                 </p>
               </div>
-              <div className="mt-1.5 h-1 overflow-hidden rounded-full bg-[#e2e8f0]" role="progressbar" aria-label="Course setup progress" aria-valuemin={0} aria-valuemax={steps.length} aria-valuenow={steps.filter((s) => s.done).length}>
-                <div className="h-full rounded-full bg-[#0d5c4b] transition-[width] duration-500" style={{ width: `${(steps.filter((s) => s.done).length / steps.length) * 100}%` }} />
+              <div
+                className="mt-1.5 h-1 overflow-hidden rounded-full bg-slate-200"
+                role="progressbar"
+                aria-label="Course setup progress"
+                aria-valuemin={0}
+                aria-valuemax={steps.length}
+                aria-valuenow={steps.filter((s) => s.done).length}
+              >
+                <div
+                  className="h-full rounded-full bg-primary-700 transition-all duration-500"
+                  style={{
+                    width: `${(steps.filter((s) => s.done).length / steps.length) * 100}%`,
+                  }}
+                />
               </div>
             </div>
-            <nav aria-label="Course setup" className="flex gap-1 overflow-x-auto md:flex-col md:gap-px md:overflow-visible">
+            <nav
+              aria-label="Course setup"
+              className="flex gap-1 overflow-x-auto md:flex-col md:gap-px md:overflow-visible"
+            >
               {SECTIONS.map((item) => {
                 const own = steps.filter((s) => s.section === item.id);
                 const done = own.length > 0 && own.every((s) => s.done);
                 return (
-                  <button key={item.id} type="button" aria-current={item.id === current.id ? "page" : undefined} onClick={() => openCourseEditor(course.id, item.id)} className={`${navItem(item.id === current.id)} ${UTILITY_SECTIONS.includes(item.id) ? "md:hidden" : ""}`}>
+                  <button
+                    key={item.id}
+                    type="button"
+                    aria-current={item.id === current.id ? "page" : undefined}
+                    onClick={() => openCourseEditor(course.id, item.id)}
+                    className={`${navItem(item.id === current.id)} ${UTILITY_SECTIONS.includes(item.id) ? "md:hidden" : ""}`}
+                  >
                     <Icon path={item.icon} className="size-4 shrink-0" />
-                    <span className="flex-1 whitespace-nowrap">{item.label}</span>
-                    {UTILITY_SECTIONS.includes(item.id) ? null : own.length > 0 ? (
-                      <span role="img" aria-label={done ? "Done" : `${own.filter((s) => s.done).length} of ${own.length} done`} className="hidden md:flex">
-                        {done ? <Icon path={CHECK_CIRCLE} className="size-3.5 text-[#059669]" /> : <span className="size-3 rounded-full border-[1.5px] border-[#cbd5e1]" />}
+                    <span className="flex-1 whitespace-nowrap">
+                      {item.label}
+                    </span>
+                    {UTILITY_SECTIONS.includes(item.id) ? null : own.length >
+                      0 ? (
+                      <span
+                        role="img"
+                        aria-label={
+                          done
+                            ? "Done"
+                            : `${own.filter((s) => s.done).length} of ${own.length} done`
+                        }
+                        className="hidden md:flex"
+                      >
+                        {done ? (
+                          <Icon
+                            path={CHECK_CIRCLE}
+                            className="size-3.5 text-emerald-600"
+                          />
+                        ) : (
+                          <span className="size-3 rounded-full border-2 border-slate-300" />
+                        )}
                       </span>
                     ) : (
-                      <span className={`hidden text-[10.5px] leading-[14px] text-[#94a3b8] md:inline ${fontRegular}`}>Optional</span>
+                      <span
+                        className={`hidden text-10 leading-3.5 text-slate-400 md:inline ${fontRegular}`}
+                      >
+                        Optional
+                      </span>
                     )}
                   </button>
                 );
               })}
             </nav>
           </div>
-          <div className="hidden flex-col gap-px border-t border-[#e2e8f0] pt-2 md:flex">
-            <button type="button" aria-current={current.id === "tips" ? "page" : undefined} onClick={() => openCourseEditor(course.id, "tips")} className={navItem(current.id === "tips")}>
-              <Icon path={SECTIONS.find((s) => s.id === "tips")!.icon} className="size-4 shrink-0" />
+          <div className="hidden flex-col gap-px border-t border-slate-200 pt-2 md:flex">
+            <button
+              type="button"
+              aria-current={current.id === "tips" ? "page" : undefined}
+              onClick={() => openCourseEditor(course.id, "tips")}
+              className={navItem(current.id === "tips")}
+            >
+              <Icon
+                path={SECTIONS.find((s) => s.id === "tips")!.icon}
+                className="size-4 shrink-0"
+              />
               Tips
             </button>
-            <button type="button" onClick={() => notify("Help is coming soon")} className={navItem(false)}>
-              <Icon path="M12 3a9 9 0 100 18 9 9 0 000-18zM9.5 9.5a2.5 2.5 0 114 2c-.9.6-1.5 1.2-1.5 2M12 17h.01" className="size-4 shrink-0" />
+            <button
+              type="button"
+              onClick={() => notify("Help is coming soon")}
+              className={navItem(false)}
+            >
+              <Icon
+                path="M12 3a9 9 0 100 18 9 9 0 000-18zM9.5 9.5a2.5 2.5 0 114 2c-.9.6-1.5 1.2-1.5 2M12 17h.01"
+                className="size-4 shrink-0"
+              />
               Help
             </button>
-            <button type="button" aria-current={current.id === "settings" ? "page" : undefined} onClick={() => openCourseEditor(course.id, "settings")} className={navItem(current.id === "settings")}>
-              <Icon path="M12 15a3 3 0 100-6 3 3 0 000 6zM19 12a7 7 0 00-.1-1.2l2-1.5-2-3.4-2.3 1a7 7 0 00-2.1-1.2L14 3h-4l-.5 2.7a7 7 0 00-2.1 1.2l-2.3-1-2 3.4 2 1.5A7 7 0 005 12a7 7 0 00.1 1.2l-2 1.5 2 3.4 2.3-1a7 7 0 002.1 1.2L10 21h4l.5-2.7a7 7 0 002.1-1.2l2.3 1 2-3.4-2-1.5A7 7 0 0019 12z" className="size-4 shrink-0" />
+            <button
+              type="button"
+              aria-current={current.id === "settings" ? "page" : undefined}
+              onClick={() => openCourseEditor(course.id, "settings")}
+              className={navItem(current.id === "settings")}
+            >
+              <Icon
+                path="M12 15a3 3 0 100-6 3 3 0 000 6zM19 12a7 7 0 00-.1-1.2l2-1.5-2-3.4-2.3 1a7 7 0 00-2.1-1.2L14 3h-4l-.5 2.7a7 7 0 00-2.1 1.2l-2.3-1-2 3.4 2 1.5A7 7 0 005 12a7 7 0 00.1 1.2l-2 1.5 2 3.4 2.3-1a7 7 0 002.1 1.2L10 21h4l.5-2.7a7 7 0 002.1-1.2l2.3 1 2-3.4-2-1.5A7 7 0 0019 12z"
+                className="size-4 shrink-0"
+              />
               Settings
             </button>
           </div>
         </aside>
-        <main className="@container min-w-0 flex-1 bg-[#fdfdfd] px-4 pb-24 pt-7 md:px-10">
-          <div className={`mx-auto ${builder && showPreview ? "max-w-[1720px]" : "max-w-[1110px]"}`}>
+        <main className="@container min-w-0 flex-1 bg-slate-25 px-4 pb-24 pt-7 md:px-10">
+          <div
+            className={`mx-auto ${builder && showPreview ? "max-w-430" : "max-w-277.5"}`}
+          >
             <div className="relative">
               <SectionTitle>{current.label}</SectionTitle>
               {builder && (
                 <div className="absolute right-0 top-0 flex items-center gap-2">
                   {!showPreview && (
-                    <button type="button" onClick={() => setShowPreview(true)} className={`hidden h-9 items-center gap-2 rounded-[8px] border border-[#e2e8f0] bg-white px-3 text-[13px] leading-[20px] text-[#0f172a] shadow-[0_1px_2px_rgba(15,23,42,0.04)] transition hover:bg-[#f8fafc] @5xl:flex ${fontMedium}`}>
+                    <button
+                      type="button"
+                      onClick={() => setShowPreview(true)}
+                      className={`hidden h-9 items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 text-13 leading-5 text-slate-900 shadow-xs transition hover:bg-slate-50 @5xl:flex ${fontMedium}`}
+                    >
                       <Icon path={PANEL} className="size-4" />
                       Show live preview
                     </button>
@@ -3238,117 +7627,265 @@ function Editor({ course, stored, section }: { course: InstructorCourse; stored?
                 </div>
               )}
             </div>
-            <div ref={splitRef} style={{ ["--preview-w" as string]: `${previewPct}%` }} className={builder && showPreview ? "grid gap-8 @5xl:grid-cols-[minmax(0,1fr)_24px_var(--preview-w)] @5xl:gap-0" : ""}>
-            <div className="@container min-w-0" onFocus={builder ? trackFocus : undefined}>
-            {current.id === "details" ? (
-              <div className="mt-7">
-                <DetailsSection {...props} fallbackCover={sampleCover(course)} guide={guide.card} onSupport={() => notify("The Support Center is coming soon")} />
-              </div>
-            ) : (
-              <div className={`mt-7 grid gap-8 ${guide.card.title && current.id !== "intended-learners" ? "@4xl:grid-cols-[minmax(0,1fr)_340px] @4xl:gap-12" : ""}`}>
-                <div className="min-w-0">
-                  {current.id === "intended-learners" && <LearnersSection {...props} />}
-                  {current.id === "curriculum" && <CurriculumSection {...props} onSupport={() => notify("The Support Center is coming soon")} uploads={{ progress: uploadProgress, urls: videoUrls, start: startUpload }} />}
-                  {current.id === "promotions" && <PromotionsSection {...props} />}
-                  {current.id === "pricing" && <PricingSection {...props} />}
-                  {current.id === "tips" && <TipsSection draft={draft} courseId={course.id} />}
-                  {current.id === "settings" && <SettingsSection course={course} status={status} settings={settings} onChange={changeSettings} />}
-                </div>
-                {guide.card.title && current.id !== "intended-learners" && (
-                  <div>
-                    {current.id === "pricing" ? (
-                      <PricingGuide onCoupons={() => openCourseEditor(course.id, "promotions")} onTips={() => openCourseEditor(course.id, "tips")} />
-                    ) : current.id === "promotions" ? (
-                      <PromotionsGuide onTips={() => openCourseEditor(course.id, "tips")} />
-                    ) : (
-                      <GuideCard title={guide.card.title} text={guide.card.text} onOpen={() => openCourseEditor(course.id, "tips")} />
+            <div
+              ref={splitRef}
+              style={{ ["--preview-w" as string]: `${previewPct}%` }}
+              className={
+                builder && showPreview
+                  ? "grid gap-8 @5xl:grid-cols-split @5xl:gap-0"
+                  : ""
+              }
+            >
+              <div
+                className="@container min-w-0"
+                onFocus={builder ? trackFocus : undefined}
+              >
+                {current.id === "details" ? (
+                  <div className="mt-7">
+                    <DetailsSection
+                      {...props}
+                      fallbackCover={sampleCover(course)}
+                      guide={guide.card}
+                      onSupport={() =>
+                        notify("The Support Center is coming soon")
+                      }
+                    />
+                  </div>
+                ) : (
+                  <div
+                    className={`mt-7 grid gap-8 ${guide.card.title && current.id !== "intended-learners" ? "@4xl:grid-cols-guide @4xl:gap-12" : ""}`}
+                  >
+                    <div className="min-w-0">
+                      {current.id === "intended-learners" && (
+                        <LearnersSection {...props} />
+                      )}
+                      {current.id === "curriculum" && (
+                        <CurriculumSection
+                          {...props}
+                          onSupport={() =>
+                            notify("The Support Center is coming soon")
+                          }
+                          uploads={{
+                            progress: uploadProgress,
+                            urls: videoUrls,
+                            start: startUpload,
+                          }}
+                        />
+                      )}
+                      {current.id === "promotions" && (
+                        <PromotionsSection {...props} />
+                      )}
+                      {current.id === "pricing" && (
+                        <PricingSection {...props} />
+                      )}
+                      {current.id === "tips" && (
+                        <TipsSection draft={draft} courseId={course.id} status={status} onSubmit={status === "draft" || status === "rejected" ? submit : undefined} />
+                      )}
+                      {current.id === "settings" && (
+                        <SettingsSection
+                          course={course}
+                          status={status}
+                          settings={settings}
+                          onChange={changeSettings}
+                        />
+                      )}
+                    </div>
+                    {guide.card.title && current.id !== "intended-learners" && (
+                      <div>
+                        {current.id === "pricing" ? (
+                          <PricingGuide
+                            onCoupons={() =>
+                              openCourseEditor(course.id, "promotions")
+                            }
+                            onTips={() => openCourseEditor(course.id, "tips")}
+                          />
+                        ) : current.id === "promotions" ? (
+                          <PromotionsGuide
+                            onTips={() => openCourseEditor(course.id, "tips")}
+                          />
+                        ) : (
+                          <GuideCard
+                            title={guide.card.title}
+                            text={guide.card.text}
+                            onOpen={() => openCourseEditor(course.id, "tips")}
+                          />
+                        )}
+                      </div>
                     )}
                   </div>
                 )}
               </div>
-            )}
-            </div>
-            {builder && showPreview && (
-              <>
-              <SplitHandle containerRef={splitRef} value={previewPct} onChange={setPreviewPct} />
-              <aside aria-label="Live course page preview" className="hidden min-w-0 @5xl:mt-7 @5xl:sticky @5xl:top-[88px] @5xl:flex @5xl:h-[calc(100dvh-112px)] @5xl:flex-col @5xl:self-start">
-                <div className="flex h-full flex-col overflow-hidden rounded-[16px] border border-[#e2e8f0] bg-white shadow-[0_1px_2px_rgba(15,23,42,0.04),0_12px_32px_rgba(15,23,42,0.08)]">
-                  <div className="flex items-center gap-3 border-b border-[#eef1f5] px-4 py-2.5">
-                    <div className="flex gap-1.5" aria-hidden="true">
-                      <span className="size-2.5 rounded-full bg-[#fca5a5]" />
-                      <span className="size-2.5 rounded-full bg-[#fcd34d]" />
-                      <span className="size-2.5 rounded-full bg-[#86efac]" />
+              {builder && showPreview && (
+                <>
+                  <SplitHandle
+                    containerRef={splitRef}
+                    value={previewPct}
+                    onChange={setPreviewPct}
+                  />
+                  <aside
+                    aria-label="Live course page preview"
+                    className="hidden min-w-0 @5xl:mt-7 @5xl:sticky @5xl:top-22 @5xl:flex @5xl:h-panel @5xl:flex-col @5xl:self-start"
+                  >
+                    <div className="flex h-full flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-panel">
+                      <div className="flex items-center gap-3 border-b border-slate-150 px-4 py-2.5">
+                        <div className="flex gap-1.5" aria-hidden="true">
+                          <span className="size-2.5 rounded-full bg-red-300" />
+                          <span className="size-2.5 rounded-full bg-amber-300" />
+                          <span className="size-2.5 rounded-full bg-green-300" />
+                        </div>
+                        <span
+                          className={`flex shrink-0 items-center gap-1.5 text-xs leading-4 text-primary-700 ${fontMedium}`}
+                        >
+                          <span className="relative flex size-2">
+                            <span className="absolute inset-0 animate-ping rounded-full bg-emerald-500 opacity-60 motion-reduce:animate-none" />
+                            <span className="relative size-2 rounded-full bg-emerald-500" />
+                          </span>
+                          Live preview
+                        </span>
+                        <span
+                          className={`min-w-0 flex-1 truncate rounded-md bg-slate-100 px-3 py-1 text-center text-11 leading-4 text-slate-500 ${fontRegular}`}
+                        >
+                          thkee.com/course/{courseSlug(draft.title)}
+                        </span>
+                        <button
+                          type="button"
+                          aria-label="Open full-size preview"
+                          title="Full size"
+                          onClick={() => setFullPreview(true)}
+                          className="flex size-8 shrink-0 items-center justify-center rounded-lg text-slate-500 transition hover:bg-slate-100 hover:text-slate-900"
+                        >
+                          <Icon path={EXPAND} className="size-4" />
+                        </button>
+                        <button
+                          type="button"
+                          aria-label="Hide preview"
+                          title="Hide preview"
+                          onClick={() => setShowPreview(false)}
+                          className="flex size-8 shrink-0 items-center justify-center rounded-lg text-slate-500 transition hover:bg-slate-100 hover:text-slate-900"
+                        >
+                          <Icon path={CLOSE} className="size-4" />
+                        </button>
+                      </div>
+                      <div
+                        data-preview-frame
+                        className="min-h-0 flex-1 overflow-y-auto bg-slate-50 scrollbar-thin"
+                      >
+                        <CoursePagePreview data={previewData} focus={anchor} />
+                      </div>
                     </div>
-                    <span className={`flex shrink-0 items-center gap-1.5 text-[12px] leading-[16px] text-[#0d5c4b] ${fontMedium}`}>
-                      <span className="relative flex size-2">
-                        <span className="absolute inset-0 animate-ping rounded-full bg-[#10b981] opacity-60 motion-reduce:animate-none" />
-                        <span className="relative size-2 rounded-full bg-[#10b981]" />
-                      </span>
-                      Live preview
-                    </span>
-                    <span className={`min-w-0 flex-1 truncate rounded-[6px] bg-[#f1f5f9] px-3 py-1 text-center text-[11px] leading-[16px] text-[#64748b] ${fontRegular}`}>thkee.com/course/{courseSlug(draft.title)}</span>
-                    <button type="button" aria-label="Open full-size preview" title="Full size" onClick={() => setFullPreview(true)} className="flex size-8 shrink-0 items-center justify-center rounded-[8px] text-[#64748b] transition hover:bg-[#f1f5f9] hover:text-[#0f172a]">
-                      <Icon path={EXPAND} className="size-4" />
-                    </button>
-                    <button type="button" aria-label="Hide preview" title="Hide preview" onClick={() => setShowPreview(false)} className="flex size-8 shrink-0 items-center justify-center rounded-[8px] text-[#64748b] transition hover:bg-[#f1f5f9] hover:text-[#0f172a]">
-                      <Icon path={CLOSE} className="size-4" />
-                    </button>
-                  </div>
-                  <div data-preview-frame className="min-h-0 flex-1 overflow-y-auto bg-[#f8fafc] [scrollbar-width:thin]">
-                    <CoursePagePreview data={previewData} focus={anchor} />
-                  </div>
-                </div>
-              </aside>
-              </>
-            )}
+                  </aside>
+                </>
+              )}
             </div>
           </div>
         </main>
       </div>
       {fullPreview && (
-        <div role="dialog" aria-modal="true" aria-label="Course page preview" className="fixed inset-0 z-50 flex flex-col bg-[#0f172a]/60 p-2 backdrop-blur-[2px] md:p-6" onClick={(e) => e.target === e.currentTarget && setFullPreview(false)}>
-          <div className="mx-auto flex min-h-0 w-full max-w-[1120px] flex-1 flex-col overflow-hidden rounded-[16px] bg-white shadow-2xl">
-            <div className="flex items-center gap-3 border-b border-[#eef1f5] px-4 py-3">
-              <span className={`text-[14px] leading-[20px] text-[#0f172a] ${fontSemi}`}>Preview as a student</span>
-              <span className={`min-w-0 flex-1 truncate rounded-[6px] bg-[#f1f5f9] px-3 py-1 text-center text-[12px] leading-[16px] text-[#64748b] ${fontRegular}`}>thkee.com/course/{courseSlug(draft.title)}</span>
-              <button type="button" autoFocus aria-label="Close preview" onClick={() => setFullPreview(false)} className="flex size-9 shrink-0 items-center justify-center rounded-[8px] text-[#334155] transition hover:bg-[#f1f5f9]">
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-label="Course page preview"
+          className="fixed inset-0 z-50 flex flex-col bg-slate-900/60 p-2 backdrop-blur-xs md:p-6"
+          onClick={(e) => e.target === e.currentTarget && setFullPreview(false)}
+        >
+          <div className="mx-auto flex min-h-0 w-full max-w-280 flex-1 flex-col overflow-hidden rounded-2xl bg-white shadow-2xl">
+            <div className="flex items-center gap-3 border-b border-slate-150 px-4 py-3">
+              <span
+                className={`text-sm leading-5 text-slate-900 ${fontSemi}`}
+              >
+                Preview as a student
+              </span>
+              <span
+                className={`min-w-0 flex-1 truncate rounded-md bg-slate-100 px-3 py-1 text-center text-xs leading-4 text-slate-500 ${fontRegular}`}
+              >
+                thkee.com/course/{courseSlug(draft.title)}
+              </span>
+              <button
+                type="button"
+                autoFocus
+                aria-label="Close preview"
+                onClick={() => setFullPreview(false)}
+                className="flex size-9 shrink-0 items-center justify-center rounded-lg text-slate-700 transition hover:bg-slate-100"
+              >
                 <Icon path={CLOSE} className="size-5" />
               </button>
             </div>
-            <div data-preview-frame className="min-h-0 flex-1 overflow-y-auto bg-[#f8fafc]">
+            <div
+              data-preview-frame
+              className="min-h-0 flex-1 overflow-y-auto bg-slate-50"
+            >
               <CoursePagePreview data={previewData} fit={false} />
             </div>
           </div>
         </div>
       )}
-      <button type="button" onClick={() => setExplaining(true)} className={`fixed bottom-5 right-5 z-20 flex h-11 items-center gap-2 rounded-[10px] bg-[#2e0a78] px-4 text-[14px] leading-[20px] text-white shadow-[0_6px_16px_rgba(46,10,120,0.3)] transition hover:bg-[#3d1299] md:bottom-8 md:right-8 ${fontMedium}`}>
-        <Icon path="M9 18h6M10 21h4M12 3a6 6 0 00-4 10.5c.8.8 1 1.5 1 2.5h6c0-1 .2-1.7 1-2.5A6 6 0 0012 3z" className="size-[18px]" />
+      <button
+        type="button"
+        onClick={() => setExplaining(true)}
+        className={`fixed bottom-5 right-5 z-20 flex h-11 items-center gap-2 rounded-10 bg-ai-900 px-4 text-sm leading-5 text-white shadow-fab transition hover:bg-ai-800 md:bottom-8 md:right-8 ${fontMedium}`}
+      >
+        <Icon
+          path="M9 18h6M10 21h4M12 3a6 6 0 00-4 10.5c.8.8 1 1.5 1 2.5h6c0-1 .2-1.7 1-2.5A6 6 0 0012 3z"
+          className="size-4.5"
+        />
         Explain me
       </button>
       {explaining && (
-        <Shell title={current.label} onClose={() => setExplaining(false)} width="max-w-[520px]" radius="sm:rounded-[12px]">
+        <Shell
+          title={current.label}
+          onClose={() => setExplaining(false)}
+          width="max-w-130"
+          radius="sm:rounded-xl"
+        >
           <div className="flex flex-col gap-3 p-6">
             {guide.explain.map((line) => (
-              <p key={line} className={`text-[14px] leading-[24px] text-[#334155] ${fontRegular}`}>
+              <p
+                key={line}
+                className={`text-sm leading-6 text-slate-700 ${fontRegular}`}
+              >
                 {line}
               </p>
             ))}
           </div>
         </Shell>
       )}
-      {leaving && <ConfirmDialog title="Leave without saving?" body="Your unsaved changes to this course will be lost." confirmLabel="Leave without saving" onClose={() => setLeaving(false)} onConfirm={() => openInstructorCourses()} />}
+      {leaving && (
+        <ConfirmDialog
+          title="Leave without saving?"
+          body="Your unsaved changes to this course will be lost."
+          confirmLabel="Leave without saving"
+          onClose={() => setLeaving(false)}
+          onConfirm={() => openInstructorCourses()}
+        />
+      )}
     </div>
   );
 }
 
-export default function InstructorCourseEditor({ id, section }: { id: string; section?: string }) {
-  const [course] = useState(() => loadInstructorCourses().find((c) => c.id === id));
-  const [stored] = useState(() => load<Record<string, StoredDetails>>(COURSE_DETAILS_KEY, {})[id]);
+export default function InstructorCourseEditor({
+  id,
+  section,
+}: {
+  id: string;
+  section?: string;
+}) {
+  const [course] = useState(() =>
+    loadInstructorCourses().find((c) => c.id === id),
+  );
+  const [stored] = useState(
+    () => load<Record<string, StoredDetails>>(COURSE_DETAILS_KEY, {})[id],
+  );
 
   useEffect(() => {
     if (!course) openInstructorCourses();
   }, [course]);
 
   if (!course) return null;
-  return <Editor course={course} stored={stored} section={section ?? SECTIONS[0].id} />;
+  return (
+    <Editor
+      course={course}
+      stored={stored}
+      section={section ?? SECTIONS[0].id}
+    />
+  );
 }

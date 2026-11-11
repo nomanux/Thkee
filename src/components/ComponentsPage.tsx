@@ -44,20 +44,31 @@ const nav = [
 ];
 
 const primaryScale = [
-  { name: "50", hex: "#FFF9F0", swatch: "bg-primary-50" },
-  { name: "100", hex: "#FFF0D7", swatch: "bg-primary-100" },
-  { name: "200", hex: "#FEE3B4", swatch: "bg-primary-200" },
-  { name: "300", hex: "#FDCE7C", swatch: "bg-primary-300" },
-  { name: "400", hex: "#FCB740", swatch: "bg-primary-400" },
-  { name: "500", hex: "#FFB20D", swatch: "bg-primary-500" },
-  { name: "600", hex: "#FAA104", swatch: "bg-primary-600" },
-  { name: "700", hex: "#C98003", swatch: "bg-primary-700" },
-  { name: "800", hex: "#976002", swatch: "bg-primary-800" },
-  { name: "900", hex: "#613F00", swatch: "bg-primary-900" },
+  { name: "50", hex: "#F4FAF7", swatch: "bg-primary-50" },
+  { name: "100", hex: "#EEF7F3", swatch: "bg-primary-100" },
+  { name: "200", hex: "#E6F4EE", swatch: "bg-primary-200" },
+  { name: "300", hex: "#D4E8DF", swatch: "bg-primary-300" },
+  { name: "400", hex: "#9FC9B8", swatch: "bg-primary-400" },
+  { name: "500", hex: "#3F8F78", swatch: "bg-primary-500" },
+  { name: "600", hex: "#1F6B5A", swatch: "bg-primary-600" },
+  { name: "700", hex: "#0D5C4B", swatch: "bg-primary-700" },
+  { name: "800", hex: "#0B4C3E", swatch: "bg-primary-800" },
+  { name: "900", hex: "#0F2F2A", swatch: "bg-primary-900" },
+];
+const secondaryScale = [
+  { name: "50", hex: "#FFF9F0", swatch: "bg-secondary-50" },
+  { name: "100", hex: "#FFF0D7", swatch: "bg-secondary-100" },
+  { name: "200", hex: "#FEE3B4", swatch: "bg-secondary-200" },
+  { name: "300", hex: "#FDCE7C", swatch: "bg-secondary-300" },
+  { name: "400", hex: "#FCB740", swatch: "bg-secondary-400" },
+  { name: "500", hex: "#FFB20D", swatch: "bg-secondary-500" },
+  { name: "600", hex: "#FAA104", swatch: "bg-secondary-600" },
+  { name: "700", hex: "#C98003", swatch: "bg-secondary-700" },
+  { name: "800", hex: "#976002", swatch: "bg-secondary-800" },
+  { name: "900", hex: "#613F00", swatch: "bg-secondary-900" },
 ];
 // Common values still written directly in the code, not yet named in the theme.
 const otherColors = [
-  { name: "Brand green", hex: "#0D5C4B" },
   { name: "Slate 900", hex: "#0F172A" },
   { name: "Slate 800", hex: "#1E293B" },
   { name: "Slate 600", hex: "#475569" },
@@ -84,7 +95,8 @@ const typeSamples = [
 
 const buttonBase = `flex h-[36px] items-center justify-center rounded-[8px] px-4 text-[14px] transition disabled:cursor-not-allowed disabled:opacity-50 ${fontMedium}`;
 const buttons = [
-  { name: "Primary", className: "bg-primary-500 text-[#1e293b] hover:bg-primary-600" },
+  { name: "Primary", className: "bg-primary-700 text-white hover:bg-primary-800" },
+  { name: "Yellow", className: "bg-secondary-500 text-[#1e293b] hover:bg-secondary-600" },
   { name: "Dark", className: "bg-[#1e293b] text-white hover:bg-[#0f172a]" },
   { name: "Secondary", className: "border border-[#cbd5e1] bg-white text-[#1e293b] hover:bg-[#f8fafc]" },
   { name: "Danger", className: "bg-[#dc2626] text-white hover:bg-[#b91c1c]" },
@@ -238,10 +250,17 @@ export default function ComponentsPage() {
         </aside>
 
         <div className="min-w-0 flex-1">
-          <Section id="colors" title="Colours" description="The Primary scale comes from the theme in index.css, so it can be used as bg-primary-500 or text-primary-700.">
+          <Section id="colors" title="Colours" description="Primary (green) and Secondary (yellow) come from the theme in index.css, so they can be used as bg-primary-700 or text-secondary-600.">
             <Demo name="Primary">
               <div className="grid grid-cols-2 gap-4 sm:grid-cols-5">
                 {primaryScale.map((color) => (
+                  <Swatch key={color.name} {...color} />
+                ))}
+              </div>
+            </Demo>
+            <Demo name="Secondary">
+              <div className="grid grid-cols-2 gap-4 sm:grid-cols-5">
+                {secondaryScale.map((color) => (
                   <Swatch key={color.name} {...color} />
                 ))}
               </div>

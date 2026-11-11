@@ -65,7 +65,13 @@ const upgradeSample = (list: InstructorCourse[]) => (list.length > 0 && list.eve
 // The picture for a sample course. Courses people create themselves have none until they upload one.
 export const sampleCover = (course: InstructorCourse) => SAMPLE_TITLES.find((t) => course.title.startsWith(t.title))?.image ?? "";
 
+// The cover the instructor uploaded in the course editor, if any.
+export const savedCover = (courseId: string) => load<Record<string, { cover?: string }>>(COURSE_DETAILS_KEY, {})[courseId]?.cover ?? "";
+
 export const thumbFor = (course: InstructorCourse) => {
+  // An uploaded cover always wins over the sample pictures.
+  const uploaded = savedCover(course.id);
+  if (uploaded) return uploaded;
   const match = SAMPLE_TITLES.find((t) => course.title.startsWith(t.title));
   if (match) return match.image;
   const hash = [...course.id].reduce((h, ch) => (h * 31 + ch.charCodeAt(0)) >>> 0, 7);

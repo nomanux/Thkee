@@ -18,7 +18,7 @@ import {
 import { useApp } from "../store"
 import { buildCurriculum, seedReviews, type Lesson, type Review } from "./CourseDetailsPage"
 import { CourseThumb } from "./Overlays"
-import { QUIZ_LENGTH, QuizPanel, QuizRunner, type QuizResult } from "./Quiz"
+import { DEMO_QUIZ_INSTRUCTIONS, QUIZ_LENGTH, QuizPanel, QuizRunner, type QuizResult } from "./Quiz"
 import { ASSIGNMENT_QUESTIONS, AssignmentPanel, type AssignmentState } from "./Assignment"
 import { ActionMenu, FilterSelect } from "./Menus"
 import { ArticleReader, NoteBody, NoteEditor, NotesPanel, type LessonRef, type Note } from "./Notes"
@@ -517,6 +517,7 @@ function Player({ course }: { course: Course }) {
                 key={current.key}
                 title={current.title}
                 questions={QUIZ_LENGTH}
+                instructions={DEMO_QUIZ_INSTRUCTIONS}
                 result={quizResults[current.key]}
                 onStart={() => setQuizMode(true)}
                 onNext={next ? () => goTo(next) : undefined}

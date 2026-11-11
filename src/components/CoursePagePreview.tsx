@@ -28,8 +28,12 @@ export type CoursePreviewData = {
 // Parts of the page the builder can point at while the instructor edits them.
 export type PreviewAnchor = "banner" | "card" | "objectives" | "overview" | "requirements" | "audience" | "content" | "instructor";
 
-// The page is drawn at desktop width and scaled down, so it keeps the real layout instead of collapsing to mobile.
+// The page is drawn at desktop width and scaled down, so it keeps the real layout.
+// When the preview panel gets narrow, it switches to the phone layout inside a phone frame.
 const DESIGN_WIDTH = 1040;
+const PHONE_WIDTH = 390;
+const PHONE_BREAKPOINT = 480;
+const PHONE_BEZEL = 8;
 
 const PATHS: Record<string, string> = {
   check: "M5 12.5l4.5 4.5L19 7.5",
@@ -65,13 +69,18 @@ export default function CoursePagePreview({ data, focus, fit = true }: { data: C
   const pageRef = useRef<HTMLDivElement>(null);
   const [scale, setScale] = useState(0.5);
   const [height, setHeight] = useState(0);
+  const [phone, setPhone] = useState(false);
 
   useLayoutEffect(() => {
     const outer = outerRef.current;
     const page = pageRef.current;
     if (!outer || !page) return;
     const measure = () => {
-      setScale(fit ? outer.clientWidth / DESIGN_WIDTH : Math.min(1, outer.clientWidth / DESIGN_WIDTH));
+      const width = outer.clientWidth;
+      const small = width < PHONE_BREAKPOINT;
+      setPhone(small);
+      if (small) setScale(Math.min(1, (width - PHONE_BEZEL * 2) / PHONE_WIDTH));
+      else setScale(fit ? width / DESIGN_WIDTH : Math.min(1, width / DESIGN_WIDTH));
       setHeight(page.offsetHeight);
     };
     measure();
@@ -112,8 +121,8 @@ export default function CoursePagePreview({ data, focus, fit = true }: { data: C
   const card = (anchor: PreviewAnchor, title: string, children: ReactNode) => {
     const m = mark(anchor);
     return (
-      <section data-anchor={m["data-anchor"]} className={`rounded-[16px] border border-[#e2e8f0] bg-white p-8 ${m.className}`}>
-        <h2 className={`m-0 mb-5 text-[22px] leading-[1.3] text-[#0f172a] ${fontHeading}`}>{title}</h2>
+      <section data-anchor={m["data-anchor"]} className={`rounded-[16px] border border-[#e2e8f0] bg-white ${phone ? "p-5" : "p-8"} ${m.className}`}>
+        <h2 className={`m-0 mb-5 ${phone ? "text-[19px]" : "text-[22px]"} leading-[1.3] text-[#0f172a] ${fontHeading}`}>{title}</h2>
         {children}
       </section>
     );
@@ -140,16 +149,27 @@ export default function CoursePagePreview({ data, focus, fit = true }: { data: C
   };
 
   return (
-    <div ref={outerRef} className="relative w-full overflow-hidden" style={{ height: height * scale }}>
-      <div ref={pageRef} className="absolute left-0 top-0 origin-top-left bg-[#f8fafc] p-6" style={{ width: DESIGN_WIDTH, transform: `scale(${scale})` }}>
-        <div className="relative grid grid-cols-[320px_minmax(0,1fr)] gap-x-8">
+    <div ref={outerRef} className="relative w-full overflow-hidden" style={{ height: height * scale + (phone ? PHONE_BEZEL * 2 : 0) }}>
+      {phone && (
+        <span
+          aria-hidden="true"
+          className="pointer-events-none absolute left-1/2 top-0 -translate-x-1/2 rounded-[34px] bg-[#0f172a] shadow-[0_18px_40px_-18px_rgba(15,23,42,0.6)]"
+          style={{ width: PHONE_WIDTH * scale + PHONE_BEZEL * 2, height: height * scale + PHONE_BEZEL * 2 }}
+        />
+      )}
+      <div
+        ref={pageRef}
+        className={`absolute top-0 origin-top-left overflow-hidden bg-[#f8fafc] ${phone ? "rounded-[26px] p-3" : "p-6"}`}
+        style={phone ? { width: PHONE_WIDTH, transform: `scale(${scale})`, left: `calc(50% - ${(PHONE_WIDTH * scale) / 2}px)`, top: PHONE_BEZEL } : { left: 0, width: DESIGN_WIDTH, transform: `scale(${scale})` }}
+      >
+        <div className={phone ? "relative flex flex-col gap-4" : "relative grid grid-cols-[320px_minmax(0,1fr)] gap-x-8"}>
           {/* Banner */}
-          <div {...mark("banner")} className={`${mark("banner").className} relative col-span-2 col-start-1 row-start-1 min-h-[400px] overflow-hidden rounded-[20px] bg-[linear-gradient(120deg,#0b1220_0%,#0f172a_55%,#13213a_100%)] pb-8 pl-[352px] pr-8 pt-[92px]`}>
+          <div {...mark("banner")} className={`${mark("banner").className} relative overflow-hidden rounded-[20px] bg-[linear-gradient(120deg,#0b1220_0%,#0f172a_55%,#13213a_100%)] ${phone ? "px-5 pb-6 pt-14" : "col-span-2 col-start-1 row-start-1 min-h-[400px] pb-8 pl-[352px] pr-8 pt-[92px]"}`}>
             <svg aria-hidden="true" viewBox="0 0 321 454" preserveAspectRatio="none" className="pointer-events-none absolute inset-y-0 right-[60px] h-full w-[321px] opacity-[0.06]">
               <path d="M321 0H150L0 227l150 227h171L171 227z" fill="white" />
             </svg>
             <div aria-hidden="true" className="pointer-events-none absolute -bottom-40 left-1/3 size-[420px] rounded-full bg-[radial-gradient(circle,rgba(18,185,129,0.12),transparent_70%)]" />
-            <nav className={`absolute left-8 top-7 flex items-center gap-2 text-[13px] text-[#cbd5e1] ${fontRegular}`}>
+            <nav className={`absolute flex items-center gap-2 text-[13px] text-[#cbd5e1] ${phone ? "left-5 top-5" : "left-8 top-7"} ${fontRegular}`}>
               <span>Home</span>
               <span aria-hidden="true">›</span>
               <span>{data.category || "Category"}</span>
@@ -158,7 +178,7 @@ export default function CoursePagePreview({ data, focus, fit = true }: { data: C
             </nav>
             <header className="relative flex flex-col gap-5 text-white">
               <div className="flex items-start justify-between gap-4">
-                <h1 className={`m-0 text-[34px] leading-[44px] tracking-[-0.6px] [overflow-wrap:anywhere] ${data.title ? "" : "text-white/40"} ${fontHeading}`}>{data.title || "Your course title"}</h1>
+                <h1 className={`m-0 ${phone ? "text-[26px] leading-[34px]" : "text-[34px] leading-[44px]"} tracking-[-0.6px] [overflow-wrap:anywhere] ${data.title ? "" : "text-white/40"} ${fontHeading}`}>{data.title || "Your course title"}</h1>
                 <span className="flex size-10 shrink-0 items-center justify-center rounded-[8px] bg-white/[0.06] text-white">
                   <Glyph name="heart" className="size-5" />
                 </span>
@@ -197,7 +217,7 @@ export default function CoursePagePreview({ data, focus, fit = true }: { data: C
           </div>
 
           {/* Purchase card */}
-          <aside className="relative z-10 col-start-1 row-span-2 row-start-1 mt-[64px] self-start pl-6">
+          <aside className={phone ? "relative" : "relative z-10 col-start-1 row-span-2 row-start-1 mt-[64px] self-start pl-6"}>
             <div {...mark("card")} className={`${mark("card").className} flex flex-col gap-5 rounded-[16px] border border-[#e2e8f0] bg-white p-5 shadow-[0_20px_50px_rgba(15,23,42,0.12)]`}>
               <div className="relative aspect-video overflow-hidden rounded-[12px] bg-[#e2e8f0]">
                 {data.cover && <img src={data.cover} alt="" className="size-full object-cover" />}
@@ -255,12 +275,12 @@ export default function CoursePagePreview({ data, focus, fit = true }: { data: C
           </aside>
 
           {/* Body */}
-          <div className="col-start-2 row-start-2 mt-6 flex min-w-0 flex-col gap-6">
+          <div className={phone ? "flex min-w-0 flex-col gap-4" : "col-start-2 row-start-2 mt-6 flex min-w-0 flex-col gap-6"}>
             {card(
               "objectives",
               "Course objectives",
               data.objectives.length ? (
-                <ul className={`m-0 grid list-none grid-cols-2 gap-x-8 gap-y-3 p-0 text-[14px] text-[#334155] ${fontRegular}`}>
+                <ul className={`m-0 grid list-none ${phone ? "grid-cols-1" : "grid-cols-2"} gap-x-8 gap-y-3 p-0 text-[14px] text-[#334155] ${fontRegular}`}>
                   {data.objectives.map((item, i) => (
                     <li key={i} className="flex items-start gap-3 [overflow-wrap:anywhere]">
                       <span className="mt-0.5 text-[#12b981]">
@@ -271,7 +291,7 @@ export default function CoursePagePreview({ data, focus, fit = true }: { data: C
                   ))}
                 </ul>
               ) : (
-                <div className="grid grid-cols-2 gap-x-8 gap-y-4">
+                <div className={`grid ${phone ? "grid-cols-1" : "grid-cols-2"} gap-x-8 gap-y-4`}>
                   {[0, 1, 2, 3].map((i) => (
                     <div key={i} className="flex items-center gap-3">
                       <span className="size-4 shrink-0 rounded-full bg-[#e2e8f0]" />

@@ -1,4 +1,5 @@
 import { Fragment, useEffect, useMemo, useRef, useState, type MouseEvent, type ReactNode } from "react";
+import { createPortal } from "react-dom";
 import { uploadFile } from "../api";
 import { shrinkImage } from "../imageShrink";
 import { fontMedium, fontRegular, fontSemi } from "../fonts";
@@ -101,7 +102,7 @@ function Paragraph({ text, ranges, index, onOpen }: { text: string; ranges: Mark
   return <p data-para={index}>{parts}</p>;
 }
 
-const allowedTags = new Set(["B", "STRONG", "I", "EM", "U", "UL", "OL", "LI", "P", "DIV", "BR", "CODE", "A", "IMG"]);
+const allowedTags = new Set(["B", "STRONG", "I", "EM", "U", "UL", "OL", "LI", "P", "DIV", "BR", "CODE", "A", "IMG", "H3"]);
 
 // Notes are rendered as HTML, so only the editor's own tags survive, with only safe links and embedded images.
 function sanitizeNote(html: string) {
@@ -120,7 +121,8 @@ function sanitizeNote(html: string) {
         el.setAttribute("rel", "noopener noreferrer");
       }
       if (el.tagName === "IMG") {
-        if (/^data:image\/(png|jpeg|gif|webp);base64,/.test(src)) el.setAttribute("src", src);
+        // Embedded images, uploaded files on this site (/thkee-api/uploads/...) and https images are kept.
+        if (/^data:image\/(png|jpeg|gif|webp);base64,/.test(src) || /^\/[\w\-./]+\.(png|jpe?g|gif|webp)$/i.test(src) || /^https:\/\//i.test(src)) el.setAttribute("src", src);
         else el.remove();
       }
     });
@@ -129,7 +131,7 @@ function sanitizeNote(html: string) {
   return doc.body.innerHTML;
 }
 
-const richText = "[&_b]:font-['Inter:Bold'] [&_strong]:font-['Inter:Bold'] [&_i]:[font-synthesis:style] [&_em]:[font-synthesis:style] [&_u]:underline [&_a]:text-[#6016fc] [&_a]:underline [&_code]:rounded-[4px] [&_code]:bg-[#f1f5f9] [&_code]:px-1 [&_code]:font-mono [&_img]:max-w-full [&_img]:rounded-[6px] [&_ol]:list-decimal [&_ol]:pl-5 [&_ul]:list-disc [&_ul]:pl-5";
+const richText = "[&_b]:font-['Inter:Bold'] [&_strong]:font-['Inter:Bold'] [&_i]:[font-synthesis:style] [&_em]:[font-synthesis:style] [&_u]:underline [&_a]:text-[#6016fc] [&_a]:underline [&_code]:rounded-[4px] [&_code]:bg-[#f1f5f9] [&_code]:px-1 [&_code]:font-mono [&_img]:max-w-full [&_img]:rounded-[6px] [&_ol]:list-decimal [&_ol]:pl-5 [&_ul]:list-disc [&_ul]:pl-5 [&_h3]:mb-1.5 [&_h3]:mt-4 [&_h3]:text-[1.15em] [&_h3]:leading-[1.4] [&_h3]:font-['Inter:Bold'] [&_h3]:text-[#0f172a]";
 
 export function NoteBody({ note, className = "", tone = "text-[#0f172a]" }: { note: Pick<Note, "text" | "html">; className?: string; tone?: string }) {
   const cls = `text-[14px] leading-[22px] ${tone} ${fontRegular} ${className}`;
@@ -509,6 +511,7 @@ export function NoteEditor({
   clearOnSave,
   toolbarTop,
   modern,
+  page,
   linkOnly,
   hideUnderline,
   toolbarEnd,
@@ -537,6 +540,8 @@ export function NoteEditor({
   toolbarTop?: boolean;
   // Writing-first look: content on top, a quiet grouped toolbar along the bottom, larger text.
   modern?: boolean;
+  // Document look for long writing (articles): no box, larger text, toolbar pinned at the top while scrolling.
+  page?: boolean;
   // With extras, keeps the link button but leaves out image and code.
   linkOnly?: boolean;
   hideUnderline?: boolean;
@@ -557,6 +562,9 @@ export function NoteEditor({
   const [linkOpen, setLinkOpen] = useState(false);
   const [linkUrl, setLinkUrl] = useState("");
   const [error, setError] = useState("");
+  // Floating toolbar over selected text (page mode), like Medium and Notion.
+  const [bubble, setBubble] = useState<{ x: number; y: number } | null>(null);
+  const [isHeading, setIsHeading] = useState(false);
 
   useEffect(() => {
     const el = ref.current;
@@ -564,9 +572,24 @@ export function NoteEditor({
     if (initial?.html) el.innerHTML = sanitizeNote(initial.html);
     else el.textContent = initial?.text ?? "";
     if (autoFocus) el.focus();
-    const refresh = () => setActive(document.activeElement === el ? editorTools.map((t) => t.command).filter((c) => document.queryCommandState(c)) : []);
+    const refresh = () => {
+      setActive(document.activeElement === el ? editorTools.map((t) => t.command).filter((c) => document.queryCommandState(c)) : []);
+      if (!page) return;
+      const sel = window.getSelection();
+      const range = sel && sel.rangeCount ? sel.getRangeAt(0) : null;
+      if (!sel || sel.isCollapsed || !range || !el.contains(range.commonAncestorContainer)) return setBubble(null);
+      const rect = range.getBoundingClientRect();
+      if (!rect.width && !rect.height) return setBubble(null);
+      setBubble({ x: rect.left + rect.width / 2, y: rect.top });
+      setIsHeading(String(document.queryCommandValue("formatBlock")).toLowerCase() === "h3");
+    };
     document.addEventListener("selectionchange", refresh);
-    return () => document.removeEventListener("selectionchange", refresh);
+    const hide = () => setBubble(null);
+    window.addEventListener("scroll", hide, true);
+    return () => {
+      document.removeEventListener("selectionchange", refresh);
+      window.removeEventListener("scroll", hide, true);
+    };
   }, []);
 
   const onInput = () => {
@@ -659,9 +682,9 @@ export function NoteEditor({
     <div className="flex min-w-0 flex-1 flex-col gap-4">
       <div className={sideAction ? "flex items-end gap-3" : "contents"}>
       {/* The toolbar-on-top variant matches the standard .field look: white box, slate border, green focus ring and a light toolbar strip. */}
-      <div className={`flex ${boxClass} flex-col overflow-auto ${modern ? "rounded-[14px] border border-slate-200 bg-white shadow-[0_1px_2px_rgba(15,23,42,0.04)] transition-[border-color,box-shadow] hover:border-slate-300 focus-within:!border-[#0d5c4b]/50 focus-within:shadow-[0_0_0_4px_rgba(13,92,75,0.08)]" : toolbarTop ? "flex-col-reverse rounded-[12px] border border-slate-200 bg-white shadow-[0_1px_2px_rgba(15,23,42,0.04)] transition-[border-color,box-shadow] hover:border-slate-300 focus-within:!border-[#0d5c4b]/60 focus-within:shadow-[0_0_0_3px_rgba(13,92,75,0.12)]" : "resize-y gap-2 rounded-[8px] border border-[#cbd5e1] bg-white p-4 focus-within:border-[#1e293b]"} ${sideAction ? "min-w-0 flex-1" : ""}`}>
-        <div className={`relative flex-1 ${modern ? "mx-4 mb-3 mt-3.5" : toolbarTop ? "mx-3 my-2.5" : ""}`}>
-          {empty && <span className={`pointer-events-none absolute left-0 top-0 text-[#94a3b8] ${modern ? "text-[15px] leading-[26px]" : "text-[16px] md:text-[14px]"} ${fontRegular}`}>{placeholder}</span>}
+      <div className={`flex ${boxClass} ${page ? "flex-col-reverse" : `flex-col overflow-auto ${modern ? "rounded-[14px] border border-slate-200 bg-white shadow-[0_1px_2px_rgba(15,23,42,0.04)] transition-[border-color,box-shadow] hover:border-slate-300 focus-within:!border-[#0d5c4b]/50 focus-within:shadow-[0_0_0_4px_rgba(13,92,75,0.08)]" : toolbarTop ? "flex-col-reverse rounded-[12px] border border-slate-200 bg-white shadow-[0_1px_2px_rgba(15,23,42,0.04)] transition-[border-color,box-shadow] hover:border-slate-300 focus-within:!border-[#0d5c4b]/60 focus-within:shadow-[0_0_0_3px_rgba(13,92,75,0.12)]" : "resize-y gap-2 rounded-[8px] border border-[#cbd5e1] bg-white p-4 focus-within:border-[#1e293b]"}`} ${sideAction ? "min-w-0 flex-1" : ""}`}>
+        <div className={`relative flex-1 ${page ? "mt-3" : modern ? "mx-4 mb-3 mt-3.5" : toolbarTop ? "mx-3 my-2.5" : ""}`}>
+          {empty && <span className={`pointer-events-none absolute left-0 top-0 text-[#94a3b8] ${page ? "text-[16px] leading-[28px]" : modern ? "text-[15px] leading-[26px]" : "text-[16px] md:text-[14px]"} ${fontRegular}`}>{placeholder}</span>}
           <div
             ref={ref}
             role="textbox"
@@ -677,7 +700,7 @@ export function NoteEditor({
                 if (!empty || allowEmpty) save();
               }
             }}
-            className={`min-h-[48px] whitespace-pre-wrap break-words text-[#0f172a] outline-none ${modern ? "text-[15px] leading-[26px] [&_li]:my-0.5 [&_ol]:my-2 [&_ul]:my-2" : "text-[16px] leading-[22px] md:text-[14px]"} ${richText} ${fontRegular}`}
+            className={`min-h-[48px] whitespace-pre-wrap break-words text-[#0f172a] outline-none ${page ? "text-[16px] leading-[28px] text-[#1e293b] [&_li]:my-0.5 [&_ol]:my-2 [&_p]:mb-2 [&_ul]:my-2" : modern ? "text-[15px] leading-[26px] [&_li]:my-0.5 [&_ol]:my-2 [&_ul]:my-2" : "text-[16px] leading-[22px] md:text-[14px]"} ${richText} ${fontRegular}`}
           />
         </div>
         {linkOpen && (
@@ -702,7 +725,66 @@ export function NoteEditor({
             </button>
           </div>
         )}
-        <div className={`flex flex-wrap items-center gap-0.5 ${modern ? "sticky bottom-0 z-[1] border-t border-slate-100 bg-white/95 px-2 py-1.5 backdrop-blur-sm" : toolbarTop ? "sticky top-0 z-[1] border-b border-slate-200 bg-slate-50 px-1.5 py-1" : ""}`}>
+        {page && bubble && !linkOpen && createPortal(
+          <div
+            role="toolbar"
+            aria-label="Format selected text"
+            onMouseDown={(e) => e.preventDefault()}
+            style={{ left: bubble.x, top: bubble.y }}
+            className="fixed z-[1000] flex -translate-x-1/2 -translate-y-[calc(100%+8px)] items-center gap-0.5 rounded-[10px] bg-[#0f172a] p-1 text-white shadow-[0_10px_30px_-10px_rgba(15,23,42,0.6)]"
+          >
+            {[
+              { key: "bold", label: "Bold", on: active.includes("bold"), icon: TextBoldIcon, act: () => run("bold") },
+              { key: "italic", label: "Italic", on: active.includes("italic"), icon: TextItalicIcon, act: () => run("italic") },
+              { key: "h3", label: isHeading ? "Normal text" : "Heading", on: isHeading, icon: null, act: () => { run("formatBlock", isHeading ? "P" : "H3"); setIsHeading(!isHeading); } },
+              { key: "ul", label: "Bullet list", on: active.includes("insertUnorderedList"), icon: LeftToRightListBulletIcon, act: () => run("insertUnorderedList") },
+              { key: "link", label: "Add link", on: false, icon: editorExtraIcons.link, act: () => { rememberCursor(); setBubble(null); setLinkOpen(true); } },
+              { key: "code", label: "Format as code", on: false, icon: editorExtraIcons.code, act: insertCode },
+            ].map((b) => (
+              <button key={b.key} type="button" aria-label={b.label} title={b.label} aria-pressed={b.on} onClick={b.act} className={`flex size-7 items-center justify-center rounded-[7px] transition ${b.on ? "bg-white/20 text-white" : "text-white/75 hover:bg-white/10 hover:text-white"}`}>
+                {b.icon ? <HugeiconsIcon icon={b.icon} size={16} strokeWidth={2} aria-hidden="true" /> : <span className={`text-[13px] ${fontSemi}`}>H</span>}
+              </button>
+            ))}
+          </div>,
+          document.body,
+        )}
+        {page && (
+          // Page toolbar: full width, grouped by purpose (text style, lists, insert), with clear labels on hover.
+          <div role="toolbar" aria-label="Formatting" onMouseDown={(e) => e.preventDefault()} className="sticky top-[57px] z-[2] flex items-center gap-1 rounded-[12px] border border-slate-200 bg-[#f8fafc]/95 p-1 backdrop-blur-sm">
+            {[
+              [
+                { key: "h3", label: isHeading ? "Normal text" : "Heading", on: isHeading, icon: null, act: () => { run("formatBlock", isHeading ? "P" : "H3"); setIsHeading(!isHeading); } },
+                { key: "bold", label: "Bold", on: active.includes("bold"), icon: TextBoldIcon, act: () => run("bold") },
+                { key: "italic", label: "Italic", on: active.includes("italic"), icon: TextItalicIcon, act: () => run("italic") },
+                ...(hideUnderline ? [] : [{ key: "underline", label: "Underline", on: active.includes("underline"), icon: TextUnderlineIcon, act: () => run("underline") }]),
+              ],
+              [
+                { key: "ul", label: "Bullet list", on: active.includes("insertUnorderedList"), icon: LeftToRightListBulletIcon, act: () => run("insertUnorderedList") },
+                { key: "ol", label: "Numbered list", on: active.includes("insertOrderedList"), icon: LeftToRightListNumberIcon, act: () => run("insertOrderedList") },
+              ],
+              [
+                { key: "image", label: "Add image", on: false, icon: editorExtraIcons.image, act: () => { rememberCursor(); fileRef.current?.click(); } },
+                { key: "link", label: "Add link", on: linkOpen, icon: editorExtraIcons.link, act: () => { rememberCursor(); setLinkOpen((o) => !o); } },
+                { key: "code", label: "Format as code", on: false, icon: editorExtraIcons.code, act: insertCode },
+              ],
+            ].map((group, i) => (
+              <Fragment key={i}>
+                {i > 0 && <span aria-hidden="true" className="mx-1 h-5 w-px bg-slate-200" />}
+                <div className="flex items-center gap-0.5">
+                  {group.map((b) => (
+                    <button key={b.key} type="button" aria-label={b.label} title={b.label} aria-pressed={b.on} onClick={b.act} className={`flex h-9 min-w-10 items-center justify-center rounded-[9px] px-2 transition ${b.on ? "bg-white text-[#0d5c4b] shadow-[0_1px_2px_rgba(15,23,42,0.08),0_0_0_1px_rgba(13,92,75,0.15)]" : "text-slate-600 hover:bg-white hover:text-slate-900 hover:shadow-[0_1px_2px_rgba(15,23,42,0.06)]"}`}>
+                      {b.icon ? <HugeiconsIcon icon={b.icon} size={19} strokeWidth={1.8} aria-hidden="true" /> : <span className={`text-[15px] leading-none ${fontSemi}`}>H</span>}
+                    </button>
+                  ))}
+                </div>
+              </Fragment>
+            ))}
+            <span className={`ml-auto hidden pr-2 text-[12px] text-slate-400 sm:inline ${fontRegular}`}>Select text for quick styles</span>
+            <input ref={fileRef} type="file" accept="image/png,image/jpeg,image/gif,image/webp" hidden onChange={(e) => pickImage(e.target.files?.[0])} />
+          </div>
+        )}
+        {!page && (
+        <div className={`flex flex-wrap items-center gap-0.5 ${page ? "" : modern ? "sticky bottom-0 z-[1] border-t border-slate-100 bg-white/95 px-2 py-1.5 backdrop-blur-sm" : toolbarTop ? "sticky top-0 z-[1] border-b border-slate-200 bg-slate-50 px-1.5 py-1" : ""}`}>
           {toolbarEnd && <span className="order-last ml-auto flex">{toolbarEnd}</span>}
           {editorTools.filter((tool) => !(hideUnderline && tool.command === "underline")).map((tool) => (
             <Fragment key={tool.command}>
@@ -755,6 +837,7 @@ export function NoteEditor({
             </>
           )}
         </div>
+        )}
       </div>
       {!hideActions && (
         <div className="flex items-center justify-end gap-3">

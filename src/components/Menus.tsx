@@ -111,13 +111,25 @@ export type ActionItem = { label: string; icon?: ReactNode; onClick: () => void;
 
 export function ActionMenu({ label, trigger, triggerClass, items, alignLeft }: { label: string; trigger: ReactNode; triggerClass: string; items: ActionItem[]; alignLeft?: boolean }) {
   const { open, setOpen, ref } = useDropdown();
+  const [flipUp, setFlipUp] = useState(false);
+
+  useEffect(() => {
+    if (!open || !ref.current) return;
+    const rect = ref.current.getBoundingClientRect();
+    const spaceBelow = window.innerHeight - rect.bottom;
+    setFlipUp(spaceBelow < 220);
+  }, [open]);
+
   return (
     <div ref={ref} className="relative" onKeyDown={(e) => e.key === "Escape" && setOpen(false)}>
       <button type="button" aria-label={label} aria-haspopup="menu" aria-expanded={open} onClick={() => setOpen((o) => !o)} className={triggerClass}>
         {trigger}
       </button>
       {open && (
-        <div role="menu" className={`${panel} ${alignLeft ? "left-0" : "right-0"} min-w-[120px] whitespace-nowrap`}>
+        <div
+          role="menu"
+          className={`pop-in absolute z-20 flex flex-col gap-0.5 rounded-xl border border-slate-200 bg-white p-1.5 shadow-popover min-w-30 whitespace-nowrap ${alignLeft ? "left-0" : "right-0"} ${flipUp ? "bottom-full mb-1.5" : "top-full mt-1.5"}`}
+        >
           {items.map((item) => (
             <button
               key={item.label}
@@ -128,7 +140,7 @@ export function ActionMenu({ label, trigger, triggerClass, items, alignLeft }: {
                 setOpen(false);
                 item.onClick();
               }}
-              className={`flex w-full items-center gap-2.5 rounded-[8px] px-2.5 py-2 text-left text-[14px] leading-[20px] transition-colors disabled:text-slate-400 disabled:hover:bg-transparent ${item.danger ? "text-[#dc2626] hover:bg-[#fef2f2]" : "text-slate-700 hover:bg-slate-100 hover:text-slate-900"} ${fontRegular}`}
+              className={`flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-left text-sm leading-5 transition-colors disabled:text-slate-400 disabled:hover:bg-transparent ${item.danger ? "text-red-600 hover:bg-red-50" : "text-slate-700 hover:bg-slate-100 hover:text-slate-900"} ${fontRegular}`}
             >
               {item.icon}
               {item.label}
