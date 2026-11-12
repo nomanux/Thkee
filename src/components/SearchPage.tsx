@@ -3,6 +3,8 @@ import { categories, courses, courseTags, type Course } from "../data";
 import { fontBold, fontFor, fontHeading, fontMedium, fontRegular, fontSemi } from "../fonts";
 import { useApp, type SearchParams } from "../store";
 import { CourseThumb } from "./Overlays";
+import { HugeiconsIcon } from "@hugeicons/react";
+import { ArrowRight02Icon, BookOpen01Icon, ChartIncreaseIcon, Clock01Icon, Fire02Icon, SparklesIcon, StarIcon } from "@hugeicons/core-free-icons";
 
 const PAGE_SIZE = 9;
 const arabic = /[؀-ۿ]/;
@@ -96,7 +98,7 @@ export function ResultCard({ course }: { course: Course }) {
     <button
       type="button"
       onClick={() => setOverlay({ type: "course", id: course.id })}
-      className="group flex w-full flex-col overflow-hidden rounded-[14px] border border-[#e2e8f0] bg-white text-left shadow-[0_1px_2px_rgba(15,23,42,0.04)] transition duration-300 hover:-translate-y-1 hover:shadow-[0_18px_40px_rgba(15,23,42,0.12)]"
+      className="group flex w-full flex-col overflow-hidden rounded-[14px] border border-[#e2e8f0] bg-white text-left shadow-[0_1px_2px_rgba(15,23,42,0.04)] transition duration-300 hover:-translate-y-1 hover:shadow-[0_12px_24px_-8px_rgba(15,23,42,0.2)]"
     >
       <div className="relative overflow-hidden">
         <CourseThumb course={course} showTitle={false} className="aspect-video transition-transform duration-500 group-hover:scale-[1.04]" />
@@ -155,7 +157,9 @@ function Carousel({ items }: { items: Course[] }) {
   return (
     <div className="relative">
       {arrow(-1, edge.start)}
-      <div ref={ref} onScroll={update} className="-mx-4 flex snap-x snap-mandatory gap-5 overflow-x-auto scroll-px-4 px-4 pb-4 pt-1 [scrollbar-width:none] md:mx-0 md:scroll-px-0 md:px-0 [&::-webkit-scrollbar]:hidden">
+      {/* A sideways scroller clips anything outside it, so it gets extra padding (offset by negative margins)
+          to leave room for the cards' hover lift and shadow. */}
+      <div ref={ref} onScroll={update} className="-mx-4 -mb-6 -mt-3 flex snap-x snap-mandatory gap-5 overflow-x-auto scroll-px-4 px-4 pb-10 pt-3 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         {items.map((c) => (
           <div key={c.id} className="w-[78%] shrink-0 snap-start sm:w-[calc((100%-20px)/2)] lg:w-[calc((100%-40px)/3)] xl:w-[calc((100%-60px)/4)]">
             <ResultCard course={c} />
@@ -167,46 +171,110 @@ function Carousel({ items }: { items: Course[] }) {
   );
 }
 
+// Featured course spotlight: a dark card with moving colour glows, the course image as the hero,
+// glass chips and stat tiles, and one bright call to action. Inspired by Fresha and Higgsfield hero cards.
 function FeaturedCourse({ course }: { course: Course }) {
   const { setOverlay } = useApp();
+  const open = () => setOverlay({ type: "course", id: course.id });
+  const ratings = Math.round(course.students / 14);
+  const initials = course.instructor
+    .split(" ")
+    .filter((w) => /^[A-Z]/.test(w))
+    .slice(0, 2)
+    .map((w) => w[0])
+    .join("");
+  const stats = [
+    { icon: Clock01Icon, value: course.duration ?? `${course.hours} hours`, label: "Video" },
+    { icon: BookOpen01Icon, value: `${course.lessons} lessons`, label: "Content" },
+    { icon: ChartIncreaseIcon, value: course.level, label: "Level" },
+  ];
   return (
-    <div className="grid grid-cols-1 gap-6 rounded-[18px] border border-[#e2e8f0] bg-white p-4 shadow-[0_1px_2px_rgba(15,23,42,0.04)] md:p-5 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] lg:gap-8">
-      <div className="relative overflow-hidden rounded-[12px]">
-        <CourseThumb course={course} showTitle={false} className="aspect-video" />
-        <span className={`absolute left-4 top-4 rounded-[6px] bg-[#d9f26b] px-2.5 py-1 text-[12px] text-[#1e293b] ${fontSemi}`}>Best Seller</span>
-      </div>
-      <div className="flex flex-col gap-3 py-1 lg:py-3">
-        <p dir="auto" className={`text-left text-[22px] leading-[1.35] text-[#0f172a] ${fontFor(course.title, fontHeading, "font-bold")}`}>{course.title}</p>
-        <div className="flex flex-wrap items-center gap-2">
-          <Stars value={course.rating} size={18} />
-          <span className={`text-[18px] text-[#0f172a] ${fontSemi}`}>{course.rating.toFixed(2)}</span>
-          <span className={`text-[14px] text-[#64748b] ${fontRegular}`}>({Math.round(course.students / 14).toLocaleString()} ratings)</span>
-        </div>
-        <div className={`flex flex-wrap items-center gap-x-3 gap-y-1 text-[13px] text-[#334155] ${fontRegular}`}>
-          <span dir="auto">
-            Course by <span className={fontFor(course.instructor, fontMedium, "font-medium")}>{course.instructor}</span>
-          </span>
-          <span className="size-1 rounded-full bg-[#334155]" />
-          <span>Last updated {new Date(course.launched ?? "2026-06-01").toLocaleDateString("en-GB", { month: "short", year: "numeric" })}</span>
-          <span className="size-1 rounded-full bg-[#334155]" />
-          <span>{course.students.toLocaleString()} students enrolled</span>
-        </div>
-        <p className={`line-clamp-2 text-[14px] leading-[22px] text-[#475569] ${fontRegular}`}>{course.description}</p>
-        <div className="flex flex-wrap gap-2">
-          {(courseTags[course.id] ?? []).map((t) => (
-            <span key={t} className={`rounded-[6px] border border-[#e2e8f0] px-2.5 py-1 text-[12px] text-[#334155] ${fontMedium}`}>
-              {t}
+    <article className="group/feat relative isolate overflow-hidden rounded-[28px] bg-[#0b1220] p-3 text-white shadow-[0_30px_60px_-30px_rgba(2,6,23,0.75)] md:p-4">
+      {/* Colour glows that drift slowly behind the content */}
+      <div aria-hidden="true" className="pointer-events-none absolute -left-20 -top-28 -z-10 size-[420px] rounded-full bg-[#10b981]/25 blur-[90px] [animation:feat-drift_14s_ease-in-out_infinite] motion-reduce:animate-none" />
+      <div aria-hidden="true" className="pointer-events-none absolute -bottom-32 right-0 -z-10 size-[420px] rounded-full bg-[#ffb20d]/25 blur-[100px] [animation:feat-drift_16s_ease-in-out_infinite_reverse] motion-reduce:animate-none" />
+      <div aria-hidden="true" className="pointer-events-none absolute right-1/3 top-0 -z-10 size-[260px] rounded-full bg-[#6366f1]/20 blur-[80px]" />
+      {/* Fine grid texture */}
+      <div aria-hidden="true" className="pointer-events-none absolute inset-0 -z-10 opacity-[0.07] [background-image:linear-gradient(#fff_1px,transparent_1px),linear-gradient(90deg,#fff_1px,transparent_1px)] [background-size:32px_32px] [mask-image:radial-gradient(ellipse_at_70%_40%,black,transparent_70%)]" />
+
+      <div className="grid grid-cols-1 gap-5 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,1fr)] lg:gap-8">
+        <button type="button" onClick={open} aria-label={`Open ${course.title}`} className="relative block overflow-hidden rounded-[20px] text-left ring-1 ring-white/10">
+          <CourseThumb course={course} showTitle={false} className="aspect-video transition duration-700 group-hover/feat:scale-[1.04] [&>img:nth-of-type(2)]:scale-[1.04]" />
+          <span aria-hidden="true" className="absolute inset-0 bg-gradient-to-t from-[#0b1220]/80 via-transparent to-transparent" />
+          <span className={`absolute left-3 top-3 flex items-center gap-1.5 rounded-full bg-[#0b1220]/60 py-1 pl-1 pr-2.5 text-[12px] leading-[16px] text-white ring-1 ring-inset ring-white/20 backdrop-blur-md ${fontSemi}`}>
+            <span className="flex size-5 items-center justify-center rounded-full bg-[linear-gradient(135deg,#6ee7b7,#10b981)] text-[#022c22]">
+              <HugeiconsIcon icon={Fire02Icon} size={12} strokeWidth={2.2} className="fill-current" />
             </span>
-          ))}
-        </div>
-        <div className="mt-auto flex items-center justify-between gap-4 pt-4">
-          <Price course={course} size="text-[24px]" />
-          <button type="button" onClick={() => setOverlay({ type: "course", id: course.id })} className={`h-[48px] rounded-[10px] bg-[#ffb20d] px-7 text-[16px] text-[#1e293b] shadow-[0_8px_20px_rgba(255,178,13,0.3)] transition hover:-translate-y-0.5 hover:bg-[#faa104] ${fontSemi}`}>
-            View Course
-          </button>
+            Bestseller
+          </span>
+          <span className={`absolute bottom-3 left-3 flex items-center gap-2 rounded-[12px] bg-white/15 px-2.5 py-1.5 text-white ring-1 ring-inset ring-white/25 backdrop-blur-md ${fontMedium}`}>
+            <HugeiconsIcon icon={StarIcon} size={14} strokeWidth={2} className="fill-[#ffb20d] text-[#ffb20d]" />
+            <span className={`text-[13px] leading-none ${fontBold}`}>{course.rating.toFixed(1)}</span>
+            <span className="h-3 w-px bg-white/40" />
+            <span className="text-[12px] leading-none text-white/90">{course.students.toLocaleString()} learners</span>
+          </span>
+        </button>
+
+        <div className="flex min-w-0 flex-col py-1 lg:py-3 lg:pr-3">
+          <span className={`flex w-fit items-center gap-1.5 rounded-full bg-[linear-gradient(90deg,rgba(255,178,13,0.22),rgba(255,178,13,0.06))] px-2.5 py-1 text-[11px] uppercase leading-[14px] tracking-[0.14em] text-[#ffcf5c] ring-1 ring-inset ring-[#ffb20d]/30 ${fontSemi}`}>
+            <HugeiconsIcon icon={SparklesIcon} size={13} strokeWidth={2} />
+            Editor's pick · {course.subcategory}
+          </span>
+          <h3 dir="auto" className={`m-0 mt-3 text-left text-[28px] leading-[1.15] tracking-[-0.6px] text-transparent md:text-[34px] bg-[linear-gradient(180deg,#ffffff,#cbd5e1)] bg-clip-text ${fontFor(course.title, fontHeading, "font-bold")}`}>
+            {course.title}
+          </h3>
+          <p className={`m-0 mt-2.5 line-clamp-2 text-[14px] leading-[22px] text-white/70 ${fontRegular}`}>{course.description}</p>
+
+          <div className="mt-4 flex items-center gap-2.5">
+            <span className={`flex size-9 shrink-0 items-center justify-center rounded-full bg-[linear-gradient(135deg,#ffb20d,#f97316)] text-[13px] text-[#1e293b] ring-2 ring-white/20 ${fontBold}`}>{initials || "T"}</span>
+            <span className="min-w-0">
+              <span dir="auto" className={`block truncate text-[14px] leading-[18px] text-white ${fontFor(course.instructor, fontSemi, "font-semibold")}`}>{course.instructor}</span>
+              <span className={`block text-[12px] leading-[16px] text-white/55 ${fontRegular}`}>
+                Instructor · {ratings.toLocaleString()} ratings
+              </span>
+            </span>
+          </div>
+
+          <dl className="mt-5 grid grid-cols-3 gap-2">
+            {stats.map((st) => (
+              <div key={st.label} className="rounded-[14px] bg-white/[0.06] px-3 py-2.5 ring-1 ring-inset ring-white/10 backdrop-blur-sm transition hover:bg-white/[0.1]">
+                <dt className={`flex items-center gap-1 text-[11px] leading-[14px] text-white/55 ${fontMedium}`}>
+                  <HugeiconsIcon icon={st.icon} size={13} strokeWidth={1.8} className="text-[#6ee7b7]" />
+                  {st.label}
+                </dt>
+                <dd className={`m-0 mt-1 truncate text-[14px] leading-[18px] text-white ${fontSemi}`}>{st.value}</dd>
+              </div>
+            ))}
+          </dl>
+
+          <div className="mt-auto flex flex-wrap items-center justify-between gap-4 pt-6">
+            <div className="flex flex-col">
+              {course.price === 0 ? (
+                <>
+                  <span className={`text-[30px] leading-[34px] text-[#6ee7b7] ${fontBold}`}>Free</span>
+                  <span className={`text-[12px] text-white/55 ${fontRegular}`}>Full access, no card needed</span>
+                </>
+              ) : (
+                <>
+                  <span className="flex items-baseline gap-2">
+                    <span className={`text-[30px] leading-[34px] text-white ${fontBold}`}>{course.price} SAR</span>
+                    {course.originalPrice && <span className={`text-[14px] text-white/40 line-through ${fontRegular}`}>{course.originalPrice} SAR</span>}
+                  </span>
+                  <span className={`text-[12px] text-white/55 ${fontRegular}`}>One-time payment · lifetime access</span>
+                </>
+              )}
+            </div>
+            <button type="button" onClick={open} className={`group/cta relative flex h-[50px] items-center gap-2 overflow-hidden rounded-full bg-[#ffb20d] pl-6 pr-1.5 text-[15px] text-[#0b1220] shadow-[0_0_0_4px_rgba(255,178,13,0.15),0_14px_30px_-10px_rgba(255,178,13,0.7)] transition hover:-translate-y-0.5 hover:bg-[#ffc23d] ${fontBold}`}>
+              <span aria-hidden="true" className="absolute inset-0 bg-[linear-gradient(110deg,transparent_35%,rgba(255,255,255,0.55)_50%,transparent_65%)] bg-[length:250%_100%] [animation:badge-shine_3.5s_ease-in-out_infinite] motion-reduce:hidden" />
+              <span className="relative">{course.price === 0 ? "Start learning" : "View course"}</span>
+              <span className="relative flex size-[38px] items-center justify-center rounded-full bg-[#0b1220] text-[#ffb20d] transition group-hover/cta:translate-x-0.5">
+                <HugeiconsIcon icon={ArrowRight02Icon} size={18} strokeWidth={2} />
+              </span>
+            </button>
+          </div>
         </div>
       </div>
-    </div>
+    </article>
   );
 }
 
@@ -222,30 +290,88 @@ function Check({ checked }: { checked: boolean }) {
   );
 }
 
-function FilterSection({ title, children, defaultOpen = true }: { title: string; children: ReactNode; defaultOpen?: boolean }) {
-  const [open, setOpen] = useState(defaultOpen);
+// One filter group: a plain heading with how many are picked, folding open and shut. Groups are split by thin lines.
+function FilterSection({ title, children, defaultOpen = true, selected = 0 }: { title: string; children: ReactNode; defaultOpen?: boolean; selected?: number }) {
+  const [open, setOpen] = useState(defaultOpen || selected > 0);
   return (
-    <div className="flex flex-col gap-3">
-      <button type="button" aria-expanded={open} onClick={() => setOpen((o) => !o)} className={`flex items-center justify-between rounded-[8px] bg-[#f8fafc] px-3 py-2 text-[12px] uppercase tracking-[1px] text-[#0f172a] ${fontSemi}`}>
-        {title}
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" className={`transition-transform ${open ? "" : "-rotate-90"}`} aria-hidden="true">
-          <path d="M6 9l6 6 6-6" />
-        </svg>
+    <div className="py-4 first:pt-1 last:pb-1">
+      <button type="button" aria-expanded={open} onClick={() => setOpen((o) => !o)} className="group flex w-full items-center gap-2 text-left">
+        <span className={`flex-1 text-[14px] leading-[20px] text-[#0f172a] ${fontSemi}`}>{title}</span>
+        {selected > 0 && <span className={`rounded-full bg-[#0d5c4b] px-1.5 py-px text-[11px] leading-[16px] text-white tabular-nums ${fontSemi}`}>{selected}</span>}
+        <span className="flex size-6 items-center justify-center rounded-md text-[#94a3b8] transition group-hover:bg-[#f1f5f9] group-hover:text-[#0f172a]">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" className={`transition-transform duration-200 ${open ? "rotate-180" : ""}`} aria-hidden="true">
+            <path d="M6 9l6 6 6-6" />
+          </svg>
+        </span>
       </button>
-      {open && <div className="flex flex-col gap-2.5 px-1">{children}</div>}
+      {open && <div className="fade-up mt-3 flex flex-col gap-0.5">{children}</div>}
     </div>
   );
 }
 
+// A row with a checkbox, label and a count on the right. Rows with no matching course are greyed out.
 function Option({ label, count, checked, onToggle, prefix }: { label: string; count: number; checked: boolean; onToggle: () => void; prefix?: ReactNode }) {
   const disabled = count === 0 && !checked;
   return (
-    <button type="button" role="checkbox" aria-checked={checked} disabled={disabled} onClick={onToggle} className={`group flex items-center gap-2.5 text-left text-[14px] text-[#334155] ${fontRegular} ${disabled ? "opacity-40" : ""}`}>
-      <Check checked={checked} />
-      {prefix}
-      <span>{label}</span>
-      <span className="text-[#94a3b8]">({count})</span>
+    <button
+      type="button"
+      role="checkbox"
+      aria-checked={checked}
+      disabled={disabled}
+      onClick={onToggle}
+      className={`group -mx-2 flex items-start gap-2.5 rounded-[8px] px-2 py-1.5 text-left text-[14px] leading-[20px] transition ${checked ? `bg-[#eef7f3] text-[#0f172a] ${fontMedium}` : `text-[#334155] hover:bg-[#f8fafc] ${fontRegular}`} ${disabled ? "cursor-not-allowed opacity-40" : ""}`}
+    >
+      <span className="mt-px">
+        <Check checked={checked} />
+      </span>
+      {prefix && <span className="mt-[3px] shrink-0">{prefix}</span>}
+      <span className="min-w-0 flex-1">{label}</span>
+      <span className={`mt-px shrink-0 rounded-full px-1.5 text-[12px] leading-[18px] tabular-nums ${checked ? "bg-white text-[#0d5c4b]" : "bg-[#f1f5f9] text-[#64748b]"} ${fontMedium}`}>{count}</span>
     </button>
+  );
+}
+
+// Short choices as pill toggles (price, format, level, language): quicker to scan and tap than checkbox rows.
+function Chips({ options }: { options: { label: string; count: number; checked: boolean; onToggle: () => void }[] }) {
+  return (
+    <div className="flex flex-wrap gap-1.5">
+      {options.map((o) => {
+        const disabled = o.count === 0 && !o.checked;
+        return (
+          <button
+            key={o.label}
+            type="button"
+            aria-pressed={o.checked}
+            disabled={disabled}
+            onClick={o.onToggle}
+            className={`flex h-8 items-center gap-1.5 rounded-full border px-3 text-[13px] transition disabled:cursor-not-allowed disabled:opacity-40 ${o.checked ? `border-[#0d5c4b] bg-[#0d5c4b] text-white ${fontSemi}` : `border-[#e2e8f0] bg-white text-[#334155] hover:border-[#94a3b8] ${fontMedium}`}`}
+          >
+            {o.checked && (
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <path d="M5 12l5 5 9-10" />
+              </svg>
+            )}
+            {o.label}
+            <span className={`text-[12px] tabular-nums ${o.checked ? "text-white/75" : "text-[#94a3b8]"}`}>{o.count}</span>
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+// Long lists show the first few, with a link to see the rest.
+function ShowMore({ children, limit = 5 }: { children: ReactNode[]; limit?: number }) {
+  const [all, setAll] = useState(false);
+  // Hiding a single extra row saves nothing, so only collapse when two or more would be hidden.
+  if (children.length <= limit + 1) return <>{children}</>;
+  return (
+    <>
+      {all ? children : children.slice(0, limit)}
+      <button type="button" onClick={() => setAll((a) => !a)} className={`mt-1 w-fit text-[13px] text-[#0d5c4b] underline-offset-2 hover:underline ${fontSemi}`}>
+        {all ? "Show less" : `Show all ${children.length}`}
+      </button>
+    </>
   );
 }
 
@@ -326,87 +452,91 @@ export default function SearchPage({ params }: { params: SearchParams }) {
   };
 
   const sidebar = (
-    <div className="flex flex-col gap-6">
-      <label className="field-box">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
+    <div className="flex flex-col gap-3">
+      <label className="field-box h-11 rounded-[12px]">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#64748b" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
           <circle cx="11" cy="11" r="7" />
           <path d="M20 20l-3.5-3.5" />
         </svg>
-        <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search courses…" aria-label="Search within results" className={`min-w-0 flex-1 bg-transparent text-[14px] text-[#0f172a] outline-none placeholder:text-slate-400 ${fontRegular}`} />
+        <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search in these courses…" aria-label="Search within results" className={`min-w-0 flex-1 bg-transparent text-[14px] text-[#0f172a] outline-none placeholder:text-slate-400 ${fontRegular}`} />
         {query && (
           <button type="button" onClick={() => setQuery("")} aria-label="Clear search" className="text-[#94a3b8] hover:text-[#0f172a]">
             ✕
           </button>
         )}
       </label>
-      <div className="flex flex-col gap-6 rounded-[14px] border border-[#e2e8f0] bg-white p-4">
-        <div className="flex items-center justify-between">
-          <span className={`text-[20px] text-[#0f172a] ${fontHeading}`}>Filters</span>
-          <button type="button" onClick={clearAll} disabled={!activeChips.length} className={`text-[13px] text-[#ea580c] underline underline-offset-2 disabled:text-[#cbd5e1] disabled:no-underline ${fontMedium}`}>
-            Clear Filters
-          </button>
+      <div className="rounded-[16px] border border-[#e2e8f0] bg-white px-4 pb-2 pt-4 shadow-[0_1px_2px_rgba(15,23,42,0.04)]">
+        <div className="flex items-center gap-2 border-b border-[#f1f5f9] pb-3">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0f172a" strokeWidth="1.8" strokeLinecap="round" aria-hidden="true">
+            <path d="M4 6h16M7 12h10M10 18h4" />
+          </svg>
+          <span className={`flex-1 text-[17px] leading-[24px] text-[#0f172a] ${fontSemi}`}>Filters</span>
+          {activeChips.length > 0 && (
+            <button type="button" onClick={clearAll} className={`flex items-center gap-1 rounded-full px-2 py-1 text-[12px] text-[#64748b] transition hover:bg-[#fef2f2] hover:text-[#dc2626] ${fontMedium}`}>
+              Clear all
+              <span className={`rounded-full bg-[#0f172a] px-1.5 text-[11px] leading-[16px] text-white tabular-nums ${fontSemi}`}>{activeChips.length}</span>
+            </button>
+          )}
         </div>
-        <FilterSection title="Price">
-          {["Paid", "Free"].map((v) => (
-            <Option key={v} label={v} count={count("price", (c) => (c.price === 0 ? "Free" : "Paid") === v)} checked={filters.price.includes(v)} onToggle={() => toggle("price", v)} />
-          ))}
-        </FilterSection>
-        <FilterSection title="Category">
-          {categories.map(({ name }) => (
-            <Option key={name} label={name} count={count("category", (c) => c.category === name)} checked={filters.category.includes(name)} onToggle={() => toggle("category", name)} />
-          ))}
-        </FilterSection>
-        {subOptions.length > 0 && (
-          <FilterSection title="Subcategory">
-            {subOptions.map((sub) => (
-              <Option key={sub} label={sub} count={count("sub", (c) => c.subcategory === sub)} checked={filters.sub.includes(sub)} onToggle={() => toggle("sub", sub)} />
+        <div className="divide-y divide-[#f1f5f9]">
+          <FilterSection title="Price" selected={filters.price.length}>
+            <Chips options={["Free", "Paid"].map((v) => ({ label: v, count: count("price", (c) => (c.price === 0 ? "Free" : "Paid") === v), checked: filters.price.includes(v), onToggle: () => toggle("price", v) }))} />
+          </FilterSection>
+          <FilterSection title="Category" selected={filters.category.length}>
+            <ShowMore>
+              {categories.map(({ name }) => (
+                <Option key={name} label={name} count={count("category", (c) => c.category === name)} checked={filters.category.includes(name)} onToggle={() => toggle("category", name)} />
+              ))}
+            </ShowMore>
+          </FilterSection>
+          {subOptions.length > 0 && (
+            <FilterSection title="Subcategory" selected={filters.sub.length}>
+              <ShowMore>
+                {subOptions.map((sub) => (
+                  <Option key={sub} label={sub} count={count("sub", (c) => c.subcategory === sub)} checked={filters.sub.includes(sub)} onToggle={() => toggle("sub", sub)} />
+                ))}
+              </ShowMore>
+            </FilterSection>
+          )}
+          <FilterSection title="Rating" selected={filters.rating === null ? 0 : 1}>
+            {ratingSteps.map((r) => (
+              <Option
+                key={r}
+                label={`${r} & up`}
+                prefix={<Stars value={r} />}
+                count={count("rating", (c) => c.rating >= r)}
+                checked={filters.rating === r}
+                onToggle={() => setFilters((f) => ({ ...f, rating: f.rating === r ? null : r }))}
+              />
             ))}
           </FilterSection>
-        )}
-        <FilterSection title="Format">
-          {["Recorded", "Live cohort"].map((v) => (
-            <Option key={v} label={v} count={count("format", (c) => formatOf(c) === v)} checked={filters.format.includes(v)} onToggle={() => toggle("format", v)} />
-          ))}
-        </FilterSection>
-        <FilterSection title="Course length">
-          {lengthBuckets.map((b) => (
-            <Option key={b.label} label={b.label} count={count("length", (c) => b.test(c.hours))} checked={filters.length.includes(b.label)} onToggle={() => toggle("length", b.label)} />
-          ))}
-        </FilterSection>
-        <FilterSection title="Ratings">
-          {ratingSteps.map((r) => (
-            <Option
-              key={r}
-              label={`${r} & up`}
-              prefix={<Stars value={r} />}
-              count={count("rating", (c) => c.rating >= r)}
-              checked={filters.rating === r}
-              onToggle={() => setFilters((f) => ({ ...f, rating: f.rating === r ? null : r }))}
-            />
-          ))}
-        </FilterSection>
-        <FilterSection title="Level">
-          {["Beginner", "Intermediate", "Advanced"].map((v) => (
-            <Option key={v} label={v} count={count("level", (c) => c.level === v)} checked={filters.level.includes(v)} onToggle={() => toggle("level", v)} />
-          ))}
-        </FilterSection>
-        <FilterSection title="Language">
-          {["English", "Arabic"].map((v) => (
-            <Option key={v} label={v} count={count("language", (c) => languageOf(c) === v)} checked={filters.language.includes(v)} onToggle={() => toggle("language", v)} />
-          ))}
-        </FilterSection>
-        <FilterSection title="Topics">
-          <div className="flex flex-wrap gap-2">
-            {allTopics.map((t) => {
-              const on = filters.topics.includes(t);
-              return (
-                <button key={t} type="button" aria-pressed={on} onClick={() => toggle("topics", t)} className={`rounded-[6px] border px-2.5 py-1.5 text-[12px] transition ${fontMedium} ${on ? "border-[#0d5c4b] bg-[#0d5c4b] text-white" : "border-[#e2e8f0] text-[#334155] hover:border-[#0d5c4b]"}`}>
-                  {t}
-                </button>
-              );
-            })}
-          </div>
-        </FilterSection>
+          <FilterSection title="Format" selected={filters.format.length}>
+            <Chips options={["Recorded", "Live cohort"].map((v) => ({ label: v, count: count("format", (c) => formatOf(c) === v), checked: filters.format.includes(v), onToggle: () => toggle("format", v) }))} />
+          </FilterSection>
+          <FilterSection title="Level" selected={filters.level.length}>
+            <Chips options={["Beginner", "Intermediate", "Advanced"].map((v) => ({ label: v, count: count("level", (c) => c.level === v), checked: filters.level.includes(v), onToggle: () => toggle("level", v) }))} />
+          </FilterSection>
+          <FilterSection title="Course length" selected={filters.length.length} defaultOpen={false}>
+            {lengthBuckets.map((b) => (
+              <Option key={b.label} label={b.label} count={count("length", (c) => b.test(c.hours))} checked={filters.length.includes(b.label)} onToggle={() => toggle("length", b.label)} />
+            ))}
+          </FilterSection>
+          <FilterSection title="Language" selected={filters.language.length} defaultOpen={false}>
+            <Chips options={["English", "Arabic"].map((v) => ({ label: v, count: count("language", (c) => languageOf(c) === v), checked: filters.language.includes(v), onToggle: () => toggle("language", v) }))} />
+          </FilterSection>
+          <FilterSection title="Topics" selected={filters.topics.length} defaultOpen={false}>
+            <div className="flex flex-wrap gap-1.5">
+              {allTopics.map((t) => {
+                const on = filters.topics.includes(t);
+                return (
+                  <button key={t} type="button" aria-pressed={on} onClick={() => toggle("topics", t)} className={`h-7 rounded-full border px-2.5 text-[12px] transition ${on ? `border-[#0d5c4b] bg-[#0d5c4b] text-white ${fontSemi}` : `border-[#e2e8f0] text-[#334155] hover:border-[#94a3b8] ${fontMedium}`}`}>
+                    {t}
+                  </button>
+                );
+              })}
+            </div>
+          </FilterSection>
+        </div>
       </div>
     </div>
   );

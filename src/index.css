@@ -70,6 +70,9 @@
 @utility h-below-header {
   height: calc(100dvh - 64px);
 }
+@utility h-learn-panel {
+  height: calc(100dvh - 72px);
+}
 @utility grid-cols-guide {
   grid-template-columns: minmax(0, 1fr) 340px;
 }
@@ -435,4 +438,16 @@ body {
   .float-y {
     animation: none;
   }
+}
+
+/* Light sweep across award badges on the course page. */
+@keyframes badge-shine {
+  0%, 60% { background-position: 150% 0; }
+  100% { background-position: -100% 0; }
+}
+
+/* Slow drift for the glows behind the featured course card. */
+@keyframes feat-drift {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(40px, 24px) scale(1.12); }
 }

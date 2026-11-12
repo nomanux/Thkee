@@ -135,47 +135,44 @@ function LessonMeta({ lesson }: { lesson: Lesson }) {
   )
 }
 
-function SectionStatus({
-  done,
-  total,
-  active,
-}: {
-  done: number
-  total: number
-  active: boolean
-}) {
-  if (done === total)
+// Looks for the course content list: "classic" (section bands, tick-off checkboxes), "minimal" (type-led, quiet), "timeline" (rail with status dots) or "checklist" (type icon left, status right).
+const CURRICULUM_STYLE = "classic" as "classic" | "minimal" | "timeline" | "checklist"
+
+function KindIcon({ kind, className = "size-4" }: { kind: Lesson["kind"]; className?: string }) {
+  if (kind === "assignment")
     return (
-      <Svg className="size-5 text-[#16a34a]" stroke={2.4}>
-        <path d="M5 12l5 5 9-10" />
+      <Svg className={className}>
+        <path d="M8 4h8v3H8zM6 6H5v15h14V6h-1M9 12h6M9 16h4" />
       </Svg>
     )
-  if (done > 0 || active) {
-    const pct = Math.max(0.12, done / total)
+  if (kind === "quiz")
     return (
-      <svg viewBox="0 0 24 24" className="size-5 -rotate-90" aria-hidden="true">
-        <circle
-          cx="12"
-          cy="12"
-          r="9"
-          fill="none"
-          stroke="#dcfce7"
-          strokeWidth="2.5"
-        />
-        <circle
-          cx="12"
-          cy="12"
-          r="9"
-          fill="none"
-          stroke="#16a34a"
-          strokeWidth="2.5"
-          strokeDasharray={`${pct * 56.5} 56.5`}
-          strokeLinecap="round"
-        />
-      </svg>
+      <Svg className={className}>
+        <path d="M9 9a3 3 0 115 2.2c-.8.5-1.5 1.1-1.5 2.3M12 17h.01" />
+        <circle cx="12" cy="12" r="9" />
+      </Svg>
     )
-  }
-  return <span className="size-5 rounded-full border-2 border-[#cbd5e1]" />
+  if (kind === "article")
+    return (
+      <Svg className={className}>
+        <path d="M4 5a2 2 0 012-2h6v18H6a2 2 0 01-2-2zM12 3h6a2 2 0 012 2v14a2 2 0 01-2 2h-6" />
+      </Svg>
+    )
+  return (
+    <Svg className={className}>
+      <path d="M8 5.5v13l10.5-6.5z" />
+    </Svg>
+  )
+}
+
+const lessonLength = (l: Lesson) =>
+  l.kind === "quiz" ? `${QUIZ_LENGTH} questions` : l.kind === "assignment" ? `${ASSIGNMENT_QUESTIONS.length} tasks` : `${l.minutes} min`
+
+const kindLabel: Record<Lesson["kind"], string> = {
+  video: "Video",
+  article: "Article",
+  quiz: "Quiz",
+  assignment: "Assignment",
 }
 
 export default function LearnPage({ id }: { id: string }) {
@@ -250,7 +247,6 @@ function Player({ course }: { course: Course }) {
   const [notes, setNotes] = useLocal<Note[]>(`thkee.notes2.${course.id}`, [])
   const [editNoteId, setEditNoteId] = useState<number | null>(null)
   const [assignments, setAssignments] = useLocal<Record<string, AssignmentState>>(`thkee.asg.${course.id}`, {})
-  const [tip, setTip] = useState<{ si: number; top: number; right: number } | null>(null)
   const [quizResults, setQuizResults] = useLocal<Record<string, QuizResult>>(
     `thkee.quiz.${course.id}`,
     {},
@@ -274,6 +270,12 @@ function Player({ course }: { course: Course }) {
 
   const markDone = (lesson: FlatLesson) =>
     setProgress((p) => (p.done.includes(lesson.key) ? p : { ...p, done: [...p.done, lesson.key] }))
+
+  const toggleDone = (lesson: FlatLesson) =>
+    setProgress((p) => ({
+      ...p,
+      done: p.done.includes(lesson.key) ? p.done.filter((k) => k !== lesson.key) : [...p.done, lesson.key],
+    }))
 
   const complete = (lesson: FlatLesson) => {
     setProgress((p) =>
@@ -374,7 +376,7 @@ function Player({ course }: { course: Course }) {
 
   const minutesLabel = (mins: number) => {
     const h = Math.floor(mins / 60)
-    return h ? `${h}hrs${mins % 60 ? `${mins % 60}min` : ""}` : `${mins}min`
+    return h ? `${h}h${mins % 60 ? ` ${mins % 60}m` : ""}` : `${mins} min`
   }
 
   const initials = (user?.name ?? "Guest")
@@ -398,89 +400,95 @@ function Player({ course }: { course: Course }) {
   return (
     <div className="flex min-h-dvh w-full flex-col bg-[#f8fafc]">
       {/* Header */}
-      <header className="sticky top-0 z-[100] flex h-[64px] items-center gap-4 bg-[#0f172a] px-4 md:h-[72px] md:px-8">
-        <button
-          type="button"
-          onClick={goHome}
-          aria-label="Thkee home"
-          className="shrink-0"
-        >
-          <img
-            src="/assets/820a1.svg"
-            alt="Thkee"
-            className="h-[26px] w-[88px] md:h-[28px] md:w-[95px]"
-          />
-        </button>
-        <span className="hidden h-8 w-px bg-white/25 md:block" />
-        <h1
-          dir="auto"
-          className={`m-0 hidden min-w-0 flex-1 truncate text-left text-[18px] text-white md:block ${fontFor(course.title, fontMedium, "font-medium")}`}
-        >
-          {course.title}
-        </h1>
-        <div className="ml-auto flex shrink-0 items-center gap-3 md:gap-5">
+      <header className="sticky top-0 z-100 flex h-16 items-center gap-3 border-b border-white/10 bg-slate-900 px-3 md:h-18 md:gap-4 md:px-6">
+        <div className="group relative shrink-0">
           <button
             type="button"
-            onClick={() =>
-              window.history.length > 1 ? window.history.back() : goHome()
-            }
-            className={`flex h-[38px] items-center gap-2 rounded-[6px] border border-white/80 px-3 text-[14px] text-white transition hover:bg-white hover:text-[#0f172a] md:px-4 md:text-[15px] ${fontMedium}`}
+            onClick={() => (window.history.length > 1 ? window.history.back() : goHome())}
+            aria-label="Back to my classes"
+            className="flex size-9 items-center justify-center rounded-lg text-slate-300 transition hover:bg-white/10 hover:text-white"
           >
-            <Svg className="size-4" stroke={2}>
-              <path d="M19 12H5M11 6l-6 6 6 6" />
+            <Svg className="size-5" stroke={2}>
+              <path d="M15 6l-6 6 6 6" />
             </Svg>
-            <span className="hidden sm:inline">Back to classes</span>
           </button>
-          <button
-            type="button"
-            onClick={certificate}
-            aria-label={percent === 100 ? "Get certificate" : `${percent}% completed`}
-            className={`hidden items-center gap-2.5 text-[15px] transition sm:flex ${percent === 100 ? "text-[#4ade80] hover:text-[#86efac]" : "text-white hover:text-white/80"} ${fontSemi}`}
-          >
-            <span className="relative flex size-[36px] items-center justify-center">
-              <svg viewBox="0 0 40 40" className="absolute inset-0 -rotate-90" aria-hidden="true">
-                <circle cx="20" cy="20" r="18" fill="none" stroke="#e2e8f0" strokeOpacity="0.35" strokeWidth="3" />
-                <circle
-                  cx="20"
-                  cy="20"
-                  r="18"
-                  fill="none"
-                  stroke="#4ade80"
-                  strokeWidth="3"
-                  strokeLinecap="round"
-                  strokeDasharray={`${(percent / 100) * 113.1} 113.1`}
-                  className="transition-[stroke-dasharray] duration-700"
-                />
-              </svg>
-              <span className="flex size-[26px] items-center justify-center rounded-full bg-[#334155]">
-                <svg viewBox="0 0 24 24" className="size-[18px]" aria-hidden="true">
-                  <path d="M8 14l-2.5 6 3-1 1.5 2.5L12 16M16 14l2.5 6-3-1-1.5 2.5L12 16" fill="white" />
-                  <circle cx="12" cy="10" r="6" fill="#ffb20d" />
-                  <path d="M12 6.8l.95 1.95 2.15.3-1.55 1.5.37 2.13L12 11.65l-1.92 1.03.37-2.13L8.9 9.05l2.15-.3z" fill="#1e293b" />
-                </svg>
-              </span>
+          <span className={`pointer-events-none absolute left-0 top-full mt-2 whitespace-nowrap rounded-md bg-white px-2.5 py-1.5 text-xs text-slate-900 opacity-0 shadow-popover transition group-hover:opacity-100 ${fontMedium}`}>
+            Back to my classes
+          </span>
+        </div>
+
+        <button type="button" onClick={goHome} aria-label="Thkee home" className="shrink-0">
+          <img src="/assets/820a1.svg" alt="Thkee" className="h-6 w-auto md:h-7" />
+        </button>
+
+        <span className="hidden h-7 w-px bg-white/15 md:block" aria-hidden="true" />
+
+        <div className="hidden min-w-0 flex-1 flex-col md:flex">
+          <h1 dir="auto" className={`m-0 truncate text-start text-15 leading-tight text-white ${fontFor(course.title, fontSemi)}`}>
+            {course.title}
+          </h1>
+          <p dir="auto" className={`truncate text-start text-xs leading-tight text-slate-400 ${fontRegular}`}>
+            <span className="tabular-nums">
+              Lesson {current.index + 1} of {flat.length}
             </span>
-            <span className="hidden lg:inline">{percent === 100 ? "Get certificate" : `${percent}% Completed`}</span>
-          </button>
+            <span className="mx-1.5 text-slate-600" aria-hidden="true">/</span>
+            {current.title}
+          </p>
+        </div>
+
+        <div className="ml-auto flex shrink-0 items-center gap-1.5 md:gap-3">
+          {percent === 100 ? (
+            <button
+              type="button"
+              onClick={certificate}
+              className={`flex h-9 items-center gap-2 rounded-lg bg-secondary-500 px-3.5 text-sm text-slate-900 transition hover:bg-secondary-600 ${fontSemi}`}
+            >
+              <Svg className="size-4" stroke={2}>
+                <circle cx="12" cy="9" r="6" />
+                <path d="M8.5 14L7 21l5-3 5 3-1.5-7" />
+              </Svg>
+              <span className="hidden sm:inline">Get certificate</span>
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={certificate}
+              title="Finish every lesson to get your certificate"
+              aria-label={`${percent}% complete. Finish every lesson to get your certificate`}
+              className="flex h-9 items-center gap-3 rounded-lg px-2.5 transition hover:bg-white/10"
+            >
+              <span className="hidden flex-col items-end gap-1 sm:flex">
+                <span className={`text-xs leading-none text-slate-300 ${fontRegular}`}>
+                  <span className={`tabular-nums text-white ${fontSemi}`}>{percent}%</span> complete
+                </span>
+                <span className="h-1 w-28 overflow-hidden rounded-full bg-white/15" aria-hidden="true">
+                  <span className="block h-full rounded-full bg-primary-400 transition-all duration-700" style={{ width: `${percent}%` }} />
+                </span>
+              </span>
+              <span className={`text-sm tabular-nums text-white sm:hidden ${fontSemi}`}>{percent}%</span>
+            </button>
+          )}
+
+          <span className="hidden h-6 w-px bg-white/15 sm:block" aria-hidden="true" />
+
           <div className="group relative hidden sm:block">
             <button
               type="button"
               onClick={openNotes}
-              aria-label="Notes & highlights"
-              className="flex size-[36px] items-center justify-center rounded-[8px] bg-white/15 text-white transition hover:bg-white/25"
+              aria-label="Notes and highlights"
+              className="flex size-9 items-center justify-center rounded-lg text-slate-300 transition hover:bg-white/10 hover:text-white"
             >
               <Svg className="size-5">
                 <path d="M14 3H7a2 2 0 00-2 2v14a2 2 0 002 2h10a2 2 0 002-2V8zM14 3v5h5M9 13h6M9 17h4" />
               </Svg>
             </button>
-            <span
-              className={`pointer-events-none absolute right-0 top-[calc(100%+10px)] whitespace-nowrap rounded-[6px] bg-white px-3 py-2 text-[13px] text-[#1e293b] opacity-0 shadow-[0_8px_20px_rgba(15,23,42,0.15)] transition group-hover:opacity-100 ${fontRegular}`}
-            >
-              Note &amp; Highlights
+            <span className={`pointer-events-none absolute right-0 top-full mt-2 whitespace-nowrap rounded-md bg-white px-2.5 py-1.5 text-xs text-slate-900 opacity-0 shadow-popover transition group-hover:opacity-100 ${fontMedium}`}>
+              Notes and highlights
             </span>
           </div>
+
           <span
-            className={`flex size-[38px] items-center justify-center rounded-full bg-[#ffb20d] text-[14px] text-[#1e293b] ring-2 ring-white/30 ${fontSemi}`}
+            className={`ml-1 flex size-8 items-center justify-center rounded-full bg-secondary-500 text-xs text-slate-900 ${fontSemi}`}
             title={user?.name ?? "Guest"}
           >
             {initials}
@@ -953,162 +961,377 @@ function Player({ course }: { course: Course }) {
 
           {/* Course content sidebar */}
           {sidebar ? (
-            <aside className="relative border-l border-[#e2e8f0] bg-white lg:sticky lg:top-[72px] lg:h-[calc(100dvh-72px)] lg:overflow-y-auto">
+            <aside className="lg:h-learn-panel relative flex flex-col border-l border-slate-200 bg-white lg:sticky lg:top-18">
               <button
                 type="button"
                 onClick={() => setSidebar(false)}
                 aria-label="Hide course content"
-                className="absolute -left-3 top-[50px] hidden size-6 items-center justify-center rounded-full border border-[#e2e8f0] bg-white text-[#475569] shadow-sm hover:text-[#0f172a] lg:flex"
+                className="absolute -left-3 top-7 z-20 hidden size-6 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-500 shadow-card transition hover:text-slate-900 lg:flex"
               >
                 <Svg className="size-3.5" stroke={2.4}>
                   <path d="M9 6l6 6-6 6" />
                 </Svg>
               </button>
-              <div className="flex items-center justify-between gap-3 border-b border-[#e2e8f0] px-6 py-5">
-                <h2 className={`m-0 text-[17px] text-[#0f172a] ${fontBold}`}>
-                  Course Content
-                </h2>
-                <span className={`text-[13px] text-[#64748b] ${fontMedium}`}>
-                  {doneCount}/{flat.length} · {percent}%
-                </span>
-              </div>
-              <div className="px-6 py-4">
-                <label className="field-box">
-                  <Svg className="size-[18px] text-[#0f172a]" stroke={2}>
+
+              <div className="flex flex-col gap-4 border-b border-slate-200 px-5 pb-4 pt-5">
+                <div className="flex items-baseline justify-between gap-3">
+                  <h2 className={`m-0 text-lg text-slate-900 ${fontHeading}`} style={{ fontVariationSettings: '"wdth" 100' }}>
+                    Course content
+                  </h2>
+                  <span className={`text-sm tabular-nums text-slate-900 ${fontSemi}`}>{percent}%</span>
+                </div>
+                <div className="flex flex-col gap-2">
+                  <div
+                    className="h-1 w-full overflow-hidden rounded-full bg-slate-100"
+                    role="progressbar"
+                    aria-valuenow={percent}
+                    aria-valuemin={0}
+                    aria-valuemax={100}
+                    aria-label="Course progress"
+                  >
+                    <div className="h-full rounded-full bg-primary-700 transition-all duration-700" style={{ width: `${percent}%` }} />
+                  </div>
+                  <span className={`text-xs tabular-nums text-slate-500 ${fontRegular}`}>
+                    {doneCount} of {flat.length} lessons · {minutesLabel(flat.reduce((m, l) => m + l.minutes, 0))} total
+                  </span>
+                </div>
+                <label className="flex h-9 items-center gap-2 rounded-lg bg-slate-100 px-3 transition focus-within:bg-white focus-within:ring-1 focus-within:ring-slate-300">
+                  <Svg className="size-4 text-slate-400" stroke={2}>
                     <circle cx="11" cy="11" r="7" />
                     <path d="M20 20l-3.5-3.5" />
                   </Svg>
                   <input
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
-                    placeholder="Search here"
+                    placeholder="Search lessons"
                     aria-label="Search lessons"
-                    className={`min-w-0 flex-1 bg-transparent text-[16px] md:text-[14px] text-[#0f172a] outline-none placeholder:text-slate-400 ${fontRegular}`}
+                    className={`min-w-0 flex-1 bg-transparent text-base text-slate-900 outline-none placeholder:text-slate-400 md:text-sm ${fontRegular}`}
                   />
-                </label>
-              </div>
-              {sectionView.length === 0 && (
-                <p
-                  className={`px-6 pb-6 text-[14px] text-[#64748b] ${fontRegular}`}
-                >
-                  No lessons match “{search}”.
-                </p>
-              )}
-              {sectionView.map((s) => {
-                const all = flat.filter((l) => l.section === s.si)
-                const done = all.filter((l) =>
-                  progress.done.includes(l.key),
-                ).length
-                const open = !!q || openSections.includes(s.si)
-                return (
-                  <div
-                    key={s.si}
-                    className="relative border-b border-[#e2e8f0]"
-                    onMouseEnter={(e) => {
-                      const r = e.currentTarget.getBoundingClientRect()
-                      setTip({ si: s.si, top: r.top + 8, right: window.innerWidth - r.left + 12 })
-                    }}
-                    onMouseLeave={() => setTip(null)}
-                  >
-                    {tip?.si === s.si && (
-                    <span
-                      role="tooltip"
-                      style={{ top: tip.top, right: tip.right }}
-                      className={`pointer-events-none fixed z-[120] hidden w-max rounded-[6px] bg-[#0f172a] px-4 py-3 text-white shadow-[0_12px_30px_rgba(0,0,0,0.3)] lg:block ${fontRegular}`}
-                    >
-                      <span className={`block text-[14px] ${fontMedium}`}>
-                        {s.title.replace(/^\d+\.\s*/, "")}
-                      </span>
-                      <span className="mt-2 block text-[13px] text-white/70">
-                        {done}/{all.length} Completed
-                        <span className="mx-2 text-white/30">|</span>
-                        {minutesLabel(all.reduce((m, l) => m + l.minutes, 0))}
-                      </span>
-                    </span>
-                    )}
-                    <button
-                      type="button"
-                      aria-expanded={open}
-                      onClick={() =>
-                        setOpenSections((list) =>
-                          list.includes(s.si)
-                            ? list.filter((x) => x !== s.si)
-                            : [...list, s.si],
-                        )
-                      }
-                      className="flex w-full items-center gap-3 px-6 py-4 text-left hover:bg-[#f8fafc]"
-                    >
-                      <SectionStatus
-                        done={done}
-                        total={all.length}
-                        active={current.section === s.si}
-                      />
-                      <span
-                        className={`flex-1 text-[15px] text-[#1e293b] ${fontSemi}`}
-                      >
-                        {s.title.replace(/^\d+\.\s*/, "")}
-                      </span>
-                      <Svg
-                        className={`size-5 text-[#94a3b8] transition-transform ${
-                          open ? "rotate-180 text-[#0f172a]" : ""
-                        }`}
-                        stroke={2}
-                      >
-                        <path d="M6 9l6 6 6-6" />
+                  {search && (
+                    <button type="button" onClick={() => setSearch("")} aria-label="Clear search" className="flex size-5 items-center justify-center rounded-full text-slate-400 transition hover:text-slate-700">
+                      <Svg className="size-3.5" stroke={2.2}>
+                        <path d="M6 6l12 12M18 6L6 18" />
                       </Svg>
                     </button>
-                    {open && (
-                      <ol className="relative pb-2">
-                        <span
-                          aria-hidden="true"
-                          className="absolute bottom-6 left-[32px] top-4 w-[2px] bg-[#e2e8f0]"
-                        />
-                        {s.items.map((l) => {
-                          const isDone = progress.done.includes(l.key)
-                          const isCurrent = l.key === current.key
-                          return (
-                            <li key={l.key}>
-                              <button
-                                type="button"
-                                onClick={() => goTo(l)}
-                                className={`relative flex w-full items-start gap-4 py-3 pl-[25px] pr-6 text-left transition ${
-                                  isCurrent
-                                    ? "bg-[#e7eef6]"
-                                    : "hover:bg-[#f8fafc]"
-                                }`}
-                              >
-                                <span
-                                  className={`relative z-[1] mt-0.5 size-4 shrink-0 rounded-full ${
-                                    isDone
-                                      ? "bg-[#16a34a]"
-                                      : isCurrent
-                                        ? "border-2 border-[#16a34a] bg-white"
-                                        : "border-2 border-[#cbd5e1] bg-white"
-                                  }`}
-                                />
-                                <span
-                                  className={`min-w-0 flex-1 text-[13px] leading-[20px] ${
-                                    isCurrent
-                                      ? "text-[#0f172a]"
-                                      : "text-[#334155]"
-                                  } ${isCurrent ? fontMedium : fontRegular}`}
-                                >
-                                  {l.title}
-                                </span>
-                                <span
-                                  className={`shrink-0 pt-0.5 text-[11px] text-[#64748b] ${fontRegular}`}
-                                >
-                                  <LessonMeta lesson={l} />
-                                </span>
-                              </button>
-                            </li>
+                  )}
+                </label>
+              </div>
+
+              <div className="scrollbar-thin min-h-0 flex-1 overflow-y-auto">
+                {sectionView.length === 0 && (
+                  <p className={`px-5 py-8 text-center text-sm text-slate-500 ${fontRegular}`}>
+                    No lessons match "{search}".
+                  </p>
+                )}
+                {sectionView.map((s) => {
+                  const all = flat.filter((l) => l.section === s.si)
+                  const done = all.filter((l) => progress.done.includes(l.key)).length
+                  const open = !!q || openSections.includes(s.si)
+                  const isCurrentSection = current.section === s.si
+                  return (
+                    <div key={s.si} className="border-b border-slate-150 last:border-b-0">
+                      <button
+                        type="button"
+                        aria-expanded={open}
+                        onClick={() =>
+                          setOpenSections((list) =>
+                            list.includes(s.si) ? list.filter((x) => x !== s.si) : [...list, s.si],
                           )
-                        })}
-                      </ol>
-                    )}
-                  </div>
-                )
-              })}
+                        }
+                        className={`group flex w-full items-center gap-3 px-5 text-left transition-colors ${CURRICULUM_STYLE === "classic" ? "bg-slate-50 py-3.5 hover:bg-slate-100" : CURRICULUM_STYLE === "minimal" ? "py-4" : `py-4 hover:bg-slate-50 ${open ? "bg-slate-25" : ""}`}`}
+                      >
+                        {CURRICULUM_STYLE === "classic" ? (
+                          <span className="flex min-w-0 flex-1 flex-col gap-1">
+                            <span className={`text-sm leading-snug text-slate-900 ${fontSemi}`}>
+                              Section {s.si + 1}: {s.title.replace(/^\d+\.\s*/, "")}
+                            </span>
+                            <span className={`flex items-center gap-2 text-xs tabular-nums text-slate-500 ${fontRegular}`}>
+                              <span className={done === all.length ? `text-primary-700 ${fontMedium}` : ""}>
+                                {done} / {all.length}
+                              </span>
+                              <span className="h-3 w-px bg-slate-300" aria-hidden="true" />
+                              {minutesLabel(all.reduce((m, l) => m + l.minutes, 0))}
+                            </span>
+                          </span>
+                        ) : CURRICULUM_STYLE === "minimal" ? (
+                          <>
+                            <span className="flex min-w-0 flex-1 flex-col gap-1">
+                              <span className={`text-15 leading-snug text-slate-900 transition-colors group-hover:text-primary-700 ${fontHeading}`} style={{ fontVariationSettings: '"wdth" 100' }}>
+                                {s.title.replace(/^\d+\.\s*/, "")}
+                              </span>
+                              <span className={`text-xs tabular-nums text-slate-400 ${fontRegular}`}>
+                                {all.length} lessons · {minutesLabel(all.reduce((m, l) => m + l.minutes, 0))}
+                              </span>
+                            </span>
+                            <span className={`flex shrink-0 items-center gap-1 text-xs tabular-nums ${done === all.length ? "text-primary-700" : "text-slate-500"} ${fontMedium}`}>
+                              {done === all.length ? (
+                                <>
+                                  <Svg className="size-3.5" stroke={2.4}>
+                                    <path d="M5 12l5 5 9-10" />
+                                  </Svg>
+                                  Completed
+                                </>
+                              ) : (
+                                `${done}/${all.length}`
+                              )}
+                            </span>
+                          </>
+                        ) : CURRICULUM_STYLE === "timeline" ? (
+                          <>
+                        <span className="flex min-w-0 flex-1 flex-col gap-2">
+                          <span className="flex flex-col gap-0.5">
+                            <span className={`text-15 leading-snug text-slate-900 ${fontSemi}`}>
+                              {s.title.replace(/^\d+\.\s*/, "")}
+                            </span>
+                            <span className={`text-xs text-slate-500 ${fontRegular}`}>
+                              Section {s.si + 1} · {all.length} lessons · {minutesLabel(all.reduce((m, l) => m + l.minutes, 0))}
+                            </span>
+                          </span>
+                          <span className="flex items-center gap-2.5">
+                            <span className="h-1 flex-1 overflow-hidden rounded-full bg-slate-100" aria-hidden="true">
+                              <span
+                                className={`block h-full rounded-full transition-all duration-500 ${done === all.length ? "bg-primary-700" : "bg-primary-400"}`}
+                                style={{ width: `${(done / all.length) * 100}%` }}
+                              />
+                            </span>
+                            {done === all.length ? (
+                              <span className={`flex items-center gap-1 text-xs text-primary-700 ${fontSemi}`}>
+                                <Svg className="size-3.5" stroke={2.6}>
+                                  <path d="M5 12l5 5 9-10" />
+                                </Svg>
+                                Completed
+                              </span>
+                            ) : (
+                              <span className={`text-xs ${done > 0 || isCurrentSection ? "text-slate-700" : "text-slate-400"} ${fontMedium}`}>
+                                {done}/{all.length} done
+                              </span>
+                            )}
+                          </span>
+                        </span>
+                          </>
+                        ) : (
+                          <>
+                        <span className="flex min-w-0 flex-1 flex-col gap-0.5">
+                          <span className={`text-15 leading-snug text-slate-900 ${fontSemi}`}>
+                            {s.title.replace(/^\d+\.\s*/, "")}
+                          </span>
+                          <span className={`text-xs text-slate-500 ${fontRegular}`}>
+                            {all.length} lessons · {minutesLabel(all.reduce((m, l) => m + l.minutes, 0))}
+                          </span>
+                        </span>
+                        {done === all.length ? (
+                          <span className={`flex shrink-0 items-center gap-1 rounded-full bg-primary-50 px-2 py-1 text-xs text-primary-700 ${fontSemi}`}>
+                            <Svg className="size-3.5" stroke={2.6}>
+                              <path d="M5 12l5 5 9-10" />
+                            </Svg>
+                            Done
+                          </span>
+                        ) : (
+                          <span
+                            className={`shrink-0 rounded-full px-2 py-1 text-xs ${fontSemi} ${
+                              done > 0 || isCurrentSection ? "bg-primary-50 text-primary-700" : "bg-slate-100 text-slate-500"
+                            }`}
+                          >
+                            {done}/{all.length}
+                          </span>
+                        )}
+                          </>
+                        )}
+                        <span className={`flex size-7 shrink-0 items-center justify-center rounded-lg text-slate-400 transition group-hover:bg-white group-hover:text-slate-700 ${open ? "text-slate-700" : ""}`}>
+                          <Svg className={`size-4 transition-transform duration-300 ${open ? "rotate-180" : ""}`} stroke={2.2}>
+                            <path d="M6 9l6 6 6-6" />
+                          </Svg>
+                        </span>
+                      </button>
+
+                      {open && (
+                        <ol className={CURRICULUM_STYLE === "classic" ? "fade-up" : CURRICULUM_STYLE === "minimal" ? "fade-up pb-3" : CURRICULUM_STYLE === "timeline" ? "fade-up pb-2" : "fade-up flex flex-col gap-0.5 pb-3"}>
+                          {s.items.map((l, i) => {
+                            const isDone = progress.done.includes(l.key)
+                            const isCurrent = l.key === current.key
+                            const last = i === s.items.length - 1
+                            return CURRICULUM_STYLE === "classic" ? (
+                              <li key={l.key} className={`flex items-start gap-3 py-3 pl-5 pr-5 transition-colors ${isCurrent ? "bg-slate-100" : "hover:bg-slate-50"}`}>
+                                <button
+                                  type="button"
+                                  role="checkbox"
+                                  aria-checked={isDone}
+                                  aria-label={`Mark "${l.title}" as ${isDone ? "not complete" : "complete"}`}
+                                  onClick={() => toggleDone(l)}
+                                  className={`mt-0.5 flex size-4 shrink-0 items-center justify-center rounded-sm border transition-colors ${
+                                    isDone ? "border-primary-700 bg-primary-700 text-white" : "border-slate-400 bg-white hover:border-slate-600"
+                                  }`}
+                                >
+                                  {isDone && (
+                                    <Svg className="size-3" stroke={3}>
+                                      <path d="M5 12l5 5 9-10" />
+                                    </Svg>
+                                  )}
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => goTo(l)}
+                                  aria-current={isCurrent ? "true" : undefined}
+                                  className="flex min-w-0 flex-1 flex-col gap-1 text-left"
+                                >
+                                  <span className={`text-sm leading-snug ${isCurrent ? `text-slate-900 ${fontSemi}` : `text-slate-800 ${fontRegular}`}`}>
+                                    {l.title}
+                                  </span>
+                                  <span className={`flex items-center gap-1.5 text-xs text-slate-500 ${fontRegular}`}>
+                                    <KindIcon kind={l.kind} className="size-3.5" />
+                                    {lessonLength(l)}
+                                    {isCurrent && playing && <span className={`ml-1 text-primary-700 ${fontMedium}`}>Playing</span>}
+                                  </span>
+                                </button>
+                              </li>
+                            ) : CURRICULUM_STYLE === "minimal" ? (
+                              <li key={l.key}>
+                                <button
+                                  type="button"
+                                  onClick={() => goTo(l)}
+                                  aria-current={isCurrent ? "true" : undefined}
+                                  className="group/lesson relative flex w-full items-start gap-3 py-2 pl-5 pr-5 text-left"
+                                >
+                                  {isCurrent && <span aria-hidden="true" className="absolute inset-y-1.5 left-0 w-0.5 bg-primary-700" />}
+                                  <span className="flex h-5 w-4 shrink-0 items-center text-primary-700">
+                                    {isDone && (
+                                      <Svg className="size-3.5" stroke={2.4}>
+                                        <path d="M5 12l5 5 9-10" />
+                                      </Svg>
+                                    )}
+                                    {isDone && <span className="sr-only">Completed</span>}
+                                  </span>
+                                  <span className="flex min-w-0 flex-1 flex-col">
+                                    <span
+                                      className={`text-sm leading-5 transition-colors ${
+                                        isCurrent
+                                          ? `text-slate-900 ${fontSemi}`
+                                          : isDone
+                                            ? `text-slate-400 group-hover/lesson:text-slate-600 ${fontRegular}`
+                                            : `text-slate-700 group-hover/lesson:text-slate-900 ${fontRegular}`
+                                      }`}
+                                    >
+                                      {l.title}
+                                    </span>
+                                    {isCurrent && (
+                                      <span className={`text-xs text-primary-700 ${fontMedium}`}>{playing ? "Now playing" : "Continue here"}</span>
+                                    )}
+                                  </span>
+                                  <span className={`shrink-0 text-xs leading-5 tabular-nums ${isCurrent ? "text-slate-600" : "text-slate-400"} ${fontRegular}`}>
+                                    {l.kind === "video" ? lessonLength(l) : `${kindLabel[l.kind]} · ${lessonLength(l)}`}
+                                  </span>
+                                </button>
+                              </li>
+                            ) : CURRICULUM_STYLE === "timeline" ? (
+                              <li key={l.key} className="relative">
+                                {!last && (
+                                  <span
+                                    aria-hidden="true"
+                                    className={`absolute -bottom-5.5 left-8.75 top-5.5 z-1 w-0.5 ${isDone ? "bg-primary-400" : "bg-slate-200"}`}
+                                  />
+                                )}
+                                <button
+                                  type="button"
+                                  onClick={() => goTo(l)}
+                                  aria-current={isCurrent ? "true" : undefined}
+                                  className={`group/lesson relative flex w-full items-start gap-3 py-2.5 pl-6 pr-5 text-left transition-colors ${
+                                    isCurrent ? "bg-primary-50" : "hover:bg-slate-50"
+                                  }`}
+                                >
+                                  {isCurrent && <span aria-hidden="true" className="absolute inset-y-1.5 left-0 w-1 rounded-r-full bg-primary-700" />}
+                                  <span
+                                    className={`relative z-2 flex size-6 shrink-0 items-center justify-center rounded-full transition-colors ${
+                                      isDone
+                                        ? "bg-primary-700 text-white"
+                                        : isCurrent
+                                          ? "bg-white text-primary-700 ring-2 ring-primary-700"
+                                          : "bg-white text-slate-400 ring-1 ring-slate-300 group-hover/lesson:ring-slate-400"
+                                    }`}
+                                  >
+                                    {isDone ? (
+                                      <Svg className="size-3.5" stroke={2.8}>
+                                        <path d="M5 12l5 5 9-10" />
+                                      </Svg>
+                                    ) : isCurrent ? (
+                                      <svg viewBox="0 0 24 24" className="ml-0.5 size-2.5" fill="currentColor" aria-hidden="true">
+                                        <path d="M7 4.5v15l12-7.5z" />
+                                      </svg>
+                                    ) : (
+                                      <span className="size-1.5 rounded-full bg-slate-300 transition-colors group-hover/lesson:bg-slate-400" aria-hidden="true" />
+                                    )}
+                                  </span>
+                                  <span className="flex min-w-0 flex-1 flex-col gap-1 pt-0.5">
+                                    <span
+                                      className={`text-sm leading-snug ${
+                                        isCurrent ? `text-slate-900 ${fontSemi}` : isDone ? `text-slate-500 ${fontRegular}` : `text-slate-700 ${fontRegular}`
+                                      }`}
+                                    >
+                                      {l.title}
+                                    </span>
+                                    <span className={`flex items-center gap-2 text-xs ${isCurrent ? "text-primary-700" : "text-slate-400"} ${fontRegular}`}>
+                                      <LessonMeta lesson={l} />
+                                      <span className="size-0.5 rounded-full bg-current opacity-50" aria-hidden="true" />
+                                      {kindLabel[l.kind]}
+                                      {isCurrent && (
+                                        <span className={`ml-auto flex items-center gap-1 rounded-full bg-primary-700 px-2 py-0.5 text-10 uppercase tracking-label text-white ${fontSemi}`}>
+                                          <span className="size-1.5 animate-pulse rounded-full bg-secondary-400" />
+                                          {playing ? "Playing" : "Now"}
+                                        </span>
+                                      )}
+                                    </span>
+                                  </span>
+                                </button>
+                              </li>
+                            ) : (
+                              <li key={l.key} className="px-3">
+                                <button
+                                  type="button"
+                                  onClick={() => goTo(l)}
+                                  aria-current={isCurrent ? "true" : undefined}
+                                  className={`group/lesson flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left transition ${
+                                    isCurrent ? "bg-primary-50 ring-1 ring-primary-200" : "hover:bg-slate-50"
+                                  }`}
+                                >
+                                  <span
+                                    className={`flex size-8 shrink-0 items-center justify-center rounded-lg transition-colors ${
+                                      isCurrent ? "bg-primary-700 text-white shadow-primary-chip" : isDone ? "bg-primary-50 text-primary-700" : "bg-slate-100 text-slate-500 group-hover/lesson:bg-slate-150"
+                                    }`}
+                                  >
+                                    <KindIcon kind={l.kind} />
+                                  </span>
+                                  <span className="flex min-w-0 flex-1 flex-col gap-0.5">
+                                    <span className={`text-sm leading-snug ${isCurrent ? `text-slate-900 ${fontSemi}` : isDone ? `text-slate-500 ${fontRegular}` : `text-slate-800 ${fontRegular}`}`}>
+                                      {l.title}
+                                    </span>
+                                    <span className={`text-xs ${isCurrent ? `text-primary-700 ${fontMedium}` : `text-slate-400 ${fontRegular}`}`}>
+                                      {isCurrent ? `${playing ? "Playing" : "Up now"} · ${lessonLength(l)}` : `${kindLabel[l.kind]} · ${lessonLength(l)}`}
+                                    </span>
+                                  </span>
+                                  {isDone ? (
+                                    <span className="flex size-5 shrink-0 items-center justify-center rounded-full bg-primary-700 text-white" aria-label="Completed">
+                                      <Svg className="size-3" stroke={3}>
+                                        <path d="M5 12l5 5 9-10" />
+                                      </Svg>
+                                    </span>
+                                  ) : isCurrent ? (
+                                    <span className="flex h-4 shrink-0 items-end gap-0.5" aria-hidden="true">
+                                      {[0, 1, 2].map((n) => (
+                                        <span key={n} className={`w-0.5 rounded-full bg-primary-700 ${playing ? "animate-pulse" : ""} ${n === 1 ? "h-4" : n === 0 ? "h-2.5" : "h-3"}`} />
+                                      ))}
+                                    </span>
+                                  ) : (
+                                    <span className="size-5 shrink-0 rounded-full border-2 border-slate-200 transition-colors group-hover/lesson:border-slate-300" aria-hidden="true" />
+                                  )}
+                                </button>
+                              </li>
+                            )
+                          })}
+                        </ol>
+                      )}
+                    </div>
+                  )
+                })}
+              </div>
             </aside>
           ) : (
             <button
@@ -1116,7 +1339,7 @@ function Player({ course }: { course: Course }) {
               onClick={() => setSidebar(true)}
               aria-label="Show course content"
               title="Show course content"
-              className="fixed right-0 top-[112px] z-20 hidden h-8 w-7 items-center justify-center rounded-l-full border border-r-0 border-[#e2e8f0] bg-white pl-1 text-[#475569] shadow-[0_4px_12px_rgba(15,23,42,0.12)] transition hover:w-9 hover:text-[#0f172a] lg:flex"
+              className="fixed right-0 top-28 z-20 hidden h-9 w-8 items-center justify-center rounded-l-xl border border-r-0 border-slate-200 bg-white pl-1 text-slate-500 shadow-panel transition-all hover:w-10 hover:text-primary-700 lg:flex"
             >
               <Svg className="size-4" stroke={2.2}>
                 <path d="M15 6l-6 6 6 6" />

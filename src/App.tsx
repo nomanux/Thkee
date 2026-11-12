@@ -17,6 +17,7 @@ import PurchaseHistoryPage from "./components/PurchaseHistoryPage";
 import RefundRequestPage from "./components/RefundRequestPage";
 import SearchPage from "./components/SearchPage";
 import ComponentsPage from "./components/ComponentsPage";
+import NotFoundPage from "./components/NotFoundPage";
 import CourseDetailsPage from "./components/CourseDetailsPage";
 import HowItWorks from "./components/HowItWorks";
 import Navbar from "./components/Navbar";
@@ -511,6 +512,8 @@ function Site() {
         <TeachPage />
       ) : route.page === "messages" ? (
         <MessagesPage />
+      ) : route.page === "not-found" ? (
+        <NotFoundPage />
       ) : route.page === "components" ? (
         <ComponentsPage />
       ) : route.page === "account" ? (
