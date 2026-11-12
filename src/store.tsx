@@ -13,7 +13,7 @@ export type Overlay =
   | null;
 type Toast = { id: number; message: string };
 export type SearchParams = { q?: string; category?: string; sub?: string; live?: boolean };
-export type Route = { page: "home" } | { page: "login" } | { page: "cart" } | { page: "checkout" } | { page: "my-learning"; tab?: string } | { page: "purchase-history" } | { page: "refund"; orderId: string; courseId: string } | { page: "account"; section: string } | { page: "messages" } | { page: "components" } | { page: "teach" } | { page: "instructor-start" } | { page: "instructor"; newCourse?: boolean; section?: "courses" | "assignments" | "reports" | "reviews" | "qa" | "co-instructors" | "announcements" | "availability" | "apps" | "sessions" | "schedule"; announcementCourse?: string; scheduleId?: string; appsView?: "store" | "installed"; sessionSeries?: string; sessionId?: string; sessionCourse?: string; submissionId?: string; reportView?: "revenue"; reportMonth?: string; questionId?: string; newQuestionCourse?: string } | { page: "live-create"; draftId?: string; section?: string } | { page: "course-editor"; id: string; section?: string } | { page: "learn"; id: string } | { page: "course"; id: string } | ({ page: "search" } & SearchParams);
+export type Route = { page: "home" } | { page: "not-found" } | { page: "login" } | { page: "cart" } | { page: "checkout" } | { page: "my-learning"; tab?: string } | { page: "purchase-history" } | { page: "refund"; orderId: string; courseId: string } | { page: "account"; section: string } | { page: "messages" } | { page: "components" } | { page: "teach" } | { page: "instructor-start" } | { page: "instructor"; newCourse?: boolean; section?: "courses" | "assignments" | "reports" | "reviews" | "qa" | "co-instructors" | "announcements" | "availability" | "apps" | "sessions" | "schedule"; announcementCourse?: string; scheduleId?: string; appsView?: "store" | "installed"; sessionSeries?: string; sessionId?: string; sessionCourse?: string; submissionId?: string; reportView?: "revenue"; reportMonth?: string; questionId?: string; newQuestionCourse?: string } | { page: "live-create"; draftId?: string; section?: string } | { page: "course-editor"; id: string; section?: string } | { page: "learn"; id: string } | { page: "course"; id: string } | ({ page: "search" } & SearchParams);
 
 function parseRoute(): Route {
   // Typing /component or /components goes to the hash route the rest of the app uses.
@@ -65,7 +65,8 @@ function parseRoute(): Route {
   }
   if (hash.startsWith("#/learn/")) return { page: "learn", id: decodeURIComponent(hash.slice("#/learn/".length).split("?")[0]) };
   if (hash.startsWith("#/course/")) return { page: "course", id: decodeURIComponent(hash.slice("#/course/".length).split("?")[0]) };
-  if (!hash.startsWith("#/search")) return { page: "home" };
+  // Unknown app links show the 404 page; an empty hash or a plain anchor is the homepage.
+  if (!hash.startsWith("#/search")) return /^#\/./.test(hash) ? { page: "not-found" } : { page: "home" };
   const p = new URLSearchParams(hash.split("?")[1] ?? "");
   return { page: "search", q: p.get("q") ?? undefined, category: p.get("category") ?? undefined, sub: p.get("sub") ?? undefined, live: p.get("live") === "1" };
 }
@@ -163,7 +164,9 @@ export function useStoredState<T>(key: string, fallback: T) {
 
 function useAppState() {
   const [user, setUser] = useStoredState<User | null>("thkee.user", null);
-  const [cartIds, setCartIds] = useStoredState<string[]>("thkee.cart", []);
+  const SEED_CART = ["prompt-engineering", "ui-ux-figma", "react-modern"];
+  const [cartIds, setCartIds] = useStoredState<string[]>("thkee.cart", SEED_CART);
+  useEffect(() => { if (cartIds.length < 3) setCartIds(SEED_CART); }, []);
   const [purchasedIds, setPurchasedIds] = useStoredState<string[]>("thkee.enrolled", []);
   const enrolledIds = useMemo(() => [...new Set([...STARTER_COURSE_IDS, ...purchasedIds])], [purchasedIds]);
   const [wishlistIds, setWishlistIds] = useStoredState<string[]>("thkee.wishlist", []);
