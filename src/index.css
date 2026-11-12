@@ -451,3 +451,45 @@ body {
   0%, 100% { transform: translate(0, 0) scale(1); }
   50% { transform: translate(40px, 24px) scale(1.12); }
 }
+
+/* Lesson video player */
+@utility max-h-learn-panel {
+  max-height: calc(100dvh - 72px);
+}
+@keyframes player-flash {
+  0% { opacity: 0; transform: scale(0.8); }
+  25% { opacity: 1; transform: scale(1); }
+  100% { opacity: 0; transform: scale(1.25); }
+}
+.player-flash { animation: player-flash 0.65s ease-out forwards; }
+.player-range {
+  appearance: none;
+  height: 4px;
+  border-radius: 9999px;
+  background: linear-gradient(to right, #fff var(--fill, 100%), rgba(255, 255, 255, 0.3) var(--fill, 100%));
+}
+.player-range::-webkit-slider-thumb {
+  appearance: none;
+  width: 12px;
+  height: 12px;
+  border-radius: 9999px;
+  background: #fff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+}
+.player-range::-moz-range-thumb {
+  width: 12px;
+  height: 12px;
+  border: 0;
+  border-radius: 9999px;
+  background: #fff;
+}
+@media (prefers-reduced-motion: reduce) {
+  .player-flash { animation: none; opacity: 0; }
+}
+@utility grid-cols-label {
+  grid-template-columns: 160px minmax(0, 1fr);
+}
+@utility scrollbar-none {
+  scrollbar-width: none;
+  &::-webkit-scrollbar { display: none; }
+}

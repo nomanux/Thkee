@@ -1,0 +1,173 @@
+- generic [ref=f1e3]:
+  - banner [ref=f1e4]:
+    - generic [ref=f1e5]:
+      - button "Back to my classes" [ref=f1e6]
+      - generic: Back to my classes
+    - button "Thkee home" [ref=f1e9]:
+      - img "Thkee" [ref=f1e10]
+    - generic [ref=f1e12]:
+      - 'heading "Python Programming: From Zero to Hero" [level=1] [ref=f1e13]'
+      - paragraph [ref=f1e14]:
+        - generic [ref=f1e15]: Lesson 1 of 36
+        - text: /Welcome to the course
+    - generic [ref=f1e16]:
+      - button "0% complete. Finish every lesson to get your certificate" [ref=f1e17]:
+        - generic [ref=f1e19]:
+          - generic [ref=f1e20]: 0%
+          - text: complete
+      - generic [ref=f1e23]:
+        - button "Notes and highlights" [ref=f1e24]
+        - generic: Notes and highlights
+      - generic "Guest" [ref=f1e27]: G
+  - generic [ref=f1e28]:
+    - generic [ref=f1e29]:
+      - generic [ref=f1e31]:
+        - 'img "Python Programming: From Zero to Hero" [ref=f1e34]'
+        - button "Play" [ref=f1e36]
+        - button "Play lesson" [ref=f1e37]
+        - 'button "Next: How this course works" [ref=f1e41]'
+        - generic [ref=f1e45]:
+          - slider "Seek" [ref=f1e46] [cursor=pointer]
+          - generic [ref=f1e49]:
+            - generic [ref=f1e50]:
+              - button "Play (k)" [ref=f1e51]
+              - generic: Play (k)
+            - generic [ref=f1e54]:
+              - button "Back 10s (j)" [ref=f1e55]
+              - generic: Back 10s (j)
+            - generic [ref=f1e60]:
+              - button "Forward 10s (l)" [ref=f1e61]
+              - generic: Forward 10s (l)
+            - generic [ref=f1e66]:
+              - generic [ref=f1e67]:
+                - button "Mute (m)" [ref=f1e68]
+                - generic: Mute (m)
+              - slider "Volume": "1"
+            - generic [ref=f1e73]: 0:00/16:00
+            - generic [ref=f1e74]:
+              - generic [ref=f1e75]:
+                - button "Add a note" [ref=f1e76]
+                - generic: Add a note
+              - generic [ref=f1e83]:
+                - button "Settings" [ref=f1e84]
+                - generic: Settings
+              - generic [ref=f1e89]:
+                - button "Hide course content" [ref=f1e90]
+                - generic: Hide course content
+              - generic [ref=f1e94]:
+                - button "Fullscreen (f)" [ref=f1e95]
+                - generic: Fullscreen (f)
+      - generic [ref=f1e100]:
+        - tablist [ref=f1e101]:
+          - tab "Overview" [ref=f1e102]
+          - tab "Q&A" [ref=f1e107]
+          - tab "Notes" [ref=f1e113]
+          - tab "Announcements" [active] [selected] [ref=f1e119]
+          - tab "Reviews" [ref=f1e126]
+        - button "Share course" [ref=f1e130]
+      - generic [ref=f1e360]:
+        - heading "Announcements" [level=3] [ref=f1e361]
+        - list [ref=f1e362]:
+          - listitem [ref=f1e363]:
+            - 'button "Jun 12 · 3:00 PM Urgent assignment submissions Dear students, we already uploaded two videos about this week''s assignment for Python Programming: From Zero to Hero. Please watch them and submit your work before Thursday." [ref=f1e364]':
+              - generic [ref=f1e365]:
+                - generic [ref=f1e366]: Jun 12 · 3:00 PM
+                - generic [ref=f1e367]: Urgent assignment submissions
+                - generic [ref=f1e368]: "Dear students, we already uploaded two videos about this week's assignment for Python Programming: From Zero to Hero. Please watch them and submit your work before Thursday."
+          - listitem [ref=f1e371]:
+            - button "Jun 4 · 11:30 AM New practice files added Dear students, updated exercise files for the hands-on section are ready. You can download them from the lesson resources." [ref=f1e372]:
+              - generic [ref=f1e373]:
+                - generic [ref=f1e374]: Jun 4 · 11:30 AM
+                - generic [ref=f1e375]: New practice files added
+                - generic [ref=f1e376]: Dear students, updated exercise files for the hands-on section are ready. You can download them from the lesson resources.
+          - listitem [ref=f1e379]:
+            - button "May 27 · 5:15 PM Live Q&A session this week Join me for a live Q&A on Thursday at 7 PM (Riyadh time). Bring your questions about the project." [ref=f1e380]:
+              - generic [ref=f1e381]:
+                - generic [ref=f1e382]: May 27 · 5:15 PM
+                - generic [ref=f1e383]: Live Q&A session this week
+                - generic [ref=f1e384]: Join me for a live Q&A on Thursday at 7 PM (Riyadh time). Bring your questions about the project.
+          - listitem [ref=f1e387]:
+            - button "May 20 · 9:00 AM Welcome to the course Welcome, everyone! Start with the introduction section, then introduce yourself in the Q&A tab so we can get to know you." [ref=f1e388]:
+              - generic [ref=f1e389]:
+                - generic [ref=f1e390]: May 20 · 9:00 AM
+                - generic [ref=f1e391]: Welcome to the course
+                - generic [ref=f1e392]: Welcome, everyone! Start with the introduction section, then introduce yourself in the Q&A tab so we can get to know you.
+    - complementary [ref=f1e235]:
+      - button "Hide course content" [ref=f1e236]
+      - generic [ref=f1e239]:
+        - generic [ref=f1e240]:
+          - heading "Course content" [level=2] [ref=f1e241]
+          - generic [ref=f1e242]: 0%
+        - generic [ref=f1e243]:
+          - progressbar "Course progress" [ref=f1e244]
+          - generic [ref=f1e245]: 0 of 36 lessons · 10h 46m total
+        - textbox "Search lessons" [ref=f1e250]
+      - generic [ref=f1e251]:
+        - generic [ref=f1e252]:
+          - 'button "Section 1: Introduction and setup 0 / 6 1h 46m" [expanded] [ref=f1e253]':
+            - generic [ref=f1e254]:
+              - generic [ref=f1e255]: "Section 1: Introduction and setup"
+              - generic [ref=f1e256]:
+                - generic [ref=f1e257]: 0 / 6
+                - text: 1h 46m
+          - list [ref=f1e262]:
+            - listitem [ref=f1e263]:
+              - checkbox "Mark \"Welcome to the course\" as complete" [ref=f1e264]
+              - button "Welcome to the course 16 min" [ref=f1e265]:
+                - generic [ref=f1e266]: Welcome to the course
+                - generic [ref=f1e267]: 16 min
+            - listitem [ref=f1e270]:
+              - checkbox "Mark \"How this course works\" as complete" [ref=f1e271]
+              - button "How this course works 17 min" [ref=f1e272]:
+                - generic [ref=f1e273]: How this course works
+                - generic [ref=f1e274]: 17 min
+            - listitem [ref=f1e277]:
+              - checkbox "Mark \"Set up your tools\" as complete" [ref=f1e278]
+              - button "Set up your tools 18 min" [ref=f1e279]:
+                - generic [ref=f1e280]: Set up your tools
+                - generic [ref=f1e281]: 18 min
+            - listitem [ref=f1e284]:
+              - checkbox "Mark \"Meet your learning community\" as complete" [ref=f1e285]
+              - button "Meet your learning community 19 min" [ref=f1e286]:
+                - generic [ref=f1e287]: Meet your learning community
+                - generic [ref=f1e288]: 19 min
+            - listitem [ref=f1e291]:
+              - checkbox "Mark \"Your first quick win\" as complete" [ref=f1e292]
+              - button "Your first quick win 20 min" [ref=f1e293]:
+                - generic [ref=f1e294]: Your first quick win
+                - generic [ref=f1e295]: 20 min
+            - listitem [ref=f1e298]:
+              - checkbox "Mark \"Course resources\" as complete" [ref=f1e299]
+              - button "Course resources 16 min" [ref=f1e300]:
+                - generic [ref=f1e301]: Course resources
+                - generic [ref=f1e302]: 16 min
+        - 'button "Section 2: Core concepts 0 / 6 1h 47m" [ref=f1e306]':
+          - generic [ref=f1e307]:
+            - generic [ref=f1e308]: "Section 2: Core concepts"
+            - generic [ref=f1e309]:
+              - generic [ref=f1e310]: 0 / 6
+              - text: 1h 47m
+        - 'button "Section 3: Hands-on practice 0 / 6 1h 48m" [ref=f1e316]':
+          - generic [ref=f1e317]:
+            - generic [ref=f1e318]: "Section 3: Hands-on practice"
+            - generic [ref=f1e319]:
+              - generic [ref=f1e320]: 0 / 6
+              - text: 1h 48m
+        - 'button "Section 4: Going deeper 0 / 6 1h 49m" [ref=f1e326]':
+          - generic [ref=f1e327]:
+            - generic [ref=f1e328]: "Section 4: Going deeper"
+            - generic [ref=f1e329]:
+              - generic [ref=f1e330]: 0 / 6
+              - text: 1h 49m
+        - 'button "Section 5: Real-world project 0 / 6 1h 50m" [ref=f1e336]':
+          - generic [ref=f1e337]:
+            - generic [ref=f1e338]: "Section 5: Real-world project"
+            - generic [ref=f1e339]:
+              - generic [ref=f1e340]: 0 / 6
+              - text: 1h 50m
+        - 'button "Section 6: Career and next steps 0 / 6 1h 46m" [ref=f1e346]':
+          - generic [ref=f1e347]:
+            - generic [ref=f1e348]: "Section 6: Career and next steps"
+            - generic [ref=f1e349]:
+              - generic [ref=f1e350]: 0 / 6
+              - text: 1h 46m

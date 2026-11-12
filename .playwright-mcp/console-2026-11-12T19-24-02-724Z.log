@@ -1,0 +1,16 @@
+[  221465ms] ReferenceError: tabIcons is not defined
+    at http://localhost:8443/src/components/LearnPage.tsx?t=1794511662944:815:18
+    at Array.map (<anonymous>)
+    at Player (http://localhost:8443/src/components/LearnPage.tsx?t=1794511662944:804:23)
+    at Object.react_stack_bottom_frame (http://localhost:8443/node_modules/.vite/deps/react-dom_client.js?v=2d1719cf:14142:12)
+    at renderWithHooks (http://localhost:8443/node_modules/.vite/deps/react-dom_client.js?v=2d1719cf:4400:19)
+    at updateFunctionComponent (http://localhost:8443/node_modules/.vite/deps/react-dom_client.js?v=2d1719cf:5775:16)
+    at beginWork (http://localhost:8443/node_modules/.vite/deps/react-dom_client.js?v=2d1719cf:6391:20)
+    at runWithFiberInDEV (http://localhost:8443/node_modules/.vite/deps/react-dom_client.js?v=2d1719cf:944:66)
+    at performUnitOfWork (http://localhost:8443/node_modules/.vite/deps/react-dom_client.js?v=2d1719cf:9148:92)
+    at workLoopSync (http://localhost:8443/node_modules/.vite/deps/react-dom_client.js?v=2d1719cf:9044:37)
+[  221464ms] [WARNING] %s
+
+%s
+ An error occurred in the <Player> component. Consider adding an error boundary to your tree to customize error handling behavior.
+Visit https://react.dev/link/error-boundaries to learn more about error boundaries. @ http://localhost:8443/@vite/client:357

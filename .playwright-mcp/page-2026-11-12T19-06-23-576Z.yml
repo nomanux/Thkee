@@ -1,0 +1,229 @@
+- generic [ref=e3]:
+  - banner [ref=e4]:
+    - generic [ref=e5]:
+      - button "Back to my classes" [ref=e6]
+      - generic: Back to my classes
+    - button "Thkee home" [ref=e9]:
+      - img "Thkee" [ref=e10]
+    - generic [ref=e12]:
+      - 'heading "Python Programming: From Zero to Hero" [level=1] [ref=e13]'
+      - paragraph [ref=e14]:
+        - generic [ref=e15]: Lesson 1 of 36
+        - text: /Welcome to the course
+    - generic [ref=e16]:
+      - button "0% complete. Finish every lesson to get your certificate" [ref=e17]:
+        - generic [ref=e19]:
+          - generic [ref=e20]: 0%
+          - text: complete
+      - generic [ref=e23]:
+        - button "Notes and highlights" [ref=e24]
+        - generic: Notes and highlights
+      - generic "Guest" [ref=e27]: G
+  - generic [ref=e28]:
+    - generic [ref=e29]:
+      - generic [ref=e31]:
+        - 'img "Python Programming: From Zero to Hero" [ref=e34]'
+        - button "Play" [ref=e36]
+        - button "Play lesson" [ref=e37]
+        - 'button "Next: How this course works" [ref=e338]'
+        - generic [ref=e342]:
+          - slider "Seek" [ref=e343] [cursor=pointer]
+          - generic [ref=e348]:
+            - generic [ref=e349]:
+              - button "Play (k)" [ref=e350]
+              - generic: Play (k)
+            - generic [ref=e353]:
+              - button "Back 10s (j)" [ref=e354]
+              - generic: Back 10s (j)
+            - generic [ref=e359]:
+              - button "Forward 10s (l)" [ref=e360]
+              - generic: Forward 10s (l)
+            - generic [ref=e365]:
+              - generic [ref=e366]:
+                - button "Mute (m)" [ref=e367]
+                - generic: Mute (m)
+              - slider "Volume": "1"
+            - generic [ref=e372]: 0:00/16:00
+            - generic [ref=e373]:
+              - generic [ref=e374]:
+                - button "Add a note" [ref=e375]
+                - generic: Add a note
+              - generic [ref=e381]:
+                - generic [ref=e382]:
+                  - button "Settings" [ref=e383]
+                  - generic: Settings
+                - generic [ref=e388]:
+                  - button "Quality Auto" [ref=e389]:
+                    - generic [ref=e394]: Quality
+                    - generic [ref=e395]: Auto
+                  - button "Playback speed Normal" [ref=e398]:
+                    - generic [ref=e402]: Playback speed
+                    - generic [ref=e403]: Normal
+                  - switch "Autoplay next" [checked] [ref=e406]
+                  - button "Content information" [ref=e414]
+                  - button "Report an issue" [ref=e418]
+              - generic [ref=e421]:
+                - button "Hide course content" [ref=e422]
+                - generic: Hide course content
+              - generic [ref=e426]:
+                - button "Fullscreen (f)" [ref=e427]
+                - generic: Fullscreen (f)
+      - generic [ref=e100]:
+        - tablist [ref=e101]:
+          - tab "Overview" [selected] [ref=e102]
+          - tab "Q&A" [ref=e103]
+          - tab "Notes" [ref=e104]
+          - tab "Announcements" [ref=e105]
+          - tab "Reviews" [ref=e106]
+        - button "Share course" [ref=e107]
+      - generic [ref=e111]:
+        - generic [ref=e432]:
+          - paragraph [ref=e433]: Master the fundamentals of Python step by step, then use it to clean, explore and visualise real data.
+          - generic [ref=e434]:
+            - generic [ref=e439]:
+              - definition [ref=e440]: "4.8"
+              - term [ref=e441]: Course rating
+            - generic [ref=e451]:
+              - definition [ref=e452]: 2,210
+              - term [ref=e453]: Students
+            - generic [ref=e459]:
+              - definition [ref=e460]: 10h 46m
+              - term [ref=e461]: Total length
+            - generic [ref=e469]:
+              - definition [ref=e470]: "36"
+              - term [ref=e471]: Lectures
+        - generic [ref=e472]:
+          - heading "What you'll learn" [level=2] [ref=e473]
+          - list [ref=e474]:
+            - listitem [ref=e475]: Write clean Python from scratch
+            - listitem [ref=e479]: Work with files, data and libraries
+            - listitem [ref=e483]: Build a small portfolio project
+        - generic [ref=e487]:
+          - heading "Course details" [level=2] [ref=e488]
+          - generic [ref=e489]:
+            - generic [ref=e494]:
+              - term [ref=e495]: Level
+              - definition [ref=e496]: Beginner
+            - generic [ref=e506]:
+              - term [ref=e507]: Language
+              - definition [ref=e508]: English
+            - generic [ref=e516]:
+              - term [ref=e517]: Category
+              - definition [ref=e518]: Information Technology
+            - generic [ref=e525]:
+              - term [ref=e526]: Sub category
+              - definition [ref=e527]: Data Science
+            - generic [ref=e534]:
+              - term [ref=e535]: Video lessons
+              - definition [ref=e536]: "24"
+            - generic [ref=e543]:
+              - term [ref=e544]: Quizzes
+              - definition [ref=e545]: "3"
+            - generic [ref=e552]:
+              - term [ref=e553]: Assignments
+              - definition [ref=e554]: "4"
+            - generic [ref=e561]:
+              - term [ref=e562]: Certificate
+              - definition [ref=e563]: On completion
+        - generic [ref=e564]:
+          - heading "Description" [level=2] [ref=e565]
+          - generic [ref=e567]:
+            - paragraph [ref=e568]: In this beginner course you learn data science step by step through 36 short lessons. Each section ends with a short exercise, so you practise what you learn before moving on.
+            - paragraph [ref=e569]: You will move from the basics to real, hands-on work, with 3 quizzes to check your understanding and 4 assignments to apply what you learn. Watch at your own pace, take notes on any lesson, and ask questions in the Q&A whenever you get stuck.
+            - paragraph [ref=e570]: By the end you will have a small portfolio project you can share, and a certificate of completion from Omar Al-Harbi.
+          - button "Show more" [ref=e571]
+        - generic [ref=e574]:
+          - heading "Topics covered" [level=2] [ref=e575]
+          - generic [ref=e576]:
+            - generic [ref=e577]: Python
+            - generic [ref=e581]: Data Analysis
+        - generic [ref=e585]:
+          - heading "Your instructor" [level=2] [ref=e586]
+          - generic [ref=e587]:
+            - generic [ref=e588]: OA
+            - generic [ref=e589]:
+              - paragraph [ref=e590]: Omar Al-Harbi
+              - paragraph [ref=e591]: Data Science instructor
+              - generic [ref=e592]:
+                - generic [ref=e593]: 4.8 rating
+                - generic [ref=e596]: 2,210 students
+                - generic [ref=e604]: Information Technology
+    - complementary [ref=e184]:
+      - button "Hide course content" [ref=e185]
+      - generic [ref=e188]:
+        - generic [ref=e189]:
+          - heading "Course content" [level=2] [ref=e190]
+          - generic [ref=e191]: 0%
+        - generic [ref=e192]:
+          - progressbar "Course progress" [ref=e193]
+          - generic [ref=e194]: 0 of 36 lessons · 10h 46m total
+        - textbox "Search lessons" [ref=e199]
+      - generic [ref=e200]:
+        - generic [ref=e201]:
+          - 'button "Section 1: Introduction and setup 0 / 6 1h 46m" [expanded] [ref=e202]':
+            - generic [ref=e203]:
+              - generic [ref=e204]: "Section 1: Introduction and setup"
+              - generic [ref=e205]:
+                - generic [ref=e206]: 0 / 6
+                - text: 1h 46m
+          - list [ref=e211]:
+            - listitem [ref=e212]:
+              - checkbox "Mark \"Welcome to the course\" as complete" [ref=e213]
+              - button "Welcome to the course 16 min" [ref=e214]:
+                - generic [ref=e215]: Welcome to the course
+                - generic [ref=e216]: 16 min
+            - listitem [ref=e219]:
+              - checkbox "Mark \"How this course works\" as complete" [ref=e220]
+              - button "How this course works 17 min" [ref=e221]:
+                - generic [ref=e222]: How this course works
+                - generic [ref=e223]: 17 min
+            - listitem [ref=e226]:
+              - checkbox "Mark \"Set up your tools\" as complete" [ref=e227]
+              - button "Set up your tools 18 min" [ref=e228]:
+                - generic [ref=e229]: Set up your tools
+                - generic [ref=e230]: 18 min
+            - listitem [ref=e233]:
+              - checkbox "Mark \"Meet your learning community\" as complete" [ref=e234]
+              - button "Meet your learning community 19 min" [ref=e235]:
+                - generic [ref=e236]: Meet your learning community
+                - generic [ref=e237]: 19 min
+            - listitem [ref=e240]:
+              - checkbox "Mark \"Your first quick win\" as complete" [ref=e241]
+              - button "Your first quick win 20 min" [ref=e242]:
+                - generic [ref=e243]: Your first quick win
+                - generic [ref=e244]: 20 min
+            - listitem [ref=e247]:
+              - checkbox "Mark \"Course resources\" as complete" [ref=e248]
+              - button "Course resources 16 min" [ref=e249]:
+                - generic [ref=e250]: Course resources
+                - generic [ref=e251]: 16 min
+        - 'button "Section 2: Core concepts 0 / 6 1h 47m" [ref=e255]':
+          - generic [ref=e256]:
+            - generic [ref=e257]: "Section 2: Core concepts"
+            - generic [ref=e258]:
+              - generic [ref=e259]: 0 / 6
+              - text: 1h 47m
+        - 'button "Section 3: Hands-on practice 0 / 6 1h 48m" [ref=e265]':
+          - generic [ref=e266]:
+            - generic [ref=e267]: "Section 3: Hands-on practice"
+            - generic [ref=e268]:
+              - generic [ref=e269]: 0 / 6
+              - text: 1h 48m
+        - 'button "Section 4: Going deeper 0 / 6 1h 49m" [ref=e275]':
+          - generic [ref=e276]:
+            - generic [ref=e277]: "Section 4: Going deeper"
+            - generic [ref=e278]:
+              - generic [ref=e279]: 0 / 6
+              - text: 1h 49m
+        - 'button "Section 5: Real-world project 0 / 6 1h 50m" [ref=e285]':
+          - generic [ref=e286]:
+            - generic [ref=e287]: "Section 5: Real-world project"
+            - generic [ref=e288]:
+              - generic [ref=e289]: 0 / 6
+              - text: 1h 50m
+        - 'button "Section 6: Career and next steps 0 / 6 1h 46m" [ref=e295]':
+          - generic [ref=e296]:
+            - generic [ref=e297]: "Section 6: Career and next steps"
+            - generic [ref=e298]:
+              - generic [ref=e299]: 0 / 6
+              - text: 1h 46m

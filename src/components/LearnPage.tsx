@@ -16,8 +16,27 @@ import {
   fontSemi,
 } from "../fonts"
 import { useApp } from "../store"
+import { HugeiconsIcon, type IconSvgElement } from "@hugeicons/react"
+import {
+  ArrowDown01Icon,
+  BubbleChatQuestionIcon,
+  ChartBarLineIcon,
+  GridViewIcon,
+  HelpCircleIcon,
+  InformationCircleIcon,
+  Layers01Icon,
+  Megaphone01Icon,
+  Note01Icon,
+  PlayListIcon,
+  Share08Icon,
+  StarIcon,
+  Task01Icon,
+  Tick02Icon,
+  TranslateIcon,
+  UserGroupIcon,
+} from "@hugeicons/core-free-icons"
 import { buildCurriculum, seedReviews, type Lesson, type Review } from "./CourseDetailsPage"
-import { CourseThumb } from "./Overlays"
+import LessonPlayer from "./LessonPlayer"
 import { DEMO_QUIZ_INSTRUCTIONS, QUIZ_LENGTH, QuizPanel, QuizRunner, type QuizResult } from "./Quiz"
 import { ASSIGNMENT_QUESTIONS, AssignmentPanel, type AssignmentState } from "./Assignment"
 import { ActionMenu, FilterSelect } from "./Menus"
@@ -25,9 +44,15 @@ import { ArticleReader, NoteBody, NoteEditor, NotesPanel, type LessonRef, type N
 
 // Demo playback runs 10x faster than the lesson length so a lesson can be finished in a few seconds.
 const SPEED = 10
-const qualities = ["1080p", "720p", "480p", "360p", "144p", "Auto"]
 const tabs = ["Overview", "Q&A", "Notes", "Announcements", "Reviews"] as const
 type Tab = typeof tabs[number]
+const tabIcons: Record<Tab, IconSvgElement> = {
+  Overview: InformationCircleIcon,
+  "Q&A": BubbleChatQuestionIcon,
+  Notes: Note01Icon,
+  Announcements: Megaphone01Icon,
+  Reviews: StarIcon,
+}
 
 type FlatLesson = Lesson & { key: string; section: number; index: number }
 type QaAnswer = {
@@ -233,10 +258,8 @@ function Player({ course }: { course: Course }) {
 
   const [time, setTime] = useState(0)
   const [playing, setPlaying] = useState(false)
-  const [muted, setMuted] = useState(false)
-  const [quality, setQuality] = useState("Auto")
+  const [rate, setRate] = useLocal("thkee.rate", 1)
   const [autoplay, setAutoplay] = useLocal("thkee.autoplay", true)
-  const [menuOpen, setMenuOpen] = useState(false)
   const [sidebar, setSidebar] = useState(true)
   const [openSections, setOpenSections] = useState<number[]>(() => [
     current.section,
@@ -252,8 +275,6 @@ function Player({ course }: { course: Course }) {
     {},
   )
   const [moreOverview, setMoreOverview] = useState(false)
-  const playerRef = useRef<HTMLDivElement>(null)
-  const menuRef = useRef<HTMLDivElement>(null)
   const tabsRef = useRef<HTMLDivElement>(null)
 
   const doneCount = progress.done.length
@@ -298,7 +319,7 @@ function Player({ course }: { course: Course }) {
     if (!playing) return
     const timer = setInterval(() => {
       setTime((t) => {
-        const next = t + SPEED / 4
+        const next = t + (SPEED / 4) * rate
         if (next >= duration) {
           clearInterval(timer)
           setTimeout(() => complete(current), 0)
@@ -309,30 +330,10 @@ function Player({ course }: { course: Course }) {
     }, 250)
     return () => clearInterval(timer)
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [playing, current.key, duration])
-
-  useEffect(() => {
-    if (!menuOpen) return
-    const close = (e: MouseEvent) =>
-      menuRef.current &&
-      !menuRef.current.contains(e.target as Node) &&
-      setMenuOpen(false)
-    document.addEventListener("mousedown", close)
-    return () => document.removeEventListener("mousedown", close)
-  }, [menuOpen])
+  }, [playing, current.key, duration, rate])
 
   const prev = flat[current.index - 1]
   const next = flat[current.index + 1]
-
-  const fullscreen = () => {
-    const el = playerRef.current
-    if (!el) return
-    if (document.fullscreenElement) document.exitFullscreen()
-    else
-      el
-        .requestFullscreen?.()
-        .catch(() => notify("Fullscreen isn’t available here"))
-  }
 
   const certificate = () => {
     if (doneCount === flat.length)
@@ -564,360 +565,88 @@ function Player({ course }: { course: Course }) {
                 onToggleExpand={() => setSidebar((v) => !v)}
               />
             ) : (
-              <div
-                ref={playerRef}
-                className="group/player relative w-full overflow-hidden bg-black"
-              >
-                <div className="relative aspect-video w-full lg:max-h-[calc(100dvh-72px-60px)]">
-                  {current.kind === "video" ? (
-                    <>
-                      <CourseThumb
-                        course={course}
-                        showTitle={false}
-                        className="absolute inset-0 size-full [&>img:last-of-type]:object-cover [&>span]:hidden"
-                      />
-                      <div
-                        className={`absolute inset-0 bg-[#0f172a] transition-opacity ${
-                          playing ? "opacity-10" : "opacity-45"
-                        }`}
-                      />
-                      {!playing && (
-                        <button
-                          type="button"
-                          onClick={() => setPlaying(true)}
-                          aria-label="Play lesson"
-                          className="absolute inset-0 m-auto flex size-[72px] items-center justify-center rounded-full bg-white/90 text-[#0f172a] shadow-xl transition hover:scale-105"
-                        >
-                          <svg
-                            viewBox="0 0 24 24"
-                            className="ml-1 size-8"
-                            fill="currentColor"
-                            aria-hidden="true"
-                          >
-                            <path d="M8 5v14l11-7z" />
-                          </svg>
-                        </button>
-                      )}
-                    </>
-                  ) : (
-                    <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 bg-gradient-to-br from-[#0f172a] to-[#0d5c4b] px-6 text-center text-white">
-                      <span
-                        className={`rounded-full bg-white/15 px-3 py-1 text-[12px] uppercase tracking-[1px] ${fontSemi}`}
-                      >
-                        Reading
-                      </span>
-                      <p
-                        className={`max-w-[560px] text-[22px] leading-[1.3] md:text-[28px] ${fontHeading}`}
-                      >
-                        {current.title}
-                      </p>
-                      <p
-                        className={`max-w-[520px] text-[14px] text-white/75 ${fontRegular}`}
-                      >
-                        {`A ${current.minutes}-minute read that sums up the key ideas from this section, with examples you can reuse.`}
-                      </p>
-                      <button
-                        type="button"
-                        onClick={() => complete(current)}
-                        className={`h-[42px] rounded-[8px] bg-[#ffb20d] px-5 text-[14px] text-[#1e293b] transition hover:bg-[#faa104] ${fontSemi}`}
-                      >
-                        {progress.done.includes(current.key)
-                          ? "Completed ✓ — Next lesson"
-                          : "Mark as complete"}
-                      </button>
-                    </div>
-                  )}
-
-                  {prev && (
-                    <button
-                      type="button"
-                      onClick={() => goTo(prev, playing)}
-                      aria-label={`Previous: ${prev.title}`}
-                      className="group/prev absolute left-0 top-1/2 flex -translate-y-1/2 items-center"
-                    >
-                      <span className="flex h-[44px] w-[38px] items-center justify-center bg-[#0f172a]/80 text-white transition group-hover/prev:bg-[#0f172a]">
-                        <Svg className="size-5" stroke={2}>
-                          <path d="M15 6l-6 6 6 6" />
-                        </Svg>
-                      </span>
-                      <span
-                        className={`hidden h-[44px] max-w-[260px] items-center truncate bg-[#0f172a]/80 px-3 text-[14px] text-white group-hover/prev:flex ${fontRegular}`}
-                      >
-                        {prev.title}
-                      </span>
-                    </button>
-                  )}
-                  {next && (
-                    <button
-                      type="button"
-                      onClick={() => goTo(next, playing)}
-                      aria-label={`Next: ${next.title}`}
-                      className="group/next absolute right-0 top-1/2 flex -translate-y-1/2 flex-row-reverse items-center"
-                    >
-                      <span className="flex h-[44px] w-[38px] items-center justify-center bg-[#0f172a]/80 text-white transition group-hover/next:bg-[#0f172a]">
-                        <Svg className="size-5" stroke={2}>
-                          <path d="M9 6l6 6-6 6" />
-                        </Svg>
-                      </span>
-                      <span
-                        className={`hidden h-[44px] max-w-[260px] items-center truncate bg-[#0f172a]/80 px-3 text-[14px] text-white group-hover/next:flex ${fontRegular}`}
-                      >
-                        {next.title}
-                      </span>
-                    </button>
-                  )}
-
-                  {menuOpen && (
-                    <div
-                      ref={menuRef}
-                      className="pop-in absolute bottom-[56px] right-3 z-20 w-[240px] overflow-hidden rounded-[8px] bg-white py-1 shadow-[0_16px_40px_rgba(0,0,0,0.35)] sm:right-[60px] sm:w-[272px]"
-                    >
-                      {qualities.map((qOpt) => (
-                        <button
-                          key={qOpt}
-                          type="button"
-                          onClick={() => (setQuality(qOpt), setMenuOpen(false))}
-                          className={`flex w-full items-center justify-between px-4 py-2.5 text-left text-[14px] text-[#1e293b] hover:bg-[#f1f5f9] ${fontRegular}`}
-                        >
-                          {qOpt}
-                          {quality === qOpt && (
-                            <span className="text-[#0d5c4b]">✓</span>
-                          )}
-                        </button>
-                      ))}
-                      <div className="my-1 border-t border-[#e2e8f0]" />
-                      <button
-                        type="button"
-                        role="switch"
-                        aria-checked={autoplay}
-                        onClick={() => setAutoplay((a) => !a)}
-                        className={`flex w-full items-center justify-between px-4 py-2.5 text-[14px] text-[#1e293b] hover:bg-[#f1f5f9] ${fontRegular}`}
-                      >
-                        Autoplay
-                        <span
-                          className={`flex h-[22px] w-[38px] items-center rounded-full p-[3px] transition ${
-                            autoplay ? "bg-[#1e293b]" : "bg-[#cbd5e1]"
-                          }`}
-                        >
-                          <span
-                            className={`size-4 rounded-full bg-white transition ${
-                              autoplay ? "translate-x-4" : ""
-                            }`}
-                          />
-                        </span>
-                      </button>
-                      <div className="my-1 border-t border-[#e2e8f0]" />
-                      <button
-                        type="button"
-                        onClick={() => (
-                          setMenuOpen(false),
-                          notify(
-                            `${current.title} · ${current.minutes} min · ${quality}`,
-                          )
-                        )}
-                        className={`block w-full px-4 py-2.5 text-left text-[14px] text-[#1e293b] hover:bg-[#f1f5f9] ${fontRegular}`}
-                      >
-                        Content Information
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => (
-                          setMenuOpen(false),
-                          notify("Thanks — our team will review this lesson")
-                        )}
-                        className={`block w-full px-4 py-2.5 text-left text-[14px] text-[#1e293b] hover:bg-[#f1f5f9] ${fontRegular}`}
-                      >
-                        Report Abuse
-                      </button>
-                    </div>
-                  )}
-                </div>
-
-                {/* Controls */}
-                <div className="relative bg-[#0f172a] text-white">
-                  <button
-                    type="button"
-                    aria-label="Seek"
-                    disabled={current.kind !== "video"}
-                    onClick={(e) => {
-                      const rect = e.currentTarget.getBoundingClientRect()
-                      setTime(
-                        Math.max(
-                          0,
-                          Math.min(
-                            duration,
-                            ((e.clientX - rect.left) / rect.width) * duration,
-                          ),
-                        ),
-                      )
-                    }}
-                    className="group/seek absolute inset-x-0 -top-[3px] h-[6px] cursor-pointer bg-white/25"
-                  >
-                    <span
-                      className="block h-full bg-white transition-[width] duration-200"
-                      style={{
-                        width: `${
-                          current.kind === "video"
-                            ? (time / duration) * 100
-                            : progress.done.includes(current.key)
-                              ? 100
-                              : 0
-                        }%`,
-                      }}
-                    />
-                  </button>
-                  <div
-                    className={`flex h-[52px] items-center gap-4 px-4 text-[14px] md:gap-5 md:px-6 ${fontRegular}`}
-                  >
-                    <button
-                      type="button"
-                      onClick={() =>
-                        current.kind === "video"
-                          ? setPlaying((p) => !p)
-                          : complete(current)
-                      }
-                      aria-label={playing ? "Pause" : "Play"}
-                      className="hover:text-[#ffb20d]"
-                    >
-                      {playing ? (
-                        <svg
-                          viewBox="0 0 24 24"
-                          className="size-5"
-                          fill="currentColor"
-                          aria-hidden="true"
-                        >
-                          <path d="M7 5h4v14H7zM13 5h4v14h-4z" />
-                        </svg>
-                      ) : (
-                        <svg
-                          viewBox="0 0 24 24"
-                          className="size-5"
-                          fill="currentColor"
-                          aria-hidden="true"
-                        >
-                          <path d="M7 5v14l11-7z" />
-                        </svg>
-                      )}
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setTime((t) => Math.max(0, t - 10))}
-                      aria-label="Back 10 seconds"
-                      className="hover:text-[#ffb20d]"
-                    >
-                      <Svg className="size-5">
-                        <path d="M4 12a8 8 0 108-8H8M8 4L5 7l3 3" />
-                      </Svg>
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setMuted((m) => !m)}
-                      aria-label={muted ? "Unmute" : "Mute"}
-                      className="hover:text-[#ffb20d]"
-                    >
-                      <Svg className="size-5">
-                        <path d="M4 9v6h4l5 4V5L8 9z" fill="currentColor" />
-                        {muted ? (
-                          <path d="M17 9l5 6M22 9l-5 6" />
-                        ) : (
-                          <path d="M17 8.5a5 5 0 010 7M19.5 6a8.5 8.5 0 010 12" />
-                        )}
-                      </Svg>
-                    </button>
-                    <span className="tabular-nums">
-                      {clock(current.kind === "video" ? time : 0)}/
-                      {clock(duration)}
-                    </span>
-                    <button
-                      type="button"
-                      onClick={openNotes}
-                      aria-label="Add a note"
-                      className="hover:text-[#ffb20d]"
-                    >
-                      <Svg className="size-5">
-                        <path d="M4 6h12M4 10h12M4 14h7M15 19l5-5-2-2-5 5v2z" />
-                      </Svg>
-                    </button>
-                    <span className="ml-auto text-[13px] text-white/90">
-                      {quality}
-                    </span>
-                    <button
-                      type="button"
-                      onClick={() => setMenuOpen((o) => !o)}
-                      aria-label="Settings"
-                      aria-expanded={menuOpen}
-                      className={`transition hover:text-[#ffb20d] ${
-                        menuOpen ? "rotate-45 text-[#ffb20d]" : ""
-                      }`}
-                    >
-                      <Svg className="size-5">
-                        <circle cx="12" cy="12" r="3" />
-                        <path d="M19.4 15a1.7 1.7 0 00.3 1.8l.1.1a2 2 0 11-2.8 2.8l-.1-.1a1.7 1.7 0 00-1.8-.3 1.7 1.7 0 00-1 1.5V21a2 2 0 11-4 0v-.1a1.7 1.7 0 00-1.1-1.5 1.7 1.7 0 00-1.8.3l-.1.1a2 2 0 11-2.8-2.8l.1-.1a1.7 1.7 0 00.3-1.8 1.7 1.7 0 00-1.5-1H3a2 2 0 110-4h.1a1.7 1.7 0 001.5-1.1 1.7 1.7 0 00-.3-1.8l-.1-.1a2 2 0 112.8-2.8l.1.1a1.7 1.7 0 001.8.3H9a1.7 1.7 0 001-1.5V3a2 2 0 114 0v.1a1.7 1.7 0 001 1.5 1.7 1.7 0 001.8-.3l.1-.1a2 2 0 112.8 2.8l-.1.1a1.7 1.7 0 00-.3 1.8V9a1.7 1.7 0 001.5 1H21a2 2 0 110 4h-.1a1.7 1.7 0 00-1.5 1z" />
-                      </Svg>
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setSidebar((s) => !s)}
-                      aria-label={
-                        sidebar ? "Hide course content" : "Show course content"
-                      }
-                      className="hidden hover:text-[#ffb20d] lg:block"
-                    >
-                      <Svg className="size-5">
-                        <rect x="3" y="5" width="18" height="14" rx="2" />
-                        <path d="M13 11h5v5h-5z" fill="currentColor" />
-                      </Svg>
-                    </button>
-                    <button
-                      type="button"
-                      onClick={fullscreen}
-                      aria-label="Fullscreen"
-                      className="hover:text-[#ffb20d]"
-                    >
-                      <Svg className="size-5">
-                        <path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5" />
-                      </Svg>
-                    </button>
-                  </div>
-                </div>
-              </div>
+              <LessonPlayer
+                course={course}
+                current={current}
+                prev={prev}
+                next={next}
+                time={time}
+                duration={duration}
+                playing={playing}
+                rate={rate}
+                autoplay={autoplay}
+                sidebar={sidebar}
+                done={progress.done.includes(current.key)}
+                setTime={setTime}
+                setPlaying={setPlaying}
+                setRate={setRate}
+                setAutoplay={setAutoplay}
+                onPrev={() => prev && goTo(prev, playing)}
+                onNext={() => next && goTo(next, playing)}
+                onNote={openNotes}
+                onToggleSidebar={() => setSidebar((s) => !s)}
+                onCompleteReading={() => complete(current)}
+                notify={notify}
+              />
             )}
 
             {/* Tabs */}
             <div
               ref={tabsRef}
-              className="sticky top-[64px] z-10 flex scroll-mt-[72px] items-center border-b border-[#e2e8f0] bg-[#f1f5f9] md:top-[72px]"
+              className="sticky top-16 z-10 flex h-14 scroll-mt-18 items-center gap-3 border-b border-slate-200 bg-white/95 px-2 backdrop-blur-md md:top-18 md:px-4"
             >
               <div
                 role="tablist"
-                className="flex min-w-0 flex-1 overflow-x-auto px-2 md:px-4"
+                className="scrollbar-none flex h-full min-w-0 flex-1 items-stretch gap-1 overflow-x-auto"
               >
-                {tabs.map((t) => (
-                  <button
-                    key={t}
-                    type="button"
-                    role="tab"
-                    aria-selected={tab === t}
-                    onClick={() => setTab(t)}
-                    className={`shrink-0 border-b-2 px-4 py-4 text-[15px] transition md:px-6 ${
-                      tab === t
-                        ? `border-[#0f172a] text-[#0f172a] ${fontMedium}`
-                        : `border-transparent text-[#64748b] hover:text-[#0f172a] ${fontRegular}`
-                    }`}
-                  >
-                    {t}
-                  </button>
-                ))}
+                {tabs.map((t) => {
+                  const active = tab === t
+                  const badge = t === "Notes" && notes.length ? notes.length : null
+                  return (
+                    <button
+                      key={t}
+                      type="button"
+                      role="tab"
+                      aria-selected={active}
+                      onClick={() => setTab(t)}
+                      className={`group/tab relative flex shrink-0 items-center gap-2 px-3 text-sm transition md:px-4 ${
+                        active ? `text-slate-900 ${fontSemi}` : `text-slate-500 hover:text-slate-900 ${fontMedium}`
+                      }`}
+                    >
+                      <HugeiconsIcon
+                        icon={tabIcons[t]}
+                        size={18}
+                        strokeWidth={active ? 2 : 1.8}
+                        aria-hidden="true"
+                        className={active ? "text-primary-700" : "text-slate-400 transition group-hover/tab:text-slate-600"}
+                      />
+                      {t}
+                      {badge !== null && (
+                        <span
+                          className={`min-w-5 rounded-full px-1.5 py-0.5 text-center text-11 leading-none tabular-nums ${
+                            active ? "bg-primary-700 text-white" : "bg-slate-100 text-slate-600"
+                          } ${fontSemi}`}
+                        >
+                          {badge}
+                        </span>
+                      )}
+                      <span
+                        aria-hidden="true"
+                        className={`absolute inset-x-2 bottom-0 h-0.5 rounded-full transition ${
+                          active ? "bg-primary-700" : "bg-transparent group-hover/tab:bg-slate-200"
+                        }`}
+                      />
+                    </button>
+                  )
+                })}
               </div>
               <button
                 type="button"
                 onClick={share}
-                className={`hidden shrink-0 items-center gap-2 px-6 text-[14px] uppercase tracking-[0.3px] text-[#0f172a] hover:text-[#0d5c4b] sm:flex ${fontBold}`}
+                className={`hidden h-9 shrink-0 items-center gap-2 rounded-lg border border-slate-200 bg-white px-3.5 text-sm text-slate-700 shadow-sm transition hover:border-slate-300 hover:bg-slate-50 hover:text-slate-900 sm:flex ${fontMedium}`}
               >
+                <HugeiconsIcon icon={Share08Icon} size={16} strokeWidth={1.8} aria-hidden="true" />
                 Share course
-                <Svg className="size-5" stroke={2}>
-                  <path d="M14 5l7 7-7 7M21 12H9a6 6 0 00-6 6" />
-                </Svg>
               </button>
             </div>
 
@@ -1352,10 +1081,14 @@ function Player({ course }: { course: Course }) {
   )
 }
 
+function HIcon({ icon, size = 18, className = "" }: { icon: IconSvgElement; size?: number; className?: string }) {
+  return <HugeiconsIcon icon={icon} size={size} strokeWidth={1.8} aria-hidden="true" className={`shrink-0 ${className}`} />
+}
+
 function Row({ label, children }: { label: string; children: ReactNode }) {
   return (
-    <div className="grid grid-cols-1 gap-4 border-t border-[#e2e8f0] py-8 first:border-t-0 first:pt-0 md:grid-cols-[192px_minmax(0,1fr)]">
-      <p className={`text-[16px] text-[#0f172a] ${fontSemi}`}>{label}</p>
+    <div className="grid grid-cols-1 gap-2 border-t border-slate-100 py-5 first:border-t-0 first:pt-0 last:pb-0 md:grid-cols-label md:gap-6">
+      <h3 className={`text-sm text-slate-900 ${fontSemi}`}>{label}</h3>
       <div className="min-w-0">{children}</div>
     </div>
   )
@@ -1372,159 +1105,119 @@ function OverviewTab({
   more: boolean
   onMore: () => void
 }) {
-  const quizzes = lessons.filter((l) => l.kind === "quiz").length
-  const articles = lessons.filter((l) => l.kind === "assignment").length
-  const details: [string, string, ReactNode][] = [
-    [
-      "Level",
-      course.level,
-      <path key="i" d="M5 20v-4M10 20v-8M15 20V8M20 20V4" />,
-    ],
-    [
-      "Students",
-      course.students.toLocaleString(),
-      <path
-        key="i"
-        d="M16 19v-1a4 4 0 00-8 0v1M12 11a3 3 0 100-6 3 3 0 000 6zM20 19v-1a3 3 0 00-2-2.8M4 19v-1a3 3 0 012-2.8"
-      />,
-    ],
-    [
-      "Language",
-      /[؀-ۿ]/.test(course.title) ? "Arabic" : "English",
-      <path
-        key="i"
-        d="M4 6h10M9 4v2M6 6c0 4 3 7 7 8M12 6c0 3-3 7-7 9M14 20l4-9 4 9M15.5 17h5"
-      />,
-    ],
-    [
-      "Lectures",
-      String(lessons.length),
-      <path
-        key="i"
-        d="M4 5a2 2 0 012-2h5v17H6a2 2 0 01-2-2zM11 3h7a2 2 0 012 2v13a2 2 0 01-2 2h-7"
-      />,
-    ],
-    [
-      "Category",
-      course.category,
-      <path key="i" d="M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4zM14 14h6v6h-6z" />,
-    ],
-    [
-      "Quizzes",
-      String(quizzes),
-      <path
-        key="i"
-        d="M9 9a3 3 0 115 2.2c-.8.5-1.5 1.1-1.5 2.3M12 17h.01M12 21a9 9 0 100-18 9 9 0 000 18z"
-      />,
-    ],
-    [
-      "Sub Category",
-      course.subcategory,
-      <path
-        key="i"
-        d="M4 4v14a2 2 0 002 2h4M4 9h6M14 7h6v6h-6zM14 15h6v5h-6z"
-      />,
-    ],
-    [
-      "Assignments",
-      String(articles),
-      <path key="i" d="M8 4h8v3H8zM6 6H5v15h14V6h-1M9 12h6M9 16h4" />,
-    ],
+  const count = (kind: Lesson["kind"]) => lessons.filter((l) => l.kind === kind).length
+  const totalMin = lessons.reduce((sum, l) => sum + l.minutes, 0)
+  const language = /[؀-ۿ]/.test(course.title) ? "Arabic" : "English"
+  const topics = courseTags[course.id] ?? [course.subcategory]
+  const initials = course.instructor
+    .replace(/^(د\.|Dr\.)\s*/, "")
+    .split(" ")
+    .slice(0, 2)
+    .map((w) => w[0])
+    .join("")
+
+  const details: [IconSvgElement, string, string][] = [
+    [ChartBarLineIcon, "Level", course.level],
+    [UserGroupIcon, "Students", course.students.toLocaleString()],
+    [TranslateIcon, "Language", language],
+    [PlayListIcon, "Lectures", String(lessons.length)],
+    [GridViewIcon, "Category", course.category],
+    [HelpCircleIcon, "Quizzes", String(count("quiz"))],
+    [Layers01Icon, "Sub category", course.subcategory],
+    [Task01Icon, "Assignments", String(count("assignment"))],
   ]
+
   return (
-    <div className="flex max-w-[980px] flex-col">
+    <div className="flex max-w-4xl flex-col">
       <Row label="About">
         <p
           dir="auto"
-          className={`text-left text-[14px] leading-[22px] text-[#1e293b] ${fontFor(course.description, fontRegular, "font-normal")}`}
+          className={`text-start text-sm leading-relaxed text-slate-700 ${fontFor(course.description, fontRegular, "font-normal")}`}
         >
           {course.description}
         </p>
       </Row>
+
       <Row label="Instructor">
         <div className="flex items-center gap-3">
-          <span
-            className={`flex size-10 items-center justify-center rounded-full bg-[#e7f5f1] text-[14px] text-[#0d5c4b] ${fontSemi}`}
-          >
-            {course.instructor
-              .replace(/^(د\.|Dr\.)\s*/, "")
-              .split(" ")
-              .slice(0, 2)
-              .map((w) => w[0])
-              .join("")}
+          <span className={`flex size-10 shrink-0 items-center justify-center rounded-full bg-primary-700 text-sm text-white ${fontSemi}`}>
+            {initials}
           </span>
-          <div>
-            <p
-              dir="auto"
-              className={`text-left text-[16px] text-[#0f172a] ${fontFor(course.instructor, fontMedium, "font-medium")}`}
-            >
+          <div className="min-w-0">
+            <p dir="auto" className={`text-start text-sm text-slate-900 ${fontFor(course.instructor, fontSemi, "font-semibold")}`}>
               {course.instructor}
             </p>
-            <p className={`text-[12px] text-[#64748b] ${fontRegular}`}>
+            <p className={`flex flex-wrap items-center gap-x-2 text-xs text-slate-500 ${fontRegular}`}>
               {course.subcategory} instructor
+              <span className="text-slate-300" aria-hidden="true">•</span>
+              <span className="inline-flex items-center gap-1">
+                <HIcon icon={StarIcon} size={12} className="fill-current text-secondary-500" />
+                <span className={`text-slate-700 ${fontMedium}`}>{course.rating.toFixed(1)}</span>
+              </span>
+              <span className="text-slate-300" aria-hidden="true">•</span>
+              {Math.floor(totalMin / 60)}h {totalMin % 60}m of content
             </p>
           </div>
         </div>
       </Row>
-      <Row label="Course Details:">
-        <dl className="grid grid-cols-1 gap-x-8 gap-y-3 sm:grid-cols-2">
-          {details.map(([label, value, icon]) => (
-            <div
-              key={label}
-              className={`flex items-center gap-3 text-[14px] ${fontRegular}`}
-            >
-              <Svg className="size-[18px] shrink-0 text-[#94a3b8]">{icon}</Svg>
-              <dt className="text-[#1e293b]">{label}:</dt>
-              <dd className="m-0 text-[#64748b]">{value}</dd>
+
+      <Row label="Course details">
+        <dl className="grid grid-cols-1 gap-x-8 gap-y-2.5 sm:grid-cols-2">
+          {details.map(([icon, label, value]) => (
+            <div key={label} className={`flex items-start gap-2.5 text-sm ${fontRegular}`}>
+              <HIcon icon={icon} size={16} className="mt-0.5 text-slate-400" />
+              <dt className="w-24 shrink-0 text-slate-500">{label}</dt>
+              <dd className={`m-0 min-w-0 text-slate-900 ${fontMedium}`}>{value}</dd>
             </div>
           ))}
         </dl>
       </Row>
+
       <Row label="Overview">
         <div className="relative">
           <div
-            className={`flex flex-col gap-4 text-[14px] leading-[22px] text-[#475569] ${fontRegular} ${
-              more ? "" : "max-h-[150px] overflow-hidden"
+            className={`flex flex-col gap-3 text-sm leading-relaxed text-slate-600 ${fontRegular} ${
+              more ? "" : "max-h-24 overflow-hidden"
             }`}
           >
             <p>
-              In this {course.level.toLowerCase()} course you learn{" "}
-              {course.subcategory.toLowerCase()} step by step through{" "}
-              {lessons.length} short lessons. Each section ends with a short
-              exercise, so you practise what you learn before moving on.
+              In this {course.level.toLowerCase()} course you learn {course.subcategory.toLowerCase()} step by step
+              through {lessons.length} short lessons. Each section ends with a short exercise, so you practise what you
+              learn before moving on.
             </p>
-            <p>What you will be able to do by the end:</p>
-            <ul className="list-disc pl-5">
-              {course.outcomes.map((o) => (
-                <li key={o}>{o}</li>
+            <div>
+              <p className={`mb-2 text-slate-900 ${fontMedium}`}>What you will be able to do by the end</p>
+              <ul className="flex flex-col gap-1.5">
+                {course.outcomes.map((o) => (
+                  <li key={o} dir="auto" className="flex items-start gap-2">
+                    <HIcon icon={Tick02Icon} size={16} className="mt-0.5 text-primary-700" />
+                    {o}
+                  </li>
+                ))}
+              </ul>
+            </div>
+            <div className="flex flex-wrap items-center gap-1.5">
+              <span className={`mr-1 text-slate-900 ${fontMedium}`}>Topics</span>
+              {topics.map((t) => (
+                <span key={t} className={`rounded-md bg-slate-100 px-2 py-0.5 text-xs text-slate-700 ${fontMedium}`}>
+                  {t}
+                </span>
               ))}
-            </ul>
-            <p>
-              Topics covered:{" "}
-              {(courseTags[course.id] ?? [course.subcategory]).join(", ")}.
-            </p>
+            </div>
           </div>
           {!more && (
-            <div className="pointer-events-none absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-white to-white/0" />
+            <div className="pointer-events-none absolute inset-x-0 bottom-0 h-12 bg-gradient-to-t from-white to-white/0" />
           )}
         </div>
-        <div className="mt-6 flex justify-center">
-          <button
-            type="button"
-            onClick={onMore}
-            className={`flex h-[40px] items-center gap-2 rounded-[6px] border border-[#cbd5e1] px-4 text-[15px] text-[#1e293b] hover:border-[#1e293b] ${fontMedium}`}
-          >
-            {more ? "Show Less" : "Show More"}
-            <Svg
-              className={`size-4 transition-transform ${
-                more ? "rotate-180" : ""
-              }`}
-              stroke={2}
-            >
-              <path d="M6 9l6 6 6-6" />
-            </Svg>
-          </button>
-        </div>
+        <button
+          type="button"
+          onClick={onMore}
+          aria-expanded={more}
+          className={`mt-2 inline-flex items-center gap-1 text-sm text-primary-700 transition hover:text-primary-800 ${fontSemi}`}
+        >
+          {more ? "Show less" : "Show more"}
+          <HIcon icon={ArrowDown01Icon} size={16} className={`transition-transform ${more ? "rotate-180" : ""}`} />
+        </button>
       </Row>
     </div>
   )
@@ -2136,65 +1829,35 @@ function AnnouncementsTab({ course }: { course: Course }) {
     {
       title: "Urgent assignment submissions",
       body: `Dear students, we already uploaded two videos about this week's assignment for ${course.title}. Please watch them and submit your work before Thursday.`,
-      month: "June",
-      time: "3:00 PM",
+      date: "Jun 12 · 3:00 PM",
     },
     {
       title: "New practice files added",
       body: "Dear students, updated exercise files for the hands-on section are ready. You can download them from the lesson resources.",
-      month: "June",
-      time: "11:30 AM",
+      date: "Jun 4 · 11:30 AM",
     },
     {
       title: "Live Q&A session this week",
       body: "Join me for a live Q&A on Thursday at 7 PM (Riyadh time). Bring your questions about the project.",
-      month: "May",
-      time: "5:15 PM",
+      date: "May 27 · 5:15 PM",
     },
     {
       title: "Welcome to the course",
       body: "Welcome, everyone! Start with the introduction section, then introduce yourself in the Q&A tab so we can get to know you.",
-      month: "May",
-      time: "9:00 AM",
+      date: "May 20 · 9:00 AM",
     },
   ]
-  const [open, setOpen] = useState<string | null>(null)
   return (
-    <div className="flex flex-col gap-6">
-      <h3 className={`m-0 text-[22px] text-[#0f172a] ${fontRegular}`}>
-        Instructor Announcements
-      </h3>
-      <ul className="flex flex-col gap-3">
-        {items.map((a) => {
-          const expanded = open === a.title
-          return (
-            <li key={a.title}>
-              <button
-                type="button"
-                aria-expanded={expanded}
-                onClick={() => setOpen(expanded ? null : a.title)}
-                className="flex w-full gap-3 rounded-[6px] border border-[#e2e8f0] bg-[#f8fafc] p-2 text-left transition hover:border-[#cbd5e1] sm:gap-4"
-              >
-                <span
-                  className={`flex w-[72px] shrink-0 flex-col items-center justify-center gap-3 border-r border-[#e2e8f0] py-2 sm:w-[64px] ${fontRegular}`}
-                >
-                  <span className="text-[14px] text-[#475569]">{a.month}</span>
-                  <span className="text-[12px] text-[#64748b]">{a.time}</span>
-                </span>
-                <span className="flex min-w-0 flex-1 flex-col gap-2 py-2 pr-2">
-                  <span className={`text-[14px] text-[#1e293b] ${fontSemi}`}>
-                    {a.title}
-                  </span>
-                  <span
-                    className={`text-[14px] leading-[22px] text-[#475569] ${expanded ? "" : "truncate"} ${fontRegular}`}
-                  >
-                    {a.body}
-                  </span>
-                </span>
-              </button>
-            </li>
-          )
-        })}
+    <div className="flex max-w-3xl flex-col gap-2">
+      <h3 className={`m-0 text-lg text-slate-900 ${fontSemi}`}>Announcements</h3>
+      <ul className="divide-y divide-slate-100">
+        {items.map((a) => (
+          <li key={a.title} className="py-4">
+            <p className={`text-xs text-slate-400 ${fontRegular}`}>{a.date}</p>
+            <h4 className={`mt-1 text-15 text-slate-900 ${fontSemi}`}>{a.title}</h4>
+            <p className={`mt-1 text-sm leading-relaxed text-slate-600 ${fontRegular}`}>{a.body}</p>
+          </li>
+        ))}
       </ul>
     </div>
   )
