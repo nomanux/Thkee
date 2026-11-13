@@ -1,6 +1,7 @@
 import { fontHeading, fontMedium, fontRegular, fontSemi } from "../fonts";
 import { useApp } from "../store";
 import NotFoundIllustration from "./NotFoundIllustration";
+import { buttonClass } from "./Button"
 
 export default function NotFoundPage({
   title = "Page not found",
@@ -28,10 +29,10 @@ export default function NotFoundPage({
         .
       </p>
       <div className="mt-7 flex flex-wrap justify-center gap-3">
-        <button type="button" onClick={goHome} className={`h-11 rounded-xl bg-secondary-500 px-6 text-15 text-slate-800 transition hover:bg-secondary-600 ${fontSemi}`}>
+        <button type="button" onClick={goHome} className={`${buttonClass("yellow", "lg")}`}>
           Go to homepage
         </button>
-        <button type="button" onClick={() => window.history.back()} className={`h-11 rounded-xl border border-slate-300 bg-white px-6 text-15 text-slate-900 transition hover:bg-slate-50 ${fontSemi}`}>
+        <button type="button" onClick={() => window.history.back()} className={`${buttonClass("secondary", "lg")}`}>
           Go back
         </button>
       </div>

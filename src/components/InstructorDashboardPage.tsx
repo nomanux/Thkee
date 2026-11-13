@@ -95,7 +95,7 @@ const D = {
 
 function NavIcon({ src, active }: { src: string; active: boolean }) {
   const mask = `url(${src}) center / contain no-repeat`;
-  return <span aria-hidden="true" className={`size-[18px] shrink-0 transition-colors ${active ? "bg-[#ffb20d]" : "bg-[#94a3b8] group-hover:bg-white"}`} style={{ mask, WebkitMask: mask }} />;
+  return <span aria-hidden="true" className={`size-4.5 shrink-0 transition-colors ${active ? "bg-secondary-500" : "bg-slate-400 group-hover:bg-white"}`} style={{ mask, WebkitMask: mask }} />;
 }
 
 function Avatar({ size = 32, ring = "ring-white" }: { size?: number; ring?: string }) {
@@ -110,7 +110,7 @@ function Avatar({ size = 32, ring = "ring-white" }: { size?: number; ring?: stri
   return photo ? (
     <img src={photo} alt="" className={`shrink-0 rounded-full object-cover ring-2 ${ring}`} style={{ width: size, height: size }} />
   ) : (
-    <span aria-hidden="true" className={`flex shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[#ffb20d] to-[#f59e0b] text-[#1e293b] ring-2 ${ring} ${fontBold}`} style={{ width: size, height: size, fontSize: size * 0.36 }}>
+    <span aria-hidden="true" className={`flex shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-secondary-500 to-secondary-600 text-slate-800 ring-2 ${ring} ${fontBold}`} style={{ width: size, height: size, fontSize: size * 0.36 }}>
       {initials}
     </span>
   );
@@ -136,17 +136,17 @@ function Sidebar({ active, collapsed, onToggle, onNavigate, mobile }: { active: 
     <div className="flex h-full flex-col">
       <div className={`flex h-16 shrink-0 items-center ${narrow ? "justify-center px-2" : "justify-between px-5"}`}>
         {narrow ? (
-          <button type="button" onClick={() => go("Dashboard")} aria-label="Dashboard" className={`flex size-9 items-center justify-center rounded-[10px] bg-white/10 text-[18px] text-[#ffb20d] ${fontBold}`}>
+          <button type="button" onClick={() => go("Dashboard")} aria-label="Dashboard" className={`flex size-9 items-center justify-center rounded-xl bg-white/10 text-lg text-secondary-500 ${fontBold}`}>
             T
           </button>
         ) : (
           <button type="button" onClick={() => go("Dashboard")} className="flex items-center gap-2.5">
-            <img src={imgLogoLight} alt="Thkee" className="h-[24px] w-auto" />
-            <span className={`rounded-full bg-[#ffb20d]/15 px-2 py-0.5 text-[11px] leading-[16px] text-[#ffcf66] ${fontSemi}`}>Instructor</span>
+            <img src={imgLogoLight} alt="Thkee" className="h-6 w-auto" />
+            <span className={`rounded-full bg-secondary-500/15 px-2 py-0.5 text-11 leading-4 text-secondary-300 ${fontSemi}`}>Instructor</span>
           </button>
         )}
         {mobile && (
-          <button type="button" onClick={onNavigate} aria-label="Close menu" className="flex size-9 items-center justify-center rounded-[8px] text-[#94a3b8] hover:bg-white/10 hover:text-white">
+          <button type="button" onClick={onNavigate} aria-label="Close menu" className="flex size-9 items-center justify-center rounded-lg text-slate-400 hover:bg-white/10 hover:text-white">
             <Svg d={D.close} />
           </button>
         )}
@@ -159,7 +159,7 @@ function Sidebar({ active, collapsed, onToggle, onNavigate, mobile }: { active: 
               (narrow ? (
                 <span aria-hidden="true" className="mx-auto mb-1 h-px w-6 bg-white/10" />
               ) : (
-                <p className={`mb-1 px-3 text-[11px] uppercase leading-[16px] tracking-[0.6px] text-[#64748b] ${fontSemi}`}>{group.heading}</p>
+                <p className={`mb-1 px-3 text-11 uppercase leading-4 tracking-wider text-slate-500 ${fontSemi}`}>{group.heading}</p>
               ))}
             {group.items.map((item) => {
               const isActive = item.label === active || !!item.children?.includes(active);
@@ -173,24 +173,24 @@ function Sidebar({ active, collapsed, onToggle, onNavigate, mobile }: { active: 
                     aria-current={item.label === active ? "page" : undefined}
                     aria-expanded={item.children && !narrow ? open : undefined}
                     onClick={() => pick(item.label, !!item.children)}
-                    className={`group relative flex h-9 w-full items-center rounded-[8px] text-left text-[14px] leading-[20px] transition ${narrow ? "justify-center" : "gap-3 px-3"} ${isActive && !open ? `bg-white/[0.08] text-white ${fontSemi}` : `text-[#94a3b8] hover:bg-white/[0.05] hover:text-white ${fontMedium}`}`}
+                    className={`group relative flex h-9 w-full items-center rounded-lg text-left text-sm leading-5 transition ${narrow ? "justify-center" : "gap-3 px-3"} ${isActive && !open ? `bg-white/8 text-white ${fontSemi}` : `text-slate-400 hover:bg-white/5 hover:text-white ${fontMedium}`}`}
                   >
-                    {isActive && !open && <span aria-hidden="true" className="absolute -left-3 top-1.5 bottom-1.5 w-[3px] rounded-r-full bg-[#ffb20d]" />}
+                    {isActive && !open && <span aria-hidden="true" className="absolute -left-3 top-1.5 bottom-1.5 w-0.75 rounded-r-full bg-secondary-500" />}
                     <NavIcon src={item.icon} active={isActive} />
                     {!narrow && <span className="min-w-0 flex-1 truncate">{item.label}</span>}
-                    {!narrow && count > 0 && <span className={`min-w-[20px] rounded-full px-1.5 text-center text-[11px] leading-[18px] ${isActive ? "bg-[#ffb20d] text-[#1e293b]" : "bg-white/10 text-[#cbd5e1]"} ${fontSemi}`}>{count}</span>}
-                    {narrow && count > 0 && <span aria-hidden="true" className="absolute right-1.5 top-1.5 size-2 rounded-full bg-[#ef4444] ring-2 ring-[#0b1220]" />}
-                    {!narrow && item.children && <Svg d={D.chevron} className={`size-4 shrink-0 text-[#64748b] transition-transform ${open ? "" : "-rotate-90"}`} />}
+                    {!narrow && count > 0 && <span className={`min-w-5 rounded-full px-1.5 text-center text-11 leading-4.5 ${isActive ? "bg-secondary-500 text-slate-800" : "bg-white/10 text-slate-300"} ${fontSemi}`}>{count}</span>}
+                    {narrow && count > 0 && <span aria-hidden="true" className="absolute right-1.5 top-1.5 size-2 rounded-full bg-red-500 ring-2 ring-gray-900" />}
+                    {!narrow && item.children && <Svg d={D.chevron} className={`size-4 shrink-0 text-slate-500 transition-transform ${open ? "" : "-rotate-90"}`} />}
                   </button>
                   {open && (
-                    <div className="ml-[21px] mt-0.5 flex flex-col gap-0.5 border-l border-white/10 pl-3">
+                    <div className="ml-5.25 mt-0.5 flex flex-col gap-0.5 border-l border-white/10 pl-3">
                       {item.children!.map((child) => (
                         <button
                           key={child}
                           type="button"
                           aria-current={child === active ? "page" : undefined}
                           onClick={() => pick(child)}
-                          className={`flex h-8 items-center rounded-[8px] px-3 text-left text-[13px] transition ${child === active ? `bg-white/[0.08] text-white ${fontSemi}` : `text-[#94a3b8] hover:bg-white/[0.05] hover:text-white ${fontMedium}`}`}
+                          className={`flex h-8 items-center rounded-lg px-3 text-left text-13 transition ${child === active ? `bg-white/8 text-white ${fontSemi}` : `text-slate-400 hover:bg-white/5 hover:text-white ${fontMedium}`}`}
                         >
                           {child}
                         </button>
@@ -207,28 +207,28 @@ function Sidebar({ active, collapsed, onToggle, onNavigate, mobile }: { active: 
       <div className={`shrink-0 ${narrow ? "flex flex-col items-center gap-2 p-2" : "p-3"}`}>
         {narrow ? (
           <>
-            <button type="button" onClick={() => openMyLearning()} title="Switch to student view" aria-label="Switch to student view" className="flex size-9 items-center justify-center rounded-[8px] text-[#94a3b8] hover:bg-white/10 hover:text-white">
-              <Svg d={D.swap} className="size-[18px]" />
+            <button type="button" onClick={() => openMyLearning()} title="Switch to student view" aria-label="Switch to student view" className="flex size-9 items-center justify-center rounded-lg text-slate-400 hover:bg-white/10 hover:text-white">
+              <Svg d={D.swap} className="size-4.5" />
             </button>
-            <button type="button" onClick={onToggle} title="Expand sidebar" aria-label="Expand sidebar" className="flex size-9 items-center justify-center rounded-[8px] text-[#94a3b8] hover:bg-white/10 hover:text-white">
-              <Svg d={D.expand} className="size-[18px]" />
+            <button type="button" onClick={onToggle} title="Expand sidebar" aria-label="Expand sidebar" className="flex size-9 items-center justify-center rounded-lg text-slate-400 hover:bg-white/10 hover:text-white">
+              <Svg d={D.expand} className="size-4.5" />
             </button>
           </>
         ) : (
           <>
-            <button type="button" onClick={() => openMyLearning()} className={`flex h-10 w-full items-center justify-center gap-2 rounded-[10px] border border-white/10 bg-white/[0.06] text-[14px] text-white transition hover:bg-white/[0.12] ${fontSemi}`}>
-              <Svg d={D.swap} className="size-[18px]" />
+            <button type="button" onClick={() => openMyLearning()} className={`flex h-10 w-full items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/6 text-sm text-white transition hover:bg-white/12 ${fontSemi}`}>
+              <Svg d={D.swap} className="size-4.5" />
               Switch to student view
             </button>
-            <div className="mt-3 flex items-center gap-3 rounded-[10px] px-1 py-1">
-              <Avatar size={34} ring="ring-[#0b1220]" />
+            <div className="mt-3 flex items-center gap-3 rounded-xl px-1 py-1">
+              <Avatar size={34} ring="ring-gray-900" />
               <div className="min-w-0 flex-1">
-                <p className={`truncate text-[13px] leading-[18px] text-white ${fontSemi}`}>{user?.name ?? "Instructor"}</p>
-                <p className={`truncate text-[12px] leading-[16px] text-[#94a3b8] ${fontRegular}`}>{user?.email ?? "Signed in"}</p>
+                <p className={`truncate text-13 leading-4.5 text-white ${fontSemi}`}>{user?.name ?? "Instructor"}</p>
+                <p className={`truncate text-xs leading-4 text-slate-400 ${fontRegular}`}>{user?.email ?? "Signed in"}</p>
               </div>
               {onToggle && (
-                <button type="button" onClick={onToggle} title="Collapse sidebar" aria-label="Collapse sidebar" className="flex size-8 shrink-0 items-center justify-center rounded-[8px] text-[#94a3b8] hover:bg-white/10 hover:text-white">
-                  <Svg d={D.collapse} className="size-[18px]" />
+                <button type="button" onClick={onToggle} title="Collapse sidebar" aria-label="Collapse sidebar" className="flex size-8 shrink-0 items-center justify-center rounded-lg text-slate-400 hover:bg-white/10 hover:text-white">
+                  <Svg d={D.collapse} className="size-4.5" />
                 </button>
               )}
             </div>
@@ -281,9 +281,9 @@ function CommandSearch() {
   };
 
   return (
-    <div ref={boxRef} className="relative w-full max-w-[420px]">
-      <div className="flex h-9 items-center gap-2 rounded-[10px] border border-white/10 bg-white/[0.05] px-3 transition hover:bg-white/[0.08] focus-within:border-[#ffb20d]/60 focus-within:bg-white/[0.08] focus-within:ring-4 focus-within:ring-[#ffb20d]/10">
-        <Svg d={D.search} className="size-[18px] shrink-0 text-[#94a3b8]" />
+    <div ref={boxRef} className="relative w-full max-w-105">
+      <div className="flex h-9 items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-3 transition hover:bg-white/8 focus-within:border-secondary-500/60 focus-within:bg-white/8 focus-within:ring-4 focus-within:ring-secondary-500/10">
+        <Svg d={D.search} className="size-4.5 shrink-0 text-slate-400" />
         <input
           ref={inputRef}
           type="search"
@@ -309,14 +309,14 @@ function CommandSearch() {
           }}
           placeholder="Search pages…"
           aria-label="Search instructor pages"
-          className={`min-w-0 flex-1 bg-transparent text-[14px] text-white outline-none placeholder:text-white/45 ${fontRegular}`}
+          className={`min-w-0 flex-1 bg-transparent text-sm text-white outline-none placeholder:text-white/45 ${fontRegular}`}
         />
-        <kbd className={`hidden shrink-0 rounded-[6px] border border-white/10 bg-white/5 px-1.5 py-0.5 text-[11px] text-[#94a3b8] lg:block ${fontMedium}`}>⌘K</kbd>
+        <kbd className={`hidden shrink-0 rounded-md border border-white/10 bg-white/5 px-1.5 py-0.5 text-11 text-slate-400 lg:block ${fontMedium}`}>⌘K</kbd>
       </div>
       {open && (
-        <div role="listbox" className="absolute left-0 right-0 top-12 z-50 max-h-[340px] overflow-y-auto rounded-[12px] border border-[#e2e8f0] bg-white p-1.5 shadow-[0_16px_40px_rgba(15,23,42,0.14)]">
+        <div role="listbox" className="absolute left-0 right-0 top-12 z-50 max-h-85 overflow-y-auto rounded-xl border border-slate-200 bg-white p-1.5 shadow-2xl">
           {results.length === 0 ? (
-            <p className={`px-3 py-6 text-center text-[13px] text-[#64748b] ${fontRegular}`}>No pages match "{query}"</p>
+            <p className={`px-3 py-6 text-center text-13 text-slate-500 ${fontRegular}`}>No pages match "{query}"</p>
           ) : (
             results.map((r, i) => (
               <button
@@ -326,10 +326,10 @@ function CommandSearch() {
                 aria-selected={i === index}
                 onMouseEnter={() => setIndex(i)}
                 onClick={() => choose(r.label)}
-                className={`flex w-full items-center justify-between gap-3 rounded-[8px] px-3 py-2 text-left text-[14px] ${i === index ? "bg-[#f1f5f9]" : ""} ${fontMedium}`}
+                className={`flex w-full items-center justify-between gap-3 rounded-lg px-3 py-2 text-left text-sm ${i === index ? "bg-slate-150" : ""} ${fontMedium}`}
               >
-                <span className="text-[#0f172a]">{r.label}</span>
-                <span className={`text-[12px] text-[#94a3b8] ${fontRegular}`}>{r.group}</span>
+                <span className="text-slate-900">{r.label}</span>
+                <span className={`text-xs text-slate-400 ${fontRegular}`}>{r.group}</span>
               </button>
             ))
           )}
@@ -339,7 +339,7 @@ function CommandSearch() {
   );
 }
 
-function Menu({ trigger, label, children, width = "w-[260px]" }: { trigger: ReactNode; label: string; children: (close: () => void) => ReactNode; width?: string }) {
+function Menu({ trigger, label, children, width = "w-65" }: { trigger: ReactNode; label: string; children: (close: () => void) => ReactNode; width?: string }) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
   const close = useMemo(() => () => setOpen(false), []);
@@ -356,7 +356,7 @@ function Menu({ trigger, label, children, width = "w-[260px]" }: { trigger: Reac
         {trigger}
       </button>
       {open && (
-        <div role="menu" className={`pop-in absolute right-0 top-12 z-50 ${width} overflow-hidden rounded-[12px] border border-[#e2e8f0] bg-white shadow-[0_16px_40px_rgba(15,23,42,0.14)]`}>
+        <div role="menu" className={`pop-in absolute right-0 top-12 z-50 ${width} overflow-hidden rounded-xl border border-slate-200 bg-white shadow-2xl`}>
           {children(close)}
         </div>
       )}
@@ -372,32 +372,32 @@ const NOTIFICATIONS = [
 
 function TopBar({ title, group, onMenu }: { title: string; group: string; onMenu: () => void }) {
   const { user, logout, notify } = useApp();
-  const iconBtn = "relative flex size-9 items-center justify-center rounded-[10px] text-[#94a3b8] transition hover:bg-white/10 hover:text-white";
+  const iconBtn = "relative flex size-9 items-center justify-center rounded-xl text-slate-400 transition hover:bg-white/10 hover:text-white";
   const unread = NOTIFICATIONS.filter((n) => n.unread).length;
 
   return (
-    <header className="sticky top-0 z-40 flex h-16 shrink-0 items-center gap-3 bg-[#0b1220] px-4 md:pl-4 md:pr-5">
+    <header className="sticky top-0 z-40 flex h-16 shrink-0 items-center gap-3 bg-gray-900 px-4 md:pl-4 md:pr-5">
       <button type="button" onClick={onMenu} aria-label="Open menu" className={`${iconBtn} md:hidden`}>
         <Svg d={D.menu} />
       </button>
-      <nav aria-label="Breadcrumb" className={`hidden min-w-0 items-center gap-1.5 text-[14px] lg:flex ${fontMedium}`}>
-        <button type="button" onClick={() => go("Dashboard")} className="text-[#94a3b8] transition hover:text-white">
+      <nav aria-label="Breadcrumb" className={`hidden min-w-0 items-center gap-1.5 text-sm lg:flex ${fontMedium}`}>
+        <button type="button" onClick={() => go("Dashboard")} className="text-slate-400 transition hover:text-white">
           Instructor
         </button>
         {group && (
           <>
-            <Svg d={D.chevronRight} className="size-3.5 text-[#475569]" />
-            <span className="whitespace-nowrap text-[#94a3b8]">{group}</span>
+            <Svg d={D.chevronRight} className="size-3.5 text-slate-600" />
+            <span className="whitespace-nowrap text-slate-400">{group}</span>
           </>
         )}
-        <Svg d={D.chevronRight} className="size-3.5 text-[#475569]" />
+        <Svg d={D.chevronRight} className="size-3.5 text-slate-600" />
         <span className={`truncate text-white ${fontSemi}`}>{title}</span>
       </nav>
       <div className="flex flex-1 justify-center px-2 lg:px-6">
         <CommandSearch />
       </div>
       <div className="flex items-center gap-1">
-        <button type="button" onClick={() => openMyLearning()} className={`mr-1 hidden h-9 items-center gap-2 rounded-[10px] border border-white/10 bg-white/[0.04] px-3 text-[13px] text-white transition hover:bg-white/10 xl:flex ${fontSemi}`}>
+        <button type="button" onClick={() => openMyLearning()} className={`mr-1 hidden h-9 items-center gap-2 rounded-xl border border-white/10 bg-white/4 px-3 text-13 text-white transition hover:bg-white/10 xl:flex ${fontSemi}`}>
           <Svg d={D.swap} className="size-4" />
           Student view
         </button>
@@ -406,28 +406,28 @@ function TopBar({ title, group, onMenu }: { title: string; group: string; onMenu
         </button>
         <Menu
           label={`Notifications, ${unread} unread`}
-          width="w-[340px]"
+          width="w-85"
           trigger={
             <span className={iconBtn}>
               <Svg d={D.bell} />
-              {unread > 0 && <span className="absolute right-2 top-2 size-2 rounded-full bg-[#ef4444] ring-2 ring-[#0b1220]" />}
+              {unread > 0 && <span className="absolute right-2 top-2 size-2 rounded-full bg-red-500 ring-2 ring-gray-900" />}
             </span>
           }
         >
           {() => (
             <>
-              <div className="flex items-center justify-between border-b border-[#eef2f6] px-4 py-3">
-                <p className={`text-[14px] text-[#0f172a] ${fontSemi}`}>Notifications</p>
-                <span className={`rounded-full bg-[#fee2e2] px-2 py-0.5 text-[11px] text-[#b91c1c] ${fontSemi}`}>{unread} new</span>
+              <div className="flex items-center justify-between border-b border-slate-150 px-4 py-3">
+                <p className={`text-sm text-slate-900 ${fontSemi}`}>Notifications</p>
+                <span className={`rounded-full bg-red-100 px-2 py-0.5 text-11 text-red-700 ${fontSemi}`}>{unread} new</span>
               </div>
-              <ul className="max-h-[320px] overflow-y-auto py-1">
+              <ul className="max-h-80 overflow-y-auto py-1">
                 {NOTIFICATIONS.map((n) => (
-                  <li key={n.title} className="flex gap-3 px-4 py-3 hover:bg-[#f8fafc]">
-                    <span className={`mt-1.5 size-2 shrink-0 rounded-full ${n.unread ? "bg-[#ffb20d]" : "bg-transparent"}`} />
+                  <li key={n.title} className="flex gap-3 px-4 py-3 hover:bg-slate-25">
+                    <span className={`mt-1.5 size-2 shrink-0 rounded-full ${n.unread ? "bg-secondary-500" : "bg-transparent"}`} />
                     <div className="min-w-0">
-                      <p className={`text-[13px] text-[#0f172a] ${fontSemi}`}>{n.title}</p>
-                      <p className={`text-[13px] leading-[18px] text-[#475569] ${fontRegular}`}>{n.body}</p>
-                      <p className={`mt-0.5 text-[12px] text-[#94a3b8] ${fontRegular}`}>{n.ago}</p>
+                      <p className={`text-13 text-slate-900 ${fontSemi}`}>{n.title}</p>
+                      <p className={`text-13 leading-4.5 text-slate-600 ${fontRegular}`}>{n.body}</p>
+                      <p className={`mt-0.5 text-xs text-slate-400 ${fontRegular}`}>{n.ago}</p>
                     </div>
                   </li>
                 ))}
@@ -440,35 +440,35 @@ function TopBar({ title, group, onMenu }: { title: string; group: string; onMenu
           label="Account menu"
           trigger={
             <span className="flex items-center gap-2 rounded-full py-1 pl-1 pr-2 transition hover:bg-white/10">
-              <Avatar size={32} ring="ring-[#0b1220]" />
-              <Svg d={D.chevron} className="hidden size-4 text-[#94a3b8] sm:block" />
+              <Avatar size={32} ring="ring-gray-900" />
+              <Svg d={D.chevron} className="hidden size-4 text-slate-400 sm:block" />
             </span>
           }
         >
           {(close) => {
-            const item = `flex w-full items-center gap-3 px-4 py-2.5 text-left text-[14px] text-[#334155] transition hover:bg-[#f8fafc] ${fontMedium}`;
+            const item = `flex w-full items-center gap-3 px-4 py-2.5 text-left text-sm text-slate-700 transition hover:bg-slate-25 ${fontMedium}`;
             return (
               <>
-                <div className="flex items-center gap-3 border-b border-[#eef2f6] px-4 py-3">
+                <div className="flex items-center gap-3 border-b border-slate-150 px-4 py-3">
                   <Avatar size={38} />
                   <div className="min-w-0">
-                    <p className={`truncate text-[14px] text-[#0f172a] ${fontSemi}`}>{user?.name ?? "Instructor"}</p>
-                    <p className={`truncate text-[12px] text-[#64748b] ${fontRegular}`}>{user?.email ?? ""}</p>
+                    <p className={`truncate text-sm text-slate-900 ${fontSemi}`}>{user?.name ?? "Instructor"}</p>
+                    <p className={`truncate text-xs text-slate-500 ${fontRegular}`}>{user?.email ?? ""}</p>
                   </div>
                 </div>
                 <div className="py-1">
                   <button type="button" role="menuitem" className={item} onClick={() => (close(), openAccount())}>
-                    <Svg d={D.user} className="size-[18px] text-[#64748b]" />
+                    <Svg d={D.user} className="size-4.5 text-slate-500" />
                     Account settings
                   </button>
                   <button type="button" role="menuitem" className={item} onClick={() => (close(), openMyLearning())}>
-                    <Svg d={D.swap} className="size-[18px] text-[#64748b]" />
+                    <Svg d={D.swap} className="size-4.5 text-slate-500" />
                     Switch to student view
                   </button>
                 </div>
-                <div className="border-t border-[#eef2f6] py-1">
-                  <button type="button" role="menuitem" className={`${item} text-[#b91c1c]`} onClick={() => (close(), logout())}>
-                    <Svg d={D.logout} className="size-[18px]" />
+                <div className="border-t border-slate-150 py-1">
+                  <button type="button" role="menuitem" className={`${item} text-red-700`} onClick={() => (close(), logout())}>
+                    <Svg d={D.logout} className="size-4.5" />
                     Log out
                   </button>
                 </div>
@@ -509,15 +509,15 @@ export default function InstructorDashboardPage({ section, newCourse, submission
   }, [drawer]);
 
   return (
-    <div className="flex min-h-[100dvh] w-full bg-[#0b1220]">
-      <aside className={`sticky top-0 hidden h-[100dvh] shrink-0 bg-[#0b1220] transition-[width] duration-200 md:block ${collapsed ? "w-[68px]" : "w-[248px]"}`}>
+    <div className="flex min-h-dvh w-full bg-gray-900">
+      <aside className={`sticky top-0 hidden h-dvh shrink-0 bg-gray-900 transition-all duration-200 md:block ${collapsed ? "w-17" : "w-62"}`}>
         <Sidebar active={activeLabel} collapsed={collapsed} onToggle={toggle} />
       </aside>
 
       {drawer && (
-        <div className="fixed inset-0 z-[150] md:hidden" role="dialog" aria-modal="true" aria-label="Menu">
-          <div className="overlay-fade absolute inset-0 bg-[#0f172a]/50 backdrop-blur-[2px]" onClick={() => setDrawer(false)} />
-          <div className="absolute inset-y-0 left-0 w-[280px] max-w-[85vw] bg-[#0b1220] shadow-2xl">
+        <div className="fixed inset-0 z-150 md:hidden" role="dialog" aria-modal="true" aria-label="Menu">
+          <div className="overlay-fade absolute inset-0 bg-slate-900/50 backdrop-blur-xs" onClick={() => setDrawer(false)} />
+          <div className="absolute inset-y-0 left-0 w-70 max-w-vw-85 bg-gray-900 shadow-2xl">
             <Sidebar active={activeLabel} collapsed={false} mobile onNavigate={() => setDrawer(false)} />
           </div>
         </div>
@@ -526,7 +526,7 @@ export default function InstructorDashboardPage({ section, newCourse, submission
       <div className="flex min-w-0 flex-1 flex-col">
         <TopBar title={activeLabel} group={PAGE_GROUP[activeLabel] ?? ""} onMenu={() => setDrawer(true)} />
         {/* Content sits in a rounded light panel inside the dark frame. overflow-clip keeps sticky elements inside pages working. */}
-        <div className="flex min-h-[calc(100dvh-4rem)] flex-1 flex-col overflow-clip bg-[#f6f7f9] md:mb-2 md:mr-2 md:rounded-[16px] md:ring-1 md:ring-white/5">
+        <div className="flex min-h-dvh-minus-64 flex-1 flex-col overflow-clip bg-primary-50 md:mb-2 md:mr-2 md:rounded-2xl md:ring-1 md:ring-white/5">
         {section === "courses" ? <InstructorCourses startNew={newCourse} /> : section === "assignments" ? <InstructorAssignments submissionId={submissionId} /> : section === "reports" ? <InstructorReports view={reportView} month={reportMonth} /> : section === "reviews" ? <InstructorReviews /> : section === "qa" ? <InstructorQa questionId={questionId} newQuestionCourse={newQuestionCourse} /> : section === "co-instructors" ? <InstructorCoRequests /> : section === "announcements" ? <InstructorAnnouncements courseId={announcementCourse} /> : section === "availability" ? <InstructorAvailability scheduleId={scheduleId} /> : section === "apps" ? <InstructorApps view={appsView ?? "store"} /> : section === "sessions" ? <InstructorSessions seriesId={sessionSeries} sessionId={sessionId} courseId={sessionCourse} /> : section === "schedule" ? <InstructorSchedule /> : <InstructorOverview />}
         </div>
       </div>

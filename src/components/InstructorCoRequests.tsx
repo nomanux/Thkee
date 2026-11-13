@@ -25,7 +25,7 @@ export const pendingCoRequestCount = () => {
   return REQUESTS.filter((r) => (decisions[r.id]?.status ?? r.status) === "Pending").length;
 };
 const PAGE_SIZE = 10;
-const COLUMNS = "grid grid-cols-[254fr_269fr_156fr_170fr_230fr] items-center gap-x-3 px-6";
+const COLUMNS = "grid grid-cols-co-requests items-center gap-x-3 px-6";
 
 const ordinal = (day: number) => {
   const tens = day % 100;
@@ -39,9 +39,9 @@ const acceptedNow = () => {
 };
 
 const STATUS_STYLES: Record<Status, string> = {
-  Pending: "bg-[#fff9f0] text-[#faa104]",
-  Accepted: "bg-[#ecfdf5] text-[#059669]",
-  Rejected: "bg-[#f2f4f7] text-[#475569]",
+  Pending: "bg-secondary-50 text-secondary-600",
+  Accepted: "bg-emerald-50 text-emerald-600",
+  Rejected: "bg-slate-150 text-slate-600",
 };
 
 export default function InstructorCoRequests() {
@@ -62,7 +62,7 @@ export default function InstructorCoRequests() {
   const start = (current - 1) * PAGE_SIZE;
   const rows = filtered.slice(start, start + PAGE_SIZE);
 
-  const headerCell = `flex items-center gap-1.5 text-[14px] leading-[24px] text-[#64748b] ${fontMedium}`;
+  const headerCell = `flex items-center gap-1.5 text-sm leading-6 text-slate-500 ${fontMedium}`;
   const pickCourse = (next: string) => {
     setCourse(next);
     setPage(1);
@@ -70,8 +70,8 @@ export default function InstructorCoRequests() {
 
   return (
     <main className="flex flex-1 flex-col bg-white">
-      <div className="border-b border-[#e2e8f0] bg-white px-4 py-6 md:px-7">
-        <h1 className="m-0 flex h-[42px] items-center font-['Instrument_Sans:Medium'] text-[24px] font-medium leading-[32px] text-[#0f172a]" style={{ fontVariationSettings: '"wdth" 100' }}>
+      <div className="border-b border-slate-200 bg-white px-4 py-6 md:px-7">
+        <h1 className="m-0 flex h-10.5 items-center font-instrument-medium text-2xl font-medium leading-8 text-slate-900" style={{ fontVariationSettings: '"wdth" 100' }}>
           Co-Instructor Requests
         </h1>
       </div>
@@ -80,7 +80,7 @@ export default function InstructorCoRequests() {
           <ActionMenu
             label={`Course: ${allCourses ? "All Courses" : course}`}
             alignLeft
-            triggerClass={`flex items-center gap-3 text-left text-[16px] leading-[24px] text-[#0f172a] ${fontSemi}`}
+            triggerClass={`flex items-center gap-3 text-left text-base leading-6 text-slate-900 ${fontSemi}`}
             trigger={
               <>
                 {allCourses ? "All Courses" : course} ({inCourse.length} Requests)
@@ -89,7 +89,7 @@ export default function InstructorCoRequests() {
             }
             items={[{ label: `All Courses (${REQUESTS.length} Requests)`, onClick: () => pickCourse("all") }, ...COURSES.map((name) => ({ label: `${name} (${REQUESTS.filter((r) => r.course === name).length} Requests)`, onClick: () => pickCourse(name) }))]}
           />
-          <div className="w-[186px] [&_button[aria-haspopup]]:w-full [&_button[aria-haspopup]]:justify-between">
+          <div className="w-46.5 [&_button[aria-haspopup]]:w-full [&_button[aria-haspopup]]:justify-between">
             <FilterSelect
               large
               alignRight
@@ -109,9 +109,9 @@ export default function InstructorCoRequests() {
           </div>
         </div>
 
-        <div className="overflow-x-auto rounded-[8px] border border-[#e2e8f0]">
-          <div className="min-w-[860px]">
-            <div className={`${COLUMNS} h-[54px] bg-[#f8fafc]`}>
+        <div className="overflow-x-auto rounded-lg border border-slate-200">
+          <div className="min-w-215">
+            <div className={`${COLUMNS} h-13.5 bg-slate-25`}>
               <span className={headerCell}>
                 Course Name
                 <img src={imgSort} alt="" width={20} height={20} className="size-5" />
@@ -129,14 +129,14 @@ export default function InstructorCoRequests() {
                 const current = statusOf(r);
                 const acceptedAt = decisions[r.id]?.acceptedAt ?? SEEDED_ACCEPTED;
                 return (
-                  <li key={r.id} className={`${COLUMNS} min-h-[55px] border-t border-[#f1f5f9] py-2 text-[14px] leading-[24px] tracking-[-0.01px] ${fontRegular}`}>
-                    <span title={r.course} className="truncate pr-6 text-[#64748b]">
+                  <li key={r.id} className={`${COLUMNS} min-h-13.75 border-t border-slate-150 py-2 text-sm leading-6 ${fontRegular}`}>
+                    <span title={r.course} className="truncate pr-6 text-slate-500">
                       {r.course}
                     </span>
-                    <span className="truncate text-[#1e293b]">{r.name}</span>
-                    <span className="whitespace-nowrap text-[#64748b]">{r.requestedOn}</span>
+                    <span className="truncate text-slate-800">{r.name}</span>
+                    <span className="whitespace-nowrap text-slate-500">{r.requestedOn}</span>
                     <span>
-                      <span className={`inline-flex h-[22px] items-center rounded-full px-2 text-[12px] leading-[18px] ${STATUS_STYLES[current]} ${fontMedium}`}>{current}</span>
+                      <span className={`inline-flex h-5.5 items-center rounded-full px-2 text-xs leading-4.5 ${STATUS_STYLES[current]} ${fontMedium}`}>{current}</span>
                     </span>
                     <div className="flex flex-col items-center justify-center">
                       {current === "Pending" && (
@@ -148,9 +148,9 @@ export default function InstructorCoRequests() {
                               setDecisions((d) => ({ ...d, [r.id]: { status: "Accepted", acceptedAt: acceptedNow() } }));
                               notify(`${r.name} approved as co-instructor`);
                             }}
-                            className="flex items-center gap-2 text-[#faa104] transition hover:text-[#c98003]"
+                            className="flex items-center gap-2 text-secondary-600 transition hover:text-secondary-700"
                           >
-                            <svg viewBox="0 0 24 24" className="size-[18px]" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
+                            <svg viewBox="0 0 24 24" className="size-4.5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
                               <circle cx="12" cy="12" r="10" />
                               <path d="M12 8v8M8 12h8" />
                             </svg>
@@ -163,9 +163,9 @@ export default function InstructorCoRequests() {
                               setDecisions((d) => ({ ...d, [r.id]: { status: "Rejected" } }));
                               notify(`Request from ${r.name} rejected`);
                             }}
-                            className="flex items-center gap-2 text-[#94a3b8] transition hover:text-[#475569]"
+                            className="flex items-center gap-2 text-slate-400 transition hover:text-slate-600"
                           >
-                            <svg viewBox="0 0 24 24" className="size-[18px] text-[#475569]" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
+                            <svg viewBox="0 0 24 24" className="size-4.5 text-slate-600" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
                               <path d="M6 6l12 12M18 6L6 18" />
                             </svg>
                             Reject
@@ -174,17 +174,17 @@ export default function InstructorCoRequests() {
                       )}
                       {current === "Accepted" && (
                         <>
-                          <button type="button" onClick={() => notify("Permission settings are coming soon")} className={`text-[12px] leading-[18px] text-[#334155] underline transition hover:text-[#0f172a] ${fontMedium}`}>
+                          <button type="button" onClick={() => notify("Permission settings are coming soon")} className={`text-xs leading-4.5 text-slate-700 underline transition hover:text-slate-900 ${fontMedium}`}>
                             Manage Permission
                           </button>
-                          <span className="mt-0.5 whitespace-nowrap text-[10px] leading-[16px] tracking-[0.1px] text-[#94a3b8]">{acceptedAt}</span>
+                          <span className="mt-0.5 whitespace-nowrap text-10 leading-4 text-slate-400">{acceptedAt}</span>
                         </>
                       )}
                     </div>
                   </li>
                 );
               })}
-              {rows.length === 0 && <li className={`border-t border-[#f1f5f9] px-6 py-10 text-center text-[14px] text-[#64748b] ${fontRegular}`}>No requests match these filters.</li>}
+              {rows.length === 0 && <li className={`border-t border-slate-150 px-6 py-10 text-center text-sm text-slate-500 ${fontRegular}`}>No requests match these filters.</li>}
             </ul>
           </div>
         </div>

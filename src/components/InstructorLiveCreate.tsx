@@ -9,6 +9,7 @@ import { Checkbox } from "./InstructorAssignments";
 import { ConfirmDialog, LIVE_COURSES, MultiSessionBadge, SingleSessionBadge } from "./InstructorSessions";
 import { ActionMenu, FilterSelect } from "./Menus";
 import { NoteEditor } from "./Notes";
+import { buttonClass } from "./Button"
 
 const imgLogo = "/assets/4c1d1.svg";
 const DRAFTS_KEY = "thkee.liveDrafts";
@@ -97,13 +98,13 @@ const SPARKLE = "M12 3l1.8 4.7L18.5 9.5l-4.7 1.8L12 16l-1.8-4.7L5.5 9.5l4.7-1.8z
 const ARROW_RIGHT = "M5 12h14M13 6l6 6-6 6";
 
 const inputClass = "field";
-const labelClass = `text-[14px] leading-[20px] text-[#1e293b] ${fontSemi}`;
-const yellowButton = `flex h-[44px] w-full max-w-[260px] items-center justify-center gap-2 rounded-[8px] bg-[#ffb20d] px-4 text-[16px] leading-[20px] text-[#1e293b] transition hover:bg-[#faa104] ${fontMedium}`;
-const inlineLink = "text-[#faa104] underline transition hover:text-[#c98003]";
+const labelClass = `text-sm leading-5 text-slate-800 ${fontSemi}`;
+const yellowButton = `flex h-11 w-full max-w-65 items-center justify-center gap-2 rounded-lg bg-secondary-500 px-4 text-base leading-5 text-slate-800 transition hover:bg-secondary-600 ${fontMedium}`;
+const inlineLink = "text-secondary-600 underline transition hover:text-secondary-700";
 
 function Select({ label, value, options, onChange, error }: { label: string; value: string; options: { value: string; label: string }[]; onChange: (value: string) => void; error?: boolean }) {
   return (
-    <div className={`[&_ul]:max-h-[240px] [&_ul]:w-full [&_ul]:overflow-y-auto ${error ? "[&_button[aria-haspopup]]:border-[#f87171]" : ""}`}>
+    <div className={`[&_ul]:max-h-60 [&_ul]:w-full [&_ul]:overflow-y-auto ${error ? "[&_button[aria-haspopup]]:border-red-400" : ""}`}>
       <FilterSelect plain label={label} value={value} onChange={onChange} options={options} />
     </div>
   );
@@ -111,16 +112,16 @@ function Select({ label, value, options, onChange, error }: { label: string; val
 
 function StartShell({ children }: { children: ReactNode }) {
   return (
-    <div className="flex min-h-[100dvh] flex-col bg-[#f5f2ec]">
-      <header className="flex h-[70px] shrink-0 items-center justify-between gap-4 bg-[#1e293b] px-4 md:px-8">
-        <img src={imgLogo} alt="Thkee" className="h-[30px] w-[101.6px]" />
-        <button type="button" onClick={() => openInstructorSessions()} className={`flex items-center gap-1.5 text-[16px] leading-[24px] text-white transition hover:text-[#ffb20d] ${fontRegular}`}>
+    <div className="flex min-h-dvh flex-col bg-olive-100">
+      <header className="flex h-17.5 shrink-0 items-center justify-between gap-4 bg-slate-800 px-4 md:px-8">
+        <img src={imgLogo} alt="Thkee" className="h-7.5 w-25.5" />
+        <button type="button" onClick={() => openInstructorSessions()} className={`flex items-center gap-1.5 text-base leading-6 text-white transition hover:text-secondary-500 ${fontRegular}`}>
           <Icon path="M15 6l-6 6 6 6" className="size-4" />
           Back to Dashboard
         </button>
       </header>
       <main className="flex flex-1 justify-center px-4 py-10 md:py-20">
-        <div className="relative h-fit w-full max-w-[852px] rounded-[20px] bg-white px-5 py-12 shadow-[0px_1px_3px_0px_rgba(0,0,0,0.1)] md:px-10">{children}</div>
+        <div className="relative h-fit w-full max-w-213 rounded-2xl bg-white px-5 py-12 shadow-sm md:px-10">{children}</div>
       </main>
     </div>
   );
@@ -128,9 +129,9 @@ function StartShell({ children }: { children: ReactNode }) {
 
 function StartHeading({ title, subtitle }: { title: string; subtitle: string }) {
   return (
-    <div className="mx-auto max-w-[440px] text-center">
-      <h1 className={`m-0 text-[30px] leading-[38px] tracking-[-0.5px] text-[#1e293b] ${fontHeading}`}>{title}</h1>
-      <p className={`mt-3 text-[16px] leading-[28px] text-[#334155] ${fontRegular}`}>{subtitle}</p>
+    <div className="mx-auto max-w-110 text-center">
+      <h1 className={`m-0 text-3xl leading-9.5 tracking-tight text-slate-800 ${fontHeading}`}>{title}</h1>
+      <p className={`mt-3 text-base leading-7 text-slate-700 ${fontRegular}`}>{subtitle}</p>
     </div>
   );
 }
@@ -159,18 +160,18 @@ function StartFlow() {
     return (
       <StartShell>
         <StartHeading title="Welcome to Live Session" subtitle="Select the session type that best fits your teaching needs." />
-        <div role="radiogroup" aria-label="Session type" className="mx-auto mt-6 flex max-w-[440px] flex-col gap-4">
+        <div role="radiogroup" aria-label="Session type" className="mx-auto mt-6 flex max-w-110 flex-col gap-4">
           {TYPE_OPTIONS.map((option) => {
             const selected = option.kind === kind;
             return (
-              <label key={option.kind} className={`relative block cursor-pointer rounded-[12px] border-2 p-5 pr-14 transition ${selected ? "border-[#faa104] bg-white" : "border-[#f8fafc] bg-[#f8fafc] hover:border-[#e2e8f0]"}`}>
+              <label key={option.kind} className={`relative block cursor-pointer rounded-xl border-2 p-5 pr-14 transition ${selected ? "border-secondary-600 bg-white" : "border-slate-25 bg-slate-25 hover:border-slate-200"}`}>
                 <input type="radio" name="session-type" checked={selected} onChange={() => setKind(option.kind)} className="peer sr-only" />
-                <span className={`flex items-center gap-3 text-[#1e293b] ${selected ? "text-[18px]" : "text-[16px]"} leading-[28px] ${fontSemi}`}>
+                <span className={`flex items-center gap-3 text-slate-800 ${selected ? "text-lg" : "text-base"} leading-7 ${fontSemi}`}>
                   <Icon path={option.icon} className="size-7 shrink-0" />
                   {option.label}
                 </span>
-                <span className={`mt-2 block text-[14px] leading-[24px] text-[#334155] ${fontRegular}`}>{option.text}</span>
-                <span aria-hidden="true" className={`absolute right-5 top-5 flex size-6 items-center justify-center rounded-full peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-[#1e293b] ${selected ? "bg-[#334155]" : "border border-[#cbd5e1] bg-white"}`}>{selected && <span className="size-2 rounded-full bg-white" />}</span>
+                <span className={`mt-2 block text-sm leading-6 text-slate-700 ${fontRegular}`}>{option.text}</span>
+                <span aria-hidden="true" className={`absolute right-5 top-5 flex size-6 items-center justify-center rounded-full peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-slate-800 ${selected ? "bg-slate-700" : "border border-slate-300 bg-white"}`}>{selected && <span className="size-2 rounded-full bg-white" />}</span>
               </label>
             );
           })}
@@ -187,12 +188,12 @@ function StartFlow() {
 
   return (
     <StartShell>
-      <button type="button" onClick={() => setStep("type")} aria-label="Back to session type" className="mb-4 flex size-11 items-center justify-center rounded-[8px] bg-[#f1f5f9] text-[#1e293b] transition hover:bg-[#e2e8f0] md:absolute md:left-9 md:top-12 md:mb-0">
+      <button type="button" onClick={() => setStep("type")} aria-label="Back to session type" className="mb-4 flex size-11 items-center justify-center rounded-lg bg-slate-150 text-slate-800 transition hover:bg-slate-200 md:absolute md:left-9 md:top-12 md:mb-0">
         <Icon path="M20 12H4M10 6l-6 6 6 6" />
       </button>
       <StartHeading title={`Set Up Your ${kind === "single" ? "Single" : "Multi"} Live Session`} subtitle="Define your session title and category to get started with your live class." />
       <form
-        className="mx-auto mt-8 flex max-w-[440px] flex-col"
+        className="mx-auto mt-8 flex max-w-110 flex-col"
         onSubmit={(e) => {
           e.preventDefault();
           proceed();
@@ -201,14 +202,14 @@ function StartFlow() {
         <label htmlFor="live-title" className={labelClass}>
           Live Course Title
         </label>
-        <input id="live-title" value={title} maxLength={TITLE_LIMIT} onChange={(e) => setTitle(e.target.value)} placeholder="e.g. Learn Blender in 60 minutes" className={`mt-2 ${inputClass} ${attempted && !title.trim() ? "border-[#f87171]" : ""}`} />
-        <div className="mt-1 flex justify-between gap-3 text-[12px] leading-[18px]">
-          <span className={`text-[#dc2626] ${fontRegular}`}>{attempted && !title.trim() ? "This is required" : ""}</span>
-          <span className={`text-[#64748b] ${fontRegular}`}>{TITLE_LIMIT - title.length} characters left!</span>
+        <input id="live-title" value={title} maxLength={TITLE_LIMIT} onChange={(e) => setTitle(e.target.value)} placeholder="e.g. Learn Blender in 60 minutes" className={`mt-2 ${inputClass} ${attempted && !title.trim() ? "border-red-400" : ""}`} />
+        <div className="mt-1 flex justify-between gap-3 text-xs leading-4.5">
+          <span className={`text-red-600 ${fontRegular}`}>{attempted && !title.trim() ? "This is required" : ""}</span>
+          <span className={`text-slate-500 ${fontRegular}`}>{TITLE_LIMIT - title.length} characters left!</span>
         </div>
         <p className={`mb-2 mt-4 ${labelClass}`}>Category</p>
         <Select label="Category" value={category} onChange={setCategory} error={attempted && !category} options={[{ value: "", label: "Select here" }, ...CATEGORIES.map((c) => ({ value: c, label: c }))]} />
-        {attempted && !category && <p className={`mt-1 text-[12px] leading-[18px] text-[#dc2626] ${fontRegular}`}>This is required</p>}
+        {attempted && !category && <p className={`mt-1 text-xs leading-4.5 text-red-600 ${fontRegular}`}>This is required</p>}
         <button type="submit" className={`${yellowButton} mx-auto mt-10`}>
           Proceed to Session Setup
           <Icon path={ARROW_RIGHT} className="size-4" />
@@ -229,17 +230,17 @@ function PointList({ placeholder, values, onChange, keepFirst, counterOnFirst, a
           return (
             <li key={i} className="flex items-center gap-3">
               <div className={`field-box min-w-0 flex-1 ${counter ? "md:mr-0" : ""}`}>
-                <input aria-label={`${label} ${i + 1}`} value={value} maxLength={POINT_LIMIT} onChange={(e) => onChange(values.map((v, j) => (j === i ? e.target.value : v)))} placeholder={placeholder} className={`min-w-0 flex-1 bg-transparent text-[14px] leading-[24px] text-[#334155] outline-none placeholder:text-slate-400 ${fontRegular}`} />
+                <input aria-label={`${label} ${i + 1}`} value={value} maxLength={POINT_LIMIT} onChange={(e) => onChange(values.map((v, j) => (j === i ? e.target.value : v)))} placeholder={placeholder} className={`min-w-0 flex-1 bg-transparent text-sm leading-6 text-slate-700 outline-none placeholder:text-slate-400 ${fontRegular}`} />
                 {counter ? (
-                  <span className={`shrink-0 text-[14px] text-[#cbd5e1] ${fontRegular}`}>{POINT_LIMIT - value.length}</span>
+                  <span className={`shrink-0 text-sm text-slate-300 ${fontRegular}`}>{POINT_LIMIT - value.length}</span>
                 ) : (
-                  <button type="button" aria-label={`Suggest ${label.toLowerCase()} ${i + 1} with AI`} onClick={() => notify("AI suggestions are coming soon")} className="flex shrink-0 text-[#6016fc] transition hover:opacity-70">
+                  <button type="button" aria-label={`Suggest ${label.toLowerCase()} ${i + 1} with AI`} onClick={() => notify("AI suggestions are coming soon")} className="flex shrink-0 text-ai-600 transition hover:opacity-70">
                     <Icon path={SPARKLE} className="size-5" />
                   </button>
                 )}
               </div>
               {!counter && !(keepFirst && i === 0) && (
-                <button type="button" aria-label={`Remove ${label.toLowerCase()} ${i + 1}`} disabled={fixed} onClick={() => onChange(values.filter((_, j) => j !== i))} className="flex size-8 shrink-0 items-center justify-center rounded-full bg-[#f8fafc] text-[#475569] transition hover:bg-[#f1f5f9] disabled:cursor-not-allowed disabled:opacity-40">
+                <button type="button" aria-label={`Remove ${label.toLowerCase()} ${i + 1}`} disabled={fixed} onClick={() => onChange(values.filter((_, j) => j !== i))} className="flex size-8 shrink-0 items-center justify-center rounded-full bg-slate-25 text-slate-600 transition hover:bg-slate-150 disabled:cursor-not-allowed disabled:opacity-40">
                   <Icon path={TRASH} className="size-4" />
                 </button>
               )}
@@ -248,8 +249,8 @@ function PointList({ placeholder, values, onChange, keepFirst, counterOnFirst, a
           );
         })}
       </ul>
-      <button type="button" onClick={() => onChange([...values, ""])} className={`mt-4 flex items-center gap-2 text-[14px] leading-[20px] text-[#1e293b] transition ${addLink ? "hover:text-[#64748b]" : "h-9 rounded-[8px] border border-[#cbd5e1] px-3 hover:bg-[#f8fafc]"} ${fontMedium}`}>
-        <Icon path={PLUS} className="size-[18px]" />
+      <button type="button" onClick={() => onChange([...values, ""])} className={`mt-4 flex items-center gap-2 text-sm leading-5 text-slate-800 transition ${addLink ? "hover:text-slate-500" : "h-9 rounded-lg border border-slate-300 px-3 hover:bg-slate-25"} ${fontMedium}`}>
+        <Icon path={PLUS} className="size-4.5" />
         Add New
       </button>
     </div>
@@ -257,19 +258,19 @@ function PointList({ placeholder, values, onChange, keepFirst, counterOnFirst, a
 }
 
 function SectionTitle({ children }: { children: ReactNode }) {
-  return <h1 className={`m-0 text-[20px] leading-[28px] text-[#1e293b] ${fontSemi}`}>{children}</h1>;
+  return <h1 className={`m-0 text-xl leading-7 text-slate-800 ${fontSemi}`}>{children}</h1>;
 }
 
 type SectionProps = { draft: LiveDraft; update: (patch: Partial<LiveDraft>) => void; attempted: boolean };
 
 function LearnersSection({ draft, update }: SectionProps) {
   const { notify } = useApp();
-  const heading = `text-[16px] leading-[24px] text-[#1e293b] ${fontSemi}`;
-  const text = `mt-2 text-[14px] leading-[24px] text-[#475569] ${fontRegular}`;
+  const heading = `text-base leading-6 text-slate-800 ${fontSemi}`;
+  const text = `mt-2 text-sm leading-6 text-slate-600 ${fontRegular}`;
   return (
     <>
       <SectionTitle>Intended Learners</SectionTitle>
-      <p className={`mt-6 text-[16px] leading-[28px] text-[#334155] ${fontRegular}`}>
+      <p className={`mt-6 text-base leading-7 text-slate-700 ${fontRegular}`}>
         These descriptions will appear on your{" "}
         <button type="button" onClick={() => notify("The course landing page preview is coming soon")} className={inlineLink}>
           Course Landing Page
@@ -306,7 +307,7 @@ const wordCount = (text: string) => text.trim().split(/\s+/).filter(Boolean).len
 function DetailsSection({ draft, update }: SectionProps) {
   const { notify } = useApp();
   const fileRef = useRef<HTMLInputElement>(null);
-  const hint = `mt-2 text-[12px] leading-[18px] text-[#475569] ${fontRegular}`;
+  const hint = `mt-2 text-xs leading-4.5 text-slate-600 ${fontRegular}`;
   const words = wordCount(draft.description.text);
 
   const pickCover = (file?: File) => {
@@ -336,7 +337,7 @@ function DetailsSection({ draft, update }: SectionProps) {
             <label htmlFor="detail-title" className={labelClass}>
               Title
             </label>
-            <span className={`text-[12px] leading-[18px] text-[#64748b] ${fontRegular}`}>{TITLE_LIMIT - draft.title.length} characters left!</span>
+            <span className={`text-xs leading-4.5 text-slate-500 ${fontRegular}`}>{TITLE_LIMIT - draft.title.length} characters left!</span>
           </div>
           <input id="detail-title" value={draft.title} maxLength={TITLE_LIMIT} onChange={(e) => update({ title: e.target.value })} className={`mt-2 ${inputClass}`} />
           <p className={hint}>Make your title catchy, clear, and easy for people to find in a search.</p>
@@ -360,31 +361,31 @@ function DetailsSection({ draft, update }: SectionProps) {
           </p>
         </div>
         <div className="mt-4 flex flex-col gap-6 md:flex-row">
-          <div className="flex aspect-video w-full shrink-0 flex-col items-center justify-center gap-3 overflow-hidden rounded-[8px] bg-[#f8fafc] md:w-[310px]">
+          <div className="flex aspect-video w-full shrink-0 flex-col items-center justify-center gap-3 overflow-hidden rounded-lg bg-slate-25 md:w-77.5">
             {draft.cover ? (
               <img src={draft.cover} alt="Course cover preview" className="size-full object-cover" />
             ) : (
               <>
-                <span className="flex size-[90px] items-center justify-center rounded-full bg-white text-[#94a3b8]">
+                <span className="flex size-22.5 items-center justify-center rounded-full bg-white text-slate-400">
                   <Icon path="M4 7h13a2 2 0 012 2v9a2 2 0 01-2 2H4a2 2 0 01-2-2V9a2 2 0 012-2zM2 17l5-5 4 4 3-3 5 5M7 4h13a2 2 0 012 2v9M14 11h.01" className="size-11" />
                 </span>
-                <span className={`text-[14px] leading-[20px] text-[#475569] ${fontMedium}`}>No image</span>
+                <span className={`text-sm leading-5 text-slate-600 ${fontMedium}`}>No image</span>
               </>
             )}
           </div>
           <div className="min-w-0">
-            <p className={`text-[16px] leading-[24px] text-[#1e293b] ${fontSemi}`}>Cover Image</p>
-            <p className={`mt-2 text-[14px] leading-[24px] text-[#475569] ${fontRegular}`}>
+            <p className={`text-base leading-6 text-slate-800 ${fontSemi}`}>Cover Image</p>
+            <p className={`mt-2 text-sm leading-6 text-slate-600 ${fontRegular}`}>
               Upload your course image here. Supported files are .webp, .jpg, .jpeg, or .png. Best size: 16:9, at least <span className={fontSemi}>750 × 422 px</span>, up to 10 MB. See our{" "}
               <button type="button" onClick={() => notify("Image guidelines are coming soon")} className={inlineLink}>
                 image guidelines.
               </button>
             </p>
             <div className="mt-4 flex gap-4">
-              <button type="button" onClick={() => fileRef.current?.click()} className={`h-[44px] rounded-[8px] bg-[#475569] px-4 text-[16px] leading-[20px] text-white transition hover:bg-[#334155] ${fontMedium}`}>
+              <button type="button" onClick={() => fileRef.current?.click()} className={`h-11 rounded-lg bg-slate-600 px-4 text-base leading-5 text-white transition hover:bg-slate-700 ${fontMedium}`}>
                 Browse Files
               </button>
-              <button type="button" disabled={!draft.cover} onClick={() => update({ cover: "" })} className={`h-[44px] rounded-[8px] border border-[#cbd5e1] px-5 text-[16px] leading-[20px] text-[#1e293b] transition hover:bg-[#f8fafc] disabled:cursor-not-allowed disabled:opacity-50 ${fontMedium}`}>
+              <button type="button" disabled={!draft.cover} onClick={() => update({ cover: "" })} className={`${buttonClass("secondary", "lg")}`}>
                 Reset
               </button>
               <input ref={fileRef} type="file" hidden aria-label="Choose cover image" accept=".webp,.jpg,.jpeg,.png" onChange={(e) => pickCover(e.target.files?.[0])} />
@@ -396,7 +397,7 @@ function DetailsSection({ draft, update }: SectionProps) {
   );
 }
 
-const fieldTitle = `text-[14px] leading-[20px] text-[#1e293b] ${fontRegular}`;
+const fieldTitle = `text-sm leading-5 text-slate-800 ${fontRegular}`;
 
 function ClassSection({ draft, update }: SectionProps) {
   return (
@@ -409,7 +410,7 @@ function ClassSection({ draft, update }: SectionProps) {
           </label>
           <div className="mt-2 flex">
             <input id="class-duration" type="number" min={1} value={draft.duration} onChange={(e) => update({ duration: e.target.value })} placeholder="60" className={`${inputClass} rounded-r-none`} />
-            <span className={`flex h-[36px] shrink-0 items-center rounded-r-[8px] border border-l-0 border-[#e2e8f0] bg-[#f1f5f9] px-3.5 text-[14px] text-[#475569] ${fontRegular}`}>Minute</span>
+            <span className={`flex h-9 shrink-0 items-center rounded-r-lg border border-l-0 border-slate-200 bg-slate-150 px-3.5 text-sm text-slate-600 ${fontRegular}`}>Minute</span>
           </div>
         </div>
         <div>
@@ -430,10 +431,10 @@ function HelpLabel({ label, help, htmlFor }: { label: string; help: string; html
         {label}
       </label>
       <span className="group/tip relative flex">
-        <button type="button" aria-label={help} className="flex size-3.5 items-center justify-center rounded-full bg-[#94a3b8] text-[10px] leading-none text-white">
+        <button type="button" aria-label={help} className="flex size-3.5 items-center justify-center rounded-full bg-slate-400 text-10 leading-none text-white">
           ?
         </button>
-        <span role="tooltip" className={`pointer-events-none absolute bottom-full left-1/2 z-20 mb-2 hidden w-[230px] -translate-x-1/2 rounded-[6px] bg-[#1e293b] px-2.5 py-2 text-[12px] leading-[18px] text-white group-focus-within/tip:block group-hover/tip:block ${fontRegular}`}>
+        <span role="tooltip" className={`pointer-events-none absolute bottom-full left-1/2 z-20 mb-2 hidden w-57.5 -translate-x-1/2 rounded-md bg-slate-800 px-2.5 py-2 text-xs leading-4.5 text-white group-focus-within/tip:block group-hover/tip:block ${fontRegular}`}>
           {help}
         </span>
       </span>
@@ -458,7 +459,7 @@ function LimitsSection({ draft, update }: SectionProps) {
           <HelpLabel htmlFor="minimum-notice" label="Minimum Notice" help="How far ahead students must book." />
           <div className="flex gap-2">
             <input id="minimum-notice" type="number" min={0} value={draft.noticeValue} onChange={(e) => update({ noticeValue: e.target.value })} placeholder="60" className={`${inputClass} min-w-0 flex-1`} />
-            <div className="w-[130px] shrink-0">
+            <div className="w-32.5 shrink-0">
               <Select
                 label="Minimum notice unit"
                 value={draft.noticeUnit}
@@ -479,7 +480,7 @@ function LimitsSection({ draft, update }: SectionProps) {
       </div>
       <div className="mt-4">
         <Checkbox checked={draft.remember} onChange={() => update({ remember: !draft.remember })}>
-          <span className={`text-[14px] leading-[20px] text-[#475569] ${fontRegular}`}>Remember this setting</span>
+          <span className={`text-sm leading-5 text-slate-600 ${fontRegular}`}>Remember this setting</span>
         </Checkbox>
       </div>
     </>
@@ -488,13 +489,13 @@ function LimitsSection({ draft, update }: SectionProps) {
 
 function PricingSection({ draft, update, attempted }: SectionProps) {
   const { notify } = useApp();
-  const text = `text-[14px] leading-[24px] text-[#475569] ${fontRegular}`;
+  const text = `text-sm leading-6 text-slate-600 ${fontRegular}`;
   const missing = attempted && !draft.price;
   return (
     <>
       <SectionTitle>Pricing</SectionTitle>
       <p className={`mt-6 ${text}`}>Please select the price tier for your live session below and click 'Save'. The list price that students will see in other currencies is determined using the price tier matrix. If you intend to offer your course for free, the total length of video content must be less than 2 hours.</p>
-      <div className="mt-4 grid gap-4 md:grid-cols-[245px_minmax(0,1fr)]">
+      <div className="mt-4 grid gap-4 md:grid-cols-aside-245">
         <div>
           <p className={`mb-2 ${fieldTitle}`}>Currency</p>
           <Select
@@ -510,11 +511,11 @@ function PricingSection({ draft, update, attempted }: SectionProps) {
         <div>
           <p className={`mb-2 ${fieldTitle}`}>Prices</p>
           <Select label="Prices" value={draft.price} error={missing} onChange={(price) => update({ price })} options={[{ value: "", label: "Select a price" }, ...PRICE_TIERS[draft.currency].map((p) => ({ value: p, label: p }))]} />
-          {missing && <p className={`mt-1.5 text-[12px] leading-[18px] text-[#dc2626] ${fontRegular}`}>This is required</p>}
+          {missing && <p className={`mt-1.5 text-xs leading-4.5 text-red-600 ${fontRegular}`}>This is required</p>}
         </div>
       </div>
-      <hr className="my-10 border-[#e2e8f0]" />
-      <h2 className={`text-[16px] leading-[24px] text-[#1e293b] ${fontSemi}`}>Thkee's Promotional Programs</h2>
+      <hr className="my-10 border-slate-200" />
+      <h2 className={`text-base leading-6 text-slate-800 ${fontSemi}`}>Thkee's Promotional Programs</h2>
       <p className={`mt-2 ${text}`}>
         Thkee offers several optional marketing programs in which you can choose to participate. These programs can help increase your revenue potential on Thkee by finding the optimal price point for your content and promoting it through additional marketing channels.
         <br />
@@ -526,12 +527,12 @@ function PricingSection({ draft, update, attempted }: SectionProps) {
         </button>
         , so you should read it carefully.
       </p>
-      <h2 className={`mt-5 text-[16px] leading-[24px] text-[#1e293b] ${fontSemi}`}>Deals Program</h2>
+      <h2 className={`mt-5 text-base leading-6 text-slate-800 ${fontSemi}`}>Deals Program</h2>
       <p className={`mt-2 ${text}`}>We will take care of promoting your content to a huge range of audiences using our advanced marketing tools. Participation can increase your revenue potential by enabling Thkee to offer your content at a compelling discount via targeted promotions.</p>
       <p className={`mt-6 ${text}`}>The Deals Program allows Thkee to offer your content for a price no lower than 75 SR (or local equivalent) except in select countries or to certain resellers. It also allows Thkee to optimize your list price in different markets.</p>
       <div className="mt-6">
         <Checkbox checked={draft.dealsAgreed} onChange={() => update({ dealsAgreed: !draft.dealsAgreed })}>
-          <span className={`text-[14px] leading-[20px] text-[#334155] ${fontRegular}`}>I have read and agree to the Promotions Policy terms for the Thkee Deals Program.</span>
+          <span className={`text-sm leading-5 text-slate-700 ${fontRegular}`}>I have read and agree to the Promotions Policy terms for the Thkee Deals Program.</span>
         </Checkbox>
       </div>
     </>
@@ -549,26 +550,26 @@ function AvailabilitySection({ draft, update }: SectionProps) {
     return () => window.removeEventListener("focus", refresh);
   }, []);
   const schedule = schedules.find((s) => s.id === draft.availabilityId) ?? schedules.find((s) => s.isDefault) ?? schedules[0];
-  const row = `grid grid-cols-[110px_minmax(0,1fr)] gap-x-4 text-[14px] leading-[24px] sm:grid-cols-[168px_minmax(0,1fr)] ${fontRegular}`;
+  const row = `grid grid-cols-aside-110 gap-x-4 text-sm leading-6 sm:grid-cols-aside-168 ${fontRegular}`;
 
   return (
     <>
       <SectionTitle>Appointment Time</SectionTitle>
       {!schedule ? (
-        <p className={`mt-8 rounded-[8px] border border-[#e2e8f0] px-6 py-12 text-center text-[14px] leading-[24px] text-[#64748b] ${fontRegular}`}>You don't have any availability schedules yet.</p>
+        <p className={`mt-8 rounded-lg border border-slate-200 px-6 py-12 text-center text-sm leading-6 text-slate-500 ${fontRegular}`}>You don't have any availability schedules yet.</p>
       ) : (
-        <div className="mt-8 rounded-[12px] border border-[#e2e8f0]">
-          <div className="flex flex-wrap items-center justify-between gap-3 rounded-t-[12px] bg-[#f1f5f9] px-6 py-4">
-            <p className={`flex items-center gap-2.5 text-[14px] leading-[20px] text-[#1e293b] ${fontRegular}`}>
-              <Icon path="M12 3a9 9 0 100 18 9 9 0 000-18zM3 12h18M12 3c3 3 3 15 0 18M12 3c-3 3-3 15 0 18" className="size-[18px] shrink-0" />
+        <div className="mt-8 rounded-xl border border-slate-200">
+          <div className="flex flex-wrap items-center justify-between gap-3 rounded-t-xl bg-slate-150 px-6 py-4">
+            <p className={`flex items-center gap-2.5 text-sm leading-5 text-slate-800 ${fontRegular}`}>
+              <Icon path="M12 3a9 9 0 100 18 9 9 0 000-18zM3 12h18M12 3c3 3 3 15 0 18M12 3c-3 3-3 15 0 18" className="size-4.5 shrink-0" />
               {schedule.timezone}
             </p>
-            <a href={`#/instructor/availability/${encodeURIComponent(schedule.id)}`} target="_blank" rel="noreferrer" className={`flex items-center gap-2 text-[16px] leading-[24px] text-[#1e293b] transition hover:text-[#64748b] ${fontMedium}`}>
-              <Icon path="M18 13v5a2 2 0 01-2 2H6a2 2 0 01-2-2V8a2 2 0 012-2h5M14 4h6v6M20 4l-8 8" className="size-[18px]" />
+            <a href={`#/instructor/availability/${encodeURIComponent(schedule.id)}`} target="_blank" rel="noreferrer" className={`flex items-center gap-2 text-base leading-6 text-slate-800 transition hover:text-slate-500 ${fontMedium}`}>
+              <Icon path="M18 13v5a2 2 0 01-2 2H6a2 2 0 01-2-2V8a2 2 0 012-2h5M14 4h6v6M20 4l-8 8" className="size-4.5" />
               Edit availability
             </a>
           </div>
-          <div className="border-b border-[#e2e8f0] px-6 py-6">
+          <div className="border-b border-slate-200 px-6 py-6">
             <p className={`mb-1.5 ${fieldTitle}`}>Availability</p>
             <Select label="Availability" value={schedule.id} onChange={(availabilityId) => update({ availabilityId })} options={schedules.map((s) => ({ value: s.id, label: s.isDefault ? `${s.name} (Default)` : s.name }))} />
           </div>
@@ -577,8 +578,8 @@ function AvailabilitySection({ draft, update }: SectionProps) {
               <li key={DAY_LABELS[i]} className={row}>
                 {day.on ? (
                   <>
-                    <span className="text-[#1e293b]">{DAY_LABELS[i]}</span>
-                    <span className="flex flex-col gap-2.5 text-[#334155]">
+                    <span className="text-slate-800">{DAY_LABELS[i]}</span>
+                    <span className="flex flex-col gap-2.5 text-slate-700">
                       {day.slots.map((slot, j) => (
                         <span key={j} className="whitespace-nowrap">
                           {formatClock(slot.start)}
@@ -590,8 +591,8 @@ function AvailabilitySection({ draft, update }: SectionProps) {
                   </>
                 ) : (
                   <>
-                    <span className="text-[#94a3b8] line-through">{DAY_LABELS[i]}</span>
-                    <span className="text-[#94a3b8]">Unavailable</span>
+                    <span className="text-slate-400 line-through">{DAY_LABELS[i]}</span>
+                    <span className="text-slate-400">Unavailable</span>
                   </>
                 )}
               </li>
@@ -667,20 +668,20 @@ function Editor({ initial, section }: { initial: LiveDraft; section: string }) {
     }
   };
 
-  const navItem = (active: boolean) => `flex h-10 shrink-0 items-center gap-3 rounded-[8px] px-4 text-left text-[14px] leading-[20px] transition md:w-full ${active ? "bg-[#f1f5f9] text-[#1e293b]" : "text-[#475569] hover:bg-[#f8fafc]"} ${fontRegular}`;
+  const navItem = (active: boolean) => `flex h-10 shrink-0 items-center gap-3 rounded-lg px-4 text-left text-sm leading-5 transition md:w-full ${active ? "bg-slate-150 text-slate-800" : "text-slate-600 hover:bg-slate-25"} ${fontRegular}`;
   const props: SectionProps = { draft, update, attempted };
 
   return (
-    <div className="flex min-h-[100dvh] flex-col bg-white">
-      <header className="sticky top-0 z-30 flex min-h-[70px] flex-wrap items-center justify-between gap-3 border-b border-[#e2e8f0] bg-white px-4 py-2 md:px-8">
+    <div className="flex min-h-dvh flex-col bg-white">
+      <header className="sticky top-0 z-30 flex min-h-17.5 flex-wrap items-center justify-between gap-3 border-b border-slate-200 bg-white px-4 py-2 md:px-8">
         <div className="flex min-w-0 items-center gap-4">
-          <button type="button" onClick={() => (dirty ? setLeaving(true) : openInstructorSessions())} className={`flex shrink-0 items-center gap-2 border-r border-[#e2e8f0] pr-4 text-[14px] leading-[20px] text-[#1e293b] transition hover:text-[#64748b] ${fontRegular}`}>
+          <button type="button" onClick={() => (dirty ? setLeaving(true) : openInstructorSessions())} className={`flex shrink-0 items-center gap-2 border-r border-slate-200 pr-4 text-sm leading-5 text-slate-800 transition hover:text-slate-500 ${fontRegular}`}>
             <Icon path="M15 6l-6 6 6 6" className="size-5" />
             Back
           </button>
           <div className="min-w-0">
-            <p className={`truncate text-[16px] leading-[24px] text-[#0f172a] ${fontSemi}`}>{draft.title || "Untitled session"}</p>
-            <p className={`mt-0.5 flex flex-wrap items-center gap-3 text-[12px] leading-[18px] text-[#ef4444] ${fontRegular}`}>
+            <p className={`truncate text-base leading-6 text-slate-900 ${fontSemi}`}>{draft.title || "Untitled session"}</p>
+            <p className={`mt-0.5 flex flex-wrap items-center gap-3 text-xs leading-4.5 text-red-500 ${fontRegular}`}>
               <span className="flex items-center gap-1.5">
                 <Icon path="M3 6h13a1 1 0 011 1v10a1 1 0 01-1 1H3a1 1 0 01-1-1V7a1 1 0 011-1zM17 11l5-3v8l-5-3M8 10l3 2-3 2z" className="size-4" />
                 <span>
@@ -694,7 +695,7 @@ function Editor({ initial, section }: { initial: LiveDraft; section: string }) {
         <div className="flex items-center gap-3">
           <ActionMenu
             label="Preview"
-            triggerClass={`flex h-9 items-center gap-2 rounded-[8px] bg-[#f1f5f9] px-3 text-[14px] leading-[20px] text-[#1e293b] transition hover:bg-[#e2e8f0] ${fontRegular}`}
+            triggerClass={`flex h-9 items-center gap-2 rounded-lg bg-slate-150 px-3 text-sm leading-5 text-slate-800 transition hover:bg-slate-200 ${fontRegular}`}
             trigger={
               <>
                 Preview
@@ -703,14 +704,14 @@ function Editor({ initial, section }: { initial: LiveDraft; section: string }) {
             }
             items={[{ label: "Preview as student", onClick: () => notify("The student preview is coming soon") }]}
           />
-          <div className="flex h-9 overflow-visible rounded-[8px] bg-[#1e293b] text-white">
-            <button type="button" onClick={saveNow} className={`rounded-l-[8px] pl-4 pr-3 text-[14px] leading-[20px] transition hover:bg-[#0f172a] ${fontMedium}`}>
+          <div className="flex h-9 overflow-visible rounded-lg bg-slate-800 text-white">
+            <button type="button" onClick={saveNow} className={`rounded-l-lg pl-4 pr-3 text-sm leading-5 transition hover:bg-slate-900 ${fontMedium}`}>
               Save
             </button>
             <span aria-hidden="true" className="my-2 w-px bg-white/30" />
             <ActionMenu
               label="More save options"
-              triggerClass="flex h-9 items-center rounded-r-[8px] px-2.5 transition hover:bg-[#0f172a]"
+              triggerClass="flex h-9 items-center rounded-r-lg px-2.5 transition hover:bg-slate-900"
               trigger={<Icon path="M6 9l6 6 6-6" className="size-4" />}
               items={[
                 { label: "Save and continue", onClick: saveAndNext },
@@ -721,7 +722,7 @@ function Editor({ initial, section }: { initial: LiveDraft; section: string }) {
         </div>
       </header>
       <div className="flex min-h-0 flex-1 flex-col md:flex-row">
-        <aside className="flex shrink-0 flex-col justify-between border-b border-[#e2e8f0] p-3 md:sticky md:top-[70px] md:h-[calc(100dvh-70px)] md:w-[268px] md:border-b-0 md:border-r md:p-6">
+        <aside className="flex shrink-0 flex-col justify-between border-b border-slate-200 p-3 md:sticky md:top-17.5 md:h-dvh-minus-70 md:w-67 md:border-b-0 md:border-r md:p-6">
           <nav aria-label="Session setup" className="flex gap-1 overflow-x-auto md:flex-col md:overflow-visible">
             {SECTIONS.map((item) => (
               <button key={item.id} type="button" aria-current={item.id === current.id ? "page" : undefined} onClick={() => openLiveEditor(draft.id, item.id)} className={navItem(item.id === current.id)}>
@@ -741,8 +742,8 @@ function Editor({ initial, section }: { initial: LiveDraft; section: string }) {
             </button>
           </div>
         </aside>
-        <main className="min-w-0 flex-1 bg-[#fdfdfd] px-4 pb-16 pt-7 md:px-10">
-          <div className="mx-auto max-w-[770px]">
+        <main className="min-w-0 flex-1 bg-slate-25 px-4 pb-16 pt-7 md:px-10">
+          <div className="mx-auto max-w-192.5">
             {current.id === "intended-learners" && <LearnersSection {...props} />}
             {current.id === "details" && <DetailsSection {...props} />}
             {current.id === "class-setup" && <ClassSection {...props} />}

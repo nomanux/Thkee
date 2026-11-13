@@ -5,6 +5,7 @@ import { Checkbox } from "./InstructorAssignments";
 import { BarChart, Donut, LineChart, type ChartSeries } from "./InstructorCharts";
 import { Pagination } from "./InstructorCourses";
 import { FilterSelect } from "./Menus";
+import { buttonClass } from "./Button"
 
 
 const MONTHS = ["May 2021", "June 2021", "July 2021", "Aug 2021", "Sep 2021", "Oct 2021", "Nov 2021", "Dec 2021", "Jan 2022", "Feb 2022", "Mar 2022"];
@@ -28,24 +29,24 @@ const REVENUE_SERIES: ChartSeries[] = [
 
 const money = (v: number) => `$${v.toFixed(2)}`;
 const titleStyle = { fontVariationSettings: '"wdth" 100' };
-const titleClass = "m-0 font-['Instrument_Sans:Medium'] text-[24px] font-medium leading-[32px] text-[#0f172a]";
+const titleClass = "m-0 font-instrument-medium text-2xl font-medium leading-8 text-slate-900";
 
 export function InfoTip({ text, tone = "gray", light }: { text: string; tone?: "gray" | "amber"; light?: boolean }) {
   return (
     <span className="group/tip relative inline-flex shrink-0">
       <button type="button" aria-label={text} className="flex">
         {tone === "gray" ? (
-          <svg viewBox="0 0 20 20" className="size-4 text-[#94a3b8]" fill="currentColor" aria-hidden="true">
+          <svg viewBox="0 0 20 20" className="size-4 text-slate-400" fill="currentColor" aria-hidden="true">
             <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm-1-9a1 1 0 112 0v4a1 1 0 11-2 0V9zm1-4a1 1 0 100 2 1 1 0 000-2z" clipRule="evenodd" />
           </svg>
         ) : (
-          <svg viewBox="0 0 20 20" className={`size-3.5 ${light ? "text-[#ffb20d]" : "text-[#faa104]"}`} fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" aria-hidden="true">
+          <svg viewBox="0 0 20 20" className={`size-3.5 ${light ? "text-secondary-500" : "text-secondary-600"}`} fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" aria-hidden="true">
             <circle cx="10" cy="10" r="8" />
             <path d="M10 6v5M10 14h.01" />
           </svg>
         )}
       </button>
-      <span role="tooltip" className={`pointer-events-none absolute bottom-full right-[-8px] z-20 mb-2 hidden w-[260px] rounded-[6px] bg-[#1e293b] px-2.5 py-2 text-left text-[12px] leading-[18px] text-white group-focus-within/tip:block group-hover/tip:block ${fontRegular}`}>
+      <span role="tooltip" className={`pointer-events-none absolute bottom-full -right-2 z-20 mb-2 hidden w-65 rounded-md bg-slate-800 px-2.5 py-2 text-left text-xs leading-4.5 text-white group-focus-within/tip:block group-hover/tip:block ${fontRegular}`}>
         {text}
       </span>
     </span>
@@ -57,8 +58,8 @@ function SeriesToggles({ series, on, toggle }: { series: ChartSeries[]; on: stri
     <div className="flex flex-wrap items-center gap-x-6 gap-y-2">
       {series.map((s) => (
         <Checkbox key={s.key} checked={on.includes(s.key)} onChange={() => toggle(s.key)}>
-          <span className={`text-[14px] leading-[20px] tracking-[-0.01px] text-[#334155] ${fontRegular}`}>{s.label}</span>
-          <span aria-hidden="true" className="h-[3px] w-4 rounded-full" style={{ backgroundColor: s.color }} />
+          <span className={`text-sm leading-5 text-slate-700 ${fontRegular}`}>{s.label}</span>
+          <span aria-hidden="true" className="h-0.75 w-4 rounded-full" style={{ backgroundColor: s.color }} />
         </Checkbox>
       ))}
     </div>
@@ -67,7 +68,7 @@ function SeriesToggles({ series, on, toggle }: { series: ChartSeries[]; on: stri
 
 function PeriodSelect({ value, onChange }: { value: string; onChange: (v: string) => void }) {
   return (
-    <div className="w-[187px]">
+    <div className="w-46.75">
       <FilterSelect
         plain
         alignRight
@@ -121,26 +122,26 @@ function Overview() {
 
   return (
     <main className="flex flex-1 flex-col bg-white">
-      <div className="flex flex-wrap items-center gap-6 border-b border-[#e2e8f0] bg-white px-4 py-6 md:px-7">
-        <h1 className={`flex h-[42px] items-center ${titleClass}`} style={titleStyle}>
+      <div className="flex flex-wrap items-center gap-6 border-b border-slate-200 bg-white px-4 py-6 md:px-7">
+        <h1 className={`flex h-10.5 items-center ${titleClass}`} style={titleStyle}>
           Reports overview
         </h1>
         {tab !== "revenue" && (
-          <button type="button" onClick={() => (tab === "rating" ? downloadCsv("instructor-rating.csv", "Rating", RATINGS) : downloadCsv("total-enrollments.csv", "Enrollments", ENROLLMENTS))} className={`flex h-[42px] items-center rounded-[8px] bg-[#ffb20d] px-4 text-[16px] leading-[20px] tracking-[-0.01px] text-[#1e293b] transition hover:bg-[#faa104] ${fontMedium}`}>
+          <button type="button" onClick={() => (tab === "rating" ? downloadCsv("instructor-rating.csv", "Rating", RATINGS) : downloadCsv("total-enrollments.csv", "Enrollments", ENROLLMENTS))} className={`${buttonClass("yellow", "lg")}`}>
             Download CSV
           </button>
         )}
       </div>
       <div className="flex flex-col gap-6 px-4 py-6 md:px-7">
-        <div role="tablist" aria-label="Report metric" className="flex overflow-x-auto border-y border-[#e2e8f0] bg-[#f8fafc]">
+        <div role="tablist" aria-label="Report metric" className="flex overflow-x-auto border-y border-slate-200 bg-slate-25">
           {TABS.map((t) => {
             const active = t.key === tab;
             return (
-              <button key={t.key} type="button" role="tab" aria-selected={active} onClick={() => setTab(t.key)} className={`flex w-[216px] shrink-0 flex-col gap-1.5 border-t-4 px-6 py-5 text-left transition ${active ? "border-[#ffb20d] bg-white" : "border-transparent hover:bg-[#f1f5f9]"}`}>
-                <span className={`text-[16px] leading-[24px] ${active ? "text-[#64748b]" : "text-[#94a3b8]"} ${fontRegular}`}>{t.label}</span>
-                <span className={`text-[24px] leading-[32px] ${active ? "text-[#1e293b]" : "text-[#475569]"} ${fontHeading}`}>{t.value}</span>
-                <span className={`text-[14px] leading-[24px] ${active ? "text-[#64748b]" : "text-[#94a3b8]"} ${fontRegular}`}>
-                  {t.highlight && <span className={active ? "text-[#faa104]" : ""}>{t.highlight} </span>}
+              <button key={t.key} type="button" role="tab" aria-selected={active} onClick={() => setTab(t.key)} className={`flex w-54 shrink-0 flex-col gap-1.5 border-t-4 px-6 py-5 text-left transition ${active ? "border-secondary-500 bg-white" : "border-transparent hover:bg-slate-150"}`}>
+                <span className={`text-base leading-6 ${active ? "text-slate-500" : "text-slate-400"} ${fontRegular}`}>{t.label}</span>
+                <span className={`text-2xl leading-8 ${active ? "text-slate-800" : "text-slate-600"} ${fontHeading}`}>{t.value}</span>
+                <span className={`text-sm leading-6 ${active ? "text-slate-500" : "text-slate-400"} ${fontRegular}`}>
+                  {t.highlight && <span className={active ? "text-secondary-600" : ""}>{t.highlight} </span>}
                   {t.note}
                 </span>
               </button>
@@ -150,7 +151,7 @@ function Overview() {
 
         {tab === "revenue" ? (
           <>
-            <section className="rounded-[8px] border border-[#e2e8f0] bg-white p-6">
+            <section className="rounded-lg border border-slate-200 bg-white p-6">
               <div className="flex flex-wrap items-center justify-between gap-4">
                 <h2 className={titleClass} style={titleStyle}>
                   Report analytics
@@ -162,33 +163,33 @@ function Overview() {
                 <LineChart months={MONTHS} series={visibleSeries} yMax={750} ticks={[0, 250, 500, 750]} markers tickLabel={money} valueLabel={money} />
               </div>
               <div className="mt-6 flex justify-center">
-                <button type="button" onClick={() => openInstructorReports("revenue")} className={`flex h-[44px] items-center gap-3 rounded-[8px] border border-[#cbd5e1] px-5 text-[16px] text-[#1e293b] transition hover:bg-[#f8fafc] ${fontRegular}`}>
+                <button type="button" onClick={() => openInstructorReports("revenue")} className={`${buttonClass("secondary", "lg")}`}>
                   Revenue Report
-                  <svg viewBox="0 0 24 24" className="size-4 text-[#ffb20d]" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" className="size-4 text-secondary-500" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                     <path d="M9 6l6 6-6 6" />
                   </svg>
                 </button>
               </div>
             </section>
-            <section className="rounded-[8px] border border-[#e2e8f0] bg-white p-6">
-              <span className={`inline-flex h-[30px] items-center rounded-[4px] bg-[#10b981] px-2 text-[12px] leading-[18px] text-white ${fontMedium}`}>Monthly Payout</span>
+            <section className="rounded-lg border border-slate-200 bg-white p-6">
+              <span className={`inline-flex h-7.5 items-center rounded-sm bg-emerald-500 px-2 text-xs leading-4.5 text-white ${fontMedium}`}>Monthly Payout</span>
               <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
-                <h2 className={`text-[20px] leading-[32px] tracking-[0.15px] text-[#065f46] ${fontHeading}`}>Your Next Payout</h2>
-                <p className={`text-[16px] leading-[24px] text-[#334155] ${fontRegular}`}>
-                  Due date: <span className={`text-[#1e293b] ${fontSemi}`}>3 July 2022</span>
+                <h2 className={`text-xl leading-8 text-emerald-800 ${fontHeading}`}>Your Next Payout</h2>
+                <p className={`text-base leading-6 text-slate-700 ${fontRegular}`}>
+                  Due date: <span className={`text-slate-800 ${fontSemi}`}>3 July 2022</span>
                 </p>
               </div>
               <div className="mt-4 grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
                 {PAYOUT_TILES.map((tile) => (
-                  <div key={tile.label} className="relative flex items-center gap-4 rounded-[8px] border border-[#e2e8f0] px-5 py-[18px]">
-                    <span className="flex size-12 shrink-0 items-center justify-center rounded-[8px]" style={{ backgroundColor: tile.bg, color: tile.color }}>
+                  <div key={tile.label} className="relative flex items-center gap-4 rounded-lg border border-slate-200 px-5 py-4.5">
+                    <span className="flex size-12 shrink-0 items-center justify-center rounded-lg" style={{ backgroundColor: tile.bg, color: tile.color }}>
                       <svg viewBox="0 0 24 24" className="size-5" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                         {tile.icon}
                       </svg>
                     </span>
                     <div className="min-w-0">
-                      <p className={`text-[20px] leading-[28px] text-[#334155] ${fontHeading}`}>{tile.value}</p>
-                      <p className={`mt-1 text-[14px] leading-[20px] text-[#64748b] ${fontRegular}`}>{tile.label}</p>
+                      <p className={`text-xl leading-7 text-slate-700 ${fontHeading}`}>{tile.value}</p>
+                      <p className={`mt-1 text-sm leading-5 text-slate-500 ${fontRegular}`}>{tile.label}</p>
                     </div>
                     <span className="absolute right-2.5 top-2.5 flex">
                       <InfoTip text={tile.tip} />
@@ -203,14 +204,14 @@ function Overview() {
             <div className="flex justify-end">
               <PeriodSelect value={period} onChange={setPeriod} />
             </div>
-            <section className="rounded-[8px] border border-[#cbd5e1] bg-white p-6">
+            <section className="rounded-lg border border-slate-300 bg-white p-6">
               {tab === "enrollments" ? (
                 <LineChart months={MONTHS} series={[{ key: "enrollments", label: "Enrollments", color: COLORS.promotional, values: ENROLLMENTS }]} yMax={750} ticks={[0, 250, 500, 750]} markers tickLabel={String} valueLabel={String} />
               ) : (
                 <>
                   <BarChart months={MONTHS} values={RATINGS} color={COLORS.promotional} yMax={5} ticks={[0, 1, 2, 3, 4, 5]} tickLabel={(t) => `${t} Star`} valueLabel={(v) => v.toFixed(1)} />
                   <div className="mt-3 flex justify-center">
-                    <button type="button" onClick={openInstructorReviews} className={`text-[16px] leading-[24px] text-[#faa104] transition hover:text-[#c98003] ${fontRegular}`}>
+                    <button type="button" onClick={openInstructorReviews} className={`text-base leading-6 text-secondary-600 transition hover:text-secondary-700 ${fontRegular}`}>
                       Reviews Overview
                     </button>
                   </div>
@@ -241,11 +242,11 @@ const REVENUE_ROWS = Array.from({ length: 65 }, (_, i) => {
   return { month: date.toLocaleString("en-US", { month: "short", year: "numeric" }), sales: [20, 30, 50, 33, 66, 11, 21][i % 7], earnings: "$2.36", refund: "$86.37", payment: i === 0 ? "Due on July 08, 2021" : "Paid on July 08, 2021" };
 });
 const REVENUE_PAGE = 7;
-const REVENUE_COLUMNS = "grid grid-cols-[1.15fr_1fr_1fr_1fr_1.15fr] items-center px-5";
+const REVENUE_COLUMNS = "grid grid-cols-reports-summary items-center px-5";
 
 function SortCell({ label }: { label: string }) {
   return (
-    <span className={`flex items-center gap-1.5 whitespace-nowrap text-[14px] leading-[24px] text-white ${fontMedium}`}>
+    <span className={`flex items-center gap-1.5 whitespace-nowrap text-sm leading-6 text-white ${fontMedium}`}>
       {label}
       <svg viewBox="0 0 24 24" className="size-4" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
         <path d="M6 9l6 6 6-6" />
@@ -260,25 +261,25 @@ function RevenueReport() {
   const { on, toggle } = useToggles(REVENUE_SERIES.map((s) => s.key));
   const start = (page - 1) * REVENUE_PAGE;
   const rows = REVENUE_ROWS.slice(start, start + REVENUE_PAGE);
-  const smallText = `flex flex-wrap items-center gap-x-0.5 gap-y-1 text-[12px] leading-[18px] ${fontRegular}`;
+  const smallText = `flex flex-wrap items-center gap-x-0.5 gap-y-1 text-xs leading-4.5 ${fontRegular}`;
 
   return (
-    <main className="flex flex-1 flex-col bg-[#f1f5f9]">
+    <main className="flex flex-1 flex-col bg-slate-150">
       <div className="bg-white px-4 py-6 md:px-8">
-        <h1 className={`flex h-[42px] items-center ${titleClass}`} style={titleStyle}>
+        <h1 className={`flex h-10.5 items-center ${titleClass}`} style={titleStyle}>
           Revenue Report
         </h1>
       </div>
       <div className="flex flex-1 flex-col gap-8 px-4 py-6 md:px-7">
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
-          <div className="flex flex-col gap-3 rounded-[6px] bg-[#5a0ee0] p-5">
-            <p className={`text-[16px] leading-[24px] text-white ${fontRegular}`}>Total Revenue</p>
-            <p className={`flex items-center gap-2 text-[22px] leading-[32px] text-white ${fontHeading}`}>
+          <div className="flex flex-col gap-3 rounded-md bg-ai-600 p-5">
+            <p className={`text-base leading-6 text-white ${fontRegular}`}>Total Revenue</p>
+            <p className={`flex items-center gap-2 text-22 leading-8 text-white ${fontHeading}`}>
               $3416.62 <InfoTip tone="amber" light text={STAT_TIP} />
             </p>
-            <p className={`${smallText} text-[#cbd5e1]`}>
+            <p className={`${smallText} text-slate-300`}>
               <Up color="#34d399" />
-              <span className="text-[#34d399]">+12.4%</span> this month
+              <span className="text-emerald-400">+12.4%</span> this month
             </p>
           </div>
           {[
@@ -287,20 +288,20 @@ function RevenueReport() {
             { label: "Total Refund", value: "$200", delta: "+09.4%", note: "This Month", up: true },
             { label: "Total Sales", value: "145", delta: "-09.4%", note: "this month", up: false },
           ].map((card) => (
-            <div key={card.label} className="flex flex-col gap-3 rounded-[6px] border border-[#e2e8f0] bg-white p-5">
-              <p className={`text-[16px] leading-[24px] text-[#475569] ${fontRegular}`}>{card.label}</p>
-              <p className={`flex items-center gap-2 text-[22px] leading-[32px] text-[#5a0ee0] ${fontHeading}`}>
+            <div key={card.label} className="flex flex-col gap-3 rounded-md border border-slate-200 bg-white p-5">
+              <p className={`text-base leading-6 text-slate-600 ${fontRegular}`}>{card.label}</p>
+              <p className={`flex items-center gap-2 text-22 leading-8 text-ai-600 ${fontHeading}`}>
                 {card.value} <InfoTip tone="amber" text={STAT_TIP} />
               </p>
-              <p className={`${smallText} text-[#64748b]`}>
+              <p className={`${smallText} text-slate-500`}>
                 {card.up ? <Up color="#059669" /> : <Down />}
-                <span className={card.up ? "text-[#059669]" : "text-[#ef4444]"}>{card.delta}</span> {card.prefix && <span className={`text-[10px] ${fontSemi}`}>{card.prefix}</span>} {card.note} <InfoTip tone="amber" text={STAT_TIP} />
+                <span className={card.up ? "text-emerald-600" : "text-red-500"}>{card.delta}</span> {card.prefix && <span className={`text-10 ${fontSemi}`}>{card.prefix}</span>} {card.note} <InfoTip tone="amber" text={STAT_TIP} />
               </p>
             </div>
           ))}
         </div>
 
-        <section className="rounded-[8px] border border-[#cbd5e1] bg-white p-6">
+        <section className="rounded-lg border border-slate-300 bg-white p-6">
           <div className="flex flex-wrap items-center justify-between gap-4">
             <h2 className={titleClass} style={titleStyle}>
               Report Analytics
@@ -314,15 +315,15 @@ function RevenueReport() {
         </section>
 
         <div className="overflow-x-auto">
-          <div className="flex min-w-[760px] flex-col gap-2">
-            <div className={`${REVENUE_COLUMNS} h-10 rounded-[4px] bg-[#334155]`}>
+          <div className="flex min-w-190 flex-col gap-2">
+            <div className={`${REVENUE_COLUMNS} h-10 rounded-sm bg-slate-700`}>
               {["Statistics", "Total Sales", "Total Earnings", "Total Refund", "Expected Payment Date"].map((h) => (
                 <SortCell key={h} label={h} />
               ))}
             </div>
             {rows.map((row) => (
-              <div key={row.month} className={`${REVENUE_COLUMNS} h-[74px] rounded-[8px] border border-[#e2e8f0] bg-white text-[16px] leading-[24px] text-[#475569] ${fontRegular}`}>
-                <button type="button" onClick={() => openInstructorReports("revenue", row.month)} className={`w-fit text-[#5a0ee0] hover:underline ${fontMedium}`}>
+              <div key={row.month} className={`${REVENUE_COLUMNS} h-18.5 rounded-lg border border-slate-200 bg-white text-base leading-6 text-slate-600 ${fontRegular}`}>
+                <button type="button" onClick={() => openInstructorReports("revenue", row.month)} className={`w-fit text-ai-600 hover:underline ${fontMedium}`}>
                   {row.month}
                 </button>
                 <span>{row.sales}</span>
@@ -372,23 +373,23 @@ function DonutCard({ title, rows }: { title: string; rows: { label: string; colo
   const shown = rows.filter((r) => on.includes(r.label));
   const total = rows.reduce((sum, r) => sum + r.value, 0);
   return (
-    <section className="flex flex-col rounded-[8px] border border-[#e2e8f0] bg-white p-6">
-      <h2 className={`text-[18px] leading-[28px] text-[#1e293b] ${fontMedium}`}>{title}</h2>
+    <section className="flex flex-col rounded-lg border border-slate-200 bg-white p-6">
+      <h2 className={`text-lg leading-7 text-slate-800 ${fontMedium}`}>{title}</h2>
       <div className="mt-6">
         <Donut segments={shown} center={money(shown.reduce((sum, r) => sum + r.value, 0))} />
       </div>
       <div className="mt-10 flex flex-col gap-2">
         {rows.map((r) => (
-          <div key={r.label} className="flex min-h-[36px] items-center justify-between gap-2">
+          <div key={r.label} className="flex min-h-9 items-center justify-between gap-2">
             <Checkbox checked={on.includes(r.label)} onChange={() => toggle(r.label)}>
-              <span className={`max-w-[120px] truncate text-[14px] leading-[20px] tracking-[-0.01px] text-[#334155] ${fontRegular}`} title={r.label}>
+              <span className={`max-w-30 truncate text-sm leading-5 text-slate-700 ${fontRegular}`} title={r.label}>
                 {r.label}
               </span>
-              <span aria-hidden="true" className="h-[3px] w-4 shrink-0 rounded-full" style={{ backgroundColor: r.color }} />
+              <span aria-hidden="true" className="h-0.75 w-4 shrink-0 rounded-full" style={{ backgroundColor: r.color }} />
             </Checkbox>
             <div className="flex items-center gap-5">
-              <span className={`rounded-full bg-[#f8fafc] px-3 py-1.5 text-[12px] leading-[18px] text-[#64748b] ${fontMedium}`}>{Math.round((r.value / total) * 100)}%</span>
-              <span className={`w-[50px] text-right text-[14px] leading-[20px] text-[#475569] ${fontRegular}`}>{money(r.value)}</span>
+              <span className={`rounded-full bg-slate-25 px-3 py-1.5 text-xs leading-4.5 text-slate-500 ${fontMedium}`}>{Math.round((r.value / total) * 100)}%</span>
+              <span className={`w-12.5 text-right text-sm leading-5 text-slate-600 ${fontRegular}`}>{money(r.value)}</span>
             </div>
           </div>
         ))}
@@ -408,7 +409,7 @@ const SALES = Array.from({ length: 65 }, (_, i) => ({
   earnings: "$119.10",
   status: i % 5 === 4 ? "Cancelled" : "Completed",
 }));
-const SALE_COLUMNS = "grid grid-cols-[100px_140px_minmax(180px,1fr)_110px_110px_140px_140px_70px] items-center gap-x-2 px-5";
+const SALE_COLUMNS = "grid grid-cols-reports-table items-center gap-x-2 px-5";
 const SALES_PAGE = 5;
 
 function MonthDetail({ month }: { month: string }) {
@@ -421,21 +422,21 @@ function MonthDetail({ month }: { month: string }) {
   const current = Math.min(page, pageCount);
   const start = (current - 1) * SALES_PAGE;
   const rows = filtered.slice(start, start + SALES_PAGE);
-  const link = "text-[#faa104] transition hover:text-[#c98003]";
+  const link = "text-secondary-600 transition hover:text-secondary-700";
 
   return (
-    <main className="flex flex-1 flex-col bg-[#f1f5f9]">
+    <main className="flex flex-1 flex-col bg-slate-150">
       <div className="bg-white px-4 py-6 md:px-8">
-        <h1 className={`flex h-[42px] flex-wrap items-center gap-1.5 ${titleClass}`} style={titleStyle}>
-          <button type="button" onClick={() => openInstructorReports("revenue")} className="transition hover:text-[#475569]">
+        <h1 className={`flex h-10.5 flex-wrap items-center gap-1.5 ${titleClass}`} style={titleStyle}>
+          <button type="button" onClick={() => openInstructorReports("revenue")} className="transition hover:text-slate-600">
             Revenue Report
           </button>
-          <span className="text-[#ffb20d]">/ {month}</span>
+          <span className="text-secondary-500">/ {month}</span>
         </h1>
       </div>
       <div className="flex flex-1 flex-col px-4 py-6 md:px-7">
-        <p className={`text-[16px] leading-[24px] text-[#334155] ${fontRegular}`}>You earned $88.93 during this month. July 08, 2020 is the expected payment date for this statement.</p>
-        <p className={`mt-4 text-[14px] leading-[20px] text-[#334155] ${fontRegular}`}>
+        <p className={`text-base leading-6 text-slate-700 ${fontRegular}`}>You earned $88.93 during this month. July 08, 2020 is the expected payment date for this statement.</p>
+        <p className={`mt-4 text-sm leading-5 text-slate-700 ${fontRegular}`}>
           Totals for this month are not yet finalized, as refunds and external payments may still be applied. Learn more about{" "}
           <button type="button" onClick={() => notify("Payments help is coming soon")} className={link}>
             payments
@@ -451,7 +452,7 @@ function MonthDetail({ month }: { month: string }) {
           ))}
         </div>
         <div className="mt-12 flex flex-wrap justify-end gap-6">
-          <div className="w-[187px]">
+          <div className="w-46.75">
             <FilterSelect
               plain
               alignRight
@@ -464,7 +465,7 @@ function MonthDetail({ month }: { month: string }) {
               options={[{ value: "all", label: "All channel" }, ...["Affiliate", "Organic", "Thkee Organic"].map((c) => ({ value: c, label: c }))]}
             />
           </div>
-          <div className="w-[187px]">
+          <div className="w-46.75">
             <FilterSelect
               plain
               alignRight
@@ -483,28 +484,28 @@ function MonthDetail({ month }: { month: string }) {
           </div>
         </div>
         <div className="mt-5 overflow-x-auto">
-          <div className="flex min-w-[1010px] flex-col gap-4">
-            <div className={`${SALE_COLUMNS} h-10 rounded-[4px] bg-[#334155]`}>
+          <div className="flex min-w-252.5 flex-col gap-4">
+            <div className={`${SALE_COLUMNS} h-10 rounded-sm bg-slate-700`}>
               {["Date", "Customer Name", "Products", "Channel", "Sale Price", "Your Earnings", "Status"].map((h) => (
                 <SortCell key={h} label={h} />
               ))}
-              <span className={`text-[14px] leading-[24px] text-white ${fontMedium}`}>Details</span>
+              <span className={`text-sm leading-6 text-white ${fontMedium}`}>Details</span>
             </div>
             {rows.map((s) => (
-              <div key={s.id} className={`${SALE_COLUMNS} min-h-[84px] rounded-[8px] border border-[#e2e8f0] bg-white py-2 text-[14px] leading-[24px] text-[#475569] ${fontRegular}`}>
-                <span className="max-w-[80px]">{s.date}</span>
+              <div key={s.id} className={`${SALE_COLUMNS} min-h-21 rounded-lg border border-slate-200 bg-white py-2 text-sm leading-6 text-slate-600 ${fontRegular}`}>
+                <span className="max-w-20">{s.date}</span>
                 <span>{s.customer}</span>
-                <span className={`pr-6 text-[#334155] ${fontSemi}`}>{s.product}</span>
+                <span className={`pr-6 text-slate-700 ${fontSemi}`}>{s.product}</span>
                 <span>{s.channel}</span>
                 <span>{s.price}</span>
                 <span>{s.earnings}</span>
-                <span className={`flex h-[26px] w-[104px] items-center justify-center rounded-[4px] border text-[12px] ${s.status === "Completed" ? "border-[#a7f3d0] bg-[#ecfdf5] text-[#059669]" : "border-[#fecaca] bg-[#fee2e2] text-[#ef4444]"} ${fontMedium}`}>{s.status}</span>
-                <button type="button" onClick={() => notify("Sale details are coming soon")} className={`w-fit text-[16px] text-[#475569] underline transition hover:text-[#0f172a] ${fontMedium}`}>
+                <span className={`flex h-6.5 w-26 items-center justify-center rounded-sm border text-xs ${s.status === "Completed" ? "border-emerald-200 bg-emerald-50 text-emerald-600" : "border-red-200 bg-red-100 text-red-500"} ${fontMedium}`}>{s.status}</span>
+                <button type="button" onClick={() => notify("Sale details are coming soon")} className={`w-fit text-base text-slate-600 underline transition hover:text-slate-900 ${fontMedium}`}>
                   View
                 </button>
               </div>
             ))}
-            {rows.length === 0 && <p className={`rounded-[8px] bg-white px-6 py-10 text-center text-[14px] text-[#64748b] ${fontRegular}`}>No sales match these filters.</p>}
+            {rows.length === 0 && <p className={`rounded-lg bg-white px-6 py-10 text-center text-sm text-slate-500 ${fontRegular}`}>No sales match these filters.</p>}
           </div>
         </div>
       </div>

@@ -7,6 +7,7 @@ import { CreateModal, DeleteModal, EditModal, type Announcement } from "./Instru
 import { Checkbox } from "./InstructorAssignments";
 import { ActionMenu, FilterSelect } from "./Menus";
 import { Shell } from "./Overlays";
+import { buttonClass } from "./Button"
 
 const imgClose = "/assets/53e9a.svg";
 const imgPlusSmall = "/assets/51771.svg";
@@ -58,9 +59,9 @@ export const LIVE_COURSES: LiveCourse[] = [
 const STORE_KEY = "thkee.instructorSessions";
 const EXTRAS_KEY = "thkee.instructorSessions.extras";
 
-const headingClass = `text-[24px] leading-[32px] text-[#0f172a] ${fontHeading}`;
-const sectionTitle = `text-[18px] leading-[28px] text-[#1e293b] ${fontSemi}`;
-const iconButton = "flex size-8 shrink-0 items-center justify-center rounded-[6px] text-[#475569] transition hover:bg-[#f1f5f9]";
+const headingClass = `text-2xl leading-8 text-slate-900 ${fontHeading}`;
+const sectionTitle = `text-lg leading-7 text-slate-800 ${fontSemi}`;
+const iconButton = "flex size-8 shrink-0 items-center justify-center rounded-md text-slate-600 transition hover:bg-slate-150";
 
 function Icon({ path, className = "size-5" }: { path: string; className?: string }) {
   return (
@@ -89,9 +90,9 @@ function NameDialog({ title, label, initial, onClose, onSave }: { title: string;
   const [name, setName] = useState(initial);
   const submit = () => (name.trim() ? onSave(name.trim()) : notify(`Add a ${label.toLowerCase()} first`));
   return (
-    <Shell title={title} onClose={onClose} hideHeader width="max-w-[480px]" radius="sm:rounded-[12px]">
-      <div className="flex items-center justify-between border-b border-[#e2e8f0] px-6 py-5">
-        <h2 className={`text-[18px] leading-[28px] text-[#1e293b] ${fontSemi}`}>{title}</h2>
+    <Shell title={title} onClose={onClose} hideHeader width="max-w-120" radius="sm:rounded-xl">
+      <div className="flex items-center justify-between border-b border-slate-200 px-6 py-5">
+        <h2 className={`text-lg leading-7 text-slate-800 ${fontSemi}`}>{title}</h2>
         <button type="button" onClick={onClose} aria-label="Close" className="flex transition hover:opacity-70">
           <img src={imgClose} alt="" width={20} height={20} className="size-5" />
         </button>
@@ -103,16 +104,16 @@ function NameDialog({ title, label, initial, onClose, onSave }: { title: string;
           submit();
         }}
       >
-        <label htmlFor="session-name" className={`text-[14px] leading-[20px] text-[#0f172a] ${fontMedium}`}>
+        <label htmlFor="session-name" className={`text-sm leading-5 text-slate-900 ${fontMedium}`}>
           {label}
         </label>
         <input id="session-name" value={name} onChange={(e) => setName(e.target.value)} className="field" />
       </form>
-      <div className="flex items-center justify-end gap-8 border-t border-[#e2e8f0] px-6 py-4">
-        <button type="button" onClick={onClose} className={`text-[16px] leading-[24px] text-[#1e293b] transition hover:text-[#64748b] ${fontMedium}`}>
+      <div className="flex items-center justify-end gap-8 border-t border-slate-200 px-6 py-4">
+        <button type="button" onClick={onClose} className={`text-base leading-6 text-slate-800 transition hover:text-slate-500 ${fontMedium}`}>
           Cancel
         </button>
-        <button type="button" onClick={submit} className={`h-[44px] rounded-[8px] bg-[#ffb20d] px-5 text-[16px] leading-[20px] text-[#1e293b] transition hover:bg-[#faa104] ${fontMedium}`}>
+        <button type="button" onClick={submit} className={`${buttonClass("yellow", "lg")}`}>
           Save
         </button>
       </div>
@@ -122,16 +123,16 @@ function NameDialog({ title, label, initial, onClose, onSave }: { title: string;
 
 export function ConfirmDialog({ title, body, confirmLabel, onClose, onConfirm }: { title: string; body: string; confirmLabel: string; onClose: () => void; onConfirm: () => void }) {
   return (
-    <Shell title={title} onClose={onClose} hideHeader width="max-w-[480px]" radius="sm:rounded-[12px]">
+    <Shell title={title} onClose={onClose} hideHeader width="max-w-120" radius="sm:rounded-xl">
       <div className="flex flex-col gap-2 px-6 py-6">
-        <h2 className={`text-[18px] leading-[28px] text-[#1e293b] ${fontSemi}`}>{title}</h2>
-        <p className={`text-[14px] leading-[24px] text-[#64748b] ${fontRegular}`}>{body}</p>
+        <h2 className={`text-lg leading-7 text-slate-800 ${fontSemi}`}>{title}</h2>
+        <p className={`text-sm leading-6 text-slate-500 ${fontRegular}`}>{body}</p>
       </div>
-      <div className="flex items-center justify-end gap-8 border-t border-[#e2e8f0] px-6 py-4">
-        <button type="button" onClick={onClose} className={`text-[16px] leading-[24px] text-[#1e293b] transition hover:text-[#64748b] ${fontMedium}`}>
+      <div className="flex items-center justify-end gap-8 border-t border-slate-200 px-6 py-4">
+        <button type="button" onClick={onClose} className={`text-base leading-6 text-slate-800 transition hover:text-slate-500 ${fontMedium}`}>
           Cancel
         </button>
-        <button type="button" onClick={onConfirm} className={`h-[44px] rounded-[8px] bg-[#ef4444] px-5 text-[16px] leading-[20px] text-white transition hover:bg-[#dc2626] ${fontMedium}`}>
+        <button type="button" onClick={onConfirm} className={`h-11 rounded-lg bg-red-500 px-5 text-base leading-5 text-white transition hover:bg-red-600 ${fontMedium}`}>
           {confirmLabel}
         </button>
       </div>
@@ -141,22 +142,22 @@ export function ConfirmDialog({ title, body, confirmLabel, onClose, onConfirm }:
 
 export function MultiSessionBadge() {
   return (
-    <span className={`inline-flex h-[22px] items-center gap-1.5 rounded-full bg-[#fff0d7] px-2 text-[12px] leading-[18px] text-[#9a3412] ${fontMedium}`}>
-      <span aria-hidden="true" className="size-1.5 rounded-full bg-[#f97316]" />
+    <span className={`inline-flex h-5.5 items-center gap-1.5 rounded-full bg-secondary-100 px-2 text-xs leading-4.5 text-orange-800 ${fontMedium}`}>
+      <span aria-hidden="true" className="size-1.5 rounded-full bg-orange-500" />
       Multi Session
     </span>
   );
 }
 const Separator = () => (
-  <span aria-hidden="true" className="size-1 rounded-full bg-[#cbd5e1]" />
+  <span aria-hidden="true" className="size-1 rounded-full bg-slate-300" />
 );
 
 function StatusLabel({ status }: { status: SessionStatus }) {
   if (status === "In progress") {
     return (
-      <span className={`inline-flex items-center gap-2 text-[12px] italic leading-[18px] text-[#ef4444] [font-synthesis:style] ${fontMedium}`}>
-        <span aria-hidden="true" className="flex size-[18px] items-center justify-center rounded-full bg-[#fee2e2]">
-          <span className="size-2 rounded-full bg-[#ef4444] motion-safe:animate-pulse" />
+      <span className={`inline-flex items-center gap-2 text-xs italic leading-4.5 text-red-500 font-synthesis-style ${fontMedium}`}>
+        <span aria-hidden="true" className="flex size-4.5 items-center justify-center rounded-full bg-red-100">
+          <span className="size-2 rounded-full bg-red-500 motion-safe:animate-pulse" />
         </span>
         In progress
       </span>
@@ -164,8 +165,8 @@ function StatusLabel({ status }: { status: SessionStatus }) {
   }
   const completed = status === "Completed";
   return (
-    <span className={`inline-flex h-[22px] items-center gap-1.5 rounded-full px-2 text-[12px] leading-[18px] ${completed ? "bg-[#f1f5f9] text-[#475569]" : "bg-[#ecfdf5] text-[#059669]"} ${fontMedium}`}>
-      <span aria-hidden="true" className={`size-1.5 rounded-full ${completed ? "bg-[#64748b]" : "bg-[#10b981]"}`} />
+    <span className={`inline-flex h-5.5 items-center gap-1.5 rounded-full px-2 text-xs leading-4.5 ${completed ? "bg-slate-150 text-slate-600" : "bg-emerald-50 text-emerald-600"} ${fontMedium}`}>
+      <span aria-hidden="true" className={`size-1.5 rounded-full ${completed ? "bg-slate-500" : "bg-emerald-500"}`} />
       {status}
     </span>
   );
@@ -187,46 +188,46 @@ function OverviewTab({ store, setSeries, courseId }: { store: Store; setSeries: 
 
   return (
     <div className="flex flex-col gap-6 p-6 lg:flex-row">
-      <ul className="flex shrink-0 gap-2 overflow-x-auto lg:w-[197px] lg:flex-col">
+      <ul className="flex shrink-0 gap-2 overflow-x-auto lg:w-49.25 lg:flex-col">
         {store.series.map((s) => {
           const selected = s.id === active.id;
           return (
-            <li key={s.id} className={`group relative shrink-0 rounded-[8px] transition lg:w-full ${selected ? "bg-[#f1f5f9]" : "hover:bg-[#f8fafc]"}`}>
+            <li key={s.id} className={`group relative shrink-0 rounded-lg transition lg:w-full ${selected ? "bg-slate-150" : "hover:bg-slate-25"}`}>
               <button type="button" aria-current={selected ? "true" : undefined} onClick={() => setActiveId(s.id)} className="flex w-full flex-col gap-3 py-3 pl-3 pr-10 text-left">
-                <span className={`flex items-center gap-3 text-[14px] leading-[20px] text-[#1e293b] ${fontSemi}`}>
-                  <Icon path={LIST} className="size-4 shrink-0 text-[#64748b]" />
+                <span className={`flex items-center gap-3 text-sm leading-5 text-slate-800 ${fontSemi}`}>
+                  <Icon path={LIST} className="size-4 shrink-0 text-slate-500" />
                   {s.name}
                 </span>
-                <span className={`text-[12px] leading-[18px] text-[#475569] ${fontRegular}`}>{s.sessions.length} Class</span>
+                <span className={`text-xs leading-4.5 text-slate-600 ${fontRegular}`}>{s.sessions.length} Class</span>
               </button>
-              <button type="button" aria-label={`Rename ${s.name}`} onClick={() => setRenaming(s)} className="absolute right-3 top-3 flex text-[#94a3b8] opacity-0 transition hover:text-[#475569] focus-visible:opacity-100 group-hover:opacity-100 [@media(hover:none)]:opacity-100">
+              <button type="button" aria-label={`Rename ${s.name}`} onClick={() => setRenaming(s)} className="absolute right-3 top-3 flex text-slate-400 opacity-0 transition hover:text-slate-600 focus-visible:opacity-100 group-hover:opacity-100 [@media(hover:none)]:opacity-100">
                 <Icon path={PENCIL} className="size-4" />
               </button>
             </li>
           );
         })}
       </ul>
-      <section className="min-w-0 flex-1 rounded-[12px] bg-[#f1f5f9] p-6">
+      <section className="min-w-0 flex-1 rounded-xl bg-slate-150 p-6">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
             <div className="flex items-center gap-3">
-              <Icon path={LIST} className="size-4 text-[#64748b]" />
-              <h2 className={`text-[18px] leading-[28px] text-[#1e293b] ${fontSemi}`}>{active.name}</h2>
-              <span className={`rounded-full bg-[#e2e8f0] px-2 py-0.5 text-[12px] leading-[18px] text-[#475569] ${fontMedium}`}>DRAFT</span>
+              <Icon path={LIST} className="size-4 text-slate-500" />
+              <h2 className={`text-lg leading-7 text-slate-800 ${fontSemi}`}>{active.name}</h2>
+              <span className={`rounded-full bg-slate-200 px-2 py-0.5 text-xs leading-4.5 text-slate-600 ${fontMedium}`}>DRAFT</span>
             </div>
-            <p className={`mt-1 text-[14px] leading-[20px] text-[#475569] ${fontRegular}`}>{active.sessions.length} session available</p>
+            <p className={`mt-1 text-sm leading-5 text-slate-600 ${fontRegular}`}>{active.sessions.length} session available</p>
           </div>
           <div className="flex items-center gap-4">
-            <p className={`text-[14px] leading-[20px] text-[#94a3b8] ${fontRegular}`}>
-              Timezone: <span className={`ml-1 text-[#1e293b] ${fontMedium}`}>( GMT +6:00) Astana,Dhaka</span>
+            <p className={`text-sm leading-5 text-slate-400 ${fontRegular}`}>
+              Timezone: <span className={`ml-1 text-slate-800 ${fontMedium}`}>( GMT +6:00) Astana,Dhaka</span>
             </p>
             <ActionMenu label={`More actions for ${active.name}`} trigger={Dots} triggerClass={iconButton} items={[{ label: "Rename series", onClick: () => setRenaming(active) }]} />
           </div>
         </div>
-        <div className="mt-6 overflow-x-auto rounded-[8px] bg-white">
-          <table className="w-full min-w-[680px] border-collapse text-left">
+        <div className="mt-6 overflow-x-auto rounded-lg bg-white">
+          <table className="w-full min-w-170 border-collapse text-left">
             <thead>
-              <tr className={`text-[12px] leading-[18px] text-[#475569] ${fontMedium}`}>
+              <tr className={`text-xs leading-4.5 text-slate-600 ${fontMedium}`}>
                 <th scope="col" className="px-6 py-3 font-medium">
                   Name
                 </th>
@@ -243,14 +244,14 @@ function OverviewTab({ store, setSeries, courseId }: { store: Store; setSeries: 
             </thead>
             <tbody>
               {active.sessions.map((session) => (
-                <tr key={session.id} className="border-t border-[#f1f5f9]">
+                <tr key={session.id} className="border-t border-slate-150">
                   <td className="px-5 py-3">
-                    <span className={`flex items-center gap-2.5 whitespace-nowrap text-[14px] leading-[20px] text-[#1e293b] ${fontRegular}`}>
-                      <Icon path={SCREEN} className="size-[18px] shrink-0 text-[#64748b]" />
+                    <span className={`flex items-center gap-2.5 whitespace-nowrap text-sm leading-5 text-slate-800 ${fontRegular}`}>
+                      <Icon path={SCREEN} className="size-4.5 shrink-0 text-slate-500" />
                       {session.name}
                     </span>
                   </td>
-                  <td className={`whitespace-nowrap px-3 py-3 text-center text-[14px] leading-[20px] text-[#94a3b8] ${fontRegular}`}>
+                  <td className={`whitespace-nowrap px-3 py-3 text-center text-sm leading-5 text-slate-400 ${fontRegular}`}>
                     {session.date} • {session.time}
                   </td>
                   <td className="px-3 py-3 text-center">
@@ -318,25 +319,25 @@ function StudyMaterialsTab({ materials, setMaterials }: { materials: Material[];
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <h2 className={sectionTitle}>Study Materials</h2>
-          <p className={`mt-1 text-[14px] leading-[20px] text-[#64748b] ${fontRegular}`}>Related study materials add in here.</p>
+          <p className={`mt-1 text-sm leading-5 text-slate-500 ${fontRegular}`}>Related study materials add in here.</p>
         </div>
-        <button type="button" onClick={() => fileRef.current?.click()} className={`flex h-[36px] items-center gap-2 rounded-[8px] bg-[#ffb20d] px-3 text-[14px] leading-[20px] text-[#1e293b] transition hover:bg-[#faa104] ${fontMedium}`}>
-          <img src={imgPlusSmall} alt="" width={18} height={18} className="size-[18px]" />
+        <button type="button" onClick={() => fileRef.current?.click()} className={`${buttonClass("yellow", "md")}`}>
+          <img src={imgPlusSmall} alt="" width={18} height={18} className="size-4.5" />
           Add new
         </button>
         <input ref={fileRef} type="file" hidden aria-label="Add study material" onChange={(e) => addFile(e.target.files?.[0])} />
       </div>
       {materials.length === 0 ? (
-        <p className={`mt-6 rounded-[8px] border border-[#e2e8f0] px-6 py-12 text-center text-[14px] text-[#64748b] ${fontRegular}`}>No study materials yet.</p>
+        <p className={`mt-6 rounded-lg border border-slate-200 px-6 py-12 text-center text-sm text-slate-500 ${fontRegular}`}>No study materials yet.</p>
       ) : (
         <ul className="mt-6 grid gap-6 md:grid-cols-2 xl:grid-cols-3">
           {materials.map((m) => (
-            <li key={m.id} className="flex items-center gap-4 rounded-[8px] border border-[#e2e8f0] p-4">
-              <span className="flex size-11 shrink-0 items-center justify-center rounded-full bg-[#f8fafc] text-[#475569]">
+            <li key={m.id} className="flex items-center gap-4 rounded-lg border border-slate-200 p-4">
+              <span className="flex size-11 shrink-0 items-center justify-center rounded-full bg-slate-25 text-slate-600">
                 <Icon path={FILE} className="size-6" />
               </span>
               <div className="min-w-0 flex-1">
-                <p title={m.name} className={`truncate text-[14px] leading-[20px] text-[#334155] ${fontRegular}`}>
+                <p title={m.name} className={`truncate text-sm leading-5 text-slate-700 ${fontRegular}`}>
                   {m.url ? (
                     <a href={m.url} target="_blank" rel="noreferrer" className="hover:underline">
                       {m.name}
@@ -345,7 +346,7 @@ function StudyMaterialsTab({ materials, setMaterials }: { materials: Material[];
                     m.name
                   )}
                 </p>
-                <p className={`mt-0.5 text-[14px] leading-[20px] text-[#94a3b8] ${fontRegular}`}>{m.size}</p>
+                <p className={`mt-0.5 text-sm leading-5 text-slate-400 ${fontRegular}`}>{m.size}</p>
               </div>
               <ActionMenu
                 label={`More actions for ${m.name}`}
@@ -406,22 +407,22 @@ function AnnouncementsTab({ items, setItems, courseTitle }: { items: SessionAnno
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <h2 className={sectionTitle}>Announcement</h2>
-          <p className={`mt-1 text-[14px] leading-[20px] text-[#64748b] ${fontRegular}`}>All the announcement show in here</p>
+          <p className={`mt-1 text-sm leading-5 text-slate-500 ${fontRegular}`}>All the announcement show in here</p>
         </div>
         <div className="flex flex-wrap items-center gap-5">
-          <button type="button" disabled={selected.length === 0} onClick={() => setDeletingSelected(true)} className={`flex h-[36px] items-center gap-2 rounded-[8px] bg-[#f8fafc] px-3 text-[14px] leading-[20px] text-[#dc2626] transition hover:bg-[#fef2f2] disabled:cursor-not-allowed disabled:text-[#94a3b8] disabled:hover:bg-[#f8fafc] ${fontMedium}`}>
-            <Icon path={TRASH} className="size-[18px]" />
+          <button type="button" disabled={selected.length === 0} onClick={() => setDeletingSelected(true)} className={`flex h-9 items-center gap-2 rounded-lg bg-slate-25 px-3 text-sm leading-5 text-red-600 transition hover:bg-red-50 disabled:cursor-not-allowed disabled:text-slate-400 disabled:hover:bg-slate-25 ${fontMedium}`}>
+            <Icon path={TRASH} className="size-4.5" />
             {allSelected || selected.length === 0 ? "Delete all" : `Delete ${selected.length} selected`}
           </button>
-          <button type="button" onClick={() => setCreating(true)} className={`flex h-[36px] items-center gap-2 rounded-[8px] bg-[#ffb20d] px-3 text-[14px] leading-[20px] text-[#1e293b] transition hover:bg-[#faa104] ${fontMedium}`}>
-            <img src={imgPlusSmall} alt="" width={18} height={18} className="size-[18px]" />
+          <button type="button" onClick={() => setCreating(true)} className={`${buttonClass("yellow", "md")}`}>
+            <img src={imgPlusSmall} alt="" width={18} height={18} className="size-4.5" />
             Create Announcement
           </button>
         </div>
       </div>
-      <div className="mt-6 overflow-x-auto rounded-[12px] border border-[#e2e8f0]">
-        <div className="min-w-[820px]">
-          <div className={`grid grid-cols-[64px_minmax(0,1fr)_170px_170px] items-center py-3 text-[12px] leading-[18px] text-[#475569] ${fontMedium}`}>
+      <div className="mt-6 overflow-x-auto rounded-xl border border-slate-200">
+        <div className="min-w-205">
+          <div className={`grid grid-cols-sessions-table items-center py-3 text-xs leading-4.5 text-slate-600 ${fontMedium}`}>
             <span className="flex justify-center">
               <Checkbox checked={allSelected} onChange={() => setSelected(allSelected ? [] : items.map((i) => i.id))}>
                 <span className="sr-only">Select all announcements</span>
@@ -431,33 +432,33 @@ function AnnouncementsTab({ items, setItems, courseTitle }: { items: SessionAnno
             <span className="text-center">Posted Date</span>
             <span className="text-center">Action</span>
           </div>
-          {sorted.length === 0 && <p className={`border-t border-[#f1f5f9] px-6 py-12 text-center text-[14px] text-[#64748b] ${fontRegular}`}>No announcements yet.</p>}
+          {sorted.length === 0 && <p className={`border-t border-slate-150 px-6 py-12 text-center text-sm text-slate-500 ${fontRegular}`}>No announcements yet.</p>}
           {sorted.map((item) => (
-            <div key={item.id} className="grid grid-cols-[64px_minmax(0,1fr)_170px_170px] items-center border-t border-[#f1f5f9] py-4">
+            <div key={item.id} className="grid grid-cols-sessions-table items-center border-t border-slate-150 py-4">
               <span className="flex justify-center">
                 <Checkbox checked={selected.includes(item.id)} onChange={() => setSelected((list) => (list.includes(item.id) ? list.filter((id) => id !== item.id) : [...list, item.id]))}>
                   <span className="sr-only">Select {item.title}</span>
                 </Checkbox>
               </span>
               <div className="flex min-w-0 items-center gap-8">
-                <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-[#f8fafc]">
-                  <span aria-hidden="true" className="size-[18px] bg-[#475569]" style={{ mask, WebkitMask: mask }} />
+                <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-slate-25">
+                  <span aria-hidden="true" className="size-4.5 bg-slate-600" style={{ mask, WebkitMask: mask }} />
                 </span>
                 <div className="min-w-0">
-                  <p className={`truncate text-[14px] leading-[24px] text-[#334155] ${fontMedium}`}>{item.title}</p>
-                  <p className={`truncate text-[12px] leading-[20px] text-[#64748b] ${fontRegular}`}>{item.preview}</p>
+                  <p className={`truncate text-sm leading-6 text-slate-700 ${fontMedium}`}>{item.title}</p>
+                  <p className={`truncate text-xs leading-5 text-slate-500 ${fontRegular}`}>{item.preview}</p>
                 </div>
               </div>
-              <p className={`text-center text-[14px] leading-[20px] text-[#475569] ${fontRegular}`}>{item.posted}</p>
+              <p className={`text-center text-sm leading-5 text-slate-600 ${fontRegular}`}>{item.posted}</p>
               <div className="flex items-center justify-center gap-2">
                 <button type="button" aria-label={`Edit ${item.title}`} onClick={() => setEditing(item)} className={iconButton}>
-                  <Icon path={PENCIL} className="size-[18px]" />
+                  <Icon path={PENCIL} className="size-4.5" />
                 </button>
                 <button type="button" aria-label={`Delete ${item.title}`} onClick={() => setDeleting(item)} className={iconButton}>
-                  <Icon path={TRASH} className="size-[18px]" />
+                  <Icon path={TRASH} className="size-4.5" />
                 </button>
                 <button type="button" aria-label={item.pinned ? `Unpin ${item.title}` : `Pin ${item.title}`} aria-pressed={Boolean(item.pinned)} onClick={() => setItems(items.map((i) => (i.id === item.id ? { ...i, pinned: !i.pinned } : i)))} className={iconButton}>
-                  <svg viewBox="0 0 24 24" className="size-[18px]" fill={item.pinned ? "#334155" : "none"} stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" className="size-4.5" fill={item.pinned ? "#334155" : "none"} stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                     <path d={PIN} />
                   </svg>
                 </button>
@@ -546,27 +547,27 @@ function ParticipantsTab() {
   return (
     <div className="p-6">
       <div className="flex flex-wrap items-center justify-between gap-4">
-        <label className="field-box w-full max-w-[378px]">
-          <Icon path="M11 19a8 8 0 100-16 8 8 0 000 16zM21 21l-4.3-4.3" className="size-[18px] shrink-0 text-[#64748b]" />
-          <input type="search" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search" aria-label="Search participants" className={`min-w-0 flex-1 bg-transparent text-[14px] leading-[20px] text-[#1e293b] outline-none placeholder:text-slate-400 ${fontRegular}`} />
+        <label className="field-box w-full max-w-94.5">
+          <Icon path="M11 19a8 8 0 100-16 8 8 0 000 16zM21 21l-4.3-4.3" className="size-4.5 shrink-0 text-slate-500" />
+          <input type="search" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search" aria-label="Search participants" className={`min-w-0 flex-1 bg-transparent text-sm leading-5 text-slate-800 outline-none placeholder:text-slate-400 ${fontRegular}`} />
         </label>
         <div className="flex flex-wrap items-center gap-5">
           {selected.length > 0 && (
-            <p aria-live="polite" className={`text-[14px] leading-[20px] text-[#334155] ${fontRegular}`}>
+            <p aria-live="polite" className={`text-sm leading-5 text-slate-700 ${fontRegular}`}>
               {selected.length} {selected.length === 1 ? "user" : "users"} selected
             </p>
           )}
-          <button type="button" disabled={selected.length === 0} onClick={() => notify("Bulk messaging is coming soon")} className={`flex h-9 items-center gap-2 rounded-[8px] bg-[#ffb20d] px-3 text-[14px] leading-[20px] text-[#1e293b] transition hover:bg-[#faa104] disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-[#ffb20d] ${fontMedium}`}>
-            <Icon path="M21 3L10 14M21 3l-7 18-4-7-7-4 18-7z" className="size-[18px]" />
+          <button type="button" disabled={selected.length === 0} onClick={() => notify("Bulk messaging is coming soon")} className={`${buttonClass("yellow", "md")}`}>
+            <Icon path="M21 3L10 14M21 3l-7 18-4-7-7-4 18-7z" className="size-4.5" />
             Send bulk Message
           </button>
         </div>
       </div>
-      <div className="mt-6 overflow-x-auto rounded-[12px] border border-[#e2e8f0]">
-        <table className="w-full min-w-[720px] border-collapse text-left">
+      <div className="mt-6 overflow-x-auto rounded-xl border border-slate-200">
+        <table className="w-full min-w-180 border-collapse text-left">
           <thead>
-            <tr className={`text-[12px] leading-[18px] text-[#475569] ${fontMedium}`}>
-              <th scope="col" className="w-[64px] py-3 pl-6">
+            <tr className={`text-xs leading-4.5 text-slate-600 ${fontMedium}`}>
+              <th scope="col" className="w-16 py-3 pl-6">
                 <Checkbox checked={allVisibleSelected} onChange={toggleVisible}>
                   <span className="sr-only">Select all participants shown</span>
                 </Checkbox>
@@ -587,15 +588,15 @@ function ParticipantsTab() {
           </thead>
           <tbody>
             {visible.map((person) => (
-              <tr key={person.name} className="border-t border-[#f1f5f9]">
+              <tr key={person.name} className="border-t border-slate-150">
                 <td className="py-3 pl-6">
                   <Checkbox checked={selected.includes(person.name)} onChange={() => setSelected((list) => (list.includes(person.name) ? list.filter((name) => name !== person.name) : [...list, person.name]))}>
                     <span className="sr-only">Select {person.name}</span>
                   </Checkbox>
                 </td>
                 <td className="py-3">
-                  <span className={`flex items-center gap-4 text-[14px] leading-[20px] text-[#1e293b] ${fontSemi}`}>
-                    <span aria-hidden="true" className="flex size-8 shrink-0 items-center justify-center rounded-full text-[11px] text-white" style={{ backgroundColor: person.color }}>
+                  <span className={`flex items-center gap-4 text-sm leading-5 text-slate-800 ${fontSemi}`}>
+                    <span aria-hidden="true" className="flex size-8 shrink-0 items-center justify-center rounded-full text-11 text-white" style={{ backgroundColor: person.color }}>
                       {person.name
                         .split(" ")
                         .map((part) => part[0])
@@ -605,12 +606,12 @@ function ParticipantsTab() {
                     {person.name}
                   </span>
                 </td>
-                <td className={`py-3 text-center text-[14px] leading-[20px] text-[#64748b] ${fontRegular}`}>{person.instructor ? <span className={`inline-flex h-[26px] items-center rounded-[8px] bg-[#1e293b] px-3 text-[12px] leading-[18px] text-white ${fontMedium}`}>Instructor</span> : "Student"}</td>
-                <td className={`whitespace-nowrap py-3 text-center text-[14px] leading-[20px] text-[#475569] ${fontRegular}`}>{person.lastActive}</td>
+                <td className={`py-3 text-center text-sm leading-5 text-slate-500 ${fontRegular}`}>{person.instructor ? <span className={`inline-flex h-6.5 items-center rounded-lg bg-slate-800 px-3 text-xs leading-4.5 text-white ${fontMedium}`}>Instructor</span> : "Student"}</td>
+                <td className={`whitespace-nowrap py-3 text-center text-sm leading-5 text-slate-600 ${fontRegular}`}>{person.lastActive}</td>
                 <td className="py-3">
                   <div className="flex justify-center">
-                    <button type="button" aria-label={`Send a message to ${person.name}`} onClick={openMessages} className={`flex items-center gap-2 text-[14px] leading-[20px] text-[#faa104] transition hover:text-[#c98003] ${fontRegular}`}>
-                      <Icon path="M4 5h16a1 1 0 011 1v12a1 1 0 01-1 1H4a1 1 0 01-1-1V6a1 1 0 011-1zM3 7l9 6 9-6" className="size-[18px]" />
+                    <button type="button" aria-label={`Send a message to ${person.name}`} onClick={openMessages} className={`flex items-center gap-2 text-sm leading-5 text-secondary-600 transition hover:text-secondary-700 ${fontRegular}`}>
+                      <Icon path="M4 5h16a1 1 0 011 1v12a1 1 0 01-1 1H4a1 1 0 01-1-1V6a1 1 0 011-1zM3 7l9 6 9-6" className="size-4.5" />
                       Send Message
                     </button>
                   </div>
@@ -618,8 +619,8 @@ function ParticipantsTab() {
               </tr>
             ))}
             {visible.length === 0 && (
-              <tr className="border-t border-[#f1f5f9]">
-                <td colSpan={5} className={`px-6 py-12 text-center text-[14px] text-[#64748b] ${fontRegular}`}>
+              <tr className="border-t border-slate-150">
+                <td colSpan={5} className={`px-6 py-12 text-center text-sm text-slate-500 ${fontRegular}`}>
                   No participants match your search.
                 </td>
               </tr>
@@ -632,18 +633,18 @@ function ParticipantsTab() {
 }
 
 function TabPlaceholder({ label }: { label: string }) {
-  return <p className={`px-6 py-16 text-center text-[14px] leading-[24px] text-[#64748b] ${fontRegular}`}>{label} is coming soon.</p>;
+  return <p className={`px-6 py-16 text-center text-sm leading-6 text-slate-500 ${fontRegular}`}>{label} is coming soon.</p>;
 }
 
 function Crumb({ onClick, current, children }: { onClick?: () => void; current?: boolean; children: ReactNode }) {
-  if (current) return <span className="text-[#334155]">{children}</span>;
+  if (current) return <span className="text-slate-700">{children}</span>;
   return (
-    <button type="button" onClick={onClick} className="transition hover:text-[#1e293b] hover:underline">
+    <button type="button" onClick={onClick} className="transition hover:text-slate-800 hover:underline">
       {children}
     </button>
   );
 }
-const CrumbArrow = () => <Icon path="M9 6l6 6-6 6" className="size-3 text-[#64748b]" />;
+const CrumbArrow = () => <Icon path="M9 6l6 6-6 6" className="size-3 text-slate-500" />;
 
 const MULTI_TABS = ["Overview", "Study Materials", "Participants", "Announcements", "Messages"];
 
@@ -651,37 +652,37 @@ function MultiSessionPage({ store, setStore, course }: { store: Store; setStore:
   const [tab, setTab] = useState("Overview");
   return (
     <main className="flex flex-1 flex-col bg-white">
-      <div className="border-b border-[#e2e8f0] px-4 py-6 md:px-7">
-        <nav aria-label="Breadcrumb" className={`flex flex-wrap items-center gap-2 text-[12px] leading-[18px] ${fontRegular}`}>
-          <span className="text-[#1e293b]">
+      <div className="border-b border-slate-200 px-4 py-6 md:px-7">
+        <nav aria-label="Breadcrumb" className={`flex flex-wrap items-center gap-2 text-xs leading-4.5 ${fontRegular}`}>
+          <span className="text-slate-800">
             <Crumb onClick={() => openInstructorSessions()}>Session List</Crumb>
           </span>
           <CrumbArrow />
-          <span className="max-w-[320px] truncate text-[#64748b]">{course.title}</span>
+          <span className="max-w-80 truncate text-slate-500">{course.title}</span>
         </nav>
         <div className="mt-4 flex flex-wrap items-start justify-between gap-4">
           <h1 className={`m-0 ${headingClass}`}>{course.title}</h1>
-          <button type="button" onClick={() => openLiveEditor(course.id)} className={`h-[36px] shrink-0 rounded-[8px] border border-[#1e293b] px-3 text-[14px] leading-[20px] text-[#1e293b] transition hover:bg-[#f8fafc] ${fontMedium}`}>
+          <button type="button" onClick={() => openLiveEditor(course.id)} className={`${buttonClass("secondary", "md")} shrink-0`}>
             Edit Session
           </button>
         </div>
-        <div className={`mt-2 flex flex-wrap items-center gap-3 text-[12px] leading-[18px] text-[#64748b] ${fontRegular}`}>
+        <div className={`mt-2 flex flex-wrap items-center gap-3 text-xs leading-4.5 text-slate-500 ${fontRegular}`}>
           <MultiSessionBadge />
           <Separator />
           <span className="flex items-center gap-1.5">
-            <Icon path="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01" className="size-4 text-[#94a3b8]" />
+            <Icon path="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01" className="size-4 text-slate-400" />
             {store.series.length} Series
           </span>
           <Separator />
           154 Participants
-          {course.status === "draft" && <span className={`rounded-full bg-[#1e293b] px-2 py-0.5 text-white ${fontMedium}`}>Draft</span>}
+          {course.status === "draft" && <span className={`rounded-full bg-slate-800 px-2 py-0.5 text-white ${fontMedium}`}>Draft</span>}
         </div>
       </div>
       <div className="px-4 py-6 md:px-7">
-        <div className="rounded-[12px] border border-[#e2e8f0]">
-          <div role="tablist" aria-label="Multi session sections" className="flex overflow-x-auto border-b border-[#e2e8f0] px-3 pt-2">
+        <div className="rounded-xl border border-slate-200">
+          <div role="tablist" aria-label="Multi session sections" className="flex overflow-x-auto border-b border-slate-200 px-3 pt-2">
             {MULTI_TABS.map((t) => (
-              <button key={t} type="button" role="tab" aria-selected={tab === t} onClick={() => setTab(t)} className={`shrink-0 border-b-2 px-6 py-3 text-[14px] leading-[24px] transition ${tab === t ? `border-[#ffb20d] text-[#1e293b] ${fontSemi}` : `border-transparent text-[#64748b] hover:text-[#1e293b] ${fontRegular}`}`}>
+              <button key={t} type="button" role="tab" aria-selected={tab === t} onClick={() => setTab(t)} className={`shrink-0 border-b-2 px-6 py-3 text-sm leading-6 transition ${tab === t ? `border-secondary-500 text-slate-800 ${fontSemi}` : `border-transparent text-slate-500 hover:text-slate-800 ${fontRegular}`}`}>
                 {t}
               </button>
             ))}
@@ -699,20 +700,20 @@ function MultiSessionPage({ store, setStore, course }: { store: Store; setStore:
 
 function RecordingPlayer() {
   const { notify } = useApp();
-  const control = "flex text-white transition hover:text-[#ffb20d]";
+  const control = "flex text-white transition hover:text-secondary-500";
   const unavailable = () => notify("No recording has been uploaded for this sample session");
   return (
-    <div className="relative aspect-video w-full overflow-hidden rounded-[12px] bg-gradient-to-br from-[#04211f] via-[#1e1b4b] to-[#020617]">
-      <button type="button" onClick={unavailable} aria-label="Play recording" className="absolute left-1/2 top-1/2 flex size-[66px] -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border-[3px] border-white text-white transition hover:scale-105">
+    <div className="relative aspect-video w-full overflow-hidden rounded-xl bg-gradient-to-br from-mist-900 via-indigo-950 to-slate-950">
+      <button type="button" onClick={unavailable} aria-label="Play recording" className="absolute left-1/2 top-1/2 flex size-16.5 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border-3 border-white text-white transition hover:scale-105">
         <svg viewBox="0 0 24 24" className="ml-1 size-8" fill="currentColor" aria-hidden="true">
           <path d="M7 4l14 8-14 8z" />
         </svg>
       </button>
       <div className="absolute inset-x-0 bottom-0 px-3 pb-2.5">
         <div className="relative h-0.5 rounded-full bg-white/30">
-          <span className="absolute inset-y-0 left-0 w-[6%] rounded-full bg-white" />
+          <span className="absolute inset-y-0 left-0 w-3/50 rounded-full bg-white" />
         </div>
-        <div className="mt-3 flex items-center gap-4 text-[10px] text-white">
+        <div className="mt-3 flex items-center gap-4 text-10 text-white">
           <button type="button" onClick={unavailable} aria-label="Play" className={control}>
             <svg viewBox="0 0 24 24" className="size-3.5" fill="currentColor" aria-hidden="true">
               <path d="M7 4l14 8-14 8z" />
@@ -737,18 +738,18 @@ function LivePanel() {
   return (
     <>
       <h2 className={sectionTitle}>Session Recording & Key Takeaways</h2>
-      <p className={`mt-1 text-[14px] leading-[20px] text-[#64748b] ${fontRegular}`}>This session covered core project objectives, key concepts, and practical insights.</p>
-      <div className="mt-5 rounded-[24px] bg-[#f1f5f9] p-4 sm:p-8">
-        <div className="flex flex-col items-center rounded-[20px] border border-[#e2e8f0] bg-white px-5 py-12 text-center">
-          <h3 className={`text-[18px] leading-[28px] text-[#1e293b] ${fontSemi}`}>Your Live Class is in Progress</h3>
-          <p className={`mt-3 text-[16px] leading-[24px] text-[#475569] ${fontRegular}`}>Students are waiting for you. Click below to start your session.</p>
-          <p className={`mt-4 flex items-center gap-2 text-[16px] leading-[24px] text-[#ef4444] ${fontSemi}`}>
-            <span aria-hidden="true" className="flex size-[18px] items-center justify-center rounded-full bg-[#fee2e2]">
-              <span className="size-2 rounded-full bg-[#ef4444] motion-safe:animate-pulse" />
+      <p className={`mt-1 text-sm leading-5 text-slate-500 ${fontRegular}`}>This session covered core project objectives, key concepts, and practical insights.</p>
+      <div className="mt-5 rounded-3xl bg-slate-150 p-4 sm:p-8">
+        <div className="flex flex-col items-center rounded-2xl border border-slate-200 bg-white px-5 py-12 text-center">
+          <h3 className={`text-lg leading-7 text-slate-800 ${fontSemi}`}>Your Live Class is in Progress</h3>
+          <p className={`mt-3 text-base leading-6 text-slate-600 ${fontRegular}`}>Students are waiting for you. Click below to start your session.</p>
+          <p className={`mt-4 flex items-center gap-2 text-base leading-6 text-red-500 ${fontSemi}`}>
+            <span aria-hidden="true" className="flex size-4.5 items-center justify-center rounded-full bg-red-100">
+              <span className="size-2 rounded-full bg-red-500 motion-safe:animate-pulse" />
             </span>
             Session In Progress
           </p>
-          <button type="button" onClick={() => notify("The live classroom isn't connected yet")} className={`mt-3 h-9 rounded-[8px] bg-[#ef4444] px-3 text-[14px] leading-[20px] text-white transition hover:bg-[#dc2626] ${fontMedium}`}>
+          <button type="button" onClick={() => notify("The live classroom isn't connected yet")} className={`mt-3 h-9 rounded-lg bg-red-500 px-3 text-sm leading-5 text-white transition hover:bg-red-600 ${fontMedium}`}>
             Join Live Class
           </button>
         </div>
@@ -775,19 +776,19 @@ function CountdownPanel() {
     { label: "SECONDS", value: left % 60 },
   ];
   return (
-    <div className="rounded-[24px] bg-[#f1f5f9] p-4 sm:p-8">
-      <p className={`text-center text-[14px] leading-[20px] tracking-[3px] text-[#94a3b8] ${fontSemi}`}>WE ARE GETTING READY</p>
+    <div className="rounded-3xl bg-slate-150 p-4 sm:p-8">
+      <p className={`text-center text-sm leading-5 tracking-widest text-slate-400 ${fontSemi}`}>WE ARE GETTING READY</p>
       <div role="timer" aria-label="Time until the session starts" className="mt-5 flex justify-center gap-3">
         {units.map((unit) => (
-          <div key={unit.label} className="flex w-[100px] max-w-[30%] flex-col items-center rounded-[16px] bg-[#0f172a] py-4 text-white">
-            <span className={`text-[36px] leading-[44px] tabular-nums ${fontHeading}`}>{String(unit.value).padStart(2, "0")}</span>
-            <span className={`text-[12px] leading-[18px] sm:text-[14px] ${fontRegular}`}>{unit.label}</span>
+          <div key={unit.label} className="flex w-25 max-w-3/10 flex-col items-center rounded-2xl bg-slate-900 py-4 text-white">
+            <span className={`text-4xl leading-11 tabular-nums ${fontHeading}`}>{String(unit.value).padStart(2, "0")}</span>
+            <span className={`text-xs leading-4.5 sm:text-sm ${fontRegular}`}>{unit.label}</span>
           </div>
         ))}
       </div>
-      <div className="mt-9 rounded-[20px] border border-[#e2e8f0] bg-white px-5 py-5 text-center">
-        <h2 className={`text-[18px] leading-[28px] text-[#1e293b] ${fontSemi}`}>⏳ Session Not Started Yet</h2>
-        <p className={`mx-auto mt-2 max-w-[460px] text-[16px] leading-[28px] text-[#475569] ${fontRegular}`}>The session will begin soon. In the meantime, you can review the provided learning materials to prepare.</p>
+      <div className="mt-9 rounded-2xl border border-slate-200 bg-white px-5 py-5 text-center">
+        <h2 className={`text-lg leading-7 text-slate-800 ${fontSemi}`}>⏳ Session Not Started Yet</h2>
+        <p className={`mx-auto mt-2 max-w-115 text-base leading-7 text-slate-600 ${fontRegular}`}>The session will begin soon. In the meantime, you can review the provided learning materials to prepare.</p>
       </div>
     </div>
   );
@@ -819,29 +820,29 @@ function AttendeesTab({ attendance, setAttendance }: { attendance: Record<string
     setSelected([]);
   };
   const scope = selected.length > 0 ? `${selected.length} Selected` : "All";
-  const actionButton = `flex items-center gap-2 text-[14px] leading-[20px] transition ${fontRegular}`;
+  const actionButton = `flex items-center gap-2 text-sm leading-5 transition ${fontRegular}`;
 
   return (
     <div className="mt-7">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <h2 className={sectionTitle}>Attendance List</h2>
-          <p className={`mt-1 text-[14px] leading-[20px] text-[#64748b] ${fontRegular}`}>Manage class attendance efficiently.</p>
+          <p className={`mt-1 text-sm leading-5 text-slate-500 ${fontRegular}`}>Manage class attendance efficiently.</p>
         </div>
         <div className="flex flex-wrap gap-3">
-          <button type="button" onClick={() => markMany(true)} className={`h-9 rounded-[8px] bg-[#1e293b] px-3 text-[14px] leading-[20px] text-white transition hover:bg-[#0f172a] ${fontMedium}`}>
+          <button type="button" onClick={() => markMany(true)} className={`${buttonClass("dark", "md")}`}>
             Mark {scope} Present
           </button>
-          <button type="button" onClick={() => markMany(false)} className={`h-9 rounded-[8px] bg-[#f1f5f9] px-3 text-[14px] leading-[20px] text-[#1e293b] transition hover:bg-[#e2e8f0] ${fontMedium}`}>
+          <button type="button" onClick={() => markMany(false)} className={`h-9 rounded-lg bg-slate-150 px-3 text-sm leading-5 text-slate-800 transition hover:bg-slate-200 ${fontMedium}`}>
             Mark {scope} Absent
           </button>
         </div>
       </div>
-      <div className="mt-6 overflow-x-auto rounded-[12px] border border-[#e2e8f0]">
-        <table className="w-full min-w-[640px] border-collapse text-left">
+      <div className="mt-6 overflow-x-auto rounded-xl border border-slate-200">
+        <table className="w-full min-w-160 border-collapse text-left">
           <thead>
-            <tr className={`text-[12px] leading-[18px] text-[#475569] ${fontMedium}`}>
-              <th scope="col" className="w-[64px] py-3 pl-6">
+            <tr className={`text-xs leading-4.5 text-slate-600 ${fontMedium}`}>
+              <th scope="col" className="w-16 py-3 pl-6">
                 <Checkbox checked={allSelected} onChange={() => setSelected(allSelected ? [] : ROSTER.map((p) => p.name))}>
                   <span className="sr-only">Select everyone</span>
                 </Checkbox>
@@ -861,15 +862,15 @@ function AttendeesTab({ attendance, setAttendance }: { attendance: Record<string
             {ROSTER.map((person) => {
               const present = isPresent(person);
               return (
-                <tr key={person.name} className="border-t border-[#f1f5f9]">
+                <tr key={person.name} className="border-t border-slate-150">
                   <td className="py-3 pl-6">
                     <Checkbox checked={selected.includes(person.name)} onChange={() => setSelected((list) => (list.includes(person.name) ? list.filter((n) => n !== person.name) : [...list, person.name]))}>
                       <span className="sr-only">Select {person.name}</span>
                     </Checkbox>
                   </td>
                   <td className="py-3">
-                    <span className={`flex items-center gap-4 text-[14px] leading-[20px] text-[#1e293b] ${fontSemi}`}>
-                      <span aria-hidden="true" className="flex size-8 shrink-0 items-center justify-center rounded-full text-[11px] text-white" style={{ backgroundColor: person.color }}>
+                    <span className={`flex items-center gap-4 text-sm leading-5 text-slate-800 ${fontSemi}`}>
+                      <span aria-hidden="true" className="flex size-8 shrink-0 items-center justify-center rounded-full text-11 text-white" style={{ backgroundColor: person.color }}>
                         {person.name
                           .split(" ")
                           .map((part) => part[0])
@@ -880,25 +881,25 @@ function AttendeesTab({ attendance, setAttendance }: { attendance: Record<string
                     </span>
                   </td>
                   <td className="py-3 text-center">
-                    <span className={`inline-flex h-6 items-center gap-1.5 rounded-full px-2.5 text-[14px] leading-[20px] ${present ? "bg-[#ecfdf5] text-[#047857]" : "bg-[#fef2f2] text-[#b91c1c]"} ${fontRegular}`}>
-                      <span aria-hidden="true" className={`size-1.5 rounded-full ${present ? "bg-[#10b981]" : "bg-[#ef4444]"}`} />
+                    <span className={`inline-flex h-6 items-center gap-1.5 rounded-full px-2.5 text-sm leading-5 ${present ? "bg-emerald-50 text-emerald-700" : "bg-red-50 text-red-700"} ${fontRegular}`}>
+                      <span aria-hidden="true" className={`size-1.5 rounded-full ${present ? "bg-emerald-500" : "bg-red-500"}`} />
                       {present ? "Present" : "Absent"}
                     </span>
                   </td>
                   <td className="py-3">
                     <div className="flex justify-center">
                       {!present ? (
-                        <button type="button" aria-label={`Mark ${person.name} as present`} onClick={() => setAttendance({ ...attendance, [person.name]: true })} className={`${actionButton} text-[#faa104] hover:text-[#c98003]`}>
+                        <button type="button" aria-label={`Mark ${person.name} as present`} onClick={() => setAttendance({ ...attendance, [person.name]: true })} className={`${actionButton} text-secondary-600 hover:text-secondary-700`}>
                           <Icon path="M2 13l4 4L15 8M11 16l1 1 10-10" className="size-4" />
                           Mark as Present
                         </button>
                       ) : person.messageOnly ? (
-                        <button type="button" aria-label={`Send a message to ${person.name}`} onClick={openMessages} className={`${actionButton} text-[#faa104] hover:text-[#c98003]`}>
-                          <Icon path="M4 5h16a1 1 0 011 1v12a1 1 0 01-1 1H4a1 1 0 01-1-1V6a1 1 0 011-1zM3 7l9 6 9-6" className="size-[18px]" />
+                        <button type="button" aria-label={`Send a message to ${person.name}`} onClick={openMessages} className={`${actionButton} text-secondary-600 hover:text-secondary-700`}>
+                          <Icon path="M4 5h16a1 1 0 011 1v12a1 1 0 01-1 1H4a1 1 0 01-1-1V6a1 1 0 011-1zM3 7l9 6 9-6" className="size-4.5" />
                           Send Message
                         </button>
                       ) : (
-                        <button type="button" aria-label={`Mark ${person.name} as absent`} onClick={() => setAttendance({ ...attendance, [person.name]: false })} className={`${actionButton} text-[#475569] hover:text-[#0f172a]`}>
+                        <button type="button" aria-label={`Mark ${person.name} as absent`} onClick={() => setAttendance({ ...attendance, [person.name]: false })} className={`${actionButton} text-slate-600 hover:text-slate-900`}>
                           <Icon path="M6 5h4v14H6zM14 5h4v14h-4z" className="size-4" />
                           Mark Absent
                         </button>
@@ -931,40 +932,40 @@ function SessionDetail({ view, materials, attendance, setAttendance, onRename }:
     );
 
   return (
-    <main className="flex flex-1 flex-col bg-[#f1f5f9]">
+    <main className="flex flex-1 flex-col bg-slate-150">
       <div className="bg-white px-4 py-6 md:px-7">
-        <nav aria-label="Breadcrumb" className={`flex flex-wrap items-center gap-2 text-[12px] leading-[18px] text-[#94a3b8] ${fontRegular}`}>
+        <nav aria-label="Breadcrumb" className={`flex flex-wrap items-center gap-2 text-xs leading-4.5 text-slate-400 ${fontRegular}`}>
           <Crumb onClick={() => openInstructorSessions()}>Session List</Crumb>
           <CrumbArrow />
-          <span className="max-w-[320px] truncate">
+          <span className="max-w-80 truncate">
             <Crumb onClick={view.onBack}>{view.courseCrumb}</Crumb>
           </span>
           <CrumbArrow />
           <Crumb current>{view.lastCrumb}</Crumb>
         </nav>
         <div className="mt-3 flex items-center gap-4">
-          <button type="button" onClick={view.onBack} aria-label="Back to sessions" className="flex size-8 shrink-0 items-center justify-center rounded-[6px] bg-[#f8fafc] text-[#1e293b] transition hover:bg-[#f1f5f9]">
+          <button type="button" onClick={view.onBack} aria-label="Back to sessions" className="flex size-8 shrink-0 items-center justify-center rounded-md bg-slate-25 text-slate-800 transition hover:bg-slate-150">
             <Icon path="M15 6l-6 6 6 6" className="size-4" />
           </button>
           <h1 className={`m-0 ${headingClass}`}>{view.title}</h1>
-          <button type="button" onClick={() => setRenaming(true)} aria-label="Rename session" className="flex shrink-0 text-[#94a3b8] transition hover:text-[#475569]">
-            <Icon path={PENCIL} className="size-[18px]" />
+          <button type="button" onClick={() => setRenaming(true)} aria-label="Rename session" className="flex shrink-0 text-slate-400 transition hover:text-slate-600">
+            <Icon path={PENCIL} className="size-4.5" />
           </button>
         </div>
         {view.seriesName && (
-          <p className={`mt-2.5 flex flex-wrap items-center gap-2.5 text-[16px] leading-[24px] text-[#334155] ${fontRegular}`}>
-            <Icon path={SCREEN} className="size-[18px] text-[#94a3b8]" />
-            <span className="text-[#64748b]">{view.seriesName}</span>
-            <span aria-hidden="true" className="h-4 w-px bg-[#94a3b8]" />
+          <p className={`mt-2.5 flex flex-wrap items-center gap-2.5 text-base leading-6 text-slate-700 ${fontRegular}`}>
+            <Icon path={SCREEN} className="size-4.5 text-slate-400" />
+            <span className="text-slate-500">{view.seriesName}</span>
+            <span aria-hidden="true" className="h-4 w-px bg-slate-400" />
             {view.courseCrumb}
           </p>
         )}
-        <div className={`mt-2.5 flex flex-wrap items-center gap-3 text-[14px] leading-[20px] text-[#64748b] ${single ? "md:pl-12" : ""} ${fontRegular}`}>
+        <div className={`mt-2.5 flex flex-wrap items-center gap-3 text-sm leading-5 text-slate-500 ${single ? "md:pl-12" : ""} ${fontRegular}`}>
           {single ? <SingleSessionBadge /> : <MultiSessionBadge />}
           <Separator />
           {view.status === "Completed" ? (
             <span className="flex items-center gap-1.5">
-              <span aria-hidden="true" className="flex size-4 items-center justify-center rounded-[3px] bg-[#10b981] text-white">
+              <span aria-hidden="true" className="flex size-4 items-center justify-center rounded-sm bg-emerald-500 text-white">
                 <Icon path="M5 12l5 5 9-10" className="size-3" />
               </span>
               Completed
@@ -986,16 +987,16 @@ function SessionDetail({ view, materials, attendance, setAttendance, onRename }:
         </div>
       </div>
       <div className="px-4 py-6 md:px-7">
-        <div className="rounded-[12px] bg-white p-6">
+        <div className="rounded-xl bg-white p-6">
           <div role="tablist" aria-label="Session sections" className="flex gap-2 overflow-x-auto">
             {SESSION_TABS.map((t) => (
-              <button key={t} type="button" role="tab" aria-selected={tab === t} onClick={() => setTab(t)} className={`h-8 shrink-0 rounded-[6px] px-3 text-[14px] leading-[20px] transition ${tab === t ? `bg-[#f1f5f9] text-[#1e293b] ${fontSemi}` : `text-[#64748b] hover:text-[#1e293b] ${fontRegular}`}`}>
+              <button key={t} type="button" role="tab" aria-selected={tab === t} onClick={() => setTab(t)} className={`h-8 shrink-0 rounded-md px-3 text-sm leading-5 transition ${tab === t ? `bg-slate-150 text-slate-800 ${fontSemi}` : `text-slate-500 hover:text-slate-800 ${fontRegular}`}`}>
                 {t}
               </button>
             ))}
           </div>
           {tab === "Overview" && (
-            <div className="mt-7 max-w-[680px]">
+            <div className="mt-7 max-w-170">
               {view.status === "Upcoming" && <CountdownPanel />}
               {view.status === "In progress" && <LivePanel />}
               {view.status === "Completed" && (
@@ -1003,30 +1004,30 @@ function SessionDetail({ view, materials, attendance, setAttendance, onRename }:
                   <RecordingPlayer />
                   <div className="mt-5 flex flex-wrap items-start justify-between gap-4">
                     <div className="min-w-0 flex-1">
-                      <p className={`text-[16px] leading-[24px] text-[#1e293b] ${fontSemi}`}>{view.title}</p>
-                      <p className={`mt-1 text-[14px] leading-[20px] text-[#94a3b8] ${fontRegular}`}>
-                        Duration: <span className="text-[#475569]">1h 30 min</span>
+                      <p className={`text-base leading-6 text-slate-800 ${fontSemi}`}>{view.title}</p>
+                      <p className={`mt-1 text-sm leading-5 text-slate-400 ${fontRegular}`}>
+                        Duration: <span className="text-slate-600">1h 30 min</span>
                       </p>
                     </div>
-                    <button type="button" onClick={share} className={`flex h-9 shrink-0 items-center gap-2 rounded-[8px] bg-[#f8fafc] px-3 text-[14px] leading-[20px] text-[#334155] transition hover:bg-[#f1f5f9] ${fontMedium}`}>
-                      <Icon path="M12 15V3M8 7l4-4 4 4M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7" className="size-[18px]" />
+                    <button type="button" onClick={share} className={`flex h-9 shrink-0 items-center gap-2 rounded-lg bg-slate-25 px-3 text-sm leading-5 text-slate-700 transition hover:bg-slate-150 ${fontMedium}`}>
+                      <Icon path="M12 15V3M8 7l4-4 4 4M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7" className="size-4.5" />
                       Copy & Share
                     </button>
                   </div>
                 </>
               )}
               <h2 className={`mt-10 ${sectionTitle}`}>Additional Learning Materials</h2>
-              <p className={`mt-1 text-[14px] leading-[20px] text-[#64748b] ${fontRegular}`}>Download essential documents to revisit concepts and best practices.</p>
+              <p className={`mt-1 text-sm leading-5 text-slate-500 ${fontRegular}`}>Download essential documents to revisit concepts and best practices.</p>
               <ul className="mt-5 flex flex-col gap-4">
                 {materials.map((m) => (
-                  <li key={m.id} className="flex items-center gap-4 rounded-[8px] border border-[#e2e8f0] px-5 py-3.5">
-                    <Icon path={FILE} className="size-8 shrink-0 text-[#475569]" />
+                  <li key={m.id} className="flex items-center gap-4 rounded-lg border border-slate-200 px-5 py-3.5">
+                    <Icon path={FILE} className="size-8 shrink-0 text-slate-600" />
                     <div className="min-w-0 flex-1">
-                      <p className={`truncate text-[14px] leading-[20px] text-[#334155] ${fontRegular}`}>{m.name}</p>
-                      <p className={`mt-0.5 text-[14px] leading-[20px] text-[#64748b] ${fontRegular}`}>{m.size}</p>
+                      <p className={`truncate text-sm leading-5 text-slate-700 ${fontRegular}`}>{m.name}</p>
+                      <p className={`mt-0.5 text-sm leading-5 text-slate-500 ${fontRegular}`}>{m.size}</p>
                     </div>
-                    <button type="button" onClick={() => notify("Downloads will work once files are stored on a server")} className={`flex h-9 shrink-0 items-center gap-2 rounded-[8px] bg-[#f8fafc] px-3 text-[14px] leading-[20px] text-[#334155] transition hover:bg-[#f1f5f9] ${fontMedium}`}>
-                      <Icon path="M12 4v11M8 11l4 4 4-4M5 20h14" className="size-[18px]" />
+                    <button type="button" onClick={() => notify("Downloads will work once files are stored on a server")} className={`flex h-9 shrink-0 items-center gap-2 rounded-lg bg-slate-25 px-3 text-sm leading-5 text-slate-700 transition hover:bg-slate-150 ${fontMedium}`}>
+                      <Icon path="M12 4v11M8 11l4 4 4-4M5 20h14" className="size-4.5" />
                       Download
                     </button>
                   </li>
@@ -1036,7 +1037,7 @@ function SessionDetail({ view, materials, attendance, setAttendance, onRename }:
           )}
           {tab === "Attendees" &&
             (view.status === "Upcoming" ? (
-              <p className={`px-6 py-16 text-center text-[14px] leading-[24px] text-[#64748b] ${fontRegular}`}>Attendance opens when the session starts.</p>
+              <p className={`px-6 py-16 text-center text-sm leading-6 text-slate-500 ${fontRegular}`}>Attendance opens when the session starts.</p>
             ) : (
               <AttendeesTab attendance={attendance} setAttendance={setAttendance} />
             ))}
@@ -1064,8 +1065,8 @@ type Extras = { titles: Record<string, string>; attendance: Record<string, Recor
 
 export function SingleSessionBadge() {
   return (
-    <span className={`inline-flex h-[22px] items-center gap-1.5 rounded-full bg-[#e0e7ff] px-2 text-[12px] leading-[18px] text-[#3730a3] ${fontMedium}`}>
-      <span aria-hidden="true" className="size-1.5 rounded-full bg-[#4338ca]" />
+    <span className={`inline-flex h-5.5 items-center gap-1.5 rounded-full bg-indigo-100 px-2 text-xs leading-4.5 text-indigo-800 ${fontMedium}`}>
+      <span aria-hidden="true" className="size-1.5 rounded-full bg-indigo-700" />
       Single Session
     </span>
   );
@@ -1088,22 +1089,22 @@ function MySessions({ titleOf }: { titleOf: (course: LiveCourse) => string }) {
 
   return (
     <main className="flex flex-1 flex-col bg-white">
-      <div className="flex flex-wrap items-center justify-between gap-4 border-b border-[#e2e8f0] px-4 py-4 md:px-7">
+      <div className="flex flex-wrap items-center justify-between gap-4 border-b border-slate-200 px-4 py-4 md:px-7">
         <div>
-          <h1 className="m-0 font-['Instrument_Sans:Medium'] text-[24px] font-medium leading-[32px] text-[#0f172a]" style={{ fontVariationSettings: '"wdth" 100' }}>
+          <h1 className="m-0 font-instrument-medium text-2xl font-medium leading-8 text-slate-900" style={{ fontVariationSettings: '"wdth" 100' }}>
             My Sessions
           </h1>
-          <p className={`mt-1 text-[14px] leading-[20px] text-[#64748b] ${fontRegular}`}>You have total {courses.length} sessions</p>
+          <p className={`mt-1 text-sm leading-5 text-slate-500 ${fontRegular}`}>You have total {courses.length} sessions</p>
         </div>
-        <button type="button" onClick={openCreateSession} className={`flex h-[36px] items-center gap-2 rounded-[8px] bg-[#ffb20d] px-3 text-[14px] leading-[20px] text-[#1e293b] transition hover:bg-[#faa104] ${fontMedium}`}>
-          <img src={imgPlusSmall} alt="" width={18} height={18} className="size-[18px]" />
+        <button type="button" onClick={openCreateSession} className={`${buttonClass("yellow", "md")}`}>
+          <img src={imgPlusSmall} alt="" width={18} height={18} className="size-4.5" />
           Create Live Course
         </button>
       </div>
       <div className="flex flex-1 flex-col px-4 py-6 md:px-7">
-        <section className="flex-1 rounded-[12px] border border-[#e2e8f0] p-6">
-          <div className="flex flex-wrap items-center justify-between gap-3 rounded-[8px] bg-[#f8fafc] px-5 py-3.5">
-            <h2 className={`text-[16px] leading-[24px] text-[#1e293b] ${fontSemi}`}>Live Courses</h2>
+        <section className="flex-1 rounded-xl border border-slate-200 p-6">
+          <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg bg-slate-25 px-5 py-3.5">
+            <h2 className={`text-base leading-6 text-slate-800 ${fontSemi}`}>Live Courses</h2>
             <FilterSelect
               large
               alignRight
@@ -1120,34 +1121,34 @@ function MySessions({ titleOf }: { titleOf: (course: LiveCourse) => string }) {
             {visible.map((course) => {
               const title = titleOf(course);
               return (
-                <li key={course.id} className="relative overflow-hidden rounded-[12px] border border-[#e2e8f0] bg-white p-4 shadow-[0px_1px_3px_0px_rgba(0,0,0,0.1),0px_1px_2px_0px_rgba(0,0,0,0.06)] transition-shadow focus-within:shadow-[0px_10px_15px_-3px_rgba(0,0,0,0.1),0px_4px_6px_-4px_rgba(0,0,0,0.1)] hover:shadow-[0px_10px_15px_-3px_rgba(0,0,0,0.1),0px_4px_6px_-4px_rgba(0,0,0,0.1)]">
+                <li key={course.id} className="relative overflow-hidden rounded-xl border border-slate-200 bg-white p-4 shadow-sm transition-shadow focus-within:shadow-lg hover:shadow-lg">
                   {course.status === "draft" && (
-                    <span className="pointer-events-none absolute left-0 top-0 z-10 size-[64px] bg-[#ffb20d] [clip-path:polygon(0_0,100%_0,0_100%)]">
-                      <span className={`absolute left-1 top-3.5 -rotate-45 text-[12px] leading-[18px] text-[#1e293b] ${fontMedium}`}>Draft</span>
+                    <span className="pointer-events-none absolute left-0 top-0 z-10 size-16 bg-secondary-500 clip-corner">
+                      <span className={`absolute left-1 top-3.5 -rotate-45 text-xs leading-4.5 text-slate-800 ${fontMedium}`}>Draft</span>
                     </span>
                   )}
-                  {course.image ? <img src={course.image} alt="" className="aspect-[16/9] w-full rounded-[8px] object-cover" /> : <span className={`flex aspect-[16/9] w-full items-center justify-center rounded-[8px] bg-[#f1f5f9] text-[14px] text-[#64748b] ${fontMedium}`}>No image</span>}
-                  <div className="mt-5 flex min-h-[22px] items-center justify-between gap-2 px-1">
+                  {course.image ? <img src={course.image} alt="" className="aspect-video w-full rounded-lg object-cover" /> : <span className={`flex aspect-video w-full items-center justify-center rounded-lg bg-slate-150 text-sm text-slate-500 ${fontMedium}`}>No image</span>}
+                  <div className="mt-5 flex min-h-5.5 items-center justify-between gap-2 px-1">
                     {course.kind === "multi" ? <MultiSessionBadge /> : <SingleSessionBadge />}
-                    {course.status === "published" && <span className={`rounded-full bg-[#059669] px-2 py-0.5 text-[12px] leading-[18px] text-white ${fontMedium}`}>Published</span>}
+                    {course.status === "published" && <span className={`rounded-full bg-emerald-600 px-2 py-0.5 text-xs leading-4.5 text-white ${fontMedium}`}>Published</span>}
                   </div>
-                  <h3 className={`mt-3 px-1 text-[16px] leading-[28px] text-[#1e293b] ${fontSemi}`}>
-                    <button type="button" onClick={() => (course.editorOnly ? openLiveEditor(course.id) : openCourse(course))} className="text-left after:absolute after:inset-0 after:content-['']">
+                  <h3 className={`mt-3 px-1 text-base leading-7 text-slate-800 ${fontSemi}`}>
+                    <button type="button" onClick={() => (course.editorOnly ? openLiveEditor(course.id) : openCourse(course))} className="text-left after:absolute after:inset-0 ">
                       {title}
                     </button>
                   </h3>
-                  <div className={`mt-3 flex flex-wrap items-center justify-between gap-2 px-1 text-[12px] leading-[18px] text-[#64748b] ${fontRegular}`}>
+                  <div className={`mt-3 flex flex-wrap items-center justify-between gap-2 px-1 text-xs leading-4.5 text-slate-500 ${fontRegular}`}>
                     <span className="flex items-center gap-1.5">
-                      <Icon path="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01" className="size-4 text-[#94a3b8]" />
+                      <Icon path="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01" className="size-4 text-slate-400" />
                       {course.sessions}
                     </span>
                     <span className="flex items-center gap-1.5">
-                      <Icon path="M12 7v5l3 2M12 3a9 9 0 100 18 9 9 0 000-18z" className="size-4 text-[#94a3b8]" />
+                      <Icon path="M12 7v5l3 2M12 3a9 9 0 100 18 9 9 0 000-18z" className="size-4 text-slate-400" />
                       {course.durationText ?? "1h 30m"}
                     </span>
                   </div>
                   {course.status === "draft" && (
-                    <button type="button" onClick={() => openLiveEditor(course.id)} className={`relative z-10 mt-3 h-9 w-full rounded-[8px] bg-[#1e293b] text-[14px] leading-[20px] text-white transition hover:bg-[#0f172a] ${fontMedium}`}>
+                    <button type="button" onClick={() => openLiveEditor(course.id)} className={`relative z-10 mt-3 h-9 w-full rounded-lg bg-slate-800 text-sm leading-5 text-white transition hover:bg-slate-900 ${fontMedium}`}>
                       Edit Course
                     </button>
                   )}

@@ -7,6 +7,7 @@ import NotFoundPage from "./NotFoundPage";
 import ShareCourseDialog from "./ShareCourseDialog";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { Fire02Icon, PlayIcon, StarIcon } from "@hugeicons/core-free-icons";
+import { buttonClass } from "./Button"
 
 /* ---------- Dummy content generated from each course ---------- */
 
@@ -95,11 +96,11 @@ function StarRow({ rating, size = 16 }: { rating: number; size?: number }) {
         const fill = Math.max(0, Math.min(1, rating - i + 1));
         return (
           <span key={i} className="relative inline-block" style={{ width: size, height: size }}>
-            <svg viewBox="0 0 24 24" width={size} height={size} className="absolute inset-0 text-[#cbd5e1]" fill="currentColor" aria-hidden="true">
+            <svg viewBox="0 0 24 24" width={size} height={size} className="absolute inset-0 text-slate-300" fill="currentColor" aria-hidden="true">
               <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01z" />
             </svg>
             <span className="absolute inset-0 overflow-hidden" style={{ width: `${fill * 100}%` }}>
-              <svg viewBox="0 0 24 24" width={size} height={size} className="text-[#ffb20d]" fill="currentColor" aria-hidden="true">
+              <svg viewBox="0 0 24 24" width={size} height={size} className="text-secondary-500" fill="currentColor" aria-hidden="true">
                 <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01z" />
               </svg>
             </span>
@@ -135,26 +136,26 @@ function PriceBlock({ price, originalPrice, discount }: { price: number; origina
   if (price === 0)
     return (
       <div className="flex flex-col gap-1">
-        <span className={`text-[30px] leading-none text-[#0d5c4b] ${fontBold}`}>Free</span>
-        <span className={`text-[13px] text-[#64748b] ${fontRegular}`}>Enroll now and learn at your own pace.</span>
+        <span className={`text-3xl leading-none text-primary-700 ${fontBold}`}>Free</span>
+        <span className={`text-13 text-slate-500 ${fontRegular}`}>Enroll now and learn at your own pace.</span>
       </div>
     );
   return (
     <div className="flex flex-col gap-2.5">
       <div className="flex flex-col gap-1">
         <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1">
-          <span className={`text-[26px] leading-none tracking-[-0.5px] text-[#0f172a] tabular-nums ${fontBold}`}>{formatPrice(price)}</span>
+          <span className={`text-26 leading-none tracking-tight text-slate-900 tabular-nums ${fontBold}`}>{formatPrice(price)}</span>
           {sale && (
             <>
-              <span className={`text-[15px] leading-none text-[#94a3b8] line-through tabular-nums ${fontRegular}`}>{formatPrice(originalPrice!)}</span>
-              <span className={`rounded-full bg-[#fef2f2] px-1.5 py-0.5 text-[11px] leading-none text-[#b91c1c] ring-1 ring-inset ring-[#fecaca] ${fontSemi}`}>{discount}% off</span>
+              <span className={`text-15 leading-none text-slate-400 line-through tabular-nums ${fontRegular}`}>{formatPrice(originalPrice!)}</span>
+              <span className={`rounded-full bg-red-50 px-1.5 py-0.5 text-11 leading-none text-red-700 ring-1 ring-inset ring-red-200 ${fontSemi}`}>{discount}% off</span>
             </>
           )}
         </div>
-        <p className={`text-[13px] leading-[18px] text-[#64748b] ${fontRegular}`}>
+        <p className={`text-13 leading-4.5 text-slate-500 ${fontRegular}`}>
           {sale && (
             <>
-              You save <span className={`text-[#0d5c4b] ${fontSemi}`}>{formatPrice(originalPrice! - price)}</span> ·{" "}
+              You save <span className={`text-primary-700 ${fontSemi}`}>{formatPrice(originalPrice! - price)}</span> ·{" "}
             </>
           )}
           VAT included
@@ -162,45 +163,45 @@ function PriceBlock({ price, originalPrice, discount }: { price: number; origina
       </div>
       {sale && SALE_TIMER_STYLE === "flash" && (
         // Flash sale bar: dark strip, amber bolt, time in h/m/s and a thin bar of how much of the day is left.
-        <div className="relative overflow-hidden rounded-[10px] bg-[#0f172a] px-3 py-2.5 text-white shadow-[0_8px_20px_-12px_rgba(15,23,42,0.8)]">
-          <div aria-hidden="true" className="pointer-events-none absolute -right-6 -top-8 size-24 rounded-full bg-[#ffb20d]/20 blur-2xl" />
+        <div className="relative overflow-hidden rounded-xl bg-slate-900 px-3 py-2.5 text-white shadow-xl">
+          <div aria-hidden="true" className="pointer-events-none absolute -right-6 -top-8 size-24 rounded-full bg-secondary-500/20 blur-2xl" />
           <div className="relative flex items-center gap-2">
-            <span aria-hidden="true" className="flex size-6 shrink-0 items-center justify-center rounded-full bg-[#ffb20d] text-[#0f172a]">
+            <span aria-hidden="true" className="flex size-6 shrink-0 items-center justify-center rounded-full bg-secondary-500 text-slate-900">
               <svg viewBox="0 0 24 24" className="size-3.5" fill="currentColor">
                 <path d="M13 2L4 14h7l-1 8 9-12h-7l1-8z" />
               </svg>
             </span>
             <span className="min-w-0 flex-1">
-              <span className={`block text-[12px] leading-[15px] text-[#ffb20d] ${fontSemi}`}>Flash sale</span>
-              <span className={`block text-[11px] leading-[14px] text-white/60 ${fontRegular}`}>{hours < 6 ? "Last hours at this price" : "Price goes up at midnight"}</span>
+              <span className={`block text-xs leading-3.75 text-secondary-500 ${fontSemi}`}>Flash sale</span>
+              <span className={`block text-11 leading-3.5 text-white/60 ${fontRegular}`}>{hours < 6 ? "Last hours at this price" : "Price goes up at midnight"}</span>
             </span>
             <span role="timer" aria-label={`Sale ends in ${label}`} className={`flex items-baseline gap-1 tabular-nums ${fontBold}`}>
               {parts.map((n, i) => (
-                <span key={i} aria-hidden="true" className="text-[15px] leading-none">
+                <span key={i} aria-hidden="true" className="text-15 leading-none">
                   {String(n).padStart(2, "0")}
-                  <span className={`ml-[1px] text-[10px] text-white/50 ${fontMedium}`}>{["h", "m", "s"][i]}</span>
+                  <span className={`ml-0.25 text-10 text-white/50 ${fontMedium}`}>{["h", "m", "s"][i]}</span>
                 </span>
               ))}
             </span>
           </div>
           <div aria-hidden="true" className="relative mt-2 h-1 overflow-hidden rounded-full bg-white/10">
-            <div className="h-full rounded-full bg-[linear-gradient(90deg,#ffb20d,#f97316)] transition-[width] duration-1000 ease-linear" style={{ width: `${Math.max(2, share * 100)}%` }} />
+            <div className="h-full rounded-full bg-linear-90 from-secondary-500 to-orange-500 transition-all duration-1000 ease-linear" style={{ width: `${Math.max(2, share * 100)}%` }} />
           </div>
         </div>
       )}
       {sale && SALE_TIMER_STYLE === "tiles" && (
         // Highlighted deal timer: warm tint, a live pulsing dot and the time in separate digit tiles.
-        <div className={`flex items-center gap-2 rounded-[10px] border px-2.5 py-2 ${hours < 6 ? "border-[#fecaca] bg-[linear-gradient(90deg,#fef2f2,#fff7ed)]" : "border-[#fed7aa] bg-[linear-gradient(90deg,#fff7ed,#fffbeb)]"}`}>
+        <div className={`flex items-center gap-2 rounded-xl border px-2.5 py-2 ${hours < 6 ? "border-red-200 bg-linear-90 from-red-50 to-secondary-50" : "border-orange-200 bg-linear-90 from-secondary-50 to-secondary-50"}`}>
           <span aria-hidden="true" className="relative flex size-2 shrink-0">
-            <span className="absolute inset-0 animate-ping rounded-full bg-[#ef4444] opacity-60 motion-reduce:hidden" />
-            <span className="relative size-2 rounded-full bg-[#ef4444]" />
+            <span className="absolute inset-0 animate-ping rounded-full bg-red-500 opacity-60 motion-reduce:hidden" />
+            <span className="relative size-2 rounded-full bg-red-500" />
           </span>
-          <span className={`flex-1 text-[12px] leading-[16px] text-[#b91c1c] ${fontSemi}`}>Sale ends in</span>
+          <span className={`flex-1 text-xs leading-4 text-red-700 ${fontSemi}`}>Sale ends in</span>
           <span role="timer" aria-label={`Sale ends in ${label}`} className="flex items-center gap-0.5">
             {label.split(":").map((part, i) => (
               <span key={i} className="flex items-center gap-0.5">
-                {i > 0 && <span aria-hidden="true" className={`text-[12px] text-[#ef4444] ${fontBold}`}>:</span>}
-                <span aria-hidden="true" className={`min-w-[26px] rounded-[6px] bg-white px-1 py-0.5 text-center text-[13px] leading-[18px] tabular-nums text-[#b91c1c] shadow-[0_1px_2px_rgba(185,28,28,0.15)] ring-1 ring-inset ring-[#fecaca] ${fontBold}`}>
+                {i > 0 && <span aria-hidden="true" className={`text-xs text-red-500 ${fontBold}`}>:</span>}
+                <span aria-hidden="true" className={`min-w-6.5 rounded-md bg-white px-1 py-0.5 text-center text-13 leading-4.5 tabular-nums text-red-700 shadow-sm shadow-red-700/22 ring-1 ring-inset ring-red-200 ${fontBold}`}>
                   {part}
                 </span>
               </span>
@@ -212,7 +213,7 @@ function PriceBlock({ price, originalPrice, discount }: { price: number; origina
   );
 }
 
-function Icon({ name, className = "size-[18px]" }: { name: string; className?: string }) {
+function Icon({ name, className = "size-4.5" }: { name: string; className?: string }) {
   const paths: Record<string, ReactNode> = {
     video: (
       <>
@@ -292,8 +293,8 @@ function Icon({ name, className = "size-[18px]" }: { name: string; className?: s
 
 function Card({ title, children, id }: { title: string; children: ReactNode; id?: string }) {
   return (
-    <section id={id} className="scroll-mt-[96px] rounded-[16px] border border-[#e2e8f0] bg-white p-5 md:p-8">
-      <h2 className={`mb-5 text-[22px] leading-[1.3] text-[#0f172a] ${fontHeading}`}>{title}</h2>
+    <section id={id} className="scroll-mt-24 rounded-2xl border border-slate-200 bg-white p-5 md:p-8">
+      <h2 className={`mb-5 text-22 leading-tight text-slate-900 ${fontHeading}`}>{title}</h2>
       {children}
     </section>
   );
@@ -301,9 +302,9 @@ function Card({ title, children, id }: { title: string; children: ReactNode; id?
 
 function SeeMore({ open, onClick, more = "See more", less = "See less" }: { open: boolean; onClick: () => void; more?: string; less?: string }) {
   return (
-    <button type="button" onClick={onClick} className={`mt-5 inline-flex items-center gap-1.5 text-[15px] text-[#0f172a] transition hover:text-[#0d5c4b] ${fontSemi}`}>
+    <button type="button" onClick={onClick} className={`mt-5 inline-flex items-center gap-1.5 text-15 text-slate-900 transition hover:text-primary-700 ${fontSemi}`}>
       {open ? less : more}
-      <Icon name="chevron" className={`size-[16px] transition-transform ${open ? "rotate-180" : ""}`} />
+      <Icon name="chevron" className={`size-4 transition-transform ${open ? "rotate-180" : ""}`} />
     </button>
   );
 }
@@ -350,16 +351,16 @@ function Details({ course }: { course: Course }) {
   const share = () => setSharing(true);
 
   return (
-    <main className="w-full bg-[#f8fafc] pb-20 pt-[64px]">
+    <main className="w-full bg-slate-25 pb-20 pt-16">
       {sharing && <ShareCourseDialog course={course} onClose={() => setSharing(false)} />}
-      <div className="mx-auto grid max-w-[1392px] grid-cols-1 px-3 md:px-6 lg:grid-cols-[384px_minmax(0,1fr)] lg:gap-x-8 xl:grid-cols-[424px_minmax(0,1fr)] xl:gap-x-[46px] 2xl:px-0">
+      <div className="mx-auto grid max-w-348 grid-cols-1 px-3 md:px-6 lg:grid-cols-aside-384 lg:gap-x-8 xl:grid-cols-aside-424 xl:gap-x-11.5 2xl:px-0">
         {/* Banner */}
-        <div className="relative overflow-hidden rounded-[20px] bg-[linear-gradient(120deg,#0b1220_0%,#0f172a_55%,#13213a_100%)] px-5 pb-8 pt-6 md:px-8 lg:col-span-2 lg:col-start-1 lg:row-start-1 lg:min-h-[454px] lg:pb-8 lg:pl-[416px] lg:pr-8 lg:pt-[105px] xl:pl-[470px] xl:pr-[34px]">
+        <div className="relative overflow-hidden rounded-2xl bg-linear-120 from-slate-950 via-slate-900 via-55% to-slate-800 px-5 pb-8 pt-6 md:px-8 lg:col-span-2 lg:col-start-1 lg:row-start-1 lg:min-h-113.5 lg:pb-8 lg:pl-104 lg:pr-8 lg:pt-26.25 xl:pl-117.5 xl:pr-8.5">
           {[
-            "right-[120px] xl:right-[132px] opacity-[0.07]",
-            "right-[-60px] xl:right-[-50px] opacity-[0.045]",
+            "right-30 xl:right-33 opacity-7",
+            "-right-15 xl:-right-12.5 opacity-4",
           ].map((pos) => (
-            <svg key={pos} aria-hidden="true" viewBox="0 0 321 454" preserveAspectRatio="none" className={`pointer-events-none absolute inset-y-0 hidden h-full w-[321px] md:block ${pos}`}>
+            <svg key={pos} aria-hidden="true" viewBox="0 0 321 454" preserveAspectRatio="none" className={`pointer-events-none absolute inset-y-0 hidden h-full w-80.25 md:block ${pos}`}>
               <path d="M321 0H150L0 227l150 227h171L171 227z" fill="url(#chevron-fade)" />
               <defs>
                 <linearGradient id="chevron-fade" x1="0" y1="0" x2="0" y2="1">
@@ -369,10 +370,10 @@ function Details({ course }: { course: Course }) {
               </defs>
             </svg>
           ))}
-          <div aria-hidden="true" className="pointer-events-none absolute -bottom-40 left-1/3 size-[420px] rounded-full bg-[radial-gradient(circle,rgba(18,185,129,0.12),transparent_70%)]" />
+          <div aria-hidden="true" className="pointer-events-none absolute -bottom-40 left-1/3 size-105 rounded-full bg-radial from-emerald-500/12 to-transparent to-70%" />
 
-          <div className="relative mb-6 flex flex-wrap items-center justify-between gap-3 lg:absolute lg:inset-x-8 lg:top-[29px] lg:mb-0">
-            <nav aria-label="Breadcrumb" className={`flex flex-wrap items-center gap-2 text-[13px] text-[#cbd5e1] ${fontRegular}`}>
+          <div className="relative mb-6 flex flex-wrap items-center justify-between gap-3 lg:absolute lg:inset-x-8 lg:top-7.25 lg:mb-0">
+            <nav aria-label="Breadcrumb" className={`flex flex-wrap items-center gap-2 text-13 text-slate-300 ${fontRegular}`}>
               <a href="#" className="hover:text-white">
                 Home
               </a>
@@ -381,25 +382,25 @@ function Details({ course }: { course: Course }) {
                 {course.category}
               </button>
               <span aria-hidden="true">›</span>
-              <button type="button" onClick={() => openSearch({ category: course.category, sub: course.subcategory })} className={`text-[#ffb20d] hover:text-[#ffd166] ${fontMedium}`}>
+              <button type="button" onClick={() => openSearch({ category: course.category, sub: course.subcategory })} className={`text-secondary-500 hover:text-secondary-300 ${fontMedium}`}>
                 {course.subcategory}
               </button>
             </nav>
             {/* Award badges: frosted glass pills on the dark banner, each with a coloured icon and a soft glow. */}
             <div className="flex flex-wrap gap-2 lg:mr-6 lg:mt-2">
               {highestRated && (
-                <span className={`group relative flex items-center gap-1.5 overflow-hidden rounded-full bg-white/[0.08] py-1.5 pl-1.5 pr-3 text-[12px] leading-[16px] text-white ring-1 ring-inset ring-[#ffb20d]/40 backdrop-blur-md ${fontSemi}`}>
-                  <span aria-hidden="true" className="absolute inset-0 bg-[linear-gradient(110deg,transparent_30%,rgba(255,178,13,0.18)_50%,transparent_70%)] bg-[length:250%_100%] [animation:badge-shine_4s_ease-in-out_infinite] motion-reduce:hidden" />
-                  <span aria-hidden="true" className="relative flex size-6 items-center justify-center rounded-full bg-[linear-gradient(135deg,#ffd166,#ffb20d)] text-[#3b2600] shadow-[0_0_12px_rgba(255,178,13,0.45)]">
+                <span className={`group relative flex items-center gap-1.5 overflow-hidden rounded-full bg-white/8 py-1.5 pl-1.5 pr-3 text-xs leading-4 text-white ring-1 ring-inset ring-secondary-500/40 backdrop-blur-md ${fontSemi}`}>
+                  <span aria-hidden="true" className="absolute inset-0 bg-linear-110 from-transparent from-30% via-secondary-500/18 via-50% to-transparent to-70% bg-size-shine animate-badge-shine motion-reduce:hidden" />
+                  <span aria-hidden="true" className="relative flex size-6 items-center justify-center rounded-full bg-linear-135 from-secondary-300 to-secondary-500 text-yellow-950 shadow-xs shadow-secondary-500/68">
                     <HugeiconsIcon icon={StarIcon} size={13} strokeWidth={2.2} className="fill-current" />
                   </span>
                   <span className="relative">Highest rated</span>
                 </span>
               )}
               {bestSeller && (
-                <span className={`group relative flex items-center gap-1.5 overflow-hidden rounded-full bg-white/[0.08] py-1.5 pl-1.5 pr-3 text-[12px] leading-[16px] text-white ring-1 ring-inset ring-[#34d399]/40 backdrop-blur-md ${fontSemi}`}>
-                  <span aria-hidden="true" className="absolute inset-0 bg-[linear-gradient(110deg,transparent_30%,rgba(52,211,153,0.18)_50%,transparent_70%)] bg-[length:250%_100%] [animation:badge-shine_4s_ease-in-out_infinite] [animation-delay:2s] motion-reduce:hidden" />
-                  <span aria-hidden="true" className="relative flex size-6 items-center justify-center rounded-full bg-[linear-gradient(135deg,#6ee7b7,#10b981)] text-[#022c22] shadow-[0_0_12px_rgba(16,185,129,0.45)]">
+                <span className={`group relative flex items-center gap-1.5 overflow-hidden rounded-full bg-white/8 py-1.5 pl-1.5 pr-3 text-xs leading-4 text-white ring-1 ring-inset ring-emerald-400/40 backdrop-blur-md ${fontSemi}`}>
+                  <span aria-hidden="true" className="absolute inset-0 bg-linear-110 from-transparent from-30% via-emerald-400/18 via-50% to-transparent to-70% bg-size-shine animate-badge-shine animation-delay-2000 motion-reduce:hidden" />
+                  <span aria-hidden="true" className="relative flex size-6 items-center justify-center rounded-full bg-linear-135 from-emerald-300 to-emerald-500 text-emerald-950 shadow-xs shadow-emerald-500/68">
                     <HugeiconsIcon icon={Fire02Icon} size={13} strokeWidth={2.2} className="fill-current" />
                   </span>
                   <span className="relative">Bestseller</span>
@@ -408,9 +409,9 @@ function Details({ course }: { course: Course }) {
             </div>
           </div>
 
-        <header className="relative flex max-w-[862px] flex-col gap-5 text-white">
+        <header className="relative flex max-w-215.5 flex-col gap-5 text-white">
           <div className="flex items-start justify-between gap-4">
-            <h1 dir="auto" className={`m-0 text-left text-[28px] leading-[1.25] tracking-[-0.72px] md:text-[36px] md:leading-[48px] ${fontFor(course.title, fontHeading, "font-bold")}`}>
+            <h1 dir="auto" className={`m-0 text-left text-28 leading-tight tracking-tight md:text-4xl md:leading-12 ${fontFor(course.title, fontHeading, "font-bold")}`}>
               {course.title}
             </h1>
             <button
@@ -418,48 +419,48 @@ function Details({ course }: { course: Course }) {
               onClick={toggleWishlist}
               aria-pressed={saved}
               aria-label={saved ? "Remove from wishlist" : "Save to wishlist"}
-              className={`flex size-[40px] shrink-0 items-center justify-center rounded-[8px] shadow-[0_2px_12px_rgba(0,0,0,0.12)] transition ${saved ? "bg-[#ef4444] text-white" : "bg-white/[0.06] text-white hover:bg-white/15"}`}
+              className={`flex size-10 shrink-0 items-center justify-center rounded-lg shadow-lg transition ${saved ? "bg-red-500 text-white" : "bg-white/6 text-white hover:bg-white/15"}`}
             >
-              <Icon name="heart" className={`size-[20px] ${saved ? "fill-current" : ""}`} />
+              <Icon name="heart" className={`size-5 ${saved ? "fill-current" : ""}`} />
             </button>
           </div>
           <div className="flex flex-wrap gap-2">
             {tags.map((t) => (
-              <span key={t} className={`rounded-full border border-white/[0.12] bg-white/[0.12] px-3 py-1 text-[12px] leading-[18px] text-[#e2e8f0] ${fontMedium}`}>
+              <span key={t} className={`rounded-full border border-white/12 bg-white/12 px-3 py-1 text-xs leading-4.5 text-slate-200 ${fontMedium}`}>
                 {t}
               </span>
             ))}
-            {course.live && <span className={`rounded-full bg-[#ef4444] px-3 py-1 text-[12px] text-white ${fontSemi}`}>● Live cohort</span>}
+            {course.live && <span className={`rounded-full bg-red-500 px-3 py-1 text-xs text-white ${fontSemi}`}>● Live cohort</span>}
           </div>
-          <p dir="auto" className={`max-w-[650px] text-left text-[16px] leading-[24px] text-[#f1f5f9] ${fontFor(course.description, fontMedium, "font-medium")}`}>
+          <p dir="auto" className={`max-w-162.5 text-left text-base leading-6 text-slate-150 ${fontFor(course.description, fontMedium, "font-medium")}`}>
             {course.description}
           </p>
           <div className="flex flex-wrap gap-x-12 gap-y-4 pt-3">
             <div className="flex flex-col gap-1">
-              <span className={`text-[15px] text-[#64748b] ${fontMedium}`}>Created by</span>
-              <span dir="auto" className={`text-[15px] text-white ${fontFor(course.instructor, fontMedium, "font-medium")}`}>{course.instructor}</span>
+              <span className={`text-15 text-slate-500 ${fontMedium}`}>Created by</span>
+              <span dir="auto" className={`text-15 text-white ${fontFor(course.instructor, fontMedium, "font-medium")}`}>{course.instructor}</span>
             </div>
             <div className="flex flex-col gap-1">
-              <span className={`text-[15px] text-[#64748b] ${fontMedium}`}>Review</span>
-              <span className={`flex flex-wrap items-center gap-2 text-[14px] text-[#cbd5e1] ${fontRegular}`}>
-                <span className={`text-[16px] text-[#ffb20d] ${fontBold}`}>{course.rating.toFixed(1)}</span>
+              <span className={`text-15 text-slate-500 ${fontMedium}`}>Review</span>
+              <span className={`flex flex-wrap items-center gap-2 text-sm text-slate-300 ${fontRegular}`}>
+                <span className={`text-base text-secondary-500 ${fontBold}`}>{course.rating.toFixed(1)}</span>
                 <StarRow rating={course.rating} />
                 <span>({ratingsCount.toLocaleString()} ratings)</span>
                 <span className={`text-white ${fontMedium}`}>{course.students.toLocaleString()} students</span>
               </span>
             </div>
           </div>
-          <div className={`flex flex-wrap items-center gap-x-12 gap-y-2 pt-3 text-[14px] text-[#f8fafc] ${fontRegular}`}>
+          <div className={`flex flex-wrap items-center gap-x-12 gap-y-2 pt-3 text-sm text-slate-25 ${fontRegular}`}>
             <span>
-              <span className={`text-[#64748b] ${fontMedium}`}>Last Updated : </span>
+              <span className={`text-slate-500 ${fontMedium}`}>Last Updated : </span>
               {formatDate(course.launched)}
             </span>
             <span className="flex items-center gap-2">
-              <Icon name="globe" className="size-[16px]" />
+              <Icon name="globe" className="size-4" />
               {language}
             </span>
             <span className="flex items-center gap-2">
-              <Icon name="cc" className="size-[16px]" />
+              <Icon name="cc" className="size-4" />
               {language === "Arabic" ? "Arabic, English [Auto]" : "English, Arabic [Auto]"}, <span className="underline">13 more</span>
             </span>
           </div>
@@ -467,15 +468,15 @@ function Details({ course }: { course: Course }) {
         </div>
 
         {/* Purchase card */}
-        <aside className="relative z-10 mt-6 lg:sticky lg:top-[88px] lg:col-start-1 lg:row-span-2 lg:row-start-1 lg:mt-[78px] lg:self-start lg:pl-8 xl:pl-[34px]">
-          <div className="flex flex-col gap-4 rounded-[16px] border border-[#e2e8f0] bg-white p-4 shadow-[0_20px_50px_rgba(15,23,42,0.12)]">
-            <button type="button" onClick={() => notify("Course preview opens here (demo)")} className="group relative block overflow-hidden rounded-[12px]" aria-label="Play course preview">
+        <aside className="relative z-10 mt-6 lg:sticky lg:top-22 lg:col-start-1 lg:row-span-2 lg:row-start-1 lg:mt-19.5 lg:self-start lg:pl-8 xl:pl-8.5">
+          <div className="flex flex-col gap-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-2xl">
+            <button type="button" onClick={() => notify("Course preview opens here (demo)")} className="group relative block overflow-hidden rounded-xl" aria-label="Play course preview">
               <CourseThumb course={course} showTitle={false} className="aspect-video" />
               {/* Frosted play button: a soft glass ring with a solid core, and a slow pulse that invites a click. */}
               <span className="absolute inset-0 flex items-center justify-center bg-gradient-to-t from-black/25 via-transparent to-transparent transition group-hover:from-black/40">
-                <span className="relative flex size-[54px] items-center justify-center rounded-full bg-white/25 ring-1 ring-white/60 backdrop-blur-md transition duration-300 group-hover:scale-105 group-focus-visible:scale-105">
-                  <span aria-hidden="true" className="absolute inset-0 animate-ping rounded-full bg-white/25 [animation-duration:2.4s] motion-reduce:hidden" />
-                  <span className="relative flex size-[40px] items-center justify-center rounded-full bg-white text-[#0f172a] shadow-[0_8px_24px_rgba(15,23,42,0.35)]">
+                <span className="relative flex size-13.5 items-center justify-center rounded-full bg-white/25 ring-1 ring-white/60 backdrop-blur-md transition duration-300 group-hover:scale-105 group-focus-visible:scale-105">
+                  <span aria-hidden="true" className="absolute inset-0 animate-ping rounded-full bg-white/25 animation-duration-2400 motion-reduce:hidden" />
+                  <span className="relative flex size-10 items-center justify-center rounded-full bg-white text-slate-900 shadow-2xl">
                     <HugeiconsIcon icon={PlayIcon} size={18} strokeWidth={1.8} className="ml-0.5 fill-current" aria-hidden="true" />
                   </span>
                 </span>
@@ -484,13 +485,13 @@ function Details({ course }: { course: Course }) {
 
             {enrolled ? (
               // Owners do not need a price or a countdown, just a clear sign that the course is theirs.
-              <div className="flex items-center gap-3 rounded-[12px] bg-[#eef7f3] px-4 py-3">
-                <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-[#0d5c4b] text-white">
-                  <Icon name="check" className="size-[18px]" />
+              <div className="flex items-center gap-3 rounded-xl bg-primary-100 px-4 py-3">
+                <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-primary-700 text-white">
+                  <Icon name="check" className="size-4.5" />
                 </span>
                 <span className="min-w-0">
-                  <span className={`block text-[15px] leading-[20px] text-[#0f172a] ${fontSemi}`}>You own this course</span>
-                  <span className={`block text-[13px] leading-[18px] text-[#475569] ${fontRegular}`}>Pick up where you left off.</span>
+                  <span className={`block text-15 leading-5 text-slate-900 ${fontSemi}`}>You own this course</span>
+                  <span className={`block text-13 leading-4.5 text-slate-600 ${fontRegular}`}>Pick up where you left off.</span>
                 </span>
               </div>
             ) : (
@@ -499,29 +500,29 @@ function Details({ course }: { course: Course }) {
 
             <div className="flex flex-col gap-2">
               {enrolled ? (
-                <button type="button" onClick={() => openLearning(course.id)} className={`h-[44px] rounded-[10px] bg-[#0d5c4b] text-[15px] text-white transition hover:bg-[#0b4c3e] ${fontSemi}`}>
+                <button type="button" onClick={() => openLearning(course.id)} className={`h-11 rounded-xl bg-primary-700 text-15 text-white transition hover:bg-primary-800 ${fontSemi}`}>
                   Go to course
                 </button>
               ) : (
                 <>
-                  <button type="button" onClick={buyNow} className={`h-[44px] rounded-[10px] bg-[#ffb20d] text-[15px] text-[#1e293b] shadow-[0_8px_20px_rgba(255,178,13,0.3)] transition hover:-translate-y-0.5 hover:bg-[#faa104] ${fontSemi}`}>
+                  <button type="button" onClick={buyNow} className={`h-11 rounded-xl bg-secondary-500 text-15 text-slate-800 shadow-xl shadow-secondary-500/45 transition hover:-translate-y-0.5 hover:bg-secondary-600 ${fontSemi}`}>
                     {course.price === 0 ? "Enroll for free" : "Buy Now"}
                   </button>
                   <button
                     type="button"
                     onClick={() => (inCart ? setOverlay({ type: "cart" }) : addToCart(course))}
-                    className={`flex h-[44px] items-center justify-center gap-2 rounded-[10px] border text-[15px] transition ${inCart ? "border-[#0d5c4b]/30 bg-[#eef7f3] text-[#0d5c4b] hover:bg-[#e3f3ec]" : "border-[#cbd5e1] bg-white text-[#0f172a] hover:border-[#94a3b8] hover:bg-[#f8fafc]"} ${fontSemi}`}
+                    className={`flex h-11 items-center justify-center gap-2 rounded-xl border text-15 transition ${inCart ? "border-primary-700/30 bg-primary-100 text-primary-700 hover:bg-primary-200" : "border-slate-300 bg-white text-slate-900 hover:border-slate-400 hover:bg-slate-25"} ${fontSemi}`}
                   >
                     {/* Secondary action: outlined, so it never looks disabled and never competes with Buy Now. */}
                     {inCart ? (
                       <>
-                        <Icon name="check" className="size-[18px]" />
+                        <Icon name="check" className="size-4.5" />
                         In cart
-                        <span className={`text-[14px] opacity-70 ${fontMedium}`}>· Go to cart</span>
+                        <span className={`text-sm opacity-70 ${fontMedium}`}>· Go to cart</span>
                       </>
                     ) : (
                       <>
-                        <svg viewBox="0 0 24 24" className="size-[18px]" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" className="size-4.5" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                           <path d="M3 4h2l2.4 11.2a1 1 0 001 .8h9.2a1 1 0 001-.8L20 8H6.2" />
                           <circle cx="9" cy="20" r="1.2" />
                           <circle cx="17" cy="20" r="1.2" />
@@ -533,16 +534,16 @@ function Details({ course }: { course: Course }) {
                 </>
               )}
               {!enrolled && course.price > 0 && (
-                <p className={`flex items-center justify-center gap-1.5 text-center text-[12px] text-[#64748b] ${fontRegular}`}>
-                  <Icon name="check" className="size-[14px] text-[#0d5c4b]" />
+                <p className={`flex items-center justify-center gap-1.5 text-center text-xs text-slate-500 ${fontRegular}`}>
+                  <Icon name="check" className="size-3.5 text-primary-700" />
                   30-day money-back guarantee
                 </p>
               )}
             </div>
 
-            <div className="flex flex-col gap-2.5 border-t border-[#e2e8f0] pt-4">
-              <p className={`text-[14px] text-[#0f172a] ${fontSemi}`}>This course includes</p>
-              <ul className={`flex flex-col gap-2 text-[13px] leading-[18px] text-[#334155] ${fontRegular}`}>
+            <div className="flex flex-col gap-2.5 border-t border-slate-200 pt-4">
+              <p className={`text-sm text-slate-900 ${fontSemi}`}>This course includes</p>
+              <ul className={`flex flex-col gap-2 text-13 leading-4.5 text-slate-700 ${fontRegular}`}>
                 {[
                   ["video", course.live ? `Live sessions plus ${course.duration ?? `${course.hours} hours`} of recordings` : `${course.duration ?? `${course.hours} hours`} of on-demand video`],
                   ["article", `${Math.max(2, Math.round(course.lessons / 6))} exclusive articles`],
@@ -552,8 +553,8 @@ function Details({ course }: { course: Course }) {
                   ["award", "Certificate of completion"],
                 ].map(([icon, label]) => (
                   <li key={icon} className="flex items-center gap-2.5">
-                    <span className="text-[#0d5c4b]">
-                      <Icon name={icon} className="size-[16px]" />
+                    <span className="text-primary-700">
+                      <Icon name={icon} className="size-4" />
                     </span>
                     {label}
                   </li>
@@ -561,8 +562,8 @@ function Details({ course }: { course: Course }) {
               </ul>
             </div>
 
-            <button type="button" onClick={share} className={`flex items-center justify-center gap-2 border-t border-[#e2e8f0] pt-3 text-[13px] text-[#0f172a] transition hover:text-[#0d5c4b] ${fontSemi}`}>
-              <Icon name="share" className="size-[16px]" />
+            <button type="button" onClick={share} className={`flex items-center justify-center gap-2 border-t border-slate-200 pt-3 text-13 text-slate-900 transition hover:text-primary-700 ${fontSemi}`}>
+              <Icon name="share" className="size-4" />
               Share this course
             </button>
           </div>
@@ -585,11 +586,11 @@ function Objectives({ course }: { course: Course }) {
   const items = [...course.outcomes, ...extraObjectives].slice(0, 10);
   return (
     <Card title="Course objectives">
-      <ul className={`grid grid-cols-1 gap-x-8 gap-y-3 text-[14px] text-[#334155] sm:grid-cols-2 ${fontRegular}`}>
+      <ul className={`grid grid-cols-1 gap-x-8 gap-y-3 text-sm text-slate-700 sm:grid-cols-2 ${fontRegular}`}>
         {items.map((item) => (
           <li key={item} dir="auto" className="flex items-start gap-3 text-left">
-            <span className="mt-0.5 text-[#12b981]">
-              <Icon name="check" className="size-[18px]" />
+            <span className="mt-0.5 text-emerald-500">
+              <Icon name="check" className="size-4.5" />
             </span>
             {item}
           </li>
@@ -610,8 +611,8 @@ function Overview({ course }: { course: Course }) {
   ];
   return (
     <Card title="Overview">
-      <div className={`relative overflow-hidden transition-[max-height] duration-500 ${open ? "max-h-[1200px]" : "max-h-[470px]"}`}>
-        <div className={`flex flex-col gap-4 text-[14px] leading-[22px] text-[#475569] ${fontRegular}`}>
+      <div className={`relative overflow-hidden transition-all duration-500 ${open ? "max-h-300" : "max-h-117.5"}`}>
+        <div className={`flex flex-col gap-4 text-sm leading-5.5 text-slate-600 ${fontRegular}`}>
           <p dir="auto" className="text-left">
             {course.description} This {course.level.toLowerCase()} course in {course.subcategory} takes you step by step through {course.lessons} lessons, with {course.hours} hours of focused content.
           </p>
@@ -619,14 +620,14 @@ function Overview({ course }: { course: Course }) {
             Throughout the course you work on hands-on projects that apply each idea to real situations. Every section ends with a short exercise, so you practise what you learn before moving on. You finish with a project you can show to employers or clients.
           </p>
         </div>
-        <h3 className={`mb-3 mt-8 text-[18px] text-[#0f172a] ${fontHeading}`}>Requirements</h3>
-        <ul className={`flex list-disc flex-col gap-2 pl-5 text-[14px] leading-[22px] text-[#475569] marker:text-[#0f172a] ${fontRegular}`}>
+        <h3 className={`mb-3 mt-8 text-lg text-slate-900 ${fontHeading}`}>Requirements</h3>
+        <ul className={`flex list-disc flex-col gap-2 pl-5 text-sm leading-5.5 text-slate-600 marker:text-slate-900 ${fontRegular}`}>
           {requirements.map((r) => (
             <li key={r}>{r}</li>
           ))}
         </ul>
-        <h3 className={`mb-3 mt-8 text-[18px] text-[#0f172a] ${fontHeading}`}>Who this course is for</h3>
-        <ul className={`flex list-disc flex-col gap-2 pl-5 text-[14px] leading-[22px] text-[#475569] marker:text-[#0f172a] ${fontRegular}`}>
+        <h3 className={`mb-3 mt-8 text-lg text-slate-900 ${fontHeading}`}>Who this course is for</h3>
+        <ul className={`flex list-disc flex-col gap-2 pl-5 text-sm leading-5.5 text-slate-600 marker:text-slate-900 ${fontRegular}`}>
           <li>Learners who want a clear, practical start in {course.subcategory}.</li>
           <li>Professionals who want to add a new skill to their CV.</li>
           <li>Teams in Saudi Arabia and the region who learn better with real examples.</li>
@@ -657,7 +658,7 @@ function CourseContent({ course }: { course: Course }) {
   return (
     <>
     <Card title="Course content">
-      <div className={`mb-4 flex flex-wrap items-center justify-between gap-2 text-[14px] text-[#475569] ${fontRegular}`}>
+      <div className={`mb-4 flex flex-wrap items-center justify-between gap-2 text-sm text-slate-600 ${fontRegular}`}>
         <span>
           {sections.length} sections · {lessonCount} lectures · {course.duration ?? `${course.hours}h`} total length
         </span>
@@ -667,7 +668,7 @@ function CourseContent({ course }: { course: Course }) {
             setOpenSet(allOpen ? new Set() : new Set(sections.map((_, i) => i)));
             if (!allOpen) setShowAll(true);
           }}
-          className={`text-[#0d5c4b] hover:underline ${fontSemi}`}
+          className={`text-primary-700 hover:underline ${fontSemi}`}
         >
           {allOpen ? "Collapse all sections" : "Expand all sections"}
         </button>
@@ -677,11 +678,11 @@ function CourseContent({ course }: { course: Course }) {
           const open = openSet.has(i);
           const previews = section.lessons.filter((l) => l.preview).length;
           return (
-            <div key={section.title} className={`overflow-hidden rounded-[12px] border transition ${open ? "border-[#e2e8f0] bg-white" : "border-transparent bg-[#f1f5f9]"}`}>
+            <div key={section.title} className={`overflow-hidden rounded-xl border transition ${open ? "border-slate-200 bg-white" : "border-transparent bg-slate-150"}`}>
               <button type="button" onClick={() => toggle(i)} aria-expanded={open} className="flex w-full items-center gap-4 px-4 py-4 text-left md:px-5">
-                <span className={`flex size-[20px] shrink-0 items-center justify-center text-[22px] leading-none text-[#475569] ${fontRegular}`}>{open ? "−" : "+"}</span>
-                <span className={`flex-1 text-[15px] text-[#0f172a] ${fontMedium}`}>{section.title}</span>
-                <span className={`hidden shrink-0 text-[13px] text-[#64748b] sm:block ${fontRegular}`}>
+                <span className={`flex size-5 shrink-0 items-center justify-center text-22 leading-none text-slate-600 ${fontRegular}`}>{open ? "−" : "+"}</span>
+                <span className={`flex-1 text-15 text-slate-900 ${fontMedium}`}>{section.title}</span>
+                <span className={`hidden shrink-0 text-13 text-slate-500 sm:block ${fontRegular}`}>
                   {previews > 0 && `${previews} Preview | `}
                   {section.lessons.length} Lectures
                 </span>
@@ -689,9 +690,9 @@ function CourseContent({ course }: { course: Course }) {
               {open && (
                 <ul className="flex flex-col pb-2">
                   {section.lessons.map((lesson) => (
-                    <li key={lesson.title} className={`flex items-center gap-3 px-4 py-3 text-[14px] md:px-5 md:pl-[60px] ${fontRegular}`}>
-                      <span className="text-[#94a3b8]">
-                        <Icon name={lesson.kind} className="size-[16px]" />
+                    <li key={lesson.title} className={`flex items-center gap-3 px-4 py-3 text-sm md:px-5 md:pl-15 ${fontRegular}`}>
+                      <span className="text-slate-400">
+                        <Icon name={lesson.kind} className="size-4" />
                       </span>
                       {lesson.preview ? (
                         <button type="button" onClick={() => setPreviewLesson(lesson.title)} className="flex-1 text-left text-slate-900 underline-offset-2 hover:text-primary-700 hover:underline">
@@ -705,7 +706,7 @@ function CourseContent({ course }: { course: Course }) {
                           Preview
                         </button>
                       )}
-                      <span className="w-[52px] shrink-0 text-right text-[13px] text-[#94a3b8]">{lesson.kind === "quiz" ? "Quiz" : lesson.kind === "assignment" ? "Task" : `${lesson.minutes}min`}</span>
+                      <span className="w-13 shrink-0 text-right text-13 text-slate-400">{lesson.kind === "quiz" ? "Quiz" : lesson.kind === "assignment" ? "Task" : `${lesson.minutes}min`}</span>
                     </li>
                   ))}
                 </ul>
@@ -746,33 +747,33 @@ function Instructor({ course }: { course: Course }) {
     <Card title="Instructor">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div className="flex items-center gap-4">
-          <span className={`flex size-[56px] items-center justify-center rounded-full text-[18px] text-white ${fontFor(course.instructor, fontSemi, "font-bold")}`} style={{ backgroundImage: `linear-gradient(135deg, ${from}, ${to})` }}>
+          <span className={`flex size-14 items-center justify-center rounded-full text-lg text-white ${fontFor(course.instructor, fontSemi, "font-bold")}`} style={{ backgroundImage: `linear-gradient(135deg, ${from}, ${to})` }}>
             {initials(course.instructor)}
           </span>
           <div>
-            <p dir="auto" className={`text-left text-[17px] text-[#0f172a] ${fontFor(course.instructor, fontSemi)}`}>{course.instructor}</p>
-            <p className={`text-[13px] text-[#64748b] ${fontRegular}`}>{course.subcategory} instructor</p>
+            <p dir="auto" className={`text-left text-17 text-slate-900 ${fontFor(course.instructor, fontSemi)}`}>{course.instructor}</p>
+            <p className={`text-13 text-slate-500 ${fontRegular}`}>{course.subcategory} instructor</p>
           </div>
         </div>
-        <button type="button" onClick={() => openSearch({ q: course.instructor })} className={`h-[40px] rounded-[8px] bg-[#f1f5f9] px-4 text-[14px] text-[#0f172a] transition hover:bg-[#e2e8f0] ${fontSemi}`}>
+        <button type="button" onClick={() => openSearch({ q: course.instructor })} className={`h-10 rounded-lg bg-slate-150 px-4 text-sm text-slate-900 transition hover:bg-slate-200 ${fontSemi}`}>
           See instructor courses
         </button>
       </div>
-      <div className={`mt-5 flex flex-wrap gap-x-8 gap-y-2 text-[14px] text-[#0f172a] ${fontSemi}`}>
+      <div className={`mt-5 flex flex-wrap gap-x-8 gap-y-2 text-sm text-slate-900 ${fontSemi}`}>
         <span className="flex items-center gap-2">
-          <span className="text-[#ffb20d]">★</span>
+          <span className="text-secondary-500">★</span>
           {rating.toFixed(1)} rating
         </span>
         <span className="flex items-center gap-2">
-          <Icon name="users" className="size-[16px] text-[#64748b]" />
+          <Icon name="users" className="size-4 text-slate-500" />
           {students.toLocaleString()} students
         </span>
         <span className="flex items-center gap-2">
-          <Icon name="video" className="size-[16px] text-[#64748b]" />
+          <Icon name="video" className="size-4 text-slate-500" />
           {theirs.length} {theirs.length === 1 ? "course" : "courses"}
         </span>
       </div>
-      <div className={`mt-5 flex flex-col gap-3 text-[14px] leading-[22px] text-[#475569] ${fontRegular} ${open ? "" : "line-clamp-4"}`}>
+      <div className={`mt-5 flex flex-col gap-3 text-sm leading-5.5 text-slate-600 ${fontRegular} ${open ? "" : "line-clamp-4"}`}>
         <p>
           {course.instructor} is an expert in {course.subcategory} with years of hands-on experience in {course.category.toLowerCase()}. They have trained teams across Saudi Arabia and the Gulf and hold professional certificates in their field.
         </p>
@@ -894,7 +895,7 @@ function Reviews({ course, ratingsCount }: { course: Course; ratingsCount: numbe
           ))}
         </ul>
         <div className="flex justify-end">
-          <button type="button" onClick={() => setShowAll(!showAll)} className={`h-10 rounded-lg bg-slate-900 px-4 text-sm text-white transition hover:bg-primary-700 ${fontSemi}`}>
+          <button type="button" onClick={() => setShowAll(!showAll)} className={`${buttonClass("dark", "lg")}`}>
             {showAll ? "Show fewer reviews" : `See all feedback (${all.length})`}
           </button>
         </div>
@@ -903,7 +904,7 @@ function Reviews({ course, ratingsCount }: { course: Course; ratingsCount: numbe
       <Card title="Rate this course">
         <form onSubmit={submit} className="flex flex-col gap-5" noValidate>
           {/* Step 1: stars, with a word that names the rating as you hover */}
-          <div className="flex flex-col gap-4 rounded-2xl border border-slate-200 bg-[linear-gradient(135deg,#fffbeb,#ffffff_60%)] p-4 sm:flex-row sm:items-center sm:gap-6 sm:p-5">
+          <div className="flex flex-col gap-4 rounded-2xl border border-slate-200 bg-linear-135 from-secondary-50 to-slate-25 to-60% p-4 sm:flex-row sm:items-center sm:gap-6 sm:p-5">
             <div className="flex items-center gap-3">
               <span className={`flex size-11 shrink-0 items-center justify-center rounded-full bg-primary-700 text-sm text-white ring-4 ring-primary-100 ${fontSemi}`}>{initials(user?.name ?? "You")}</span>
               <div className="min-w-0">
@@ -927,13 +928,13 @@ function Reviews({ course, ratingsCount }: { course: Course; ratingsCount: numbe
                     }}
                     className="p-0.5 transition duration-150 hover:scale-115 active:scale-95"
                   >
-                    <svg viewBox="0 0 24 24" width="34" height="34" fill="currentColor" className={`transition-colors ${shown >= n ? "text-secondary-500 drop-shadow-[0_2px_6px_rgba(255,178,13,0.45)]" : "text-slate-200"}`} aria-hidden="true">
+                    <svg viewBox="0 0 24 24" width="34" height="34" fill="currentColor" className={`transition-colors ${shown >= n ? "text-secondary-500 drop-shadow-lg" : "text-slate-200"}`} aria-hidden="true">
                       <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01z" />
                     </svg>
                   </button>
                 ))}
               </div>
-              <span aria-live="polite" className={`w-[118px] text-sm ${LEVELS[shown].tone} ${shown ? fontSemi : fontRegular}`}>{LEVELS[shown].label}</span>
+              <span aria-live="polite" className={`w-29.5 text-sm ${LEVELS[shown].tone} ${shown ? fontSemi : fontRegular}`}>{LEVELS[shown].label}</span>
             </div>
           </div>
 
@@ -983,7 +984,7 @@ function Reviews({ course, ratingsCount }: { course: Course; ratingsCount: numbe
                   }}
                   rows={4}
                   placeholder="What did you learn? Who would you recommend it to?"
-                  className={`${inputClass} field-sizing-content min-h-[110px] resize-none`}
+                  className={`${inputClass} field-sizing-content min-h-27.5 resize-none`}
                 />
                 <span className={`flex justify-between text-xs ${fontRegular}`}>
                   <span className={bodyLength > 0 && bodyLength < 10 ? "text-amber-600" : "text-slate-400"}>{bodyLength < 10 ? `At least 10 characters (${10 - bodyLength} to go)` : "Looks good"}</span>
@@ -1005,7 +1006,7 @@ function Reviews({ course, ratingsCount }: { course: Course; ratingsCount: numbe
                 <button type="button" onClick={reset} className={`h-10 rounded-xl px-4 text-sm text-slate-600 transition hover:bg-slate-100 ${fontMedium}`}>
                   Cancel
                 </button>
-                <button type="submit" disabled={!ready} className={`h-10 rounded-xl bg-slate-900 px-5 text-sm text-white transition hover:bg-primary-700 disabled:cursor-not-allowed disabled:bg-slate-200 disabled:text-slate-400 ${fontSemi}`}>
+                <button type="submit" disabled={!ready} className={`${buttonClass("dark", "lg")}`}>
                   Post review
                 </button>
               </div>

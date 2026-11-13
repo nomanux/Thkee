@@ -3,6 +3,7 @@ import { fontMedium, fontRegular, fontSemi } from "../fonts";
 import { load, save, useApp } from "../store";
 import { ActionMenu, FilterSelect } from "./Menus";
 import { ConfirmDialog, LIVE_COURSES, MultiSessionBadge, SingleSessionBadge, openCourse } from "./InstructorSessions";
+import { buttonClass } from "./Button"
 
 type Tab = "Upcoming" | "Completed" | "Cancelled";
 type Seed = { id: string; course: string; session?: string; tab: Tab } & ({ inMinutes: number } | { day: number; at: number });
@@ -82,7 +83,7 @@ function SessionMenu({ item, now, onCancel }: { item: Item; now: number; onCance
   return (
     <ActionMenu
       label={`More actions for ${item.session ?? title}`}
-      triggerClass="flex size-8 items-center justify-center rounded-[6px] bg-white text-[#334155] transition hover:bg-[#f1f5f9]"
+      triggerClass="flex size-8 items-center justify-center rounded-md bg-white text-slate-700 transition hover:bg-slate-150"
       trigger={
         <svg viewBox="0 0 24 24" className="size-5" fill="currentColor" aria-hidden="true">
           <circle cx="12" cy="5" r="1.7" />
@@ -98,7 +99,7 @@ function SessionMenu({ item, now, onCancel }: { item: Item; now: number; onCance
 export function JoinButton({ canJoin }: { canJoin: boolean }) {
   const { notify } = useApp();
   return (
-    <button type="button" disabled={!canJoin} title={canJoin ? undefined : "You can join 15 minutes before the start time"} onClick={() => notify("The live classroom isn't connected yet")} className={`h-8 shrink-0 rounded-[6px] bg-[#1e293b] px-3 text-[14px] leading-[20px] text-white transition hover:bg-[#0f172a] disabled:cursor-not-allowed disabled:bg-[#94a3b8] ${fontMedium}`}>
+    <button type="button" disabled={!canJoin} title={canJoin ? undefined : "You can join 15 minutes before the start time"} onClick={() => notify("The live classroom isn't connected yet")} className={`${buttonClass("dark", "md")} shrink-0`}>
       Join now
     </button>
   );
@@ -108,23 +109,23 @@ function ScheduleCard({ item, now, onCancel }: { item: Item; now: number; onCanc
   const { course, title, duration, end, upcoming, minutesLeft, running, canJoin } = sessionInfo(item, now);
 
   return (
-    <li className="flex flex-col gap-4 rounded-[12px] border border-[#e2e8f0] bg-[#f8fafc] p-4 sm:flex-row">
-      <img src={course.image} alt="" className="aspect-[16/9] w-full shrink-0 rounded-[8px] object-cover sm:w-[150px] sm:self-start" />
+    <li className="flex flex-col gap-4 rounded-xl border border-slate-200 bg-slate-25 p-4 sm:flex-row">
+      <img src={course.image} alt="" className="aspect-video w-full shrink-0 rounded-lg object-cover sm:w-37.5 sm:self-start" />
       <div className="min-w-0 flex-1">
-        <p className={`flex flex-wrap items-center gap-x-3 text-[14px] leading-[20px] text-[#475569] ${fontRegular}`}>
+        <p className={`flex flex-wrap items-center gap-x-3 text-sm leading-5 text-slate-600 ${fontRegular}`}>
           <span>
             {formatTime(item.start)} – {formatTime(end)}
           </span>
-          {upcoming && minutesLeft > 0 && minutesLeft <= 60 && <span className="text-[#dc2626]">Starts in {minutesLeft} min</span>}
-          {running && <span className="text-[#dc2626]">In progress</span>}
+          {upcoming && minutesLeft > 0 && minutesLeft <= 60 && <span className="text-red-600">Starts in {minutesLeft} min</span>}
+          {running && <span className="text-red-600">In progress</span>}
         </p>
-        <h3 className={`mt-2 text-[16px] leading-[24px] text-[#0f172a] ${fontSemi}`}>
+        <h3 className={`mt-2 text-base leading-6 text-slate-900 ${fontSemi}`}>
           <button type="button" onClick={() => openCourse(course)} className="text-left transition hover:underline">
             {item.session ?? title}
           </button>
         </h3>
-        {item.session && <p className={`mt-1 text-[14px] leading-[20px] text-[#475569] ${fontRegular}`}>{title}</p>}
-        <div className={`mt-2 flex flex-wrap items-center gap-3 text-[14px] leading-[20px] text-[#94a3b8] ${fontRegular}`}>
+        {item.session && <p className={`mt-1 text-sm leading-5 text-slate-600 ${fontRegular}`}>{title}</p>}
+        <div className={`mt-2 flex flex-wrap items-center gap-3 text-sm leading-5 text-slate-400 ${fontRegular}`}>
           {course.kind === "multi" ? <MultiSessionBadge /> : <SingleSessionBadge />}
           <span className="flex items-center gap-1.5">
             <Icon path={CLOCK} />
@@ -168,15 +169,15 @@ export function MiniCalendar({ selected, today, marked, onPick }: { selected: nu
   }, [selected]);
 
   const shift = (by: number) => setMonth(new Date(first.getFullYear(), first.getMonth() + by, 1).getTime());
-  const arrow = "flex size-8 items-center justify-center rounded-[6px] text-[#64748b] transition hover:bg-[#f1f5f9]";
+  const arrow = "flex size-8 items-center justify-center rounded-md text-slate-500 transition hover:bg-slate-150";
 
   return (
-    <div className="px-4 py-6 lg:w-[310px] lg:shrink-0">
+    <div className="px-4 py-6 lg:w-77.5 lg:shrink-0">
       <div className="flex items-center justify-between">
         <button type="button" aria-label="Previous month" onClick={() => shift(-1)} className={arrow}>
           <Icon path="M15 6l-6 6 6 6" />
         </button>
-        <p aria-live="polite" className={`text-[16px] leading-[24px] text-[#334155] ${fontSemi}`}>
+        <p aria-live="polite" className={`text-base leading-6 text-slate-700 ${fontSemi}`}>
           {first.toLocaleDateString("en-US", { month: "long", year: "numeric" })}
         </p>
         <button type="button" aria-label="Next month" onClick={() => shift(1)} className={arrow}>
@@ -185,7 +186,7 @@ export function MiniCalendar({ selected, today, marked, onPick }: { selected: nu
       </div>
       <div className="mt-4 grid grid-cols-7 justify-items-center gap-y-1.5">
         {WEEKDAYS.map((day) => (
-          <span key={day} className={`pb-1 text-[14px] leading-[20px] text-[#334155] ${fontMedium}`}>
+          <span key={day} className={`pb-1 text-sm leading-5 text-slate-700 ${fontMedium}`}>
             {day}
           </span>
         ))}
@@ -200,10 +201,10 @@ export function MiniCalendar({ selected, today, marked, onPick }: { selected: nu
               aria-pressed={isSelected}
               aria-label={`${date.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}${marked.has(day) ? ", has sessions" : ""}`}
               onClick={() => onPick(day)}
-              className={`relative flex size-10 items-center justify-center rounded-full text-[14px] leading-[20px] transition ${isSelected ? "bg-[#faa104] text-white" : day === today ? "bg-[#f1f5f9] text-[#334155]" : `hover:bg-[#f8fafc] ${inMonth ? "text-[#334155]" : "text-[#94a3b8]"}`} ${fontRegular}`}
+              className={`relative flex size-10 items-center justify-center rounded-full text-sm leading-5 transition ${isSelected ? "bg-secondary-600 text-white" : day === today ? "bg-slate-150 text-slate-700" : `hover:bg-slate-25 ${inMonth ? "text-slate-700" : "text-slate-400"}`} ${fontRegular}`}
             >
               {date.getDate()}
-              {marked.has(day) && <span aria-hidden="true" className={`absolute bottom-1 size-1 rounded-full ${isSelected ? "bg-white" : inMonth ? "bg-[#faa104]" : "bg-[#94a3b8]"}`} />}
+              {marked.has(day) && <span aria-hidden="true" className={`absolute bottom-1 size-1 rounded-full ${isSelected ? "bg-white" : inMonth ? "bg-secondary-600" : "bg-slate-400"}`} />}
             </button>
           );
         })}
@@ -219,21 +220,21 @@ function TimelineCard({ item, day, now, onCancel }: { item: Item; day: number; n
   const timing = running ? "In progress" : upcoming && minutesLeft > 0 && minutesLeft <= 60 ? `${minutesLeft} min left` : formatDuration(duration);
 
   return (
-    <article className="absolute inset-x-2 z-10 flex flex-wrap items-center gap-x-3 gap-y-2 rounded-[12px] border border-[#e2e8f0] bg-[#f1f5f9] px-3 py-2" style={{ top: top + 1, minHeight: Math.max(toPixels((visibleEnd - item.start) / MINUTE) - 2, 62) }}>
-      <div className="min-w-[240px] flex-1">
-        <p className={`truncate text-[14px] leading-[20px] text-[#1e293b] ${fontSemi}`}>
+    <article className="absolute inset-x-2 z-10 flex flex-wrap items-center gap-x-3 gap-y-2 rounded-xl border border-slate-200 bg-slate-150 px-3 py-2" style={{ top: top + 1, minHeight: Math.max(toPixels((visibleEnd - item.start) / MINUTE) - 2, 62) }}>
+      <div className="min-w-60 flex-1">
+        <p className={`truncate text-sm leading-5 text-slate-800 ${fontSemi}`}>
           <button type="button" onClick={() => openCourse(course)} className="text-left transition hover:underline">
             {item.session ?? title}
           </button>
-          {item.session && <span className={`ml-2 text-[#334155] ${fontRegular}`}>{title}</span>}
+          {item.session && <span className={`ml-2 text-slate-700 ${fontRegular}`}>{title}</span>}
         </p>
-        <div className={`mt-1.5 flex flex-wrap items-center gap-3 text-[12px] leading-[18px] text-[#334155] ${fontRegular}`}>
+        <div className={`mt-1.5 flex flex-wrap items-center gap-3 text-xs leading-4.5 text-slate-700 ${fontRegular}`}>
           {course.kind === "multi" ? <MultiSessionBadge /> : <SingleSessionBadge />}
           <span>
             {formatTime(item.start)} – {formatTime(end)}
           </span>
           <span className="flex items-center gap-1.5">
-            <Icon path={CLOCK} className="size-3.5 text-[#94a3b8]" />
+            <Icon path={CLOCK} className="size-3.5 text-slate-400" />
             {timing}
           </span>
         </div>
@@ -262,56 +263,56 @@ function CalendarView({ items, base, now, onCancel }: { items: Item[]; base: num
     // Only move the timeline when the day or its sessions change, not on every clock tick.
   }, [selected, firstStart]);
 
-  const navButton = "flex h-10 items-center justify-center px-3 text-[#475569] transition hover:bg-[#f8fafc]";
+  const navButton = "flex h-10 items-center justify-center px-3 text-slate-600 transition hover:bg-slate-25";
 
   return (
     <>
-      <div className="flex flex-wrap items-center justify-between gap-4 border-b border-[#f1f5f9] px-5 py-4">
+      <div className="flex flex-wrap items-center justify-between gap-4 border-b border-slate-150 px-5 py-4">
         <div className="flex items-center gap-3">
-          <div className="w-[66px] shrink-0 overflow-hidden rounded-[8px] border border-[#e2e8f0] text-center">
-            <p className={`bg-[#f8fafc] py-0.5 text-[12px] leading-[18px] text-[#64748b] ${fontMedium}`}>{date.toLocaleDateString("en-US", { month: "short" }).toUpperCase()}</p>
-            <p className={`py-1 text-[18px] leading-[26px] text-[#faa104] ${fontSemi}`}>{date.getDate()}</p>
+          <div className="w-16.5 shrink-0 overflow-hidden rounded-lg border border-slate-200 text-center">
+            <p className={`bg-slate-25 py-0.5 text-xs leading-4.5 text-slate-500 ${fontMedium}`}>{date.toLocaleDateString("en-US", { month: "short" }).toUpperCase()}</p>
+            <p className={`py-1 text-lg leading-6.5 text-secondary-600 ${fontSemi}`}>{date.getDate()}</p>
           </div>
           <div>
             <p className="flex flex-wrap items-center gap-2.5">
-              <span className={`text-[18px] leading-[28px] text-[#0f172a] ${fontSemi}`}>{date.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}</span>
-              <span className={`rounded-[4px] border border-[#e2e8f0] px-1.5 text-[12px] leading-[18px] text-[#334155] ${fontMedium}`}>Week {weekNumber(selected)}</span>
+              <span className={`text-lg leading-7 text-slate-900 ${fontSemi}`}>{date.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}</span>
+              <span className={`rounded-sm border border-slate-200 px-1.5 text-xs leading-4.5 text-slate-700 ${fontMedium}`}>Week {weekNumber(selected)}</span>
             </p>
-            <p className={`text-[14px] leading-[20px] text-[#64748b] ${fontRegular}`}>{date.toLocaleDateString("en-US", { weekday: "long" })}</p>
+            <p className={`text-sm leading-5 text-slate-500 ${fontRegular}`}>{date.toLocaleDateString("en-US", { weekday: "long" })}</p>
           </div>
         </div>
-        <div className="flex divide-x divide-[#e2e8f0] overflow-hidden rounded-[8px] border border-[#e2e8f0]">
+        <div className="flex divide-x divide-slate-200 overflow-hidden rounded-lg border border-slate-200">
           <button type="button" aria-label="Previous day" onClick={() => setSelected(addDays(selected, -1))} className={navButton}>
-            <Icon path="M20 12H4M10 6l-6 6 6 6" className="size-[18px]" />
+            <Icon path="M20 12H4M10 6l-6 6 6 6" className="size-4.5" />
           </button>
-          <button type="button" onClick={() => setSelected(startOfDay(now))} className={`h-10 px-4 text-[14px] leading-[20px] text-[#334155] transition hover:bg-[#f8fafc] ${fontMedium}`}>
+          <button type="button" onClick={() => setSelected(startOfDay(now))} className={`h-10 px-4 text-sm leading-5 text-slate-700 transition hover:bg-slate-25 ${fontMedium}`}>
             Today
           </button>
           <button type="button" aria-label="Next day" onClick={() => setSelected(addDays(selected, 1))} className={navButton}>
-            <Icon path="M4 12h16M14 6l6 6-6 6" className="size-[18px]" />
+            <Icon path="M4 12h16M14 6l6 6-6 6" className="size-4.5" />
           </button>
         </div>
       </div>
       <div className="flex flex-col-reverse lg:flex-row">
-        <div ref={scrollRef} aria-label="Day timeline" className="h-[600px] min-w-0 flex-1 overflow-y-auto border-[#e2e8f0] lg:border-r">
-          <div className="relative ml-[72px] border-l border-[#e2e8f0]" style={{ height: HOUR_HEIGHT * 24 }}>
+        <div ref={scrollRef} aria-label="Day timeline" className="h-150 min-w-0 flex-1 overflow-y-auto border-slate-200 lg:border-r">
+          <div className="relative ml-18 border-l border-slate-200" style={{ height: HOUR_HEIGHT * 24 }}>
             {Array.from({ length: 24 }, (_, hour) => (
               <div key={hour} className="absolute inset-x-0" style={{ top: hour * HOUR_HEIGHT, height: HOUR_HEIGHT }}>
-                {!(isToday && Math.abs(minutesIntoDay(now) - hour * 60) < 15) && <span className={`absolute -left-[72px] top-0 w-[62px] text-right text-[12px] leading-[18px] text-[#475569] ${fontRegular}`}>{hourLabel(hour)}</span>}
-                <span aria-hidden="true" className="absolute inset-x-0 top-0 h-px bg-[#e2e8f0]" />
-                <span aria-hidden="true" className="absolute inset-x-0 top-1/2 h-px bg-[#f1f5f9]" />
+                {!(isToday && Math.abs(minutesIntoDay(now) - hour * 60) < 15) && <span className={`absolute -left-18 top-0 w-15.5 text-right text-xs leading-4.5 text-slate-600 ${fontRegular}`}>{hourLabel(hour)}</span>}
+                <span aria-hidden="true" className="absolute inset-x-0 top-0 h-px bg-slate-200" />
+                <span aria-hidden="true" className="absolute inset-x-0 top-1/2 h-px bg-slate-150" />
               </div>
             ))}
             {dayItems.map((item) => (
               <TimelineCard key={item.id} item={item} day={selected} now={now} onCancel={() => onCancel(item)} />
             ))}
             {isToday && (
-              <div className="pointer-events-none absolute inset-x-0 z-20 h-0.5 bg-[#faa104]" style={{ top: toPixels(minutesIntoDay(now)) }}>
-                <span className={`absolute -left-[72px] -top-2 w-[62px] whitespace-nowrap bg-white text-right text-[12px] leading-[18px] text-[#faa104] ${fontMedium}`}>{formatTime(now)}</span>
-                <span aria-hidden="true" className="absolute -left-1 -top-[3px] size-2 rounded-full bg-[#faa104]" />
+              <div className="pointer-events-none absolute inset-x-0 z-20 h-0.5 bg-secondary-600" style={{ top: toPixels(minutesIntoDay(now)) }}>
+                <span className={`absolute -left-18 -top-2 w-15.5 whitespace-nowrap bg-white text-right text-xs leading-4.5 text-secondary-600 ${fontMedium}`}>{formatTime(now)}</span>
+                <span aria-hidden="true" className="absolute -left-1 -top-0.75 size-2 rounded-full bg-secondary-600" />
               </div>
             )}
-            {dayItems.length === 0 && <p className={`sticky top-12 z-10 mx-auto w-fit rounded-[8px] bg-white px-4 py-2 text-[14px] leading-[20px] text-[#64748b] ${fontRegular}`}>No sessions on this day.</p>}
+            {dayItems.length === 0 && <p className={`sticky top-12 z-10 mx-auto w-fit rounded-lg bg-white px-4 py-2 text-sm leading-5 text-slate-500 ${fontRegular}`}>No sessions on this day.</p>}
           </div>
         </div>
         <MiniCalendar selected={selected} today={startOfDay(now)} marked={marked} onPick={setSelected} />
@@ -341,28 +342,28 @@ export default function InstructorSchedule() {
   const inTab = items.map((item) => (cancelledIds.includes(item.id) ? { ...item, tab: "Cancelled" as Tab } : item)).filter((item) => item.tab === tab);
   const visible = inTab.filter((item) => Math.abs(dayDiff(item.start, base)) <= limit).sort((a, b) => (tab === "Completed" ? b.start - a.start : a.start - b.start));
   const days = [...new Set(visible.map((item) => startOfDay(item.start)))];
-  const segment = (active: boolean) => `h-9 border px-4 text-[14px] leading-[20px] transition first:rounded-l-[8px] last:-ml-px last:rounded-r-[8px] ${active ? "relative z-10 border-[#ffb20d] bg-[#fff9f0] text-[#1e293b]" : "border-[#e2e8f0] bg-white text-[#334155] hover:bg-[#f8fafc]"} ${fontMedium}`;
+  const segment = (active: boolean) => `h-9 border px-4 text-sm leading-5 transition first:rounded-l-lg last:-ml-px last:rounded-r-lg ${active ? "relative z-10 border-secondary-500 bg-secondary-50 text-slate-800" : "border-slate-200 bg-white text-slate-700 hover:bg-slate-25"} ${fontMedium}`;
 
   return (
     <main className="flex flex-1 flex-col bg-white">
-      <div className="border-b border-[#e2e8f0] px-4 py-6 md:px-7">
-        <h1 className="m-0 flex h-[42px] items-center font-['Instrument_Sans:Medium'] text-[24px] font-medium leading-[32px] text-[#0f172a]" style={{ fontVariationSettings: '"wdth" 100' }}>
+      <div className="border-b border-slate-200 px-4 py-6 md:px-7">
+        <h1 className="m-0 flex h-10.5 items-center font-instrument-medium text-2xl font-medium leading-8 text-slate-900" style={{ fontVariationSettings: '"wdth" 100' }}>
           Schedule
         </h1>
       </div>
       <div className="flex flex-1 flex-col px-4 py-6 md:px-7">
-        <section className="flex-1 overflow-hidden rounded-[12px] border border-[#e2e8f0]">
-          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#f1f5f9] px-5 py-4">
+        <section className="flex-1 overflow-hidden rounded-xl border border-slate-200">
+          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-150 px-5 py-4">
             <div role="tablist" aria-label="Schedule status" className="flex gap-2">
               {TABS.map((t) => (
-                <button key={t} type="button" role="tab" aria-selected={tab === t} onClick={() => setTab(t)} className={`h-9 rounded-[6px] px-3 text-[14px] leading-[20px] transition ${tab === t ? `bg-[#f1f5f9] text-[#1e293b] ${fontSemi}` : `text-[#64748b] hover:text-[#1e293b] ${fontRegular}`}`}>
+                <button key={t} type="button" role="tab" aria-selected={tab === t} onClick={() => setTab(t)} className={`h-9 rounded-md px-3 text-sm leading-5 transition ${tab === t ? `bg-slate-150 text-slate-800 ${fontSemi}` : `text-slate-500 hover:text-slate-800 ${fontRegular}`}`}>
                   {t}
                 </button>
               ))}
             </div>
             <div className="flex flex-wrap items-center gap-3">
               {view === "list" && (
-                <div className="w-[130px]">
+                <div className="w-32.5">
                   <FilterSelect
                     plain
                     alignRight
@@ -391,10 +392,10 @@ export default function InstructorSchedule() {
             <CalendarView items={inTab} base={base} now={now} onCancel={setCancelling} />
           ) : (
             <div className="flex flex-col gap-8 px-5 py-6">
-              {days.length === 0 && <p className={`py-12 text-center text-[14px] leading-[24px] text-[#64748b] ${fontRegular}`}>No {tab.toLowerCase()} sessions in this period.</p>}
+              {days.length === 0 && <p className={`py-12 text-center text-sm leading-6 text-slate-500 ${fontRegular}`}>No {tab.toLowerCase()} sessions in this period.</p>}
               {days.map((day) => (
                 <div key={day}>
-                  <h2 className={`border-b border-[#e2e8f0] pb-2.5 text-[18px] leading-[28px] text-[#0f172a] ${fontSemi}`}>{dayLabel(day, base)}</h2>
+                  <h2 className={`border-b border-slate-200 pb-2.5 text-lg leading-7 text-slate-900 ${fontSemi}`}>{dayLabel(day, base)}</h2>
                   <ul className="mt-3.5 flex flex-col gap-3.5">
                     {visible
                       .filter((item) => startOfDay(item.start) === day)

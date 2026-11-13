@@ -24,6 +24,7 @@ import { AVAILABLE_CREDIT, COUPONS, formatPrice, orderTotals, useApp } from "../
 import { CheckoutSteps, MadaBadge, MastercardBadge, VisaBadge } from "./CheckoutPage";
 import { CourseThumb } from "./Overlays";
 import { ResultCard } from "./SearchPage";
+import { buttonClass } from "./Button"
 
 const sar = (n: number) => `${Math.round(n).toLocaleString()} SAR`;
 const headingStyle = { fontVariationSettings: '"wdth" 100' };
@@ -283,7 +284,7 @@ export default function CartPage() {
               <button
                 type="button"
                 onClick={() => openSearch({})}
-                className={`group mt-2 flex h-12 items-center gap-2 rounded-xl bg-secondary-500 px-7 text-base text-slate-900 shadow-card transition hover:bg-secondary-600 ${fontSemi}`}
+                className={`${buttonClass("yellow", "lg")} group mt-2`}
               >
                 Browse courses
                 <Icon icon={ArrowRight01Icon} className="transition-transform group-hover:translate-x-0.5" />
@@ -359,7 +360,7 @@ export default function CartPage() {
                         <button
                           type="submit"
                           disabled={!codeInput.trim()}
-                          className={`h-11 shrink-0 rounded-xl bg-slate-900 px-4 text-sm text-white transition hover:bg-slate-700 disabled:bg-slate-200 disabled:text-slate-400 ${fontSemi}`}
+                          className={`${buttonClass("dark", "lg")} shrink-0`}
                         >
                           Apply
                         </button>
@@ -430,7 +431,7 @@ export default function CartPage() {
                           aria-invalid={!!creditError}
                           className={`field h-10 min-w-0 flex-1 ${creditError ? "border-red-400" : ""}`}
                         />
-                        <button type="submit" className={`h-10 shrink-0 rounded-xl bg-slate-900 px-3.5 text-sm text-white transition hover:bg-slate-700 ${fontSemi}`}>
+                        <button type="submit" className={`${buttonClass("dark", "lg")} shrink-0`}>
                           Save
                         </button>
                         <button type="button" onClick={() => setEditCredit(false)} className={`h-10 shrink-0 rounded-xl px-2.5 text-sm text-slate-500 transition hover:bg-slate-100 ${fontMedium}`}>

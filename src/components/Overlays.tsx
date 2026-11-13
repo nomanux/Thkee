@@ -3,10 +3,11 @@ import { categories, categoryColors, courses, experts, infoPages, type Course } 
 import { fontBold, fontFor, fontHeading, fontMedium, fontRegular, fontSemi } from "../fonts";
 import { ExpertAvatar } from "./Experts";
 import { formatPrice, useApp, openLearning } from "../store";
+import { buttonClass } from "./Button"
 
 const inputClass = "field";
-const primaryBtn = `inline-flex h-[48px] items-center justify-center gap-2 rounded-[8px] bg-[#ffb20d] px-6 text-[16px] text-[#1e293b] transition hover:bg-[#faa104] disabled:opacity-50 ${fontSemi}`;
-const darkBtn = `inline-flex h-[44px] items-center justify-center gap-2 rounded-[8px] bg-[#0d5c4b] px-5 text-[15px] text-white transition hover:bg-[#0b4c3e] ${fontSemi}`;
+const primaryBtn = `inline-flex h-12 items-center justify-center gap-2 rounded-lg bg-secondary-500 px-6 text-base text-slate-800 transition hover:bg-secondary-600 disabled:opacity-50 ${fontSemi}`;
+const darkBtn = `inline-flex h-11 items-center justify-center gap-2 rounded-lg bg-primary-700 px-5 text-15 text-white transition hover:bg-primary-800 ${fontSemi}`;
 const isEmail = (v: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v.trim());
 
 function CloseIcon() {
@@ -17,7 +18,7 @@ function CloseIcon() {
   );
 }
 
-export function Shell({ title, onClose, children, variant = "modal", width = "max-w-[520px]", radius = "sm:rounded-[20px]", hideHeader = false, drawerWidth = "max-w-[440px]" }: { title: string; drawerWidth?: string; onClose: () => void; children: ReactNode; variant?: "modal" | "drawer"; width?: string; radius?: string; hideHeader?: boolean }) {
+export function Shell({ title, onClose, children, variant = "modal", width = "max-w-130", radius = "sm:rounded-2xl", hideHeader = false, drawerWidth = "max-w-110" }: { title: string; drawerWidth?: string; onClose: () => void; children: ReactNode; variant?: "modal" | "drawer"; width?: string; radius?: string; hideHeader?: boolean }) {
   const panelRef = useRef<HTMLDivElement>(null);
   const onCloseRef = useRef(onClose);
   onCloseRef.current = onClose;
@@ -37,8 +38,8 @@ export function Shell({ title, onClose, children, variant = "modal", width = "ma
 
   const drawer = variant === "drawer";
   return (
-    <div className="fixed inset-0 z-[200] flex items-end justify-center sm:items-center" role="presentation">
-      <div className="overlay-fade absolute inset-0 bg-[#0f172a]/60 backdrop-blur-[2px]" onClick={onClose} />
+    <div className="fixed inset-0 z-200 flex items-end justify-center sm:items-center" role="presentation">
+      <div className="overlay-fade absolute inset-0 bg-slate-900/60 backdrop-blur-xs" onClick={onClose} />
       <div
         ref={panelRef}
         role="dialog"
@@ -47,13 +48,13 @@ export function Shell({ title, onClose, children, variant = "modal", width = "ma
         className={
           drawer
             ? `drawer-in absolute inset-y-0 right-0 flex w-full ${drawerWidth} flex-col bg-white shadow-2xl`
-            : `modal-in relative flex max-h-[92dvh] w-full ${width} flex-col overflow-hidden rounded-t-[20px] bg-white shadow-2xl sm:mx-4 ${radius}`
+            : `modal-in relative flex max-h-dvh-92 w-full ${width} flex-col overflow-hidden rounded-t-2xl bg-white shadow-2xl sm:mx-4 ${radius}`
         }
       >
         {!hideHeader && (
-          <div className="flex items-center justify-between gap-4 border-b border-[#e2e8f0] px-5 py-4 sm:px-6">
-            <h2 className={`text-[20px] text-[#0f172a] ${fontHeading}`}>{title}</h2>
-            <button type="button" onClick={onClose} aria-label="Close" className="flex size-[36px] items-center justify-center rounded-full text-[#64748b] transition hover:bg-[#f1f5f9] hover:text-[#0f172a]">
+          <div className="flex items-center justify-between gap-4 border-b border-slate-200 px-5 py-4 sm:px-6">
+            <h2 className={`text-xl text-slate-900 ${fontHeading}`}>{title}</h2>
+            <button type="button" onClick={onClose} aria-label="Close" className="flex size-9 items-center justify-center rounded-full text-slate-500 transition hover:bg-slate-150 hover:text-slate-900">
               <CloseIcon />
             </button>
           </div>
@@ -68,14 +69,14 @@ export function CourseThumb({ course, className = "", showTitle = true }: { cour
   const [from, to] = categoryColors(course.category);
   if (course.image) {
     return (
-      <div className={`relative overflow-hidden bg-[#0f172a] ${className}`}>
+      <div className={`relative overflow-hidden bg-slate-900 ${className}`}>
         {/* Blurred copy fills the frame so banners of any shape show in full without cropping. */}
         <img src={course.image} alt="" aria-hidden loading="lazy" className="absolute inset-0 size-full scale-110 object-cover opacity-80 blur-xl" />
         <img src={course.image} alt={course.title} loading="lazy" className="absolute inset-0 size-full object-contain" />
         {!course.bannerBadges && <div className="absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-black/30 to-transparent" />}
         {course.live && !course.bannerBadges && (
-          <span className={`absolute right-3 top-3 flex items-center gap-1.5 rounded-full bg-[#ef4444] px-2.5 py-1 text-[11px] uppercase text-white ${fontSemi}`}>
-            <span className="size-[6px] animate-pulse rounded-full bg-white" /> Live
+          <span className={`absolute right-3 top-3 flex items-center gap-1.5 rounded-full bg-red-500 px-2.5 py-1 text-11 uppercase text-white ${fontSemi}`}>
+            <span className="size-1.5 animate-pulse rounded-full bg-white" /> Live
           </span>
         )}
       </div>
@@ -83,23 +84,23 @@ export function CourseThumb({ course, className = "", showTitle = true }: { cour
   }
   return (
     <div className={`relative overflow-hidden ${className}`} style={{ backgroundImage: `linear-gradient(135deg, ${from}, ${to})` }}>
-      <div className="absolute -right-6 -top-6 size-[110px] rounded-full bg-white/10" />
-      <div className="absolute -bottom-10 left-6 size-[90px] rounded-full bg-white/10" />
-      <span className={`absolute left-3 top-3 rounded-full bg-white/20 px-2.5 py-1 text-[11px] uppercase tracking-[0.5px] text-white backdrop-blur ${fontSemi}`}>{course.category}</span>
+      <div className="absolute -right-6 -top-6 size-27.5 rounded-full bg-white/10" />
+      <div className="absolute -bottom-10 left-6 size-22.5 rounded-full bg-white/10" />
+      <span className={`absolute left-3 top-3 rounded-full bg-white/20 px-2.5 py-1 text-11 uppercase tracking-wider text-white backdrop-blur ${fontSemi}`}>{course.category}</span>
       {course.live && (
-        <span className={`absolute right-3 top-3 flex items-center gap-1.5 rounded-full bg-[#ef4444] px-2.5 py-1 text-[11px] uppercase text-white ${fontSemi}`}>
-          <span className="size-[6px] animate-pulse rounded-full bg-white" /> Live
+        <span className={`absolute right-3 top-3 flex items-center gap-1.5 rounded-full bg-red-500 px-2.5 py-1 text-11 uppercase text-white ${fontSemi}`}>
+          <span className="size-1.5 animate-pulse rounded-full bg-white" /> Live
         </span>
       )}
-      {showTitle && <span dir="auto" className={`absolute bottom-3 left-3 right-3 line-clamp-2 text-left text-[17px] leading-[24px] text-white ${fontFor(course.title, fontHeading, "font-bold")}`}>{course.title}</span>}
+      {showTitle && <span dir="auto" className={`absolute bottom-3 left-3 right-3 line-clamp-2 text-left text-17 leading-6 text-white ${fontFor(course.title, fontHeading, "font-bold")}`}>{course.title}</span>}
     </div>
   );
 }
 
 function Stars({ rating }: { rating: number }) {
   return (
-    <span className={`flex items-center gap-1 text-[13px] text-[#1e293b] ${fontSemi}`}>
-      <span className="text-[#ffb20d]">★</span>
+    <span className={`flex items-center gap-1 text-13 text-slate-800 ${fontSemi}`}>
+      <span className="text-secondary-500">★</span>
       {rating.toFixed(1)}
     </span>
   );
@@ -109,24 +110,24 @@ export function CourseCard({ course }: { course: Course }) {
   const { setOverlay, addToCart, enrolledIds } = useApp();
   const enrolled = enrolledIds.includes(course.id);
   return (
-    <div className="group flex flex-col overflow-hidden rounded-[14px] border border-[#e2e8f0] bg-white transition hover:-translate-y-0.5 hover:shadow-[0_12px_30px_rgba(15,23,42,0.1)]">
+    <div className="group flex flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white transition hover:-translate-y-0.5 hover:shadow-2xl">
       <button type="button" className="text-left" onClick={() => setOverlay({ type: "course", id: course.id })}>
         <CourseThumb course={course} className="aspect-video" />
       </button>
       <div className="flex flex-1 flex-col gap-2 p-4">
-        {course.image && <p dir="auto" className={`line-clamp-2 text-left text-[15px] leading-[1.45] text-[#0f172a] ${fontFor(course.title, fontSemi)}`}>{course.title}</p>}
-        <p dir="auto" className={`text-left text-[13px] text-[#64748b] ${fontFor(course.instructor, fontRegular, "font-normal")}`}>{course.instructor}</p>
-        <div className={`flex flex-wrap items-center gap-x-3 gap-y-1 text-[12px] text-[#64748b] ${fontRegular}`}>
+        {course.image && <p dir="auto" className={`line-clamp-2 text-left text-15 leading-normal text-slate-900 ${fontFor(course.title, fontSemi)}`}>{course.title}</p>}
+        <p dir="auto" className={`text-left text-13 text-slate-500 ${fontFor(course.instructor, fontRegular, "font-normal")}`}>{course.instructor}</p>
+        <div className={`flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-slate-500 ${fontRegular}`}>
           <Stars rating={course.rating} />
           <span>{course.students.toLocaleString()} learners</span>
           <span>{course.duration ?? `${course.hours}h`} · {course.level}</span>
         </div>
         <div className="mt-auto flex items-center justify-between gap-2 pt-2">
-          <span className={`text-[17px] text-[#0f172a] ${fontBold}`}>{formatPrice(course.price)}</span>
+          <span className={`text-17 text-slate-900 ${fontBold}`}>{formatPrice(course.price)}</span>
           {enrolled ? (
-            <span className={`rounded-[8px] bg-[#e7f5f1] px-3 py-2 text-[13px] text-[#0d5c4b] ${fontSemi}`}>Enrolled</span>
+            <span className={`rounded-lg bg-primary-200 px-3 py-2 text-13 text-primary-700 ${fontSemi}`}>Enrolled</span>
           ) : (
-            <button type="button" onClick={() => addToCart(course)} className={`rounded-[8px] bg-[#0f172a] px-3 py-2 text-[13px] text-white transition hover:bg-[#0d5c4b] ${fontSemi}`}>
+            <button type="button" onClick={() => addToCart(course)} className={`rounded-lg bg-slate-900 px-3 py-2 text-13 text-white transition hover:bg-primary-700 ${fontSemi}`}>
               Add to cart
             </button>
           )}
@@ -163,11 +164,11 @@ function Catalog({ initial }: { initial: { category?: string; query?: string; li
   }, [query, category, liveOnly, level, sort]);
 
   const chip = (active: boolean) =>
-    `shrink-0 rounded-full border px-4 py-2 text-[14px] transition ${fontMedium} ${active ? "border-[#0d5c4b] bg-[#0d5c4b] text-white" : "border-[#e2e8f0] bg-white text-[#334155] hover:border-[#0d5c4b]"}`;
+    `shrink-0 rounded-full border px-4 py-2 text-sm transition ${fontMedium} ${active ? "border-primary-700 bg-primary-700 text-white" : "border-slate-200 bg-white text-slate-700 hover:border-primary-700"}`;
 
   return (
-    <Shell title="Explore courses" onClose={() => setOverlay(null)} width="max-w-[1040px]">
-      <div className="sticky top-0 z-10 flex flex-col gap-3 border-b border-[#e2e8f0] bg-white px-5 py-4 sm:px-6">
+    <Shell title="Explore courses" onClose={() => setOverlay(null)} width="max-w-260">
+      <div className="sticky top-0 z-10 flex flex-col gap-3 border-b border-slate-200 bg-white px-5 py-4 sm:px-6">
         <input className={inputClass} placeholder="Search courses, topics or instructors" value={query} onChange={(e) => setQuery(e.target.value)} aria-label="Search courses" />
         <div className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1">
           {["All", ...categories.map((c) => c.name)].map((name) => (
@@ -176,9 +177,9 @@ function Catalog({ initial }: { initial: { category?: string; query?: string; li
             </button>
           ))}
         </div>
-        <div className={`flex flex-wrap items-center gap-3 text-[14px] text-[#334155] ${fontRegular}`}>
+        <div className={`flex flex-wrap items-center gap-3 text-sm text-slate-700 ${fontRegular}`}>
           <label className="flex cursor-pointer items-center gap-2">
-            <input type="checkbox" checked={liveOnly} onChange={(e) => setLiveOnly(e.target.checked)} className="size-4 accent-[#0d5c4b]" />
+            <input type="checkbox" checked={liveOnly} onChange={(e) => setLiveOnly(e.target.checked)} className="size-4 accent-primary-700" />
             Live classes only
           </label>
           <select value={level} onChange={(e) => setLevel(e.target.value)} className="field w-auto" aria-label="Level">
@@ -191,7 +192,7 @@ function Catalog({ initial }: { initial: { category?: string; query?: string; li
               <option key={s}>{s}</option>
             ))}
           </select>
-          <span className="ml-auto text-[#64748b]">{results.length} courses</span>
+          <span className="ml-auto text-slate-500">{results.length} courses</span>
         </div>
       </div>
       <div className="p-5 sm:p-6">
@@ -202,8 +203,8 @@ function Catalog({ initial }: { initial: { category?: string; query?: string; li
             ))}
           </div>
         ) : (
-          <div className={`py-16 text-center text-[#64748b] ${fontRegular}`}>
-            <p className={`mb-2 text-[18px] text-[#0f172a] ${fontSemi}`}>No courses found</p>
+          <div className={`py-16 text-center text-slate-500 ${fontRegular}`}>
+            <p className={`mb-2 text-lg text-slate-900 ${fontSemi}`}>No courses found</p>
             Try a different search or clear the filters.
           </div>
         )}
@@ -219,34 +220,34 @@ function CourseDetail({ id }: { id: string }) {
   const enrolled = enrolledIds.includes(course.id);
 
   return (
-    <Shell title="Course details" onClose={() => setOverlay(null)} width="max-w-[640px]">
+    <Shell title="Course details" onClose={() => setOverlay(null)} width="max-w-160">
       <CourseThumb course={course} className="aspect-video" />
       <div className="flex flex-col gap-5 p-5 sm:p-6">
-        <div className={`flex flex-wrap items-center gap-x-4 gap-y-1 text-[14px] text-[#64748b] ${fontRegular}`}>
+        <div className={`flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-slate-500 ${fontRegular}`}>
           <Stars rating={course.rating} />
           <span>{course.students.toLocaleString()} learners</span>
           <span>{course.lessons} lessons · {course.hours} hours</span>
           <span>{course.level}</span>
         </div>
-        <p className={`text-[14px] leading-[22px] text-[#1e293b] ${fontRegular}`}>{course.description}</p>
+        <p className={`text-sm leading-5.5 text-slate-800 ${fontRegular}`}>{course.description}</p>
         <div>
-          <p className={`mb-2 text-[16px] text-[#0f172a] ${fontSemi}`}>What you'll learn</p>
-          <ul className={`flex flex-col gap-2 text-[14px] text-[#334155] ${fontRegular}`}>
+          <p className={`mb-2 text-base text-slate-900 ${fontSemi}`}>What you'll learn</p>
+          <ul className={`flex flex-col gap-2 text-sm text-slate-700 ${fontRegular}`}>
             {course.outcomes.map((o) => (
               <li key={o} className="flex gap-2">
-                <span className="text-[#12b981]">✓</span>
+                <span className="text-emerald-500">✓</span>
                 {o}
               </li>
             ))}
           </ul>
         </div>
-        <p className={`text-[14px] text-[#64748b] ${fontRegular}`}>
-          Instructor: <span dir="auto" className={`text-[#0f172a] ${fontFor(course.instructor, fontSemi)}`}>{course.instructor}</span>
+        <p className={`text-sm text-slate-500 ${fontRegular}`}>
+          Instructor: <span dir="auto" className={`text-slate-900 ${fontFor(course.instructor, fontSemi)}`}>{course.instructor}</span>
         </p>
-        <div className="flex flex-col gap-3 border-t border-[#e2e8f0] pt-5 sm:flex-row sm:items-center sm:justify-between">
-          <span className={`text-[24px] text-[#0f172a] ${fontBold}`}>{formatPrice(course.price)}</span>
+        <div className="flex flex-col gap-3 border-t border-slate-200 pt-5 sm:flex-row sm:items-center sm:justify-between">
+          <span className={`text-2xl text-slate-900 ${fontBold}`}>{formatPrice(course.price)}</span>
           <div className="flex flex-col gap-2 sm:flex-row">
-            <button type="button" onClick={() => setOverlay({ type: "catalog" })} className={`h-[48px] rounded-[8px] border border-[#cbd5e1] px-5 text-[15px] text-[#334155] hover:bg-[#f8fafc] ${fontSemi}`}>
+            <button type="button" onClick={() => setOverlay({ type: "catalog" })} className={`${buttonClass("secondary", "lg")}`}>
               ← All courses
             </button>
             {enrolled ? (
@@ -276,9 +277,9 @@ function CourseDetail({ id }: { id: string }) {
 function Field({ label, error, children }: { label: string; error?: string; children: ReactNode }) {
   return (
     <label className="flex flex-col gap-1.5">
-      <span className={`text-[14px] text-[#334155] ${fontMedium}`}>{label}</span>
+      <span className={`text-sm text-slate-700 ${fontMedium}`}>{label}</span>
       {children}
-      {error && <span className={`text-[13px] text-[#ef4444] ${fontRegular}`}>{error}</span>}
+      {error && <span className={`text-13 text-red-500 ${fontRegular}`}>{error}</span>}
     </label>
   );
 }
@@ -301,19 +302,19 @@ function InstructorApply() {
   };
 
   return (
-    <Shell title="Become an Instructor" onClose={() => setOverlay(null)} width="max-w-[520px]">
+    <Shell title="Become an Instructor" onClose={() => setOverlay(null)} width="max-w-130">
       {sent ? (
         <div className={`flex flex-col items-center gap-4 px-6 py-14 text-center ${fontRegular}`}>
-          <span className="text-[48px]">🎓</span>
-          <p className={`text-[20px] text-[#0f172a] ${fontHeading}`}>Application received!</p>
-          <p className="text-[#475569]">Thanks, {form.name.split(" ")[0]}. Our team will review your application and email you at {form.email} within 3 business days.</p>
+          <span className="text-5xl">🎓</span>
+          <p className={`text-xl text-slate-900 ${fontHeading}`}>Application received!</p>
+          <p className="text-slate-600">Thanks, {form.name.split(" ")[0]}. Our team will review your application and email you at {form.email} within 3 business days.</p>
           <button type="button" className={darkBtn} onClick={() => setOverlay(null)}>
             Done
           </button>
         </div>
       ) : (
         <form onSubmit={submit} noValidate className="flex flex-col gap-4 p-5 sm:p-6">
-          <p className={`text-[14px] leading-[22px] text-[#475569] ${fontRegular}`}>Share your expertise with thousands of learners. Keep 70% of every sale and host live classes with our studio tools.</p>
+          <p className={`text-sm leading-5.5 text-slate-600 ${fontRegular}`}>Share your expertise with thousands of learners. Keep 70% of every sale and host live classes with our studio tools.</p>
           <Field label="Full name" error={errors.name}>
             <input className={inputClass} value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
           </Field>
@@ -328,13 +329,13 @@ function InstructorApply() {
             </select>
           </Field>
           <Field label="Tell us about your teaching experience" error={errors.about}>
-            <textarea className={`${inputClass} min-h-[110px] resize-y`} value={form.about} onChange={(e) => setForm({ ...form, about: e.target.value })} />
+            <textarea className={`${inputClass} min-h-27.5 resize-y`} value={form.about} onChange={(e) => setForm({ ...form, about: e.target.value })} />
           </Field>
-          <label className={`flex items-start gap-2 text-[14px] text-[#334155] ${fontRegular}`}>
-            <input type="checkbox" className="mt-1 size-4 accent-[#0d5c4b]" checked={form.agree} onChange={(e) => setForm({ ...form, agree: e.target.checked })} />
+          <label className={`flex items-start gap-2 text-sm text-slate-700 ${fontRegular}`}>
+            <input type="checkbox" className="mt-1 size-4 accent-primary-700" checked={form.agree} onChange={(e) => setForm({ ...form, agree: e.target.checked })} />
             I agree to the instructor terms and content guidelines.
           </label>
-          {errors.agree && <span className={`-mt-2 text-[13px] text-[#ef4444] ${fontRegular}`}>{errors.agree}</span>}
+          {errors.agree && <span className={`-mt-2 text-13 text-red-500 ${fontRegular}`}>{errors.agree}</span>}
           <button type="submit" className={primaryBtn}>
             Submit application
           </button>
@@ -376,25 +377,25 @@ function BookingModal({ expertId }: { expertId: string }) {
   };
 
   return (
-    <Shell title="Book a session" onClose={() => setOverlay(null)} width="max-w-[560px]">
+    <Shell title="Book a session" onClose={() => setOverlay(null)} width="max-w-140">
       <div className="flex flex-col gap-5 p-5 sm:p-6">
         <div className="flex items-center gap-3.5">
           <ExpertAvatar expert={expert} size={52} />
           <div className="min-w-0">
-            <p dir="auto" className={`truncate text-left text-[17px] text-[#0f172a] ${fontFor(expert.name, fontSemi)}`}>{expert.name}</p>
-            <p className={`text-[13px] text-[#64748b] ${fontRegular}`}>
+            <p dir="auto" className={`truncate text-left text-17 text-slate-900 ${fontFor(expert.name, fontSemi)}`}>{expert.name}</p>
+            <p className={`text-13 text-slate-500 ${fontRegular}`}>
               {expert.field} · {expert.minutes} min · {formatPrice(expert.price)}
             </p>
           </div>
         </div>
-        <p dir="auto" className={`rounded-[12px] bg-[#f8fafc] px-4 py-3 text-left text-[15px] text-[#0f172a] ${fontFor(expert.headline, fontMedium, "font-medium")}`}>{expert.headline}</p>
+        <p dir="auto" className={`rounded-xl bg-slate-25 px-4 py-3 text-left text-15 text-slate-900 ${fontFor(expert.headline, fontMedium, "font-medium")}`}>{expert.headline}</p>
         {existing && (
-          <p className={`rounded-[12px] bg-[#e7f5f1] px-4 py-3 text-[14px] text-[#0d5c4b] ${fontMedium}`}>
+          <p className={`rounded-xl bg-primary-200 px-4 py-3 text-sm text-primary-700 ${fontMedium}`}>
             You already have a session on {existing.date} at {existing.time}. Booking again will reschedule it.
           </p>
         )}
         <div className="flex flex-col gap-2">
-          <span className={`text-[14px] text-[#334155] ${fontSemi}`}>Choose a day</span>
+          <span className={`text-sm text-slate-700 ${fontSemi}`}>Choose a day</span>
           <div className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1">
             {days.map((d, i) => (
               <button
@@ -404,16 +405,16 @@ function BookingModal({ expertId }: { expertId: string }) {
                   setDayIndex(i);
                   setTime(null);
                 }}
-                className={`flex w-[64px] shrink-0 flex-col items-center rounded-[12px] border py-2 transition ${dayIndex === i ? "border-[#0d5c4b] bg-[#0d5c4b] text-white" : "border-[#e2e8f0] text-[#0f172a] hover:border-[#0d5c4b]"}`}
+                className={`flex w-16 shrink-0 flex-col items-center rounded-xl border py-2 transition ${dayIndex === i ? "border-primary-700 bg-primary-700 text-white" : "border-slate-200 text-slate-900 hover:border-primary-700"}`}
               >
-                <span className={`text-[12px] uppercase opacity-80 ${fontMedium}`}>{d.toLocaleDateString("en-GB", { weekday: "short" })}</span>
-                <span className={`text-[20px] ${fontBold}`}>{d.getDate()}</span>
+                <span className={`text-xs uppercase opacity-80 ${fontMedium}`}>{d.toLocaleDateString("en-GB", { weekday: "short" })}</span>
+                <span className={`text-xl ${fontBold}`}>{d.getDate()}</span>
               </button>
             ))}
           </div>
         </div>
         <div className="flex flex-col gap-2">
-          <span className={`text-[14px] text-[#334155] ${fontSemi}`}>Choose a time</span>
+          <span className={`text-sm text-slate-700 ${fontSemi}`}>Choose a time</span>
           <div className="grid grid-cols-3 gap-2 sm:grid-cols-5">
             {timeSlots.map((t, ti) => {
               const unavailable = taken(dayIndex, ti);
@@ -423,7 +424,7 @@ function BookingModal({ expertId }: { expertId: string }) {
                   type="button"
                   disabled={unavailable}
                   onClick={() => setTime(t)}
-                  className={`rounded-[10px] border py-2.5 text-[14px] transition ${fontMedium} ${unavailable ? "cursor-not-allowed border-[#f1f5f9] text-[#cbd5e1] line-through" : time === t ? "border-[#0d5c4b] bg-[#e7f5f1] text-[#0d5c4b]" : "border-[#e2e8f0] text-[#0f172a] hover:border-[#0d5c4b]"}`}
+                  className={`rounded-xl border py-2.5 text-sm transition ${fontMedium} ${unavailable ? "cursor-not-allowed border-slate-150 text-slate-300 line-through" : time === t ? "border-primary-700 bg-primary-200 text-primary-700" : "border-slate-200 text-slate-900 hover:border-primary-700"}`}
                 >
                   {t}
                 </button>
@@ -431,11 +432,11 @@ function BookingModal({ expertId }: { expertId: string }) {
             })}
           </div>
         </div>
-        <div className="flex flex-col gap-3 border-t border-[#e2e8f0] pt-5 sm:flex-row sm:items-center sm:justify-between">
-          <p className={`text-[14px] text-[#475569] ${fontRegular}`}>
+        <div className="flex flex-col gap-3 border-t border-slate-200 pt-5 sm:flex-row sm:items-center sm:justify-between">
+          <p className={`text-sm text-slate-600 ${fontRegular}`}>
             {time ? (
               <>
-                <span className={`text-[#0f172a] ${fontSemi}`}>{dayText(days[dayIndex])}</span> at <span className={`text-[#0f172a] ${fontSemi}`}>{time}</span>
+                <span className={`text-slate-900 ${fontSemi}`}>{dayText(days[dayIndex])}</span> at <span className={`text-slate-900 ${fontSemi}`}>{time}</span>
               </>
             ) : (
               "Pick a day and time"
@@ -456,7 +457,7 @@ function Info({ page }: { page: string }) {
   if (!info) return null;
   return (
     <Shell title={info.title} onClose={() => setOverlay(null)}>
-      <div className={`flex flex-col gap-4 p-5 text-[14px] leading-[22px] text-[#334155] sm:p-6 ${fontRegular}`}>
+      <div className={`flex flex-col gap-4 p-5 text-sm leading-5.5 text-slate-700 sm:p-6 ${fontRegular}`}>
         {info.body.map((p) => (
           <p key={p}>{p}</p>
         ))}
@@ -468,9 +469,9 @@ function Info({ page }: { page: string }) {
 function Toasts() {
   const { toasts } = useApp();
   return (
-    <div aria-live="polite" className="pointer-events-none fixed inset-x-0 bottom-4 z-[300] flex flex-col items-center gap-2 px-4">
+    <div aria-live="polite" className="pointer-events-none fixed inset-x-0 bottom-4 z-300 flex flex-col items-center gap-2 px-4">
       {toasts.map((t) => (
-        <div key={t.id} className={`toast-in pointer-events-auto max-w-[480px] rounded-[12px] bg-[#0f172a] px-5 py-3 text-[15px] text-white shadow-[0_12px_30px_rgba(0,0,0,0.25)] ${fontMedium}`}>
+        <div key={t.id} className={`toast-in pointer-events-auto max-w-120 rounded-xl bg-slate-900 px-5 py-3 text-15 text-white shadow-2xl ${fontMedium}`}>
           {t.message}
         </div>
       ))}

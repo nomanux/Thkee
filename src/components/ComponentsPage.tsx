@@ -23,6 +23,7 @@ import { CourseTile } from "./PopularCourses";
 import { RefundOption } from "./RefundRequestPage";
 import { ResultCard, Stars } from "./SearchPage";
 import SectionHeadingBlock from "./SectionHeading";
+import Button, { buttonClass, type ButtonVariant } from "./Button";
 
 const nav = [
   { id: "colors", label: "Colours" },
@@ -83,24 +84,25 @@ const otherColors = [
 
 const headingStyle = { fontVariationSettings: '"wdth" 100' };
 const typeSamples = [
-  { name: "Display, Instrument Sans Bold 48", className: `text-[32px] leading-[1.2] tracking-[-0.96px] md:text-[48px] ${fontHeading}`, heading: true },
-  { name: "Page heading, Instrument Sans Bold 30", className: `text-[30px] leading-[36px] tracking-[-0.5px] ${fontHeading}`, heading: true },
-  { name: "Page title, Instrument Sans Medium 24", className: "font-['Instrument_Sans:Medium'] text-[24px] font-medium leading-[32px]", heading: true },
-  { name: "Section title, Instrument Sans Bold 20", className: `text-[20px] leading-[28px] ${fontHeading}`, heading: true },
-  { name: "Body semibold, Inter 14", className: `text-[14px] leading-[22px] ${fontSemi}` },
-  { name: "Body medium, Inter 14", className: `text-[14px] leading-[22px] ${fontMedium}` },
-  { name: "Body, Inter 14", className: `text-[14px] leading-[22px] ${fontRegular}` },
-  { name: "Small, Inter 12", className: `text-[12px] leading-[18px] ${fontRegular}` },
+  { name: "Display, Instrument Sans Bold 48", className: `text-32 leading-tight tracking-tight md:text-5xl ${fontHeading}`, heading: true },
+  { name: "Page heading, Instrument Sans Bold 30", className: `text-3xl leading-9 tracking-tight ${fontHeading}`, heading: true },
+  { name: "Page title, Instrument Sans Medium 24", className: "font-instrument-medium text-2xl font-medium leading-8", heading: true },
+  { name: "Section title, Instrument Sans Bold 20", className: `text-xl leading-7 ${fontHeading}`, heading: true },
+  { name: "Body semibold, Inter 14", className: `text-sm leading-5.5 ${fontSemi}` },
+  { name: "Body medium, Inter 14", className: `text-sm leading-5.5 ${fontMedium}` },
+  { name: "Body, Inter 14", className: `text-sm leading-5.5 ${fontRegular}` },
+  { name: "Small, Inter 12", className: `text-xs leading-4.5 ${fontRegular}` },
 ];
 
-const buttonBase = `flex h-[36px] items-center justify-center rounded-[8px] px-4 text-[14px] transition disabled:cursor-not-allowed disabled:opacity-50 ${fontMedium}`;
-const buttons = [
-  { name: "Primary", className: "bg-primary-700 text-white hover:bg-primary-800" },
-  { name: "Yellow", className: "bg-secondary-500 text-[#1e293b] hover:bg-secondary-600" },
-  { name: "Dark", className: "bg-[#1e293b] text-white hover:bg-[#0f172a]" },
-  { name: "Secondary", className: "border border-[#cbd5e1] bg-white text-[#1e293b] hover:bg-[#f8fafc]" },
-  { name: "Danger", className: "bg-[#dc2626] text-white hover:bg-[#b91c1c]" },
-  { name: "Ghost", className: "text-[#1e293b] hover:bg-[#f1f5f9]" },
+const buttonBase = buttonClass("secondary", "md");
+const buttons: { name: string; variant: ButtonVariant }[] = [
+  { name: "Primary", variant: "primary" },
+  { name: "Yellow", variant: "yellow" },
+  { name: "Dark", variant: "dark" },
+  { name: "Secondary", variant: "secondary" },
+  { name: "Soft (on state)", variant: "soft" },
+  { name: "Danger", variant: "danger" },
+  { name: "Ghost", variant: "ghost" },
 ];
 
 const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun"];
@@ -134,11 +136,11 @@ const screens = [
 
 function Section({ id, title, description, children }: { id: string; title: string; description?: string; children: ReactNode }) {
   return (
-    <section id={id} className="scroll-mt-[96px] border-t border-[#e2e8f0] py-10 first:border-t-0 first:pt-0">
-      <h2 className={`m-0 text-[20px] leading-[28px] text-[#0f172a] ${fontHeading}`} style={headingStyle}>
+    <section id={id} className="scroll-mt-24 border-t border-slate-200 py-10 first:border-t-0 first:pt-0">
+      <h2 className={`m-0 text-xl leading-7 text-slate-900 ${fontHeading}`} style={headingStyle}>
         {title}
       </h2>
-      {description && <p className={`mt-1 text-[14px] leading-[22px] text-[#64748b] ${fontRegular}`}>{description}</p>}
+      {description && <p className={`mt-1 text-sm leading-5.5 text-slate-500 ${fontRegular}`}>{description}</p>}
       <div className="mt-6 flex flex-col gap-8">{children}</div>
     </section>
   );
@@ -148,10 +150,10 @@ function Demo({ name, from, children }: { name: string; from?: string; children:
   return (
     <div className="flex min-w-0 flex-col gap-2">
       <div className="flex flex-wrap items-baseline gap-x-2">
-        <h3 className={`m-0 text-[14px] leading-[20px] text-[#0f172a] ${fontSemi}`}>{name}</h3>
-        {from && <code className="font-mono text-[12px] leading-[18px] text-[#64748b]">{from}</code>}
+        <h3 className={`m-0 text-sm leading-5 text-slate-900 ${fontSemi}`}>{name}</h3>
+        {from && <code className="font-mono text-xs leading-4.5 text-slate-500">{from}</code>}
       </div>
-      <div className="rounded-[12px] border border-[#e2e8f0] p-4 md:p-6">{children}</div>
+      <div className="rounded-xl border border-slate-200 p-4 md:p-6">{children}</div>
     </div>
   );
 }
@@ -161,9 +163,9 @@ const row = "flex flex-wrap items-center gap-4";
 function Swatch({ name, hex, swatch }: { name: string; hex: string; swatch?: string }) {
   return (
     <div className="flex flex-col gap-1.5">
-      <span className={`block h-14 rounded-[8px] border border-black/5 ${swatch ?? ""}`} style={swatch ? undefined : { backgroundColor: hex }} />
-      <span className={`text-[14px] leading-[20px] text-[#0f172a] ${fontMedium}`}>{name}</span>
-      <span className="font-mono text-[12px] leading-[18px] text-[#64748b]">{hex}</span>
+      <span className={`block h-14 rounded-lg border border-black/5 ${swatch ?? ""}`} style={swatch ? undefined : { backgroundColor: hex }} />
+      <span className={`text-sm leading-5 text-slate-900 ${fontMedium}`}>{name}</span>
+      <span className="font-mono text-xs leading-4.5 text-slate-500">{hex}</span>
     </div>
   );
 }
@@ -220,14 +222,14 @@ export default function ComponentsPage() {
   ];
 
   return (
-    <main className="w-full bg-white pt-[56px]">
-      <div className="mx-auto flex max-w-[1272px] flex-col gap-6 px-4 pb-14 pt-8 md:flex-row md:gap-14 md:pt-10">
-        <aside className="shrink-0 md:w-[232px]">
-          <div className="md:sticky md:top-[112px]">
-            <h1 className="m-0 font-['Instrument_Sans:Medium'] text-[24px] font-medium leading-[32px] text-[#0f172a]" style={headingStyle}>
+    <main className="w-full bg-white pt-14">
+      <div className="mx-auto flex max-w-318 flex-col gap-6 px-4 pb-14 pt-8 md:flex-row md:gap-14 md:pt-10">
+        <aside className="shrink-0 md:w-58">
+          <div className="md:sticky md:top-28">
+            <h1 className="m-0 font-instrument-medium text-2xl font-medium leading-8 text-slate-900" style={headingStyle}>
               Components
             </h1>
-            <p className={`mb-4 mt-1 text-[14px] leading-[20px] text-[#64748b] ${fontRegular}`}>The UI used across Thkee, shown live.</p>
+            <p className={`mb-4 mt-1 text-sm leading-5 text-slate-500 ${fontRegular}`}>The UI used across Thkee, shown live.</p>
             <nav aria-label="Component sections" className="-mx-3 flex gap-1 overflow-x-auto md:flex-col md:overflow-visible">
               {nav.map((item) => {
                 const selected = item.id === active;
@@ -237,8 +239,8 @@ export default function ComponentsPage() {
                     type="button"
                     aria-current={selected ? "true" : undefined}
                     onClick={() => goTo(item.id)}
-                    className={`flex h-[36px] shrink-0 items-center whitespace-nowrap rounded-[8px] px-3 text-left text-[14px] transition-colors ${
-                      selected ? `bg-[#eef7f3] text-[#0d5c4b] ${fontMedium}` : `text-[#475569] hover:bg-[#f3f6f5] hover:text-[#0f172a] ${fontRegular}`
+                    className={`flex h-9 shrink-0 items-center whitespace-nowrap rounded-lg px-3 text-left text-sm transition-colors ${
+                      selected ? `bg-primary-100 text-primary-700 ${fontMedium}` : `text-slate-600 hover:bg-primary-100 hover:text-slate-900 ${fontRegular}`
                     }`}
                   >
                     {item.label}
@@ -279,32 +281,41 @@ export default function ComponentsPage() {
               <div className="flex flex-col gap-5">
                 {typeSamples.map((sample) => (
                   <div key={sample.name} className="flex flex-col gap-1">
-                    <p className={`text-[#0f172a] ${sample.className}`} style={sample.heading ? headingStyle : undefined}>
+                    <p className={`text-slate-900 ${sample.className}`} style={sample.heading ? headingStyle : undefined}>
                       Learn something new today
                     </p>
-                    <span className="font-mono text-[12px] leading-[18px] text-[#64748b]">{sample.name}</span>
+                    <span className="font-mono text-xs leading-4.5 text-slate-500">{sample.name}</span>
                   </div>
                 ))}
               </div>
             </Demo>
           </Section>
 
-          <Section id="buttons" title="Buttons" description="There is no shared Button component yet. Each page writes its own styles and sizes, so these show the most common looks at 36px.">
-            <Demo name="Styles">
+          <Section id="buttons" title="Buttons" description="Use the shared Button from components/Button.tsx, or buttonClass() for links. Large (44px) is for the main action on a page or form. Medium (36px) is for everything else.">
+            <Demo name="Medium, 36px">
               <div className={row}>
-                {buttons.map((button) => (
-                  <button key={button.name} type="button" className={`${buttonBase} ${button.className}`}>
-                    {button.name}
-                  </button>
+                {buttons.map((b) => (
+                  <Button key={b.name} variant={b.variant}>
+                    {b.name}
+                  </Button>
+                ))}
+              </div>
+            </Demo>
+            <Demo name="Large, 44px">
+              <div className={row}>
+                {buttons.map((b) => (
+                  <Button key={b.name} variant={b.variant} size="lg">
+                    {b.name}
+                  </Button>
                 ))}
               </div>
             </Demo>
             <Demo name="Disabled">
               <div className={row}>
-                {buttons.slice(0, 4).map((button) => (
-                  <button key={button.name} type="button" disabled className={`${buttonBase} ${button.className}`}>
-                    {button.name}
-                  </button>
+                {buttons.slice(0, 4).map((b) => (
+                  <Button key={b.name} variant={b.variant} disabled>
+                    {b.name}
+                  </Button>
                 ))}
               </div>
             </Demo>
@@ -320,12 +331,12 @@ export default function ComponentsPage() {
               </div>
             </Demo>
             <Demo name="SelectField" from="AccountSettingsPage.tsx">
-              <div className="max-w-[340px]">
+              <div className="max-w-85">
                 <SelectField id="demo-select" label="Language" value={choice} onChange={setChoice} placeholder="Select a language" options={["English", "Arabic"]} />
               </div>
             </Demo>
             <Demo name="LinkField" from="AccountSettingsPage.tsx">
-              <div className="max-w-[340px]">
+              <div className="max-w-85">
                 <LinkField
                   id="demo-link"
                   label="LinkedIn"
@@ -333,7 +344,7 @@ export default function ComponentsPage() {
                   value={handle}
                   onChange={setHandle}
                   icon={
-                    <svg viewBox="0 0 24 24" className="size-4 text-[#64748b]" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" className="size-4 text-slate-500" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                       <circle cx="12" cy="12" r="9" />
                       <path d="M3 12h18" />
                     </svg>
@@ -348,12 +359,12 @@ export default function ComponentsPage() {
               </div>
             </Demo>
             <Demo name=".field-box search" from="index.css">
-              <label className="field-box max-w-[340px]">
-                <svg viewBox="0 0 24 24" className="size-4 shrink-0 text-[#64748b]" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
+              <label className="field-box max-w-85">
+                <svg viewBox="0 0 24 24" className="size-4 shrink-0 text-slate-500" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
                   <circle cx="11" cy="11" r="7" />
                   <path d="M20 20l-3.5-3.5" />
                 </svg>
-                <input aria-label="Sample search" placeholder="Search" className={`min-w-0 flex-1 bg-transparent text-[16px] text-[#0f172a] outline-none placeholder:text-slate-400 md:text-[14px] ${fontRegular}`} />
+                <input aria-label="Sample search" placeholder="Search" className={`min-w-0 flex-1 bg-transparent text-base text-slate-900 outline-none placeholder:text-slate-400 md:text-sm ${fontRegular}`} />
               </label>
             </Demo>
             <Demo name="TimeSelect" from="InstructorAvailability.tsx">
@@ -368,7 +379,7 @@ export default function ComponentsPage() {
                 <DateField id="demo-date-min" label="Future dates only" value={endDate} onChange={setEndDate} min={todayIso()} placeholder="Select an end date" />
                 <DateField id="demo-date-error" label="With error" value="" onChange={() => {}} error="Choose an end date" />
               </div>
-              <div className="mt-5 max-w-[220px]">
+              <div className="mt-5 max-w-55">
                 <DatePicker ariaLabel="Disabled date" value={todayIso()} onChange={() => {}} disabled />
               </div>
             </Demo>
@@ -382,7 +393,7 @@ export default function ComponentsPage() {
             </Demo>
             <Demo name="Checkbox" from="InstructorAssignments.tsx">
               <Checkbox checked={boxed} onChange={() => setBoxed((b) => !b)}>
-                <span className={`text-[14px] text-[#475569] ${fontRegular}`}>Select this row</span>
+                <span className={`text-sm text-slate-600 ${fontRegular}`}>Select this row</span>
               </Checkbox>
             </Demo>
             <Demo name="ToggleRow" from="AccountSettingsPage.tsx">
@@ -392,7 +403,7 @@ export default function ComponentsPage() {
               <Toggle on={smallSwitch} label="Sample switch" onChange={() => setSmallSwitch((s) => !s)} />
             </Demo>
             <Demo name="RefundOption (radio)" from="RefundRequestPage.tsx">
-              <div className="divide-y divide-[#e2e8f0] overflow-hidden rounded-[8px] border border-[#e2e8f0]">
+              <div className="divide-y divide-slate-200 overflow-hidden rounded-lg border border-slate-200">
                 <RefundOption checked={refund === "original"} onSelect={() => setRefund("original")} title="Original payment method" note="Takes 5 to 10 business days." />
                 <RefundOption checked={refund === "credit"} onSelect={() => setRefund("credit")} title="Thkee credit" note="Available straight away." />
               </div>
@@ -410,7 +421,7 @@ export default function ComponentsPage() {
               <div className={row}>
                 <FilterSelect label="Sort by" value={sort} onChange={setSort} options={sortOptions} />
                 <FilterSelect large label="Sort by" value={sort} onChange={setSort} options={sortOptions} />
-                <div className="w-[187px]">
+                <div className="w-46.75">
                   <FilterSelect plain label="Sort by" value={sort} onChange={setSort} options={sortOptions} />
                 </div>
               </div>
@@ -419,7 +430,7 @@ export default function ComponentsPage() {
               <ActionMenu
                 alignLeft
                 label="More actions"
-                triggerClass={`${buttonBase} border border-[#cbd5e1] bg-white text-[#1e293b] hover:bg-[#f8fafc]`}
+                triggerClass={buttonBase}
                 trigger="Open menu"
                 items={[
                   { label: "Edit", onClick: () => notify("Edit clicked") },
@@ -433,16 +444,16 @@ export default function ComponentsPage() {
           <Section id="overlays" title="Dialogs & messages">
             <Demo name="Shell, ConfirmDialog and toast" from="Overlays.tsx, InstructorSessions.tsx">
               <div className={row}>
-                <button type="button" onClick={() => setOverlay("modal")} className={`${buttonBase} ${buttons[2].className}`}>
+                <button type="button" onClick={() => setOverlay("modal")} className={buttonClass("dark", "md")}>
                   Open modal
                 </button>
-                <button type="button" onClick={() => setOverlay("drawer")} className={`${buttonBase} ${buttons[2].className}`}>
+                <button type="button" onClick={() => setOverlay("drawer")} className={buttonClass("dark", "md")}>
                   Open drawer
                 </button>
-                <button type="button" onClick={() => setOverlay("confirm")} className={`${buttonBase} ${buttons[2].className}`}>
+                <button type="button" onClick={() => setOverlay("confirm")} className={buttonClass("dark", "md")}>
                   Open confirm dialog
                 </button>
-                <button type="button" onClick={() => notify("This is a toast message")} className={`${buttonBase} ${buttons[2].className}`}>
+                <button type="button" onClick={() => notify("This is a toast message")} className={buttonClass("dark", "md")}>
                   Show toast
                 </button>
               </div>
@@ -483,7 +494,7 @@ export default function ComponentsPage() {
                 <Stepper current={step} />
                 <div className={row}>
                   {[0, 1, 2].map((n) => (
-                    <button key={n} type="button" aria-pressed={step === n} onClick={() => setStep(n)} className={`${buttonBase} ${buttons[2].className}`}>
+                    <button key={n} type="button" aria-pressed={step === n} onClick={() => setStep(n)} className={buttonClass("dark", "md")}>
                       Step {n + 1}
                     </button>
                   ))}
@@ -494,17 +505,17 @@ export default function ComponentsPage() {
 
           <Section id="cards" title="Cards" description="These show real course data, so clicking one opens that course.">
             <Demo name="CourseTile" from="PopularCourses.tsx">
-              <div className="max-w-[320px]">
+              <div className="max-w-80">
                 <CourseTile course={courses[0]} />
               </div>
             </Demo>
             <Demo name="CourseCard" from="Overlays.tsx">
-              <div className="max-w-[320px]">
+              <div className="max-w-80">
                 <CourseCard course={courses[1]} />
               </div>
             </Demo>
             <Demo name="ClassCard" from="MyLearningPage.tsx">
-              <div className="max-w-[320px]">
+              <div className="max-w-80">
                 <ClassCard course={courses[2]} />
               </div>
             </Demo>
@@ -512,13 +523,13 @@ export default function ComponentsPage() {
               <ResultCard course={courses[3]} />
             </Demo>
             <Demo name="ExpertCard" from="Experts.tsx">
-              <div className="max-w-[320px]">
+              <div className="max-w-80">
                 <ExpertCard expert={experts[0]} />
               </div>
             </Demo>
             <Demo name="Card (settings section)" from="AccountSettingsPage.tsx">
               <Card title="Section title" description="A short description of this section.">
-                <p className={`text-[14px] text-[#475569] ${fontRegular}`}>Section content goes here.</p>
+                <p className={`text-sm text-slate-600 ${fontRegular}`}>Section content goes here.</p>
               </Card>
             </Demo>
             <Demo name="SectionHeading" from="SectionHeading.tsx">
@@ -541,7 +552,7 @@ export default function ComponentsPage() {
               </div>
             </Demo>
             <Demo name="CourseThumb" from="Overlays.tsx">
-              <div className="max-w-[260px] overflow-hidden rounded-[8px]">
+              <div className="max-w-65 overflow-hidden rounded-lg">
                 <CourseThumb course={courses[0]} className="aspect-video w-full" />
               </div>
             </Demo>
@@ -574,7 +585,7 @@ export default function ComponentsPage() {
 
           <Section id="calendar" title="Calendar">
             <Demo name="MiniCalendar" from="InstructorSchedule.tsx">
-              <div className="max-w-[320px]">
+              <div className="max-w-80">
                 <MiniCalendar selected={picked} today={midnight} marked={new Set([midnight + 2 * day, midnight + 5 * day])} onPick={setPicked} />
               </div>
             </Demo>
@@ -589,10 +600,10 @@ export default function ComponentsPage() {
           <Section id="art" title="Illustrations" description="Stand-in artwork drawn for the instructor pages, until the originals are exported from Figma.">
             <Demo name="Illustrations" from="InstructorArt.tsx">
               <div className="grid grid-cols-1 items-center gap-6 sm:grid-cols-2">
-                <LaptopsArt className="w-full max-w-[280px]" />
-                <RecordingArt className="w-full max-w-[220px]" />
-                <PresentingArt className="w-full max-w-[200px]" />
-                <ChecklistArt className="w-full max-w-[200px]" />
+                <LaptopsArt className="w-full max-w-70" />
+                <RecordingArt className="w-full max-w-55" />
+                <PresentingArt className="w-full max-w-50" />
+                <ChecklistArt className="w-full max-w-50" />
               </div>
             </Demo>
             <Demo name="Icons" from="InstructorArt.tsx">
@@ -607,7 +618,7 @@ export default function ComponentsPage() {
           <Section id="screens" title="Full screens" description="Page-specific pieces, like the video player, quiz and navbar, only work inside their own screen. Open them here.">
             <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
               {screens.map((screen) => (
-                <a key={screen.label} href={`/${screen.hash}`} className={`flex h-[36px] items-center rounded-[8px] border border-[#e2e8f0] px-3 text-[14px] text-[#1e293b] transition hover:border-[#cbd5e1] hover:bg-[#f8fafc] ${fontMedium}`}>
+                <a key={screen.label} href={`/${screen.hash}`} className={`flex h-9 items-center rounded-lg border border-slate-200 px-3 text-sm text-slate-800 transition hover:border-slate-300 hover:bg-slate-25 ${fontMedium}`}>
                   {screen.label}
                 </a>
               ))}
@@ -618,12 +629,12 @@ export default function ComponentsPage() {
 
       {overlay === "modal" && (
         <Shell title="Modal title" onClose={() => setOverlay(null)}>
-          <p className={`p-6 text-[14px] leading-[22px] text-[#475569] ${fontRegular}`}>This is the shared modal. Press Escape or the close button to dismiss it.</p>
+          <p className={`p-6 text-sm leading-5.5 text-slate-600 ${fontRegular}`}>This is the shared modal. Press Escape or the close button to dismiss it.</p>
         </Shell>
       )}
       {overlay === "drawer" && (
         <Shell title="Drawer title" variant="drawer" onClose={() => setOverlay(null)}>
-          <p className={`p-6 text-[14px] leading-[22px] text-[#475569] ${fontRegular}`}>This is the shared drawer, which slides in from the side.</p>
+          <p className={`p-6 text-sm leading-5.5 text-slate-600 ${fontRegular}`}>This is the shared drawer, which slides in from the side.</p>
         </Shell>
       )}
       {overlay === "confirm" && <ConfirmDialog title="Delete this item?" body="This can't be undone." confirmLabel="Delete" onClose={() => setOverlay(null)} onConfirm={() => setOverlay(null)} />}

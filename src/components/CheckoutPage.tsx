@@ -27,6 +27,7 @@ import { courses, type Course } from "../data";
 import { fontBold, fontFor, fontHeading, fontMedium, fontRegular, fontSemi } from "../fonts";
 import { cardBrand, openLearning, orderTotals, useApp, type CardBrand } from "../store";
 import { CourseThumb } from "./Overlays";
+import { buttonClass } from "./Button"
 
 const sar = (n: number) => `${Math.round(n).toLocaleString()} SAR`;
 const countries = ["Saudi Arabia", "United Arab Emirates", "Kuwait", "Qatar", "Bahrain", "Oman", "Egypt", "Jordan", "Pakistan", "Bangladesh", "United Kingdom", "United States"];
@@ -44,31 +45,31 @@ function Icon({ icon, size = 18, className = "" }: { icon: IconSvgElement; size?
 
 export function MadaBadge() {
   return (
-    <span className="flex h-[20px] w-[30px] flex-col justify-center gap-[2px] rounded-[3px] bg-[#162f6a] px-[4px]" aria-label="mada">
-      <span className="h-[2px] w-full bg-[#84bd00]" />
-      <span className="h-[2px] w-full bg-[#00a3e0]" />
+    <span className="flex h-5 w-7.5 flex-col justify-center gap-0.5 rounded-sm bg-mada px-1" aria-label="mada">
+      <span className="h-0.5 w-full bg-mada-green" />
+      <span className="h-0.5 w-full bg-sky-500" />
     </span>
   );
 }
 
 export function VisaBadge() {
-  return <span className={`flex h-[20px] items-center rounded-[3px] bg-[#1a4c9b] px-1.5 text-[10px] italic tracking-[0.5px] text-white ${fontBold}`}>VISA</span>;
+  return <span className={`flex h-5 items-center rounded-sm bg-visa px-1.5 text-10 italic tracking-wider text-white ${fontBold}`}>VISA</span>;
 }
 
 export function MastercardBadge() {
   return (
-    <span className="relative flex h-[20px] w-[30px] items-center justify-center rounded-[3px] bg-[#111]" aria-label="Mastercard">
-      <span className="absolute left-[6px] size-[11px] rounded-full bg-[#eb001b]" />
-      <span className="absolute right-[6px] size-[11px] rounded-full bg-[#f79e1b] mix-blend-screen" />
+    <span className="relative flex h-5 w-7.5 items-center justify-center rounded-sm bg-olive-950" aria-label="Mastercard">
+      <span className="absolute left-1.5 size-2.75 rounded-full bg-red-600" />
+      <span className="absolute right-1.5 size-2.75 rounded-full bg-secondary-600 mix-blend-screen" />
     </span>
   );
 }
 
 export function PaypalLogo() {
   return (
-    <span className={`text-[17px] italic tracking-[-0.3px] ${fontBold}`}>
-      <span className="text-[#003087]">Pay</span>
-      <span className="text-[#009cde]">Pal</span>
+    <span className={`text-17 italic tracking-tight ${fontBold}`}>
+      <span className="text-blue-900">Pay</span>
+      <span className="text-paypal">Pal</span>
     </span>
   );
 }
@@ -77,8 +78,8 @@ export function BrandBadge({ brand }: { brand: CardBrand }) {
   if (brand === "Visa") return <VisaBadge />;
   if (brand === "Mastercard") return <MastercardBadge />;
   return (
-    <span className="flex h-[20px] w-[30px] items-center rounded-[3px] bg-[#e2e8f0] px-1" aria-hidden="true">
-      <span className="h-[5px] w-[10px] rounded-[1px] bg-[#cbd5e1]" />
+    <span className="flex h-5 w-7.5 items-center rounded-sm bg-slate-200 px-1" aria-hidden="true">
+      <span className="h-1.25 w-2.5 rounded-xs bg-slate-300" />
     </span>
   );
 }
@@ -502,7 +503,7 @@ export default function CheckoutPage() {
                   There's nothing to check out
                 </h2>
                 <p className={`text-sm text-slate-500 ${fontRegular}`}>Add a course to your cart first.</p>
-                <button type="button" onClick={() => openSearch({})} className={`mt-2 h-12 rounded-xl bg-secondary-500 px-7 text-base text-slate-900 shadow-card transition hover:bg-secondary-600 ${fontSemi}`}>
+                <button type="button" onClick={() => openSearch({})} className={`${buttonClass("yellow", "lg")} mt-2`}>
                   Browse courses
                 </button>
               </div>

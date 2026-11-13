@@ -4,7 +4,8 @@ import { uploadFile } from "../api";
 import { shrinkImage } from "../imageShrink";
 import { fontMedium, fontRegular, fontSemi } from "../fonts";
 import { HugeiconsIcon, type IconSvgElement } from "@hugeicons/react";
-import { Image01Icon, LeftToRightListBulletIcon, LeftToRightListNumberIcon, Link01Icon, SourceCodeIcon, TextBoldIcon, TextItalicIcon, TextUnderlineIcon } from "@hugeicons/core-free-icons";
+import { ArrowUpDownIcon, Image01Icon, LeftToRightListBulletIcon, NoteAddIcon, LeftToRightListNumberIcon, Link01Icon, SourceCodeIcon, TextBoldIcon, TextItalicIcon, TextUnderlineIcon } from "@hugeicons/core-free-icons";
+import { buttonClass, type ButtonSize, type ButtonVariant } from "./Button"
 
 export type Note = {
   id: number;
@@ -60,9 +61,9 @@ type MarkRange = { start: number; end: number; kind: RangeKind; id: number };
 
 // Yellow is a plain highlight, mint is a highlight with a note. Saved notes get their colour from whether they have text.
 const markClass: Record<RangeKind, string> = {
-  highlight: "cursor-pointer bg-[#fdf1a6] hover:bg-[#fae98a]",
-  note: "cursor-pointer bg-[#c6f0e4] hover:bg-[#a9e8d6]",
-  pending: "bg-[#dbeafe]",
+  highlight: "cursor-pointer bg-yellow-100 hover:bg-amber-200",
+  note: "cursor-pointer bg-emerald-100 hover:bg-emerald-200",
+  pending: "bg-blue-100",
 };
 
 function Paragraph({ text, ranges, index, onOpen }: { text: string; ranges: MarkRange[]; index: number; onOpen: (id: number, el: HTMLElement) => void }) {
@@ -91,7 +92,7 @@ function Paragraph({ text, ranges, index, onOpen }: { text: string; ranges: Mark
                 }
               : undefined
           }
-          className={`rounded-[2px] text-inherit transition-colors ${markClass[r.kind]}`}
+          className={`rounded-xs text-inherit transition-colors ${markClass[r.kind]}`}
         >
           {text.slice(r.start, r.end)}
         </mark>,
@@ -131,15 +132,15 @@ function sanitizeNote(html: string) {
   return doc.body.innerHTML;
 }
 
-const richText = "[&_b]:font-['Inter:Bold'] [&_strong]:font-['Inter:Bold'] [&_i]:[font-synthesis:style] [&_em]:[font-synthesis:style] [&_u]:underline [&_a]:text-[#6016fc] [&_a]:underline [&_code]:rounded-[4px] [&_code]:bg-[#f1f5f9] [&_code]:px-1 [&_code]:font-mono [&_img]:max-w-full [&_img]:rounded-[6px] [&_ol]:list-decimal [&_ol]:pl-5 [&_ul]:list-disc [&_ul]:pl-5 [&_h3]:mb-1.5 [&_h3]:mt-4 [&_h3]:text-[1.15em] [&_h3]:leading-[1.4] [&_h3]:font-['Inter:Bold'] [&_h3]:text-[#0f172a]";
+const richText = "[&_b]:font-inter-bold [&_strong]:font-inter-bold [&_i]:font-synthesis-style [&_em]:font-synthesis-style [&_u]:underline [&_a]:text-ai-600 [&_a]:underline [&_code]:rounded-sm [&_code]:bg-slate-150 [&_code]:px-1 [&_code]:font-mono [&_img]:max-w-full [&_img]:rounded-md [&_ol]:list-decimal [&_ol]:pl-5 [&_ul]:list-disc [&_ul]:pl-5 [&_h3]:mb-1.5 [&_h3]:mt-4 [&_h3]:text-em-115 [&_h3]:leading-snug [&_h3]:font-inter-bold [&_h3]:text-slate-900";
 
-export function NoteBody({ note, className = "", tone = "text-[#0f172a]" }: { note: Pick<Note, "text" | "html">; className?: string; tone?: string }) {
-  const cls = `text-[14px] leading-[22px] ${tone} ${fontRegular} ${className}`;
+export function NoteBody({ note, className = "", tone = "text-slate-900" }: { note: Pick<Note, "text" | "html">; className?: string; tone?: string }) {
+  const cls = `text-sm leading-5.5 ${tone} ${fontRegular} ${className}`;
   if (note.html) return <div className={`${cls} ${richText}`} dangerouslySetInnerHTML={{ __html: sanitizeNote(note.html) }} />;
   return <p className={`whitespace-pre-wrap ${cls}`}>{note.text}</p>;
 }
 
-function Svg({ className = "size-[18px]", children }: { className?: string; children: ReactNode }) {
+function Svg({ className = "size-4.5", children }: { className?: string; children: ReactNode }) {
   return (
     <svg viewBox="0 0 24 24" className={className} fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
       {children}
@@ -157,10 +158,10 @@ function ToolButton({ label, onClick, danger, children }: { label: string; onCli
       aria-label={label}
       onMouseDown={(e) => e.preventDefault()}
       onClick={onClick}
-      className={`group/tip relative flex size-8 items-center justify-center rounded-[4px] hover:bg-[#f1f5f9] ${danger ? "text-[#dc2626]" : "text-[#0f172a]"}`}
+      className={`group/tip relative flex size-8 items-center justify-center rounded-sm hover:bg-slate-150 ${danger ? "text-red-600" : "text-slate-900"}`}
     >
       {children}
-      <span role="tooltip" className={`pointer-events-none absolute bottom-full left-1/2 mb-2 hidden -translate-x-1/2 whitespace-nowrap rounded-[2px] bg-black px-3 py-1.5 text-[14px] leading-[18px] text-white group-hover/tip:block group-focus-visible/tip:block ${fontRegular}`}>
+      <span role="tooltip" className={`pointer-events-none absolute bottom-full left-1/2 mb-2 hidden -translate-x-1/2 whitespace-nowrap rounded-xs bg-black px-3 py-1.5 text-sm leading-4.5 text-white group-hover/tip:block group-focus-visible/tip:block ${fontRegular}`}>
         {label}
         <span className="absolute left-1/2 top-full size-2 -translate-x-1/2 -translate-y-1 rotate-45 bg-black" />
       </span>
@@ -182,7 +183,7 @@ function Floating({ anchor, width, height, boxWidth, margin = 8, arrow, children
   );
 }
 
-const floatingCard = "rounded-[8px] bg-white p-3 shadow-[0_8px_24px_rgba(15,23,42,0.2)]";
+const floatingCard = "rounded-lg bg-white p-3 shadow-2xl";
 
 type Target = { para: number; start: number; end: number; quote: string };
 
@@ -309,36 +310,36 @@ export function ArticleReader({
   const openNote = highlights.find((h) => h.id === pop?.noteId);
   const boxWidth = wrapRef.current?.clientWidth ?? 0;
 
-  const iconBtn = "flex size-8 items-center justify-center rounded-[6px] text-[#0f172a] transition hover:bg-white";
+  const iconBtn = "flex size-8 items-center justify-center rounded-md text-slate-900 transition hover:bg-white";
 
   return (
-    <div className="bg-[#1e293b]">
-      <div className="flex flex-wrap items-center gap-3 bg-[#253247] px-4 py-3 md:px-4">
-        <p className={`min-w-0 flex-1 truncate text-[16px] text-white md:text-[18px] ${fontRegular}`}>{lesson.title}</p>
-        <span className={`flex items-center gap-1.5 text-[14px] text-white/90 tabular-nums ${fontRegular}`}>
+    <div className="bg-slate-800">
+      <div className="flex flex-wrap items-center gap-3 bg-cyan-950 px-4 py-3 md:px-4">
+        <p className={`min-w-0 flex-1 truncate text-base text-white md:text-lg ${fontRegular}`}>{lesson.title}</p>
+        <span className={`flex items-center gap-1.5 text-sm text-white/90 tabular-nums ${fontRegular}`}>
           <svg viewBox="0 0 24 24" className="size-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
             <circle cx="12" cy="12" r="9" />
             <path d="M12 7v5l3 2" />
           </svg>
           {done ? "Completed" : `${clock(Math.max(0, left))} min left`}
         </span>
-        <button type="button" onClick={onBack} disabled={!onBack} className={`h-[34px] rounded-[6px] bg-white px-3 text-[14px] text-[#0f172a] transition hover:bg-[#f1f5f9] disabled:opacity-40 ${fontMedium}`}>
+        <button type="button" onClick={onBack} disabled={!onBack} className={`h-8.5 rounded-md bg-white px-3 text-sm text-slate-900 transition hover:bg-slate-150 disabled:opacity-40 ${fontMedium}`}>
           Back
         </button>
-        <button type="button" onClick={onNext} disabled={!onNext} className={`h-[34px] rounded-[6px] bg-[#ffb20d] px-3 text-[14px] text-[#1e293b] transition hover:bg-[#faa104] disabled:opacity-40 ${fontMedium}`}>
+        <button type="button" onClick={onNext} disabled={!onNext} className={`${buttonClass("yellow", "md")}`}>
           Next
         </button>
       </div>
 
       <div className="p-3 md:p-4">
-        <div ref={wrapRef} className="relative overflow-hidden rounded-[6px] bg-[#fffdf6]">
-          <div className="flex items-center justify-center gap-2 bg-[#e2e8f0] px-3 py-2">
+        <div ref={wrapRef} className="relative overflow-hidden rounded-md bg-secondary-50">
+          <div className="flex items-center justify-center gap-2 bg-slate-200 px-3 py-2">
             <button type="button" onClick={() => setZoom((z) => Math.max(80, z - 10))} aria-label="Zoom out" className={iconBtn}>
               <svg viewBox="0 0 24 24" className="size-4" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" aria-hidden="true">
                 <path d="M5 12h14" />
               </svg>
             </button>
-            <span className={`w-[48px] rounded-[4px] bg-white py-1 text-center text-[11px] text-[#0f172a] ${fontRegular}`}>{zoom}%</span>
+            <span className={`w-12 rounded-sm bg-white py-1 text-center text-11 text-slate-900 ${fontRegular}`}>{zoom}%</span>
             <button type="button" onClick={() => setZoom((z) => Math.min(150, z + 10))} aria-label="Zoom in" className={iconBtn}>
               <svg viewBox="0 0 24 24" className="size-4" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" aria-hidden="true">
                 <path d="M12 5v14M5 12h14" />
@@ -351,11 +352,11 @@ export function ArticleReader({
             </button>
           </div>
 
-          <div ref={scrollRef} onScroll={onScroll} onMouseUp={onMouseUp} className={`overflow-y-auto px-5 py-6 transition-[max-height] duration-300 md:px-8 md:py-8 ${expanded ? "max-h-[calc(100dvh-72px-66px-80px)] min-h-[440px]" : "max-h-[440px]"}`}>
-            <div className={`flex flex-col gap-6 text-[#1e293b] ${fontRegular}`} style={{ fontSize: `${(14 * zoom) / 100}px`, lineHeight: 1.75 }}>
+          <div ref={scrollRef} onScroll={onScroll} onMouseUp={onMouseUp} className={`overflow-y-auto px-5 py-6 transition-all duration-300 md:px-8 md:py-8 ${expanded ? "max-h-dvh-minus-218 min-h-110" : "max-h-110"}`}>
+            <div className={`flex flex-col gap-6 text-slate-800 ${fontRegular}`} style={{ fontSize: `${(14 * zoom) / 100}px`, lineHeight: 1.75 }}>
               {article.map((block, i) => (
                 <div key={i} className="flex flex-col gap-1">
-                  {block.heading && <h3 className={`m-0 text-[1.15em] text-[#0f172a] ${fontMedium}`}>{block.heading}</h3>}
+                  {block.heading && <h3 className={`m-0 text-em-115 text-slate-900 ${fontMedium}`}>{block.heading}</h3>}
                   <Paragraph
                     index={i}
                     text={block.text}
@@ -368,7 +369,7 @@ export function ArticleReader({
                 </div>
               ))}
               {!done && (
-                <button type="button" onClick={onComplete} className={`self-start rounded-[6px] bg-[#0f172a] px-4 py-2 text-[14px] text-white hover:bg-[#1e293b] ${fontMedium}`}>
+                <button type="button" onClick={onComplete} className={`self-start rounded-md bg-slate-900 px-4 py-2 text-sm text-white hover:bg-slate-800 ${fontMedium}`}>
                   Mark as complete
                 </button>
               )}
@@ -377,7 +378,7 @@ export function ArticleReader({
 
           {pop?.mode === "tools" && (
             <Floating anchor={pop.anchor} width={78} height={84} boxWidth={boxWidth} margin={50}>
-              <div className="flex gap-1 rounded-[4px] border border-[#e2e8f0] bg-white p-1 shadow-[0_8px_20px_rgba(15,23,42,0.15)]">
+              <div className="flex gap-1 rounded-sm border border-slate-200 bg-white p-1 shadow-xl">
                 {pop.target ? (
                   <ToolButton label="Highlight" onClick={highlight}>
                     <Svg>{penIcon}</Svg>
@@ -411,10 +412,10 @@ export function ArticleReader({
                   className={"field"}
                 />
                 <div className="grid grid-cols-2 gap-2">
-                  <button type="button" onClick={() => setPop(null)} className={`h-[36px] rounded-[6px] border border-[#475569] text-[14px] text-[#475569] transition hover:bg-[#f1f5f9] ${fontMedium}`}>
+                  <button type="button" onClick={() => setPop(null)} className={`h-9 rounded-md border border-slate-600 text-sm text-slate-600 transition hover:bg-slate-150 ${fontMedium}`}>
                     Cancel
                   </button>
-                  <button type="button" onClick={finishWriting} disabled={!draft.trim()} className={`h-[36px] rounded-[6px] bg-[#6016fc] text-[14px] text-white transition hover:bg-[#4f0fd6] disabled:opacity-50 ${fontMedium}`}>
+                  <button type="button" onClick={finishWriting} disabled={!draft.trim()} className={`h-9 rounded-md bg-ai-600 text-sm text-white transition hover:bg-indigo-700 disabled:opacity-50 ${fontMedium}`}>
                     Done
                   </button>
                 </div>
@@ -425,8 +426,8 @@ export function ArticleReader({
           {pop?.mode === "view" && openNote && (
             <Floating anchor={pop.anchor} width={232} height={170} boxWidth={boxWidth} arrow>
               <div className={`${floatingCard} flex flex-col gap-2`}>
-                <div className="flex max-h-[96px] gap-2 overflow-y-auto rounded-[2px] border border-[#e2e8f0]">
-                  <span className="w-[3px] shrink-0 bg-[#a78bfa]" />
+                <div className="flex max-h-24 gap-2 overflow-y-auto rounded-xs border border-slate-200">
+                  <span className="w-0.75 shrink-0 bg-violet-400" />
                   <NoteBody note={openNote} className="min-w-0 flex-1 break-words py-1.5 pr-2" />
                 </div>
                 <div className="flex justify-center gap-2">
@@ -448,19 +449,19 @@ export function ArticleReader({
               type="button"
               onClick={() => scrollRef.current?.scrollTo({ top: 0, behavior: "smooth" })}
               aria-label="Back to top of article"
-              className={`fade-up absolute right-5 flex size-10 items-center justify-center rounded-full bg-white text-[#0f172a] shadow-[0_6px_16px_rgba(15,23,42,0.18)] transition hover:scale-105 ${done ? "bottom-[72px]" : "bottom-5"}`}
+              className={`fade-up absolute right-5 flex size-10 items-center justify-center rounded-full bg-white text-slate-900 shadow-xl transition hover:scale-105 ${done ? "bottom-18" : "bottom-5"}`}
             >
               <svg viewBox="0 0 40 40" className="absolute inset-0 -rotate-90" aria-hidden="true">
                 <circle cx="20" cy="20" r="18" fill="none" stroke="#e2e8f0" strokeWidth="2.5" />
                 <circle cx="20" cy="20" r="18" fill="none" stroke="#ffb20d" strokeWidth="2.5" strokeLinecap="round" strokeDasharray={`${read * 113.1} 113.1`} />
               </svg>
-              <svg viewBox="0 0 24 24" className="relative size-[18px]" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <svg viewBox="0 0 24 24" className="relative size-4.5" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                 <path d="M12 19V5M6 11l6-6 6 6" />
               </svg>
             </button>
           )}
 
-          {done && <span className={`fade-up absolute bottom-4 right-4 rounded-[6px] bg-[#0d7a5c] px-3 py-2 text-[14px] text-white shadow-lg ${fontMedium}`}>Completed!</span>}
+          {done && <span className={`fade-up absolute bottom-4 right-4 rounded-md bg-emerald-700 px-3 py-2 text-sm text-white shadow-lg ${fontMedium}`}>Completed!</span>}
         </div>
       </div>
     </div>
@@ -469,7 +470,7 @@ export function ArticleReader({
 
 function KindBadge({ kind }: { kind: Note["kind"] }) {
   return (
-    <span className={`flex shrink-0 items-center gap-1 rounded-[3px] bg-[#1e293b] px-1.5 py-1 text-[12px] leading-none text-white ${fontRegular}`}>
+    <span className={`flex shrink-0 items-center gap-1 rounded-sm bg-slate-800 px-1.5 py-1 text-xs leading-none text-white ${fontRegular}`}>
       {kind === "video" ? (
         <svg viewBox="0 0 24 24" className="size-3" fill="currentColor" aria-hidden="true">
           <path d="M12 2a10 10 0 100 20 10 10 0 000-20zm-2 6l6 4-6 4z" />
@@ -502,7 +503,9 @@ export function NoteEditor({
   allowEmpty,
   placeholder = "Insert note here",
   saveLabel = "Save",
-  saveClass = "bg-[#ffb20d] text-[#1e293b] hover:bg-[#faa104]",
+  saveClass = "",
+  saveVariant = "yellow",
+  saveSize = "md",
   extras,
   imageOnly,
   sideAction,
@@ -515,7 +518,7 @@ export function NoteEditor({
   linkOnly,
   hideUnderline,
   toolbarEnd,
-  boxClass = "min-h-[126px]",
+  boxClass = "min-h-31.5",
   autoFocus = true,
   onChange,
   onSave,
@@ -525,7 +528,10 @@ export function NoteEditor({
   allowEmpty?: boolean;
   placeholder?: string;
   saveLabel?: string;
+  // Extra classes for the save button. Prefer saveVariant and saveSize.
   saveClass?: string;
+  saveVariant?: ButtonVariant;
+  saveSize?: ButtonSize;
   // Adds the image, link and code buttons.
   extras?: boolean;
   // Adds only the image button.
@@ -675,16 +681,16 @@ export function NoteEditor({
 
   const toolCls = (on: boolean) =>
     modern
-      ? `flex size-8 items-center justify-center rounded-[8px] transition ${on ? "bg-[#eef7f3] text-[#0d5c4b]" : "text-slate-500 hover:bg-slate-100 hover:text-slate-900"}`
-      : `flex size-7 items-center justify-center rounded-[4px] transition hover:bg-[#f1f5f9] hover:text-[#0f172a] ${on ? "bg-[#e2e8f0] text-[#0f172a]" : "text-[#64748b]"}`;
+      ? `flex size-8 items-center justify-center rounded-lg transition ${on ? "bg-primary-100 text-primary-700" : "text-slate-500 hover:bg-slate-100 hover:text-slate-900"}`
+      : `flex size-7 items-center justify-center rounded-sm transition hover:bg-slate-150 hover:text-slate-900 ${on ? "bg-slate-200 text-slate-900" : "text-slate-500"}`;
 
   return (
     <div className="flex min-w-0 flex-1 flex-col gap-4">
       <div className={sideAction ? "flex items-end gap-3" : "contents"}>
       {/* The toolbar-on-top variant matches the standard .field look: white box, slate border, green focus ring and a light toolbar strip. */}
-      <div className={`flex ${boxClass} ${page ? "flex-col-reverse" : `flex-col overflow-auto ${modern ? "rounded-[14px] border border-slate-200 bg-white shadow-[0_1px_2px_rgba(15,23,42,0.04)] transition-[border-color,box-shadow] hover:border-slate-300 focus-within:!border-[#0d5c4b]/50 focus-within:shadow-[0_0_0_4px_rgba(13,92,75,0.08)]" : toolbarTop ? "flex-col-reverse rounded-[12px] border border-slate-200 bg-white shadow-[0_1px_2px_rgba(15,23,42,0.04)] transition-[border-color,box-shadow] hover:border-slate-300 focus-within:!border-[#0d5c4b]/60 focus-within:shadow-[0_0_0_3px_rgba(13,92,75,0.12)]" : "resize-y gap-2 rounded-[8px] border border-[#cbd5e1] bg-white p-4 focus-within:border-[#1e293b]"}`} ${sideAction ? "min-w-0 flex-1" : ""}`}>
+      <div className={`flex ${boxClass} ${page ? "flex-col-reverse" : `flex-col overflow-auto ${modern ? "rounded-2xl border border-slate-200 bg-white shadow-sm transition-all hover:border-slate-300 focus-within:!border-primary-700/50 focus-within:shadow-xs shadow-primary-700/12" : toolbarTop ? "flex-col-reverse rounded-xl border border-slate-200 bg-white shadow-sm transition-all hover:border-slate-300 focus-within:!border-primary-700/60 focus-within:shadow-xs shadow-primary-700/18" : "resize-y gap-2 rounded-lg border border-slate-300 bg-white p-4 focus-within:border-slate-800"}`} ${sideAction ? "min-w-0 flex-1" : ""}`}>
         <div className={`relative flex-1 ${page ? "mt-3" : modern ? "mx-4 mb-3 mt-3.5" : toolbarTop ? "mx-3 my-2.5" : ""}`}>
-          {empty && <span className={`pointer-events-none absolute left-0 top-0 text-[#94a3b8] ${page ? "text-[16px] leading-[28px]" : modern ? "text-[15px] leading-[26px]" : "text-[16px] md:text-[14px]"} ${fontRegular}`}>{placeholder}</span>}
+          {empty && <span className={`pointer-events-none absolute left-0 top-0 text-slate-400 ${page ? "text-base leading-7" : modern ? "text-15 leading-6.5" : "text-base md:text-sm"} ${fontRegular}`}>{placeholder}</span>}
           <div
             ref={ref}
             role="textbox"
@@ -700,7 +706,7 @@ export function NoteEditor({
                 if (!empty || allowEmpty) save();
               }
             }}
-            className={`min-h-[48px] whitespace-pre-wrap break-words text-[#0f172a] outline-none ${page ? "text-[16px] leading-[28px] text-[#1e293b] [&_li]:my-0.5 [&_ol]:my-2 [&_p]:mb-2 [&_ul]:my-2" : modern ? "text-[15px] leading-[26px] [&_li]:my-0.5 [&_ol]:my-2 [&_ul]:my-2" : "text-[16px] leading-[22px] md:text-[14px]"} ${richText} ${fontRegular}`}
+            className={`min-h-12 whitespace-pre-wrap break-words text-slate-900 outline-none ${page ? "text-base leading-7 text-slate-800 [&_li]:my-0.5 [&_ol]:my-2 [&_p]:mb-2 [&_ul]:my-2" : modern ? "text-15 leading-6.5 [&_li]:my-0.5 [&_ol]:my-2 [&_ul]:my-2" : "text-base leading-5.5 md:text-sm"} ${richText} ${fontRegular}`}
           />
         </div>
         {linkOpen && (
@@ -718,9 +724,9 @@ export function NoteEditor({
               }}
               placeholder="Paste a link"
               aria-label="Link address"
-              className={"field h-[32px] min-w-0 flex-1"}
+              className={"field h-8 min-w-0 flex-1"}
             />
-            <button type="button" onClick={addLink} className={`h-[32px] rounded-[4px] bg-[#f1f5f9] px-3 text-[14px] text-[#0f172a] hover:bg-[#e2e8f0] ${fontMedium}`}>
+            <button type="button" onClick={addLink} className={`h-8 rounded-sm bg-slate-150 px-3 text-sm text-slate-900 hover:bg-slate-200 ${fontMedium}`}>
               Add
             </button>
           </div>
@@ -731,7 +737,7 @@ export function NoteEditor({
             aria-label="Format selected text"
             onMouseDown={(e) => e.preventDefault()}
             style={{ left: bubble.x, top: bubble.y }}
-            className="fixed z-[1000] flex -translate-x-1/2 -translate-y-[calc(100%+8px)] items-center gap-0.5 rounded-[10px] bg-[#0f172a] p-1 text-white shadow-[0_10px_30px_-10px_rgba(15,23,42,0.6)]"
+            className="fixed z-1000 flex -translate-x-1/2 translate-y-above items-center gap-0.5 rounded-xl bg-slate-900 p-1 text-white shadow-2xl"
           >
             {[
               { key: "bold", label: "Bold", on: active.includes("bold"), icon: TextBoldIcon, act: () => run("bold") },
@@ -741,8 +747,8 @@ export function NoteEditor({
               { key: "link", label: "Add link", on: false, icon: editorExtraIcons.link, act: () => { rememberCursor(); setBubble(null); setLinkOpen(true); } },
               { key: "code", label: "Format as code", on: false, icon: editorExtraIcons.code, act: insertCode },
             ].map((b) => (
-              <button key={b.key} type="button" aria-label={b.label} title={b.label} aria-pressed={b.on} onClick={b.act} className={`flex size-7 items-center justify-center rounded-[7px] transition ${b.on ? "bg-white/20 text-white" : "text-white/75 hover:bg-white/10 hover:text-white"}`}>
-                {b.icon ? <HugeiconsIcon icon={b.icon} size={16} strokeWidth={2} aria-hidden="true" /> : <span className={`text-[13px] ${fontSemi}`}>H</span>}
+              <button key={b.key} type="button" aria-label={b.label} title={b.label} aria-pressed={b.on} onClick={b.act} className={`flex size-7 items-center justify-center rounded-md transition ${b.on ? "bg-white/20 text-white" : "text-white/75 hover:bg-white/10 hover:text-white"}`}>
+                {b.icon ? <HugeiconsIcon icon={b.icon} size={16} strokeWidth={2} aria-hidden="true" /> : <span className={`text-13 ${fontSemi}`}>H</span>}
               </button>
             ))}
           </div>,
@@ -750,7 +756,7 @@ export function NoteEditor({
         )}
         {page && (
           // Page toolbar: full width, grouped by purpose (text style, lists, insert), with clear labels on hover.
-          <div role="toolbar" aria-label="Formatting" onMouseDown={(e) => e.preventDefault()} className="sticky top-[57px] z-[2] flex items-center gap-1 rounded-[12px] border border-slate-200 bg-[#f8fafc]/95 p-1 backdrop-blur-sm">
+          <div role="toolbar" aria-label="Formatting" onMouseDown={(e) => e.preventDefault()} className="sticky top-14.25 z-2 flex items-center gap-1 rounded-xl border border-slate-200 bg-slate-25/95 p-1 backdrop-blur-sm">
             {[
               [
                 { key: "h3", label: isHeading ? "Normal text" : "Heading", on: isHeading, icon: null, act: () => { run("formatBlock", isHeading ? "P" : "H3"); setIsHeading(!isHeading); } },
@@ -772,19 +778,19 @@ export function NoteEditor({
                 {i > 0 && <span aria-hidden="true" className="mx-1 h-5 w-px bg-slate-200" />}
                 <div className="flex items-center gap-0.5">
                   {group.map((b) => (
-                    <button key={b.key} type="button" aria-label={b.label} title={b.label} aria-pressed={b.on} onClick={b.act} className={`flex h-9 min-w-10 items-center justify-center rounded-[9px] px-2 transition ${b.on ? "bg-white text-[#0d5c4b] shadow-[0_1px_2px_rgba(15,23,42,0.08),0_0_0_1px_rgba(13,92,75,0.15)]" : "text-slate-600 hover:bg-white hover:text-slate-900 hover:shadow-[0_1px_2px_rgba(15,23,42,0.06)]"}`}>
-                      {b.icon ? <HugeiconsIcon icon={b.icon} size={19} strokeWidth={1.8} aria-hidden="true" /> : <span className={`text-[15px] leading-none ${fontSemi}`}>H</span>}
+                    <button key={b.key} type="button" aria-label={b.label} title={b.label} aria-pressed={b.on} onClick={b.act} className={`flex h-9 min-w-10 items-center justify-center rounded-lg px-2 transition ${b.on ? "bg-white text-primary-700 shadow-sm" : "text-slate-600 hover:bg-white hover:text-slate-900 hover:shadow-sm"}`}>
+                      {b.icon ? <HugeiconsIcon icon={b.icon} size={19} strokeWidth={1.8} aria-hidden="true" /> : <span className={`text-15 leading-none ${fontSemi}`}>H</span>}
                     </button>
                   ))}
                 </div>
               </Fragment>
             ))}
-            <span className={`ml-auto hidden pr-2 text-[12px] text-slate-400 sm:inline ${fontRegular}`}>Select text for quick styles</span>
+            <span className={`ml-auto hidden pr-2 text-xs text-slate-400 sm:inline ${fontRegular}`}>Select text for quick styles</span>
             <input ref={fileRef} type="file" accept="image/png,image/jpeg,image/gif,image/webp" hidden onChange={(e) => pickImage(e.target.files?.[0])} />
           </div>
         )}
         {!page && (
-        <div className={`flex flex-wrap items-center gap-0.5 ${page ? "" : modern ? "sticky bottom-0 z-[1] border-t border-slate-100 bg-white/95 px-2 py-1.5 backdrop-blur-sm" : toolbarTop ? "sticky top-0 z-[1] border-b border-slate-200 bg-slate-50 px-1.5 py-1" : ""}`}>
+        <div className={`flex flex-wrap items-center gap-0.5 ${page ? "" : modern ? "sticky bottom-0 z-1 border-t border-slate-100 bg-white/95 px-2 py-1.5 backdrop-blur-sm" : toolbarTop ? "sticky top-0 z-1 border-b border-slate-200 bg-slate-50 px-1.5 py-1" : ""}`}>
           {toolbarEnd && <span className="order-last ml-auto flex">{toolbarEnd}</span>}
           {editorTools.filter((tool) => !(hideUnderline && tool.command === "underline")).map((tool) => (
             <Fragment key={tool.command}>
@@ -842,17 +848,17 @@ export function NoteEditor({
       {!hideActions && (
         <div className="flex items-center justify-end gap-3">
           {onCancel && (
-            <button type="button" onClick={onCancel} className={`h-[44px] rounded-[8px] px-4 text-[14px] text-[#0f172a] transition hover:bg-[#f1f5f9] ${fontMedium}`}>
+            <button type="button" onClick={onCancel} className={buttonClass("ghost", saveSize)}>
               Cancel
             </button>
           )}
-          <button type="button" onClick={save} disabled={empty && !allowEmpty} className={`h-[44px] rounded-[8px] px-5 text-[14px] transition disabled:opacity-50 ${saveClass} ${fontMedium}`}>
+          <button type="button" onClick={save} disabled={empty && !allowEmpty} className={`${buttonClass(saveVariant, saveSize)} ${saveClass}`}>
             {saveLabel}
           </button>
         </div>
       )}
       </div>
-      {error && <p className={`text-[14px] text-[#dc2626] ${fontRegular}`}>{error}</p>}
+      {error && <p className={`text-sm text-red-600 ${fontRegular}`}>{error}</p>}
     </div>
   );
 }
@@ -867,7 +873,9 @@ export function NotesPanel({
   editId,
   setEditId,
   onJump,
+  compact = false,
 }: {
+  compact?: boolean;
   notes: Note[];
   setNotes: (update: (list: Note[]) => Note[]) => void;
   current: LessonRef;
@@ -876,9 +884,10 @@ export function NotesPanel({
   setEditId: (id: number | null) => void;
   onJump: (note: Note) => void;
 }) {
+  const pad = compact ? "px-4" : "px-4 md:px-8";
   // The time is pinned when the note is opened, so it stays put while the video plays on.
   const [composing, setComposing] = useState<{ at?: number } | null>(null);
-  const [scope, setScope] = useState<"all" | "current">("all");
+  const [scope, setScope] = useState<"all" | "current">(compact ? "current" : "all");
   const [sort, setSort] = useState<"recent" | "oldest">("recent");
   const [show, setShow] = useState<"all" | "notes" | "highlights">("all");
 
@@ -903,25 +912,118 @@ export function NotesPanel({
     .filter((n) => show === "all" || (show === "highlights" ? !!n.quote : !!n.text))
     .sort((a, b) => (sort === "recent" ? b.created - a.created : a.created - b.created));
 
+  const hasHighlights = notes.some((n) => n.quote);
+  const lessonCount = notes.filter((n) => n.lessonKey === current.key).length;
+
+  const compactHead = (
+    <div className="flex flex-col gap-4 border-b border-slate-200 px-4 pb-4 pt-4">
+      {composing ? (
+        <div className="flex flex-col gap-2">
+          <span className={`self-start rounded-full bg-primary-50 px-2.5 py-1 text-xs tabular-nums text-primary-700 ${fontSemi}`}>
+            {pin !== undefined ? `Note at ${pinLabel}` : pinLabel}
+          </span>
+          <NoteEditor key={current.key} onSave={add} onCancel={() => setComposing(null)} />
+        </div>
+      ) : (
+        <button
+          type="button"
+          onClick={() => setComposing({ at: pin })}
+          className="group/add flex h-12 w-full items-center gap-3 rounded-xl border border-dashed border-slate-300 bg-slate-25 px-3 text-left transition hover:border-primary-500 hover:bg-primary-50"
+        >
+          <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-white text-primary-700 shadow-sm ring-1 ring-slate-200 transition group-hover/add:ring-primary-200">
+            <HugeiconsIcon icon={NoteAddIcon} size={17} strokeWidth={1.8} aria-hidden="true" />
+          </span>
+          <span className={`min-w-0 flex-1 truncate text-sm text-slate-600 transition group-hover/add:text-slate-900 ${fontMedium}`}>
+            {pin !== undefined ? <>Add a note at <span className={`tabular-nums text-slate-900 ${fontSemi}`}>{pinLabel}</span></> : "Add a note"}
+          </span>
+          <kbd className={`hidden rounded-md border border-slate-200 bg-white px-1.5 py-0.5 text-11 text-slate-500 sm:block ${fontMedium}`}>N</kbd>
+        </button>
+      )}
+
+      <div className="flex items-center justify-between gap-3">
+        <h3 className={`m-0 flex items-center gap-2 text-base text-slate-900 ${fontSemi}`}>
+          Your notes
+          <span className={`rounded-full bg-slate-100 px-2 py-0.5 text-xs tabular-nums text-slate-600 ${fontSemi}`}>{shown.length}</span>
+        </h3>
+        <button
+          type="button"
+          onClick={() => setSort((v) => (v === "recent" ? "oldest" : "recent"))}
+          aria-label={`Sorted by ${sort === "recent" ? "newest" : "oldest"} first. Change sort order`}
+          className={`flex h-8 items-center gap-1.5 rounded-lg px-2 text-13 text-slate-600 transition hover:bg-slate-100 hover:text-slate-900 ${fontMedium}`}
+        >
+          <HugeiconsIcon icon={ArrowUpDownIcon} size={15} strokeWidth={1.8} aria-hidden="true" />
+          {sort === "recent" ? "Newest first" : "Oldest first"}
+        </button>
+      </div>
+
+      <div role="group" aria-label="Which notes to show" className="grid grid-cols-2 gap-1 rounded-lg bg-slate-100 p-1">
+        {(
+          [
+            ["current", "This lesson", lessonCount],
+            ["all", "All lessons", notes.length],
+          ] as const
+        ).map(([value, label, count]) => (
+          <button
+            key={value}
+            type="button"
+            aria-pressed={scope === value}
+            onClick={() => setScope(value)}
+            className={`flex h-8 items-center justify-center gap-1.5 rounded-md text-13 transition ${
+              scope === value ? `bg-white text-slate-900 shadow-sm ${fontSemi}` : `text-slate-500 hover:text-slate-900 ${fontMedium}`
+            }`}
+          >
+            {label}
+            <span className="tabular-nums text-slate-400">{count}</span>
+          </button>
+        ))}
+      </div>
+
+      {hasHighlights && (
+        <div role="group" aria-label="Note type" className="flex flex-wrap gap-1.5">
+          {(
+            [
+              ["all", "Everything"],
+              ["notes", "Notes"],
+              ["highlights", "Highlights"],
+            ] as const
+          ).map(([value, label]) => (
+            <button
+              key={value}
+              type="button"
+              aria-pressed={show === value}
+              onClick={() => setShow(value)}
+              className={`h-7 rounded-full border px-3 text-xs transition ${
+                show === value ? `border-primary-700 bg-primary-50 text-primary-700 ${fontSemi}` : `border-slate-200 text-slate-600 hover:border-slate-300 ${fontMedium}`
+              }`}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+
   return (
-    <div className="-mx-4 -my-8 md:-mx-6">
-      <div className="flex items-start gap-4 px-4 py-6 md:px-8">
-        <span className={`mt-3 shrink-0 rounded-full bg-[#334155] px-2.5 py-1 text-[12px] text-white tabular-nums ${fontMedium}`}>{pinLabel}</span>
+    <div className={compact ? "" : "-mx-4 -my-8 md:-mx-6"}>
+      {compact ? compactHead : (<>
+      <div className={`flex items-start gap-4 py-6 ${pad}`}>
+        <span className={`mt-3 shrink-0 rounded-full bg-slate-700 px-2.5 py-1 text-xs text-white tabular-nums ${fontMedium}`}>{pinLabel}</span>
         {composing ? (
           <NoteEditor key={current.key} onSave={add} onCancel={() => setComposing(null)} />
         ) : (
-          <button type="button" onClick={() => setComposing({ at: pin })} className="flex h-[52px] min-w-0 flex-1 items-center justify-between gap-3 rounded-[6px] border border-[#cbd5e1] bg-white px-4 text-left transition hover:border-[#1e293b]">
-            <span className={`truncate text-[14px] text-[#64748b] ${fontRegular}`}>{pin !== undefined ? `Add your note at ${clock(pin)}` : "Add your note"}</span>
-            <svg viewBox="0 0 24 24" className="size-5 shrink-0 text-[#0f172a]" fill="currentColor" aria-hidden="true">
+          <button type="button" onClick={() => setComposing({ at: pin })} className="flex h-13 min-w-0 flex-1 items-center justify-between gap-3 rounded-md border border-slate-300 bg-white px-4 text-left transition hover:border-slate-800">
+            <span className={`truncate text-sm text-slate-500 ${fontRegular}`}>{pin !== undefined ? `Add your note at ${clock(pin)}` : "Add your note"}</span>
+            <svg viewBox="0 0 24 24" className="size-5 shrink-0 text-slate-900" fill="currentColor" aria-hidden="true">
               <path d="M3 17.25V21h3.75L17.8 9.94l-3.75-3.75zM20.7 7.04a1 1 0 000-1.41l-2.34-2.34a1 1 0 00-1.41 0l-1.83 1.83 3.75 3.75z" />
             </svg>
           </button>
         )}
       </div>
 
-      <div className="flex flex-col gap-4 border-b border-[#e2e8f0] px-4 pb-4 md:px-8 lg:flex-row lg:items-center lg:justify-between">
-        <h3 className={`m-0 text-[22px] text-[#0f172a] ${fontRegular}`}>Your Notes</h3>
-        <div className={`flex flex-wrap items-center gap-x-3 gap-y-2 text-[14px] text-[#334155] ${fontRegular}`}>
+      <div className={`flex flex-col gap-4 border-b border-slate-200 pb-4 ${pad} ${compact ? "" : "lg:flex-row lg:items-center lg:justify-between"}`}>
+        <h3 className={`m-0 text-slate-900 ${compact ? `text-lg ${fontSemi}` : `text-22 ${fontRegular}`}`}>Your Notes</h3>
+        <div className={`flex flex-wrap items-center gap-x-3 gap-y-2 text-sm text-slate-700 ${fontRegular}`}>
           <label className="flex items-center gap-2">
             Filter by
             <select value={scope} onChange={(e) => setScope(e.target.value as typeof scope)} className={selectCls}>
@@ -946,40 +1048,52 @@ export function NotesPanel({
           </label>
         </div>
       </div>
+      </>)}
 
       {shown.length === 0 ? (
-        <p className={`px-4 py-10 text-center text-[14px] text-[#64748b] md:px-8 ${fontRegular}`}>
-          {notes.length ? "No notes match these filters." : "No notes yet. Add a note above, or select text in a reading lesson to highlight it."}
+        <p className={`py-10 text-center text-sm text-slate-500 ${pad} ${fontRegular}`}>
+          {compact
+            ? scope === "current" && notes.length
+              ? "No notes in this lesson yet. Press N while watching to save one at that second."
+              : notes.length
+                ? "No notes match this filter."
+                : "No notes yet. Press N while watching, or use Save note in the transcript."
+            : notes.length
+              ? "No notes match these filters."
+              : "No notes yet. Add a note above, or select text in a reading lesson to highlight it."}
         </p>
       ) : (
-        <ul className="flex flex-col px-4 md:px-8">
+        <ul className={`flex flex-col ${pad}`}>
           {shown.map((n) => {
             const editing = editId === n.id;
             return (
-              <li key={n.id} className="border-b border-[#e2e8f0] py-6 last:border-b-0">
-                <div className="flex items-center gap-3 border-b border-[#f1f5f9] pb-4">
+              <li key={n.id} className="group/note border-b border-slate-200 py-6 last:border-b-0">
+                <div className="flex items-center gap-3 border-b border-slate-150 pb-4">
                   <KindBadge kind={n.kind} />
-                  <p className={`min-w-0 flex-1 truncate text-[14px] text-[#1e293b] ${fontRegular}`}>
-                    {n.sectionTitle} <span className="mx-1 text-[#cbd5e1]">|</span> {n.lessonTitle}
+                  <p className={`min-w-0 flex-1 truncate text-sm text-slate-800 ${fontRegular}`}>
+                    {n.sectionTitle} <span className="mx-1 text-slate-300">|</span> {n.lessonTitle}
                   </p>
-                  <button type="button" onClick={() => setEditId(editing ? null : n.id)} aria-label="Edit note" className="flex size-7 items-center justify-center rounded-[4px] bg-[#f1f5f9] text-[#475569] hover:text-[#0f172a]">
+                  {/* On a mouse or trackpad the actions appear on hover or keyboard focus. On touch screens they stay visible. */}
+                  <span className={`flex shrink-0 items-center gap-1 transition-opacity ${editing ? "" : "pointer-fine:opacity-0 pointer-fine:group-hover/note:opacity-100 pointer-fine:group-focus-within/note:opacity-100"}`}>
+                  <button type="button" onClick={() => setEditId(editing ? null : n.id)} aria-label="Edit note" className="flex size-8 items-center justify-center rounded-lg text-slate-500 transition hover:bg-slate-100 hover:text-slate-900">
                     <svg viewBox="0 0 24 24" className="size-4" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                       <path d="M11 4H5a2 2 0 00-2 2v13a2 2 0 002 2h13a2 2 0 002-2v-6M18.5 2.5a2.1 2.1 0 013 3L12 15l-4 1 1-4z" />
                     </svg>
                   </button>
-                  <button type="button" onClick={() => setNotes((list) => list.filter((x) => x.id !== n.id))} aria-label="Delete note" className="flex size-7 items-center justify-center rounded-[4px] bg-[#f1f5f9] text-[#94a3b8] hover:bg-[#fee2e2] hover:text-[#dc2626]">
+                  <button type="button" onClick={() => setNotes((list) => list.filter((x) => x.id !== n.id))} aria-label="Delete note" className="flex size-8 items-center justify-center rounded-lg text-slate-500 transition hover:bg-red-50 hover:text-red-600">
                     <svg viewBox="0 0 24 24" className="size-4" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                       <path d="M4 7h16M10 11v6M14 11v6M5 7l1 12a2 2 0 002 2h8a2 2 0 002-2l1-12M9 7V4h6v3" />
                     </svg>
                   </button>
+                  </span>
                 </div>
                 <div className="mt-4 flex gap-3">
-                  <span className={`w-[3px] shrink-0 rounded-full ${!n.quote ? "bg-[#22d3ee]" : n.text ? "bg-[#12b9a5]" : "bg-[#f5d64e]"}`} />
+                  <span className={`w-0.75 shrink-0 rounded-full ${!n.quote ? "bg-cyan-400" : n.text ? "bg-teal-500" : "bg-amber-300"}`} />
                   <div className="flex min-w-0 flex-1 flex-col gap-3">
-                    {n.quote && <p className={`text-[14px] leading-[22px] text-[#1e293b] ${fontRegular}`}>{n.quote}</p>}
+                    {n.quote && <p className={`text-sm leading-5.5 text-slate-800 ${fontRegular}`}>{n.quote}</p>}
                     {n.at !== undefined && (
-                      <button type="button" onClick={() => onJump(n)} className={`self-start rounded-[4px] bg-[#f1f5f9] px-2 py-1 text-[12px] text-[#64748b] hover:bg-[#e2e8f0] ${fontRegular}`}>
-                        Play video from <span className={`text-[#0f172a] ${fontSemi}`}>{clock(n.at)}</span>
+                      <button type="button" onClick={() => onJump(n)} className={`self-start rounded-sm bg-slate-150 px-2 py-1 text-xs text-slate-500 hover:bg-slate-200 ${fontRegular}`}>
+                        Play video from <span className={`text-slate-900 ${fontSemi}`}>{clock(n.at)}</span>
                       </button>
                     )}
                     {editing ? (

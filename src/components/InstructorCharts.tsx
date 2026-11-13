@@ -14,7 +14,7 @@ function useWidth() {
 }
 
 const MARGIN = { top: 8, right: 8, bottom: 32, left: 64 };
-const tickClass = `fill-[#475569] text-[12px] ${fontRegular}`;
+const tickClass = `fill-slate-600 text-xs ${fontRegular}`;
 
 export type ChartSeries = { key: string; label: string; color: string; values: number[] };
 
@@ -55,11 +55,11 @@ function Axes({ width, height, plotHeight, months, ticks, yMax, tickLabel }: { w
 function ChartTooltip({ x, width, title, rows }: { x: number; width: number; title: string; rows: { label: string; color: string; value: string }[] }) {
   const left = Math.min(Math.max(x + 12, 0), width - 170);
   return (
-    <div className="pointer-events-none absolute top-2 z-10 w-[158px] rounded-[8px] bg-[#1e293b] px-3 py-2 text-[12px] leading-[18px] text-white shadow-[0_8px_24px_rgba(15,23,42,0.2)]" style={{ left }}>
+    <div className="pointer-events-none absolute top-2 z-10 w-39.5 rounded-lg bg-slate-800 px-3 py-2 text-xs leading-4.5 text-white shadow-2xl" style={{ left }}>
       <p className={fontSemi}>{title}</p>
       {rows.map((r) => (
         <p key={r.label} className={`mt-0.5 flex items-center gap-1.5 ${fontRegular}`}>
-          <span className="h-[3px] w-3 shrink-0 rounded-full" style={{ backgroundColor: r.color }} />
+          <span className="h-0.75 w-3 shrink-0 rounded-full" style={{ backgroundColor: r.color }} />
           <span className="flex-1 truncate">{r.label}</span>
           <span className={fontMedium}>{r.value}</span>
         </p>
@@ -160,7 +160,7 @@ export function Donut({ segments, center }: { segments: { label: string; color: 
   const total = segments.reduce((sum, s) => sum + s.value, 0);
   let offset = 0;
   return (
-    <div className="relative mx-auto size-[250px] max-w-full">
+    <div className="relative mx-auto size-62.5 max-w-full">
       <svg viewBox={`0 0 ${size} ${size}`} className="size-full -rotate-90" role="img" aria-label={`Donut chart: ${segments.map((s) => `${s.label} $${s.value.toFixed(2)}`).join(", ")}`} onMouseLeave={() => setHover(null)}>
         {segments.length === 0 && <circle cx={size / 2} cy={size / 2} r={radius} fill="none" stroke="#e2e8f0" strokeWidth={stroke} />}
         {segments.map((s, i) => {
@@ -168,12 +168,12 @@ export function Donut({ segments, center }: { segments: { label: string; color: 
           const dash = `${length} ${circumference - length}`;
           const dashOffset = -offset;
           offset += length;
-          return <circle key={s.label} cx={size / 2} cy={size / 2} r={radius} fill="none" stroke={s.color} strokeWidth={hover === i ? stroke + 4 : stroke} strokeDasharray={dash} strokeDashoffset={dashOffset} className="transition-[stroke-width]" onMouseEnter={() => setHover(i)} />;
+          return <circle key={s.label} cx={size / 2} cy={size / 2} r={radius} fill="none" stroke={s.color} strokeWidth={hover === i ? stroke + 4 : stroke} strokeDasharray={dash} strokeDashoffset={dashOffset} className="transition-all" onMouseEnter={() => setHover(i)} />;
         })}
       </svg>
       <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center text-center">
-        {hover !== null && <span className={`text-[12px] leading-[18px] text-[#64748b] ${fontRegular}`}>{segments[hover]?.label}</span>}
-        <span className="font-['Instrument_Sans:Bold'] text-[24px] font-bold leading-[32px] text-[#0f172a]">{hover !== null && segments[hover] ? `$${segments[hover].value.toFixed(2)}` : center}</span>
+        {hover !== null && <span className={`text-xs leading-4.5 text-slate-500 ${fontRegular}`}>{segments[hover]?.label}</span>}
+        <span className="font-instrument-bold text-2xl font-bold leading-8 text-slate-900">{hover !== null && segments[hover] ? `$${segments[hover].value.toFixed(2)}` : center}</span>
       </div>
     </div>
   );

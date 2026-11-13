@@ -20,7 +20,7 @@ function useDropdown() {
 }
 
 const panel =
-  "pop-in absolute top-full z-20 mt-1.5 flex flex-col gap-0.5 rounded-[12px] border border-slate-200 bg-white p-1.5 shadow-[0_1px_2px_rgba(15,23,42,0.05),0_16px_36px_-8px_rgba(15,23,42,0.2)]";
+  "pop-in absolute top-full z-20 mt-1.5 flex flex-col gap-0.5 rounded-xl border border-slate-200 bg-white p-1.5 shadow-2xl";
 
 export function FilterSelect({
   label,
@@ -56,9 +56,9 @@ export function FilterSelect({
         aria-label={plain && !id ? `${label}: ${selectedLabel ?? placeholder ?? ""}` : undefined}
         aria-expanded={open}
         onClick={() => setOpen((o) => !o)}
-        className={`group flex items-center gap-2 border bg-white text-slate-500 shadow-[0_1px_2px_rgba(15,23,42,0.04)] outline-none transition-[border-color,box-shadow,background-color] duration-150 focus-visible:border-[#0d5c4b]/60 focus-visible:ring-3 focus-visible:ring-[#0d5c4b]/12 ${
-          open ? "border-[#0d5c4b]/60 ring-3 ring-[#0d5c4b]/12" : "border-slate-200 hover:border-slate-300 hover:bg-slate-50"
-        } ${plain ? "h-[36px] w-full justify-between rounded-[10px] pl-3 pr-2.5 text-[14px]" : large ? "h-[36px] rounded-[10px] pl-3 pr-2.5 text-[14px]" : "h-[32px] rounded-[8px] pl-2.5 pr-2 text-[13px]"} ${fontRegular}`}
+        className={`group flex items-center gap-2 border bg-white text-slate-500 shadow-sm outline-none transition-all duration-150 focus-visible:border-primary-700/60 focus-visible:ring-3 focus-visible:ring-primary-700/12 ${
+          open ? "border-primary-700/60 ring-3 ring-primary-700/12" : "border-slate-200 hover:border-slate-300 hover:bg-slate-50"
+        } ${plain ? "h-9 w-full justify-between rounded-xl pl-3 pr-2.5 text-sm" : large ? "h-9 rounded-xl pl-3 pr-2.5 text-sm" : "h-8 rounded-lg pl-2.5 pr-2 text-13"} ${fontRegular}`}
       >
         <span className="min-w-0 truncate whitespace-nowrap">
           {plain ? (
@@ -74,11 +74,11 @@ export function FilterSelect({
           size={large || plain ? 18 : 16}
           strokeWidth={1.8}
           aria-hidden="true"
-          className={`shrink-0 transition-[transform,color] duration-200 ${open ? "rotate-180 text-[#0d5c4b]" : "text-slate-500 group-hover:text-slate-700"}`}
+          className={`shrink-0 transition-all duration-200 ${open ? "rotate-180 text-primary-700" : "text-slate-500 group-hover:text-slate-700"}`}
         />
       </button>
       {open && (
-        <ul role="listbox" aria-label={label} className={`${panel} min-w-[max(100%,180px)] whitespace-nowrap ${alignRight ? "right-0" : "left-0"}`}>
+        <ul role="listbox" aria-label={label} className={`${panel} min-w-menu whitespace-nowrap ${alignRight ? "right-0" : "left-0"}`}>
           {options.map((o) => {
             const selected = o.value === value;
             return (
@@ -91,8 +91,8 @@ export function FilterSelect({
                     onChange(o.value);
                     setOpen(false);
                   }}
-                  className={`flex w-full items-center justify-between gap-4 rounded-[8px] px-2.5 py-2 text-left text-[14px] leading-[20px] transition-colors ${
-                    selected ? `bg-[#eef7f3] text-[#0d5c4b] ${fontMedium}` : `text-slate-700 hover:bg-slate-100 hover:text-slate-900 ${fontRegular}`
+                  className={`flex w-full items-center justify-between gap-4 rounded-lg px-2.5 py-2 text-left text-sm leading-5 transition-colors ${
+                    selected ? `bg-primary-100 text-primary-700 ${fontMedium}` : `text-slate-700 hover:bg-slate-100 hover:text-slate-900 ${fontRegular}`
                   }`}
                 >
                   {o.label}

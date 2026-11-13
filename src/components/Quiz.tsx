@@ -7,6 +7,7 @@ import {
   fontRegular,
   fontSemi,
 } from "../fonts"
+import { buttonClass } from "./Button"
 
 export type QuizResult = { correct: number; total: number; minutes: number }
 
@@ -236,14 +237,14 @@ export function QuizRunner({
   return (
     <div
       ref={topRef}
-      className="flex min-h-[calc(100dvh-64px)] scroll-mt-[72px] flex-col bg-white md:min-h-[calc(100dvh-72px)]"
+      className="flex min-h-dvh-minus-64 scroll-mt-18 flex-col bg-white md:min-h-dvh-minus-72"
     >
-      <div className="mx-auto w-full max-w-[800px] flex-1 px-4 pb-10 pt-8 md:px-8 md:pt-10">
+      <div className="mx-auto w-full max-w-200 flex-1 px-4 pb-10 pt-8 md:px-8 md:pt-10">
         <div className="mb-6 flex items-center justify-between gap-4">
           <button
             type="button"
             onClick={onExit}
-            className={`flex items-center gap-1.5 text-[14px] text-[#64748b] hover:text-[#0f172a] ${fontMedium}`}
+            className={`flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-900 ${fontMedium}`}
           >
             <svg
               viewBox="0 0 24 24"
@@ -258,15 +259,15 @@ export function QuizRunner({
             </svg>
             Exit quiz
           </button>
-          <p className={`text-[14px] text-[#64748b] ${fontMedium}`}>
+          <p className={`text-sm text-slate-500 ${fontMedium}`}>
             Question {index + 1} of {questions.length}
           </p>
-          <span className="w-[72px]" aria-hidden="true" />
+          <span className="w-18" aria-hidden="true" />
         </div>
 
         <h2
           key={index}
-          className={`fade-up m-0 text-[18px] leading-[1.5] text-[#0f172a] md:text-[19px] ${fontSemi}`}
+          className={`fade-up m-0 text-lg leading-normal text-slate-900 md:text-19 ${fontSemi}`}
         >
           {index + 1}. {q.q}
         </h2>
@@ -290,23 +291,23 @@ export function QuizRunner({
                 onClick={() =>
                   setPicked((p) => p.map((v, j) => (j === index ? i : v)))
                 }
-                className={`flex w-full items-center gap-3.5 rounded-[8px] border px-4 py-2.5 text-left text-[14px] transition ${fontRegular} ${
+                className={`flex w-full items-center gap-3.5 rounded-lg border px-4 py-2.5 text-left text-sm transition ${fontRegular} ${
                   showRight
-                    ? "border-[#86efac] bg-[#f0fdf4] text-[#14532d]"
+                    ? "border-green-300 bg-primary-50 text-green-900"
                     : showWrong
-                      ? "border-[#fca5a5] bg-[#fef2f2] text-[#7f1d1d]"
+                      ? "border-red-300 bg-red-50 text-red-900"
                       : selected
-                        ? "border-transparent bg-[#f1f5f9] text-[#0f172a]"
-                        : "border-transparent text-[#1e293b] hover:bg-[#f8fafc]"
+                        ? "border-transparent bg-slate-150 text-slate-900"
+                        : "border-transparent text-slate-800 hover:bg-slate-25"
                 } disabled:cursor-default`}
               >
                 <span
-                  className={`flex size-[18px] shrink-0 items-center justify-center rounded-full border-2 ${
-                    selected ? "border-[#1e293b]" : "border-[#cbd5e1]"
+                  className={`flex size-4.5 shrink-0 items-center justify-center rounded-full border-2 ${
+                    selected ? "border-slate-800" : "border-slate-300"
                   }`}
                 >
                   {selected && (
-                    <span className="size-2 rounded-full bg-[#1e293b]" />
+                    <span className="size-2 rounded-full bg-slate-800" />
                   )}
                 </span>
                 <span>
@@ -319,29 +320,29 @@ export function QuizRunner({
 
         {isSubmitted && (
           <div
-            className={`fade-up mt-8 flex gap-3 rounded-[6px] border-l-4 px-5 py-4 ${
+            className={`fade-up mt-8 flex gap-3 rounded-md border-l-4 px-5 py-4 ${
               isCorrect
-                ? "border-[#16a34a] bg-[#f0fdf4]"
-                : "border-[#ef4444] bg-[#fef2f2]"
+                ? "border-green-600 bg-primary-50"
+                : "border-red-500 bg-red-50"
             }`}
           >
             <span
-              className={`mt-0.5 flex size-[22px] shrink-0 items-center justify-center rounded-full text-[13px] text-white ${
-                isCorrect ? "bg-[#16a34a]" : "bg-[#dc2626]"
+              className={`mt-0.5 flex size-5.5 shrink-0 items-center justify-center rounded-full text-13 text-white ${
+                isCorrect ? "bg-green-600" : "bg-red-600"
               } ${fontBold}`}
             >
               {isCorrect ? "✓" : "✕"}
             </span>
             <div>
               <p
-                className={`text-[17px] ${
-                  isCorrect ? "text-[#15803d]" : "text-[#b91c1c]"
+                className={`text-17 ${
+                  isCorrect ? "text-green-700" : "text-red-700"
                 } ${fontSemi}`}
               >
                 {isCorrect ? "Correct answer" : "Wrong answer"}
               </p>
               <p
-                className={`mt-1 text-[14px] leading-[24px] text-[#1e293b] ${fontRegular}`}
+                className={`mt-1 text-sm leading-6 text-slate-800 ${fontRegular}`}
               >
                 {q.explain}
               </p>
@@ -350,17 +351,17 @@ export function QuizRunner({
         )}
       </div>
 
-      <div className="sticky bottom-0 border-t border-[#e2e8f0] bg-white">
-        <div className="mx-auto w-full max-w-[800px] px-4 pb-5 pt-5 md:px-8">
+      <div className="sticky bottom-0 border-t border-slate-200 bg-white">
+        <div className="mx-auto w-full max-w-200 px-4 pb-5 pt-5 md:px-8">
           <div
-            className={`flex items-center justify-between text-[14px] text-[#334155] ${fontRegular}`}
+            className={`flex items-center justify-between text-sm text-slate-700 ${fontRegular}`}
           >
             <span>Progress</span>
             <span>{percent}% Complete</span>
           </div>
-          <div className="mt-2 h-[5px] overflow-hidden rounded-full bg-[#e2e8f0]">
+          <div className="mt-2 h-1.25 overflow-hidden rounded-full bg-slate-200">
             <div
-              className="h-full rounded-full bg-[#12b981] transition-[width] duration-500"
+              className="h-full rounded-full bg-emerald-500 transition-all duration-500"
               style={{ width: `${percent}%` }}
             />
           </div>
@@ -369,7 +370,7 @@ export function QuizRunner({
               type="button"
               onClick={() => setIndex((i) => Math.max(0, i - 1))}
               disabled={index === 0}
-              className={`h-[42px] justify-self-start rounded-[6px] bg-[#f1f5f9] px-4 text-[15px] text-[#1e293b] transition hover:bg-[#e2e8f0] disabled:opacity-40 ${fontMedium}`}
+              className={`h-10.5 justify-self-start rounded-md bg-slate-150 px-4 text-15 text-slate-800 transition hover:bg-slate-200 disabled:opacity-40 ${fontMedium}`}
             >
               Previous
             </button>
@@ -378,8 +379,8 @@ export function QuizRunner({
                 type="button"
                 onClick={submit}
                 disabled={choice === null}
-                className={`h-[42px] justify-self-center rounded-[6px] px-8 text-[15px] text-white transition disabled:cursor-not-allowed disabled:bg-[#94a3b8] ${
-                  choice === null ? "" : "bg-[#1e293b] hover:bg-[#0f172a]"
+                className={`h-10.5 justify-self-center rounded-md px-8 text-15 text-white transition disabled:cursor-not-allowed disabled:bg-slate-400 ${
+                  choice === null ? "" : "bg-slate-800 hover:bg-slate-900"
                 } ${fontMedium}`}
               >
                 Submit
@@ -390,7 +391,7 @@ export function QuizRunner({
             <button
               type="button"
               onClick={() => (last ? finish() : setIndex((i) => i + 1))}
-              className={`h-[42px] justify-self-end rounded-[6px] bg-[#ffb20d] px-6 text-[15px] text-[#1e293b] transition hover:bg-[#faa104] ${fontMedium}`}
+              className={`${buttonClass("yellow", "lg")} justify-self-end`}
             >
               {last ? "Finish" : "Next"}
             </button>
@@ -437,22 +438,22 @@ export function QuizPanel({
             {
               value: result.correct,
               label: "Correct",
-              color: "text-[#16a34a]",
+              color: "text-green-600",
             },
             {
               value: result.total - result.correct,
               label: "Incorrect",
-              color: "text-[#dc2626]",
+              color: "text-red-600",
             },
             {
               value: result.total,
               label: "Total Marks",
-              color: "text-[#f59e0b]",
+              color: "text-secondary-600",
             },
             {
               value: result.minutes,
               label: result.minutes === 1 ? "Minute" : "Minutes",
-              color: "text-[#0284c7]",
+              color: "text-sky-600",
             },
           ]
         : [],
@@ -460,18 +461,18 @@ export function QuizPanel({
   )
 
   return (
-    <div className="bg-gradient-to-b from-[#0050c8] via-[#0a6be0] to-[#0f2f6a]">
+    <div className="bg-gradient-to-b from-ocean-700 via-ocean-600 to-ocean-900">
       <p
-        className={`bg-[#003a8c] px-4 py-3 text-[16px] text-white md:text-[18px] ${fontRegular}`}
+        className={`bg-blue-900 px-4 py-3 text-base text-white md:text-lg ${fontRegular}`}
       >
         {title}
       </p>
       <div className="p-3 md:p-4">
-        <div className="fade-up rounded-[10px] bg-white px-5 py-8 md:px-10 md:py-10">
+        <div className="fade-up rounded-xl bg-white px-5 py-8 md:px-10 md:py-10">
           {result ? (
             <>
               <h2
-                className={`m-0 text-center text-[24px] text-[#0f172a] md:text-[30px] ${fontHeading}`}
+                className={`m-0 text-center text-2xl text-slate-900 md:text-3xl ${fontHeading}`}
                 style={{ fontVariationSettings: '"wdth" 100' }}
               >
                 🎯 Your Quiz Performance
@@ -479,16 +480,16 @@ export function QuizPanel({
               <div className="mt-8 flex flex-col items-center gap-8 md:flex-row md:gap-12">
                 <div className="flex shrink-0 flex-col items-center gap-4">
                   <span
-                    className={`flex size-[150px] items-center justify-center rounded-full bg-[#0b4fd6] text-[46px] text-white shadow-[0_12px_30px_rgba(11,79,214,0.35)] md:size-[166px] md:text-[52px] ${fontHeading}`}
+                    className={`flex size-37.5 items-center justify-center rounded-full bg-blue-700 text-46 text-white shadow-2xl shadow-blue-700/52 md:size-41.5 md:text-52 ${fontHeading}`}
                   >
                     {pct}%
                   </span>
-                  <p className={`text-[16px] text-[#0f172a] ${fontSemi}`}>
+                  <p className={`text-base text-slate-900 ${fontSemi}`}>
                     {message}
                   </p>
-                  <div className="h-[7px] w-[180px] overflow-hidden rounded-full bg-[#e2e8f0]">
+                  <div className="h-1.75 w-45 overflow-hidden rounded-full bg-slate-200">
                     <div
-                      className="h-full rounded-full bg-[#12b981]"
+                      className="h-full rounded-full bg-emerald-500"
                       style={{ width: `${pct}%` }}
                     />
                   </div>
@@ -497,13 +498,13 @@ export function QuizPanel({
                   {stats.map((s) => (
                     <div
                       key={s.label}
-                      className="flex flex-col items-center justify-center gap-1 rounded-[16px] border border-[#e2e8f0] px-3 py-6 text-center"
+                      className="flex flex-col items-center justify-center gap-1 rounded-2xl border border-slate-200 px-3 py-6 text-center"
                     >
-                      <span className={`text-[22px] ${s.color} ${fontBold}`}>
+                      <span className={`text-22 ${s.color} ${fontBold}`}>
                         {s.value}
                       </span>
                       <span
-                        className={`text-[14px] text-[#64748b] ${fontRegular}`}
+                        className={`text-sm text-slate-500 ${fontRegular}`}
                       >
                         {s.label}
                       </span>
@@ -515,11 +516,11 @@ export function QuizPanel({
                 <button
                   type="button"
                   onClick={onStart}
-                  className={`flex h-[38px] items-center gap-2 rounded-[6px] bg-[#f1f5f9] px-3.5 text-[14px] text-[#1e293b] transition hover:bg-[#e2e8f0] ${fontMedium}`}
+                  className={`flex h-9.5 items-center gap-2 rounded-md bg-slate-150 px-3.5 text-sm text-slate-800 transition hover:bg-slate-200 ${fontMedium}`}
                 >
                   <svg
                     viewBox="0 0 24 24"
-                    className="size-[18px]"
+                    className="size-4.5"
                     fill="none"
                     stroke="currentColor"
                     strokeWidth="2"
@@ -534,7 +535,7 @@ export function QuizPanel({
                   <button
                     type="button"
                     onClick={onNext}
-                    className={`flex h-[38px] items-center gap-2 rounded-[6px] bg-[#ffb20d] px-3.5 text-[14px] text-[#1e293b] transition hover:bg-[#faa104] ${fontMedium}`}
+                    className={`${buttonClass("yellow", "md")}`}
                   >
                     Go to next
                     <svg
@@ -554,31 +555,31 @@ export function QuizPanel({
             </>
           ) : (
             <div className="flex flex-col items-center gap-4 py-4 text-center">
-              <span className="text-[44px]">📝</span>
+              <span className="text-44">📝</span>
               <h2
-                className={`m-0 text-[24px] text-[#0f172a] md:text-[28px] ${fontHeading}`}
+                className={`m-0 text-2xl text-slate-900 md:text-28 ${fontHeading}`}
               >
                 Ready for the quiz?
               </h2>
               <p
-                className={`max-w-[460px] text-[14px] leading-[22px] text-[#475569] ${fontRegular}`}
+                className={`max-w-115 text-sm leading-5.5 text-slate-600 ${fontRegular}`}
               >
                 {questions} questions on UI/UX design. Pick an answer, submit to
                 see if you’re right, and read the short explanation before
                 moving on.
               </p>
               {instructions && (instructions.html || instructions.text.trim()) && (
-                <div className="mt-2 w-full max-w-[560px] rounded-[12px] border border-[#e2e8f0] bg-[#f8fafc] px-5 py-4 text-left">
-                  <p className={`m-0 text-[12px] uppercase tracking-[0.08em] text-[#64748b] ${fontSemi}`}>
+                <div className="mt-2 w-full max-w-140 rounded-xl border border-slate-200 bg-slate-25 px-5 py-4 text-left">
+                  <p className={`m-0 text-xs uppercase tracking-label text-slate-500 ${fontSemi}`}>
                     Before you start
                   </p>
-                  <NoteBody note={instructions} className="mt-2" tone="text-[#334155]" />
+                  <NoteBody note={instructions} className="mt-2" tone="text-slate-700" />
                 </div>
               )}
               <button
                 type="button"
                 onClick={onStart}
-                className={`mt-2 h-[42px] rounded-[6px] bg-[#ffb20d] px-6 text-[15px] text-[#1e293b] transition hover:bg-[#faa104] ${fontSemi}`}
+                className={`${buttonClass("yellow", "lg")} mt-2`}
               >
                 Start quiz
               </button>

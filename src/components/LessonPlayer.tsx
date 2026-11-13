@@ -35,6 +35,7 @@ import {
 import type { Course } from "../data"
 import { fontHeading, fontMedium, fontRegular, fontSemi } from "../fonts"
 import { CourseThumb } from "./Overlays"
+import { buttonClass } from "./Button"
 
 export const QUALITIES = ["Auto", "1080p", "720p", "480p", "360p"]
 export const RATES = [0.5, 0.75, 1, 1.25, 1.5, 1.75, 2]
@@ -117,6 +118,9 @@ export default function LessonPlayer({
   onToggleSidebar,
   onCompleteReading,
   notify,
+  chapters = [],
+  goal,
+  overlay,
 }: {
   course: Course
   current: LessonLite
@@ -139,6 +143,9 @@ export default function LessonPlayer({
   onToggleSidebar: () => void
   onCompleteReading: () => void
   notify: (msg: string) => void
+  chapters?: { start: number; end: number; title: string }[]
+  goal?: string
+  overlay?: ReactNode
 }) {
   const isVideo = current.kind === "video"
   const rootRef = useRef<HTMLDivElement>(null)
@@ -159,7 +166,11 @@ export default function LessonPlayer({
   const pct = duration ? Math.min(100, (time / duration) * 100) : 0
   const buffered = Math.min(100, pct + 12)
   const level = muted ? 0 : volume
-  const showUi = !isVideo || !playing || !idle || menu !== null || dragging
+  const hasOverlay = !!overlay
+  const showUi = !hasOverlay && (!isVideo || !playing || !idle || menu !== null || dragging)
+  const chapterAt = (sec: number) => chapters.findIndex((c) => sec >= c.start && sec < c.end)
+  const chapterNow = chapters.length ? Math.max(0, chapterAt(Math.min(time, duration - 0.01))) : -1
+  const hoverChapter = hover !== null && chapters.length ? chapters.at(Math.max(0, chapterAt(hover * duration))) : undefined
 
   const ping = useCallback((icon: IconSvgElement, label?: string) => {
     setFlash({ id: Date.now(), icon, label })
@@ -227,7 +238,7 @@ export default function LessonPlayer({
   }, [notify])
 
   useEffect(() => {
-    if (!isVideo) return
+    if (!isVideo || hasOverlay) return
     const onKey = (e: KeyboardEvent) => {
       const el = e.target as HTMLElement | null
       if (el && (el.isContentEditable || /^(INPUT|TEXTAREA|SELECT|BUTTON)$/.test(el.tagName))) return
@@ -242,7 +253,7 @@ export default function LessonPlayer({
     }
     window.addEventListener("keydown", onKey)
     return () => window.removeEventListener("keydown", onKey)
-  }, [fullscreen, isVideo, skip, toggleMute, togglePlay])
+  }, [fullscreen, hasOverlay, isVideo, skip, toggleMute, togglePlay])
 
   const fractionAt = (clientX: number) => {
     const rect = seekRef.current?.getBoundingClientRect()
@@ -276,9 +287,9 @@ export default function LessonPlayer({
       ref={rootRef}
       onMouseMove={wake}
       onMouseLeave={() => playing && setIdle(true)}
-      className={`group/player relative w-full select-none overflow-hidden bg-black ${showUi ? "" : "cursor-none"}`}
+      className={`group/player relative w-full select-none overflow-hidden bg-slate-950 ${showUi ? "" : "cursor-none"}`}
     >
-      <div className={`relative aspect-video w-full ${isFull ? "h-full" : "lg:max-h-learn-panel"}`}>
+      <div className={`relative mx-auto aspect-video w-full ${isFull ? "h-full max-w-none" : "max-w-player"}`}>
         {isVideo ? (
           <>
             <CourseThumb
@@ -327,12 +338,21 @@ export default function LessonPlayer({
             <button
               type="button"
               onClick={onCompleteReading}
-              className={`h-10.5 rounded-lg bg-secondary-500 px-5 text-sm text-slate-800 transition hover:bg-secondary-600 ${fontSemi}`}
+              className={`${buttonClass("yellow", "lg")}`}
             >
               {done ? "Completed ✓ — Next lesson" : "Mark as complete"}
             </button>
           </div>
         )}
+
+        {isVideo && goal && time < 8 && !overlay && (
+          <span className={`fade-up pointer-events-none absolute left-3 top-3 z-10 flex max-w-11/12 items-center gap-2 rounded-full bg-slate-900/70 px-3.5 py-2 text-xs text-white backdrop-blur-md md:left-5 md:top-5 md:text-13 ${fontMedium}`}>
+            <span className="size-2 shrink-0 rounded-full bg-secondary-500" />
+            <span className="truncate">{goal}</span>
+          </span>
+        )}
+
+        {overlay}
 
         {/* Prev / next */}
         {prev && (
@@ -373,6 +393,13 @@ export default function LessonPlayer({
               showUi ? "opacity-100" : "pointer-events-none opacity-0"
             }`}
           >
+            {chapterNow >= 0 && (
+              <p className={`mb-1 flex items-center gap-1.5 text-xs text-white/80 ${fontMedium}`}>
+                Chapter {chapterNow + 1} of {chapters.length}
+                <span className="text-white/40" aria-hidden="true">/</span>
+                <span className="text-white">{chapters.at(chapterNow)?.title}</span>
+              </p>
+            )}
             {/* Seek bar */}
             <div
               ref={seekRef}
@@ -399,6 +426,9 @@ export default function LessonPlayer({
                   <div className="absolute inset-y-0 left-0 bg-white/30" style={{ width: `${hover * 100}%` }} />
                 )}
                 <div className="absolute inset-y-0 left-0 rounded-full bg-secondary-500" style={{ width: `${pct}%` }} />
+                {chapters.slice(1).map((c) => (
+                  <span key={c.start} className="absolute inset-y-0 w-0.5 -translate-x-1/2 bg-black/70" style={{ left: `${(c.start / duration) * 100}%` }} />
+                ))}
               </div>
               <span
                 className={`absolute top-1/2 size-3.5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-secondary-500 shadow-md ring-2 ring-white transition-transform ${
@@ -411,6 +441,7 @@ export default function LessonPlayer({
                   className={`pointer-events-none absolute bottom-full mb-2 -translate-x-1/2 rounded-md bg-slate-900/95 px-2 py-1 text-xs tabular-nums text-white ${fontSemi}`}
                   style={{ left: `${hover * 100}%` }}
                 >
+                  {hoverChapter ? <span className="mr-1.5 text-white/70">{hoverChapter.title}</span> : null}
                   {clock(hover * duration)}
                 </span>
               )}

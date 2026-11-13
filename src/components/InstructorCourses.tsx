@@ -6,6 +6,7 @@ import { SelectField, TextField } from "./AccountSettingsPage";
 import { ConfirmDialog } from "./InstructorSessions";
 import { ActionMenu } from "./Menus";
 import { Shell } from "./Overlays";
+import { buttonClass } from "./Button"
 
 const imgPlusSmall = "/assets/51771.svg";
 const imgPlus = "/assets/1a8b7.svg";
@@ -82,12 +83,12 @@ export const loadInstructorCourses = () => upgradeSample(load<InstructorCourse[]
 export const saveInstructorCourses = (courses: InstructorCourse[]) => save(STORAGE_KEY, courses);
 export const rejectedCourseCount = () => loadInstructorCourses().filter((c) => c.status === "rejected").length;
 
-const COLUMNS = "grid grid-cols-[81.33px_minmax(220px,549px)_minmax(90px,130px)_minmax(90px,134px)_minmax(170px,1fr)_minmax(90px,135px)_minmax(200px,276px)_85px] items-center";
+const COLUMNS = "grid grid-cols-courses-list items-center";
 
 function SortHeader({ label, className = "" }: { label: string; className?: string }) {
   return (
     <div className={`flex items-center gap-1 ${className}`}>
-      <span className={`whitespace-nowrap text-[14px] leading-[24px] text-[#64748b] ${fontBold}`}>{label}</span>
+      <span className={`whitespace-nowrap text-sm leading-6 text-slate-500 ${fontBold}`}>{label}</span>
       <img src={imgSort} alt="" width={20} height={20} className="size-5" />
     </div>
   );
@@ -95,22 +96,22 @@ function SortHeader({ label, className = "" }: { label: string; className?: stri
 
 function Stat({ value, label }: { value: number; label: string }) {
   return (
-    <div className="flex flex-col gap-1.5 px-2 tracking-[-0.01px]">
-      <span className={`text-[14px] leading-[24px] text-[#334155] ${fontMedium}`}>{value}</span>
-      <span className={`text-[12px] leading-[18px] text-[#94a3b8] ${fontRegular}`}>{label}</span>
+    <div className="flex flex-col gap-1.5 px-2">
+      <span className={`text-sm leading-6 text-slate-700 ${fontMedium}`}>{value}</span>
+      <span className={`text-xs leading-4.5 text-slate-400 ${fontRegular}`}>{label}</span>
     </div>
   );
 }
 
 export function StatusBadge({ status }: { status: CourseStatus }) {
-  if (status === "draft") return <span className={`flex w-[115px] items-center justify-center rounded-[4px] border border-[#e2e8f0] bg-[#f1f5f9] p-2 text-[12px] leading-[18px] tracking-[-0.01px] text-[#94a3b8] ${fontRegular}`}>In drafts</span>;
-  const pill = `flex h-[26px] items-center justify-center whitespace-nowrap rounded-[4px] border px-2 text-[12px] tracking-[-0.12px] ${fontMedium}`;
-  if (status === "pending") return <span className={`${pill} border-[#fee3b4] bg-[#fff0d7] text-[#c98003]`}>Pending for review</span>;
-  if (status === "rejected") return <span className={`${pill} w-[115px] border-[#fecaca] bg-[#fee2e2] text-[#ef4444]`}>Course rejected</span>;
+  if (status === "draft") return <span className={`flex w-28.75 items-center justify-center rounded-sm border border-slate-200 bg-slate-150 p-2 text-xs leading-4.5 text-slate-400 ${fontRegular}`}>In drafts</span>;
+  const pill = `flex h-6.5 items-center justify-center whitespace-nowrap rounded-sm border px-2 text-xs ${fontMedium}`;
+  if (status === "pending") return <span className={`${pill} border-secondary-200 bg-secondary-100 text-secondary-700`}>Pending for review</span>;
+  if (status === "rejected") return <span className={`${pill} w-28.75 border-red-200 bg-red-100 text-red-500`}>Course rejected</span>;
   return (
     <>
-      <span className={`${pill} w-[115px] border-[#a7f3d0] bg-[#ecfdf5] text-[#059669]`}>Published</span>
-      <span className={`flex items-center justify-center gap-1.5 rounded-[16px] bg-[#f2f4f7] py-0.5 pl-1.5 pr-2 text-center text-[12px] leading-[18px] tracking-[-0.01px] text-[#334155] ${fontMedium}`}>
+      <span className={`${pill} w-28.75 border-emerald-200 bg-emerald-50 text-emerald-600`}>Published</span>
+      <span className={`flex items-center justify-center gap-1.5 rounded-2xl bg-slate-150 py-0.5 pl-1.5 pr-2 text-center text-xs leading-4.5 text-slate-700 ${fontMedium}`}>
         <img src={imgUnlistedDot} alt="" width={8} height={8} className="size-2" />
         Unlisted
       </span>
@@ -120,7 +121,7 @@ export function StatusBadge({ status }: { status: CourseStatus }) {
 
 function PageButton({ label, active, onClick, children }: { label: string; active?: boolean; onClick: () => void; children: React.ReactNode }) {
   return (
-    <button type="button" aria-label={label} aria-current={active ? "page" : undefined} onClick={onClick} className={`flex size-10 items-center justify-center rounded-[8px] text-[14px] leading-[24px] tracking-[-0.01px] transition ${active ? "border border-[#fdce7c] bg-[#fee3b4] text-[#1e293b]" : "text-[#334155] hover:bg-[#f8fafc]"} ${fontMedium}`}>
+    <button type="button" aria-label={label} aria-current={active ? "page" : undefined} onClick={onClick} className={`flex size-10 items-center justify-center rounded-lg text-sm leading-6 transition ${active ? "border border-secondary-300 bg-secondary-200 text-slate-800" : "text-slate-700 hover:bg-slate-25"} ${fontMedium}`}>
       {children}
     </button>
   );
@@ -128,7 +129,7 @@ function PageButton({ label, active, onClick, children }: { label: string; activ
 
 function ChevronButton({ direction, disabled, onClick }: { direction: "previous" | "next"; disabled: boolean; onClick: () => void }) {
   return (
-    <button type="button" aria-label={`${direction === "next" ? "Next" : "Previous"} page`} disabled={disabled} onClick={onClick} className="flex size-10 items-center justify-center rounded-[8px] bg-[#f8fafc] text-[#334155] transition hover:bg-[#f1f5f9] disabled:cursor-not-allowed">
+    <button type="button" aria-label={`${direction === "next" ? "Next" : "Previous"} page`} disabled={disabled} onClick={onClick} className="flex size-10 items-center justify-center rounded-lg bg-slate-25 text-slate-700 transition hover:bg-slate-150 disabled:cursor-not-allowed">
       <svg viewBox="0 0 24 24" className="size-4" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
         <path d={direction === "next" ? "M9 6l6 6-6 6" : "M15 6l-6 6 6 6"} />
       </svg>
@@ -140,8 +141,8 @@ export function Pagination({ page, pageCount, start, shown, total, onPage }: { p
   const firstShown = Math.max(1, Math.min(page - 2, pageCount - 4));
   const pageNumbers = Array.from({ length: Math.min(5, pageCount) }, (_, i) => firstShown + i);
   return (
-    <div className="flex flex-wrap items-center justify-between gap-3 border-t border-[#cbd5e1] bg-white px-4 py-4 md:px-7">
-      <p className={`text-[14px] leading-[24px] tracking-[-0.01px] text-[#334155] ${fontMedium}`}>
+    <div className="flex flex-wrap items-center justify-between gap-3 border-t border-slate-300 bg-white px-4 py-4 md:px-7">
+      <p className={`text-sm leading-6 text-slate-700 ${fontMedium}`}>
         {total === 0 ? 0 : start + 1} to {start + shown} of {total} records
       </p>
       <nav aria-label="Pagination" className="flex gap-2">
@@ -212,19 +213,19 @@ function CourseDialog({ onClose, onSave }: { onClose: () => void; onSave: (value
   };
 
   return (
-    <Shell title="New course" onClose={onClose} width="max-w-[520px]" radius="sm:rounded-[12px]">
+    <Shell title="New course" onClose={onClose} width="max-w-130" radius="sm:rounded-xl">
       <form id="course-form" onSubmit={submit} noValidate className="flex flex-col gap-5 p-6">
         <TextField id="course-title" label="Course title" required value={title} onChange={setTitle} placeholder="e.g. Adobe XD for beginners" error={attempted && !title.trim() ? "Enter a course title" : ""} />
         <TextField id="course-price" label="Price (USD)" required type="number" value={price} onChange={setPrice} placeholder="0 for a free course" error={attempted && !priceValid ? "Enter a price of 0 or more" : ""} />
         <SelectField id="course-category" label="Category" value={category} onChange={setCategory} placeholder="Select a category" options={[...new Set([...categories.map((c) => c.name as string), ...(category ? [category] : [])])]} />
-        {attempted && !category && <p className={`-mt-3 text-[14px] leading-[20px] text-[#dc2626] ${fontRegular}`}>Select a category</p>}
+        {attempted && !category && <p className={`-mt-3 text-sm leading-5 text-red-600 ${fontRegular}`}>Select a category</p>}
         <SelectField id="course-status" label="Status" value={status} onChange={setStatus} placeholder="Select a status" options={["Draft", "Published"]} />
       </form>
-      <div className="flex items-center justify-end gap-3 border-t border-[#e2e8f0] px-6 py-4">
-        <button type="button" onClick={onClose} className={`h-[36px] rounded-[8px] border border-[#cbd5e1] bg-white px-4 text-[14px] text-[#1e293b] transition hover:bg-[#f8fafc] ${fontMedium}`}>
+      <div className="flex items-center justify-end gap-3 border-t border-slate-200 px-6 py-4">
+        <button type="button" onClick={onClose} className={`${buttonClass("secondary", "md")}`}>
           Cancel
         </button>
-        <button type="submit" form="course-form" className={`h-[36px] rounded-[8px] bg-[#ffb20d] px-4 text-[14px] text-[#1e293b] transition hover:bg-[#faa104] ${fontMedium}`}>
+        <button type="submit" form="course-form" className={`${buttonClass("yellow", "md")}`}>
           Create course
         </button>
       </div>
@@ -253,14 +254,14 @@ const STATUS_STYLE: Record<CourseStatus, { label: string; dot: string; text: str
 export function StatusPill({ status }: { status: CourseStatus }) {
   const st = STATUS_STYLE[status];
   return (
-    <span className={`inline-flex items-center gap-1.5 whitespace-nowrap rounded-full px-2.5 py-1 text-[12px] leading-[16px] ring-1 ring-inset ${fontSemi}`} style={{ color: st.text, backgroundColor: st.bg, ["--tw-ring-color" as string]: st.ring }}>
+    <span className={`inline-flex items-center gap-1.5 whitespace-nowrap rounded-full px-2.5 py-1 text-xs leading-4 ring-1 ring-inset ${fontSemi}`} style={{ color: st.text, backgroundColor: st.bg, ["--tw-ring-color" as string]: st.ring }}>
       <span className="size-1.5 rounded-full" style={{ backgroundColor: st.dot }} />
       {st.label}
     </span>
   );
 }
 
-function Icon({ d, className = "size-[18px]" }: { d: string; className?: string }) {
+function Icon({ d, className = "size-4.5" }: { d: string; className?: string }) {
   return (
     <svg viewBox="0 0 24 24" className={className} fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
       <path d={d} />
@@ -293,14 +294,14 @@ const parseDate = (label: string) => {
 
 function SummaryCard({ label, value, hint, icon, tone, bg, active, onClick }: { label: string; value: number; hint: string; icon: string; tone: string; bg: string; active: boolean; onClick: () => void }) {
   return (
-    <button type="button" onClick={onClick} aria-pressed={active} className={`group flex items-center gap-4 rounded-[14px] border bg-white p-4 text-left transition hover:-translate-y-0.5 hover:shadow-[0_8px_24px_rgba(15,23,42,0.08)] ${active ? "border-[#ffb20d] shadow-[0_0_0_3px_rgba(255,178,13,0.15)]" : "border-[#e2e8f0]"}`}>
-      <span className="flex size-11 shrink-0 items-center justify-center rounded-[12px]" style={{ backgroundColor: bg, color: tone }}>
+    <button type="button" onClick={onClick} aria-pressed={active} className={`group flex items-center gap-4 rounded-2xl border bg-white p-4 text-left transition hover:-translate-y-0.5 hover:shadow-2xl ${active ? "border-secondary-500 shadow-xs shadow-secondary-500/22" : "border-slate-200"}`}>
+      <span className="flex size-11 shrink-0 items-center justify-center rounded-xl" style={{ backgroundColor: bg, color: tone }}>
         <Icon d={icon} className="size-5" />
       </span>
       <span className="min-w-0">
-        <span className={`block text-[13px] leading-[18px] text-[#64748b] ${fontMedium}`}>{label}</span>
-        <span className={`block text-[22px] leading-[28px] tracking-[-0.3px] text-[#0f172a] ${fontBold}`}>{value}</span>
-        <span className={`block truncate text-[12px] leading-[16px] text-[#94a3b8] ${fontRegular}`}>{hint}</span>
+        <span className={`block text-13 leading-4.5 text-slate-500 ${fontMedium}`}>{label}</span>
+        <span className={`block text-22 leading-7 tracking-tight text-slate-900 ${fontBold}`}>{value}</span>
+        <span className={`block truncate text-xs leading-4 text-slate-400 ${fontRegular}`}>{hint}</span>
       </span>
     </button>
   );
@@ -360,18 +361,18 @@ export default function InstructorCourses({ startNew }: { startNew?: boolean }) 
 
   const firstShown = Math.max(1, Math.min(current - 2, pageCount - 4));
   const pageNumbers = Array.from({ length: Math.min(5, pageCount) }, (_, i) => firstShown + i);
-  const ghostBtn = `flex h-10 items-center gap-2 rounded-[10px] border border-[#e2e8f0] bg-white px-3.5 text-[14px] text-[#0f172a] shadow-[0_1px_2px_rgba(15,23,42,0.04)] transition hover:bg-[#f8fafc] ${fontSemi}`;
-  const iconBtn = "flex size-9 items-center justify-center rounded-[8px] text-[#64748b] transition hover:bg-[#f1f5f9] hover:text-[#0f172a]";
+  const ghostBtn = `flex h-10 items-center gap-2 rounded-xl border border-slate-200 bg-white px-3.5 text-sm text-slate-900 shadow-sm transition hover:bg-slate-25 ${fontSemi}`;
+  const iconBtn = "flex size-9 items-center justify-center rounded-lg text-slate-500 transition hover:bg-slate-150 hover:text-slate-900";
 
   return (
-    <main className="@container flex flex-1 flex-col bg-[#f6f7f9]">
+    <main className="@container flex flex-1 flex-col bg-primary-50">
       <div className="flex w-full flex-col gap-6 px-4 py-6 md:px-8 md:py-8">
         {/* Header */}
         <div className="flex flex-wrap items-end justify-between gap-4">
           <div>
-            <h1 className={`m-0 text-[28px] leading-[36px] tracking-[-0.4px] text-[#0f172a] ${fontBold}`}>Courses</h1>
-            <p className={`mt-1 text-[15px] leading-[22px] text-[#64748b] ${fontRegular}`}>
-              Create, edit and track all your recorded courses. <span className={`text-[#0f172a] ${fontSemi}`}>{totalSales.toLocaleString("en-US")}</span> sales so far.
+            <h1 className={`m-0 text-28 leading-9 tracking-tight text-slate-900 ${fontBold}`}>Courses</h1>
+            <p className={`mt-1 text-15 leading-5.5 text-slate-500 ${fontRegular}`}>
+              Create, edit and track all your recorded courses. <span className={`text-slate-900 ${fontSemi}`}>{totalSales.toLocaleString("en-US")}</span> sales so far.
             </p>
           </div>
           <div className="flex items-center gap-2">
@@ -383,7 +384,7 @@ export default function InstructorCourses({ startNew }: { startNew?: boolean }) 
                 <>
                   <Icon d={I.backup} className="size-4" />
                   Backup
-                  <Icon d={I.chevron} className="size-4 text-[#64748b]" />
+                  <Icon d={I.chevron} className="size-4 text-slate-500" />
                 </>
               }
               items={[
@@ -397,23 +398,23 @@ export default function InstructorCourses({ startNew }: { startNew?: boolean }) 
                 { label: "Restore from file", onClick: () => backupInput.current?.click() },
               ]}
             />
-            <button type="button" onClick={newCourse} className={`flex h-10 items-center gap-2 rounded-[10px] bg-[#ffb20d] px-4 text-[14px] text-[#1e293b] shadow-[0_6px_16px_rgba(255,178,13,0.3)] transition hover:bg-[#faa104] ${fontSemi}`}>
-              <Icon d={I.plus} className="size-[18px]" />
+            <button type="button" onClick={newCourse} className={`${buttonClass("yellow", "lg")}`}>
+              <Icon d={I.plus} className="size-4.5" />
               New course
             </button>
           </div>
         </div>
 
         {courses.length === 0 ? (
-          <div className="flex flex-col items-center justify-center gap-5 rounded-[16px] border border-dashed border-[#cbd5e1] bg-white px-6 py-16 text-center">
-            <div className="flex size-[120px] items-center justify-center rounded-full bg-[#f8fafc]">
+          <div className="flex flex-col items-center justify-center gap-5 rounded-2xl border border-dashed border-slate-300 bg-white px-6 py-16 text-center">
+            <div className="flex size-30 items-center justify-center rounded-full bg-slate-25">
               <img src={imgEmpty} alt="" width={64} height={64} className="size-16" />
             </div>
             <div>
-              <p className={`text-[18px] leading-[26px] text-[#0f172a] ${fontBold}`}>Create your first course</p>
-              <p className={`mx-auto mt-1 max-w-[380px] text-[14px] leading-[22px] text-[#64748b] ${fontRegular}`}>Turn what you know into a course. Add lessons, set a price and publish when you're ready.</p>
+              <p className={`text-lg leading-6.5 text-slate-900 ${fontBold}`}>Create your first course</p>
+              <p className={`mx-auto mt-1 max-w-95 text-sm leading-5.5 text-slate-500 ${fontRegular}`}>Turn what you know into a course. Add lessons, set a price and publish when you're ready.</p>
             </div>
-            <button type="button" onClick={newCourse} className={`flex h-11 items-center gap-2 rounded-[10px] bg-[#ffb20d] px-5 text-[14px] text-[#1e293b] transition hover:bg-[#faa104] ${fontSemi}`}>
+            <button type="button" onClick={newCourse} className={`${buttonClass("yellow", "lg")}`}>
               <img src={imgPlus} alt="" width={20} height={20} className="size-5" />
               New course
             </button>
@@ -429,22 +430,22 @@ export default function InstructorCourses({ startNew }: { startNew?: boolean }) 
             </div>
 
             {/* Table card */}
-            <section className="overflow-hidden rounded-[16px] border border-[#e2e8f0] bg-white shadow-[0_1px_2px_rgba(15,23,42,0.04)]">
-              <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#eef2f6] px-4 pt-3 @3xl:px-5">
+            <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+              <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-150 px-4 pt-3 @3xl:px-5">
                 <div role="tablist" aria-label="Course status" className="-mb-px flex gap-1 overflow-x-auto">
                   {TABS.map((t) => {
                     const active = tab === t.key;
                     return (
-                      <button key={t.key} type="button" role="tab" aria-selected={active} onClick={() => pickTab(t.key)} className={`flex shrink-0 items-center gap-2 border-b-2 px-3 pb-3 pt-2 text-[14px] transition ${active ? `border-[#ffb20d] text-[#0f172a] ${fontSemi}` : `border-transparent text-[#64748b] hover:text-[#0f172a] ${fontMedium}`}`}>
+                      <button key={t.key} type="button" role="tab" aria-selected={active} onClick={() => pickTab(t.key)} className={`flex shrink-0 items-center gap-2 border-b-2 px-3 pb-3 pt-2 text-sm transition ${active ? `border-secondary-500 text-slate-900 ${fontSemi}` : `border-transparent text-slate-500 hover:text-slate-900 ${fontMedium}`}`}>
                         {t.label}
-                        <span className={`rounded-full px-2 py-0.5 text-[11px] leading-[14px] ${active ? "bg-[#fff3d6] text-[#976002]" : "bg-[#f1f5f9] text-[#64748b]"} ${fontSemi}`}>{counts[t.key]}</span>
+                        <span className={`rounded-full px-2 py-0.5 text-11 leading-3.5 ${active ? "bg-secondary-100 text-secondary-800" : "bg-slate-150 text-slate-500"} ${fontSemi}`}>{counts[t.key]}</span>
                       </button>
                     );
                   })}
                 </div>
                 <div className="flex w-full items-center gap-2 pb-3 @3xl:w-auto">
-                  <label className="flex h-9 min-w-0 flex-1 items-center gap-2 rounded-[10px] border border-slate-200 bg-white px-3 shadow-[0_1px_2px_rgba(15,23,42,0.04)] transition hover:border-slate-300 focus-within:border-[#0d5c4b]/60 focus-within:ring-3 focus-within:ring-[#0d5c4b]/12 @3xl:w-[240px] @3xl:flex-none">
-                    <Icon d={I.search} className="size-4 shrink-0 text-[#94a3b8]" />
+                  <label className="flex h-9 min-w-0 flex-1 items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 shadow-sm transition hover:border-slate-300 focus-within:border-primary-700/60 focus-within:ring-3 focus-within:ring-primary-700/12 @3xl:w-60 @3xl:flex-none">
+                    <Icon d={I.search} className="size-4 shrink-0 text-slate-400" />
                     <input
                       type="search"
                       value={query}
@@ -454,24 +455,24 @@ export default function InstructorCourses({ startNew }: { startNew?: boolean }) 
                       }}
                       placeholder="Search courses"
                       aria-label="Search courses"
-                      className={`min-w-0 flex-1 bg-transparent text-[14px] text-slate-900 outline-none placeholder:text-slate-400 ${fontRegular}`}
+                      className={`min-w-0 flex-1 bg-transparent text-sm text-slate-900 outline-none placeholder:text-slate-400 ${fontRegular}`}
                     />
                   </label>
                   <label className="relative">
                     <span className="sr-only">Sort by</span>
-                    <select value={sort} onChange={(e) => setSort(e.target.value as SortKey)} className={`h-9 appearance-none rounded-[10px] border border-slate-200 bg-white pl-3 pr-8 text-[14px] text-slate-900 shadow-[0_1px_2px_rgba(15,23,42,0.04)] outline-none transition hover:border-slate-300 hover:bg-slate-50 focus:border-[#0d5c4b]/60 focus:ring-3 focus:ring-[#0d5c4b]/12 ${fontMedium}`}>
+                    <select value={sort} onChange={(e) => setSort(e.target.value as SortKey)} className={`h-9 appearance-none rounded-xl border border-slate-200 bg-white pl-3 pr-8 text-sm text-slate-900 shadow-sm outline-none transition hover:border-slate-300 hover:bg-slate-50 focus:border-primary-700/60 focus:ring-3 focus:ring-primary-700/12 ${fontMedium}`}>
                       <option value="updated">Recently updated</option>
                       <option value="purchases">Most sales</option>
                       <option value="favorites">Most favourited</option>
                       <option value="title">Title A to Z</option>
                     </select>
-                    <Icon d={I.chevron} className="pointer-events-none absolute right-2.5 top-1/2 size-4 -translate-y-1/2 text-[#64748b]" />
+                    <Icon d={I.chevron} className="pointer-events-none absolute right-2.5 top-1/2 size-4 -translate-y-1/2 text-slate-500" />
                   </label>
                 </div>
               </div>
 
               <div className="@container">
-                <div aria-hidden="true" className={`hidden grid-cols-[minmax(0,1fr)_96px_96px_110px_120px_88px] items-center gap-4 bg-[#f8fafc] px-5 py-2.5 text-[12px] uppercase tracking-[0.5px] text-[#64748b] @3xl:grid ${fontSemi}`}>
+                <div aria-hidden="true" className={`hidden grid-cols-courses-table items-center gap-4 bg-slate-25 px-5 py-2.5 text-xs uppercase tracking-wider text-slate-500 @3xl:grid ${fontSemi}`}>
                   <span>Course</span>
                   <span>Sales</span>
                   <span>Favourites</span>
@@ -481,73 +482,73 @@ export default function InstructorCourses({ startNew }: { startNew?: boolean }) 
                 </div>
                 {visible.length === 0 ? (
                   <div className="flex flex-col items-center gap-2 px-6 py-16 text-center">
-                    <span className="flex size-12 items-center justify-center rounded-full bg-[#f1f5f9] text-[#64748b]">
+                    <span className="flex size-12 items-center justify-center rounded-full bg-slate-150 text-slate-500">
                       <Icon d={I.search} className="size-5" />
                     </span>
-                    <p className={`text-[15px] text-[#0f172a] ${fontSemi}`}>No courses match</p>
-                    <p className={`text-[14px] text-[#64748b] ${fontRegular}`}>Try another search or status.</p>
+                    <p className={`text-15 text-slate-900 ${fontSemi}`}>No courses match</p>
+                    <p className={`text-sm text-slate-500 ${fontRegular}`}>Try another search or status.</p>
                     <button
                       type="button"
                       onClick={() => {
                         setQuery("");
                         pickTab("all");
                       }}
-                      className={`mt-2 text-[14px] text-[#976002] hover:underline ${fontSemi}`}
+                      className={`mt-2 text-sm text-secondary-800 hover:underline ${fontSemi}`}
                     >
                       Clear filters
                     </button>
                   </div>
                 ) : (
-                  <ul className="divide-y divide-[#eef2f6]">
+                  <ul className="divide-y divide-slate-150">
                     {visible.map((course) => (
-                      <li key={course.id} className="group grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-3 px-4 py-4 transition hover:bg-[#fafbfc] @3xl:grid-cols-[minmax(0,1fr)_96px_96px_110px_120px_88px] @3xl:px-5">
+                      <li key={course.id} className="group grid grid-cols-main-auto items-center gap-x-4 gap-y-3 px-4 py-4 transition hover:bg-slate-25 @3xl:grid-cols-courses-table @3xl:px-5">
                         <div className="flex min-w-0 items-start gap-3 @md:items-center @md:gap-4">
-                          <div className="relative aspect-video w-[76px] shrink-0 overflow-hidden rounded-[10px] @md:w-[104px] bg-[#0f172a] ring-1 ring-[#0f172a]/5 @3xl:w-[112px]">
+                          <div className="relative aspect-video w-19 shrink-0 overflow-hidden rounded-xl @md:w-26 bg-slate-900 ring-1 ring-slate-900/5 @3xl:w-28">
                             <img src={thumbFor(course)} alt="" loading="lazy" className="size-full object-cover transition duration-300 group-hover:scale-105" />
                           </div>
                           <div className="min-w-0">
-                            <button type="button" onClick={() => openCourseEditor(course.id)} className={`line-clamp-2 text-left text-[15px] leading-[21px] text-[#0f172a] transition hover:text-[#976002] ${fontSemi}`}>
+                            <button type="button" onClick={() => openCourseEditor(course.id)} className={`line-clamp-2 text-left text-15 leading-5.25 text-slate-900 transition hover:text-secondary-800 ${fontSemi}`}>
                               {course.title}
                             </button>
-                            <p className={`mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-[13px] leading-[18px] text-[#64748b] ${fontRegular}`}>
-                              <span className={`text-[#0f172a] ${fontSemi}`}>{course.price}</span>
-                              <span className="size-1 rounded-full bg-[#cbd5e1]" />
+                            <p className={`mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-13 leading-4.5 text-slate-500 ${fontRegular}`}>
+                              <span className={`text-slate-900 ${fontSemi}`}>{course.price}</span>
+                              <span className="size-1 rounded-full bg-slate-300" />
                               <span className="truncate">{course.category}</span>
                             </p>
                             <div className="mt-2 flex flex-wrap items-center gap-3 @3xl:hidden">
                               <StatusPill status={course.status} />
-                              <span className={`flex items-center gap-1 text-[12px] text-[#64748b] ${fontMedium}`}>
+                              <span className={`flex items-center gap-1 text-xs text-slate-500 ${fontMedium}`}>
                                 <Icon d={I.cart} className="size-3.5" />
                                 {course.purchases}
                               </span>
-                              <span className={`flex items-center gap-1 text-[12px] text-[#64748b] ${fontMedium}`}>
+                              <span className={`flex items-center gap-1 text-xs text-slate-500 ${fontMedium}`}>
                                 <Icon d={I.heart} className="size-3.5" />
                                 {course.favorites}
                               </span>
                             </div>
                           </div>
                         </div>
-                        <span className={`hidden text-[14px] tabular-nums text-[#0f172a] @3xl:block ${fontSemi}`}>{course.purchases.toLocaleString("en-US")}</span>
-                        <span className={`hidden items-center gap-1.5 text-[14px] tabular-nums text-[#334155] @3xl:flex ${fontMedium}`}>
-                          <Icon d={I.heart} className="size-3.5 text-[#f43f5e]" />
+                        <span className={`hidden text-sm tabular-nums text-slate-900 @3xl:block ${fontSemi}`}>{course.purchases.toLocaleString("en-US")}</span>
+                        <span className={`hidden items-center gap-1.5 text-sm tabular-nums text-slate-700 @3xl:flex ${fontMedium}`}>
+                          <Icon d={I.heart} className="size-3.5 text-rose-500" />
                           {course.favorites.toLocaleString("en-US")}
                         </span>
-                        <span className={`hidden text-[13px] text-[#64748b] @3xl:block ${fontRegular}`}>{course.updated}</span>
+                        <span className={`hidden text-13 text-slate-500 @3xl:block ${fontRegular}`}>{course.updated}</span>
                         <span className="hidden flex-col items-start gap-1 @3xl:flex">
                           <StatusPill status={course.status} />
-                          {course.status === "published" && <span className={`pl-1 text-[11px] text-[#94a3b8] ${fontMedium}`}>Unlisted</span>}
+                          {course.status === "published" && <span className={`pl-1 text-11 text-slate-400 ${fontMedium}`}>Unlisted</span>}
                         </span>
                         <div className="flex items-center justify-end gap-0.5">
                           <button type="button" aria-label={`Edit ${course.title}`} title="Edit" onClick={() => openCourseEditor(course.id)} className={iconBtn}>
-                            <Icon d={I.edit} className="size-[17px]" />
+                            <Icon d={I.edit} className="size-4.25" />
                           </button>
                           {course.status === "published" ? (
                             <button type="button" aria-label={`Announce ${course.title}`} title="Announce" onClick={() => notify("Announcements are coming soon")} className={iconBtn}>
-                              <Icon d={I.megaphone} className="size-[17px]" />
+                              <Icon d={I.megaphone} className="size-4.25" />
                             </button>
                           ) : (
-                            <button type="button" aria-label={`Delete ${course.title}`} title="Delete" onClick={() => setDeleting(course)} className={`${iconBtn} hover:bg-[#fef2f2] hover:text-[#dc2626]`}>
-                              <Icon d={I.trash} className="size-[17px]" />
+                            <button type="button" aria-label={`Delete ${course.title}`} title="Delete" onClick={() => setDeleting(course)} className={`${iconBtn} hover:bg-red-50 hover:text-red-600`}>
+                              <Icon d={I.trash} className="size-4.25" />
                             </button>
                           )}
                         </div>
@@ -558,20 +559,20 @@ export default function InstructorCourses({ startNew }: { startNew?: boolean }) 
               </div>
 
               {filtered.length > 0 && (
-                <div className="flex flex-wrap items-center justify-between gap-3 border-t border-[#eef2f6] px-4 py-3 @3xl:px-5">
-                  <p className={`text-[13px] text-[#64748b] ${fontRegular}`}>
-                    Showing <span className={`text-[#0f172a] ${fontSemi}`}>{start + 1}</span> to <span className={`text-[#0f172a] ${fontSemi}`}>{start + visible.length}</span> of <span className={`text-[#0f172a] ${fontSemi}`}>{filtered.length}</span> courses
+                <div className="flex flex-wrap items-center justify-between gap-3 border-t border-slate-150 px-4 py-3 @3xl:px-5">
+                  <p className={`text-13 text-slate-500 ${fontRegular}`}>
+                    Showing <span className={`text-slate-900 ${fontSemi}`}>{start + 1}</span> to <span className={`text-slate-900 ${fontSemi}`}>{start + visible.length}</span> of <span className={`text-slate-900 ${fontSemi}`}>{filtered.length}</span> courses
                   </p>
                   <nav aria-label="Pagination" className="flex items-center gap-1">
-                    <button type="button" aria-label="Previous page" disabled={current === 1} onClick={() => setPage(current - 1)} className="flex size-9 items-center justify-center rounded-[8px] border border-[#e2e8f0] text-[#334155] transition hover:bg-[#f8fafc] disabled:opacity-40">
+                    <button type="button" aria-label="Previous page" disabled={current === 1} onClick={() => setPage(current - 1)} className="flex size-9 items-center justify-center rounded-lg border border-slate-200 text-slate-700 transition hover:bg-slate-25 disabled:opacity-40">
                       <Icon d={I.left} className="size-4" />
                     </button>
                     {pageNumbers.map((n) => (
-                      <button key={n} type="button" aria-label={`Page ${n}`} aria-current={n === current ? "page" : undefined} onClick={() => setPage(n)} className={`flex size-9 items-center justify-center rounded-[8px] text-[13px] transition ${n === current ? `bg-[#0f172a] text-white ${fontSemi}` : `text-[#334155] hover:bg-[#f1f5f9] ${fontMedium}`}`}>
+                      <button key={n} type="button" aria-label={`Page ${n}`} aria-current={n === current ? "page" : undefined} onClick={() => setPage(n)} className={`flex size-9 items-center justify-center rounded-lg text-13 transition ${n === current ? `bg-slate-900 text-white ${fontSemi}` : `text-slate-700 hover:bg-slate-150 ${fontMedium}`}`}>
                         {n}
                       </button>
                     ))}
-                    <button type="button" aria-label="Next page" disabled={current === pageCount} onClick={() => setPage(current + 1)} className="flex size-9 items-center justify-center rounded-[8px] border border-[#e2e8f0] text-[#334155] transition hover:bg-[#f8fafc] disabled:opacity-40">
+                    <button type="button" aria-label="Next page" disabled={current === pageCount} onClick={() => setPage(current + 1)} className="flex size-9 items-center justify-center rounded-lg border border-slate-200 text-slate-700 transition hover:bg-slate-25 disabled:opacity-40">
                       <Icon d={I.right} className="size-4" />
                     </button>
                   </nav>

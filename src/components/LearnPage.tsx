@@ -6,7 +6,7 @@ import {
   type FormEvent,
   type ReactNode,
 } from "react"
-import { courses, courseTags, type Course } from "../data"
+import { courses, type Course } from "../data"
 import {
   fontBold,
   fontFor,
@@ -19,6 +19,10 @@ import { useApp } from "../store"
 import { HugeiconsIcon, type IconSvgElement } from "@hugeicons/react"
 import {
   ArrowDown01Icon,
+  CheckmarkBadge01Icon,
+  Comment01Icon,
+  Notification01Icon,
+  ThumbsUpIcon,
   BubbleChatQuestionIcon,
   ChartBarLineIcon,
   GridViewIcon,
@@ -28,6 +32,7 @@ import {
   Megaphone01Icon,
   Note01Icon,
   PlayListIcon,
+  SparklesIcon,
   Share08Icon,
   StarIcon,
   Task01Icon,
@@ -35,23 +40,49 @@ import {
   TranslateIcon,
   UserGroupIcon,
 } from "@hugeicons/core-free-icons"
-import { buildCurriculum, seedReviews, type Lesson, type Review } from "./CourseDetailsPage"
+import { buildCurriculum, type Lesson } from "./CourseDetailsPage"
 import LessonPlayer from "./LessonPlayer"
+import ShareCourseDialog from "./ShareCourseDialog"
 import { DEMO_QUIZ_INSTRUCTIONS, QUIZ_LENGTH, QuizPanel, QuizRunner, type QuizResult } from "./Quiz"
 import { ASSIGNMENT_QUESTIONS, AssignmentPanel, type AssignmentState } from "./Assignment"
 import { ActionMenu, FilterSelect } from "./Menus"
 import { ArticleReader, NoteBody, NoteEditor, NotesPanel, type LessonRef, type Note } from "./Notes"
+import {
+  AnnouncementBanner,
+  AskPanel,
+  CheckpointCard,
+  LessonBar,
+  LessonSection,
+  PinnedAnnouncements,
+  TranscriptPanel,
+  announcementsFor,
+  buildChapters,
+  buildCheckpoints,
+  buildTranscript,
+  clock as clockLabel,
+  lessonGoal,
+  type CheckResult,
+  type TranscriptLine,
+} from "./LessonLearning"
+import { buttonClass } from "./Button"
 
 // Demo playback runs 10x faster than the lesson length so a lesson can be finished in a few seconds.
 const SPEED = 10
-const tabs = ["Overview", "Q&A", "Notes", "Announcements", "Reviews"] as const
-type Tab = typeof tabs[number]
-const tabIcons: Record<Tab, IconSvgElement> = {
-  Overview: InformationCircleIcon,
-  "Q&A": BubbleChatQuestionIcon,
+// Tools used while watching sit in the side panel; reading material sits under the video.
+const panels = ["Contents", "Notes", "Transcript", "Ask"] as const
+type Panel = typeof panels[number]
+const panelIcons: Record<Panel, IconSvgElement> = {
+  Contents: Layers01Icon,
   Notes: Note01Icon,
-  Announcements: Megaphone01Icon,
-  Reviews: StarIcon,
+  Transcript: PlayListIcon,
+  Ask: SparklesIcon,
+}
+const belowTabs = ["Lesson", "Discussion", "Course"] as const
+type Below = typeof belowTabs[number]
+const belowIcons: Record<Below, IconSvgElement> = {
+  Lesson: InformationCircleIcon,
+  Discussion: BubbleChatQuestionIcon,
+  Course: Layers01Icon,
 }
 
 type FlatLesson = Lesson & { key: string; section: number; index: number }
@@ -127,7 +158,7 @@ function LessonMeta({ lesson }: { lesson: Lesson }) {
   if (lesson.kind === "assignment")
     return (
       <span className="flex items-center gap-1.5">
-        <Svg className="size-[14px]">
+        <Svg className="size-3.5">
           <path d="M8 4h8v3H8zM6 6H5v15h14V6h-1M9 12h6M9 16h4" />
         </Svg>
         {ASSIGNMENT_QUESTIONS.length} asgmt.
@@ -136,7 +167,7 @@ function LessonMeta({ lesson }: { lesson: Lesson }) {
   if (lesson.kind === "quiz")
     return (
       <span className="flex items-center gap-1.5">
-        <Svg className="size-[14px]">
+        <Svg className="size-3.5">
           <path d="M9 9a3 3 0 115 2.2c-.8.5-1.5 1.1-1.5 2.3M12 17h.01" />
           <circle cx="12" cy="12" r="9" />
         </Svg>
@@ -146,11 +177,11 @@ function LessonMeta({ lesson }: { lesson: Lesson }) {
   return (
     <span className="flex items-center gap-1.5">
       {lesson.kind === "article" ? (
-        <Svg className="size-[14px]">
+        <Svg className="size-3.5">
           <path d="M4 5a2 2 0 012-2h6v18H6a2 2 0 01-2-2zM12 3h6a2 2 0 012 2v14a2 2 0 01-2 2h-6" />
         </Svg>
       ) : (
-        <Svg className="size-[14px]">
+        <Svg className="size-3.5">
           <circle cx="12" cy="12" r="9" />
           <path d="M10 9l5 3-5 3z" />
         </Svg>
@@ -200,26 +231,29 @@ const kindLabel: Record<Lesson["kind"], string> = {
   assignment: "Assignment",
 }
 
+// Announcements are hidden for now. Set to true to show the banner and the pinned list in Discussion again.
+const SHOW_ANNOUNCEMENTS = false
+
 export default function LearnPage({ id }: { id: string }) {
   const course = courses.find((c) => c.id === id)
   const { goHome, openSearch } = useApp()
   if (!course)
     return (
-      <main className="flex min-h-dvh flex-col items-center justify-center gap-4 bg-[#f8fafc] px-4 text-center">
-        <p className={`text-[22px] text-[#0f172a] ${fontHeading}`}>
+      <main className="flex min-h-dvh flex-col items-center justify-center gap-4 bg-slate-25 px-4 text-center">
+        <p className={`text-22 text-slate-900 ${fontHeading}`}>
           Course not found
         </p>
         <button
           type="button"
           onClick={() => openSearch({})}
-          className={`h-[42px] rounded-[8px] bg-[#ffb20d] px-5 text-[14px] text-[#1e293b] ${fontSemi}`}
+          className={`${buttonClass("yellow", "lg")}`}
         >
           Browse courses
         </button>
         <button
           type="button"
           onClick={goHome}
-          className={`text-[14px] text-[#64748b] underline ${fontRegular}`}
+          className={`text-sm text-slate-500 underline ${fontRegular}`}
         >
           Go home
         </button>
@@ -265,7 +299,9 @@ function Player({ course }: { course: Course }) {
     current.section,
   ])
   const [search, setSearch] = useState("")
-  const [tab, setTab] = useState<Tab>("Overview")
+  const [panel, setPanel] = useState<Panel>("Contents")
+  const [below, setBelow] = useState<Below>("Lesson")
+  const [askSeed, setAskSeed] = useState<TranscriptLine | null>(null)
   const [quizMode, setQuizMode] = useState(false)
   const [notes, setNotes] = useLocal<Note[]>(`thkee.notes2.${course.id}`, [])
   const [editNoteId, setEditNoteId] = useState<number | null>(null)
@@ -274,16 +310,31 @@ function Player({ course }: { course: Course }) {
     `thkee.quiz.${course.id}`,
     {},
   )
-  const [moreOverview, setMoreOverview] = useState(false)
+  const [checks, setChecks] = useLocal<Record<string, CheckResult>>(`thkee.checks.${course.id}`, {})
+  const [activeCheck, setActiveCheck] = useState<number | null>(null)
+  const [passed, setPassed] = useState<string[]>([])
+  const [annSeen, setAnnSeen] = useLocal(`thkee.annSeen.${course.id}`, "")
+  const [ratePrompt, setRatePrompt] = useLocal<"none" | "later" | "done">(`thkee.ratePrompt.${course.id}`, "none")
   const tabsRef = useRef<HTMLDivElement>(null)
 
   const doneCount = progress.done.length
   const percent = Math.round((doneCount / flat.length) * 100)
 
+  const chapters = useMemo(() => buildChapters(current), [current])
+  const lines = useMemo(() => buildTranscript(current, chapters), [current, chapters])
+  const checkpoints = useMemo(() => (current.kind === "video" ? buildCheckpoints(current, chapters, lines) : []), [current, chapters, lines])
+  const lessonChecksDone = checkpoints.filter((c) => checks[c.id]).length
+  const skillsChecked = Object.values(checks).filter((c) => c.correct).length
+  const announcements = useMemo(() => announcementsFor(course.title), [course.title])
+  const bannerItem = annSeen === announcements[0].id ? null : announcements[0]
+  const showRating = (ratePrompt === "none" && percent >= 30) || (ratePrompt === "later" && percent === 100)
+
   const goTo = (lesson: FlatLesson, play = false) => {
     setProgress((p) => ({ ...p, current: lesson.key }))
     setTime(0)
     setPlaying(play && lesson.kind === "video")
+    setActiveCheck(null)
+    setPassed([])
     setOpenSections((s) =>
       s.includes(lesson.section) ? s : [...s, lesson.section],
     )
@@ -320,6 +371,18 @@ function Player({ course }: { course: Course }) {
     const timer = setInterval(() => {
       setTime((t) => {
         const next = t + (SPEED / 4) * rate
+        const due = checkpoints.find((c) => {
+          const end = chapters.at(c.chapter)?.end ?? duration
+          return t < end - 0.05 && next >= end - 0.05 && !checks[c.id] && !passed.includes(c.id)
+        })
+        if (due) {
+          clearInterval(timer)
+          setTimeout(() => {
+            setPlaying(false)
+            setActiveCheck(due.chapter)
+          }, 0)
+          return (chapters.at(due.chapter)?.end ?? duration) - 0.05
+        }
         if (next >= duration) {
           clearInterval(timer)
           setTimeout(() => complete(current), 0)
@@ -330,7 +393,7 @@ function Player({ course }: { course: Course }) {
     }, 250)
     return () => clearInterval(timer)
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [playing, current.key, duration, rate])
+  }, [playing, current.key, duration, rate, checkpoints, checks, passed])
 
   const prev = flat[current.index - 1]
   const next = flat[current.index + 1]
@@ -344,20 +407,57 @@ function Player({ course }: { course: Course }) {
       )
   }
 
-  const share = async () => {
-    const url = `${window.location.origin}${window.location.pathname}#/course/${course.id}`
-    try {
-      await navigator.clipboard.writeText(url)
-      notify("Course link copied")
-    } catch {
-      notify("Copy this link: " + url)
-    }
-  }
+  const [sharing, setSharing] = useState(false)
+  const share = () => setSharing(true)
 
   const openNotes = () => {
-    setTab("Notes")
+    setSidebar(true)
+    setPanel("Notes")
+  }
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      const el = e.target as HTMLElement | null
+      if (el && (el.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(el.tagName))) return
+      if (e.metaKey || e.ctrlKey || e.altKey || e.key.toLowerCase() !== "n") return
+      setSidebar(true)
+      setPanel("Notes")
+    }
+    window.addEventListener("keydown", onKey)
+    return () => window.removeEventListener("keydown", onKey)
+  }, [])
+
+  const seekTo = (sec: number) => {
+    if (current.kind !== "video") return
+    setActiveCheck(null)
+    setTime(sec)
+  }
+
+  const saveLineNote = (line: TranscriptLine) => {
+    const text = line.en
+    setNotes((list) => [
+      {
+        id: Date.now(),
+        created: Date.now(),
+        lessonKey: current.key,
+        lessonTitle: current.title,
+        sectionTitle: sections[current.section].title,
+        kind: current.kind as Note["kind"],
+        text,
+        html: `<p>${text.replace(/&/g, "&amp;").replace(/</g, "&lt;")}</p>`,
+        at: current.kind === "video" ? line.sec : undefined,
+      },
+      ...list,
+    ])
+    notify(`Note saved at ${clockLabel(line.sec)}`)
+  }
+
+  const openBelow = (t: Below) => {
+    setBelow(t)
     tabsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })
   }
+
+  const activeCheckpoint = activeCheck === null ? undefined : checkpoints.at(activeCheck)
 
   const lessonRef = (l: FlatLesson): LessonRef => ({
     key: l.key,
@@ -399,7 +499,7 @@ function Player({ course }: { course: Course }) {
     .filter((s) => s.items.length)
 
   return (
-    <div className="flex min-h-dvh w-full flex-col bg-[#f8fafc]">
+    <div className="flex min-h-dvh w-full flex-col bg-slate-25">
       {/* Header */}
       <header className="sticky top-0 z-100 flex h-16 items-center gap-3 border-b border-white/10 bg-slate-900 px-3 md:h-18 md:gap-4 md:px-6">
         <div className="group relative shrink-0">
@@ -442,7 +542,7 @@ function Player({ course }: { course: Course }) {
             <button
               type="button"
               onClick={certificate}
-              className={`flex h-9 items-center gap-2 rounded-lg bg-secondary-500 px-3.5 text-sm text-slate-900 transition hover:bg-secondary-600 ${fontSemi}`}
+              className={`${buttonClass("yellow", "md")}`}
             >
               <Svg className="size-4" stroke={2}>
                 <circle cx="12" cy="9" r="6" />
@@ -515,7 +615,7 @@ function Player({ course }: { course: Course }) {
         <div
           className={`grid flex-1 grid-cols-1 ${
             sidebar
-              ? "lg:grid-cols-[minmax(0,1fr)_380px] xl:grid-cols-[minmax(0,1fr)_420px]"
+              ? "lg:grid-cols-main-380 xl:grid-cols-main-420"
               : ""
           }`}
         >
@@ -587,54 +687,89 @@ function Player({ course }: { course: Course }) {
                 onToggleSidebar={() => setSidebar((s) => !s)}
                 onCompleteReading={() => complete(current)}
                 notify={notify}
+                chapters={current.kind === "video" ? chapters : []}
+                goal={lessonGoal(current)}
+                overlay={
+                  activeCheckpoint ? (
+                    <CheckpointCard
+                      checkpoint={activeCheckpoint}
+                      total={checkpoints.length}
+                      onAnswer={(correct) => setChecks((c) => ({ ...c, [activeCheckpoint.id]: { correct } }))}
+                      onRewatch={() => {
+                        setActiveCheck(null)
+                        setTime(activeCheckpoint.rewatchAt)
+                        setPlaying(true)
+                      }}
+                      onContinue={() => {
+                        setPassed((list) => [...list, activeCheckpoint.id])
+                        setActiveCheck(null)
+                        setPlaying(true)
+                      }}
+                    />
+                  ) : undefined
+                }
               />
             )}
 
-            {/* Tabs */}
+            {current.kind === "video" && (
+              <LessonBar
+                sectionTitle={sections[current.section].title.replace(/^\d+\.\s*/, "")}
+                title={current.title}
+                minutes={current.minutes}
+                done={progress.done.includes(current.key)}
+                hasNext={!!next}
+                checksDone={lessonChecksDone}
+                checksTotal={checkpoints.length}
+                onToggleDone={() => toggleDone(current)}
+                onNext={() => {
+                  if (!next) return
+                  markDone(current)
+                  goTo(next, true)
+                  window.scrollTo({ top: 0, behavior: "smooth" })
+                }}
+              />
+            )}
+
+            {SHOW_ANNOUNCEMENTS && bannerItem && (
+              <AnnouncementBanner
+                item={bannerItem}
+                onView={() => {
+                  setAnnSeen(bannerItem.id)
+                  openBelow("Discussion")
+                }}
+                onDismiss={() => setAnnSeen(bannerItem.id)}
+              />
+            )}
+
             <div
               ref={tabsRef}
-              className="sticky top-16 z-10 flex h-14 scroll-mt-18 items-center gap-3 border-b border-slate-200 bg-white/95 px-2 backdrop-blur-md md:top-18 md:px-4"
+              className="sticky top-16 z-10 flex h-14 scroll-mt-18 items-center gap-3 border-b border-slate-200 bg-white/95 px-2 backdrop-blur-md md:top-18 md:px-6"
             >
-              <div
-                role="tablist"
-                className="scrollbar-none flex h-full min-w-0 flex-1 items-stretch gap-1 overflow-x-auto"
-              >
-                {tabs.map((t) => {
-                  const active = tab === t
-                  const badge = t === "Notes" && notes.length ? notes.length : null
+              <div role="tablist" aria-label="Lesson sections" className="flex h-full min-w-0 flex-1 items-stretch gap-1">
+                {belowTabs.map((t) => {
+                  const active = below === t
                   return (
                     <button
                       key={t}
                       type="button"
                       role="tab"
                       aria-selected={active}
-                      onClick={() => setTab(t)}
-                      className={`group/tab relative flex shrink-0 items-center gap-2 px-3 text-sm transition md:px-4 ${
+                      onClick={() => setBelow(t)}
+                      className={`group/tab relative flex shrink-0 items-center gap-2 px-3 text-15 transition md:px-4 ${t === "Course" ? "lg:hidden" : ""} ${
                         active ? `text-slate-900 ${fontSemi}` : `text-slate-500 hover:text-slate-900 ${fontMedium}`
                       }`}
                     >
                       <HugeiconsIcon
-                        icon={tabIcons[t]}
+                        icon={belowIcons[t]}
                         size={18}
                         strokeWidth={active ? 2 : 1.8}
                         aria-hidden="true"
                         className={active ? "text-primary-700" : "text-slate-400 transition group-hover/tab:text-slate-600"}
                       />
                       {t}
-                      {badge !== null && (
-                        <span
-                          className={`min-w-5 rounded-full px-1.5 py-0.5 text-center text-11 leading-none tabular-nums ${
-                            active ? "bg-primary-700 text-white" : "bg-slate-100 text-slate-600"
-                          } ${fontSemi}`}
-                        >
-                          {badge}
-                        </span>
-                      )}
                       <span
                         aria-hidden="true"
-                        className={`absolute inset-x-2 bottom-0 h-0.5 rounded-full transition ${
-                          active ? "bg-primary-700" : "bg-transparent group-hover/tab:bg-slate-200"
-                        }`}
+                        className={`absolute inset-x-2 bottom-0 h-0.5 rounded-full transition ${active ? "bg-primary-700" : "bg-transparent group-hover/tab:bg-slate-200"}`}
                       />
                     </button>
                   )
@@ -643,54 +778,165 @@ function Player({ course }: { course: Course }) {
               <button
                 type="button"
                 onClick={share}
-                className={`hidden h-9 shrink-0 items-center gap-2 rounded-lg border border-slate-200 bg-white px-3.5 text-sm text-slate-700 shadow-sm transition hover:border-slate-300 hover:bg-slate-50 hover:text-slate-900 sm:flex ${fontMedium}`}
+                className={`${buttonClass("secondary", "md")} hidden shrink-0 sm:flex`}
               >
                 <HugeiconsIcon icon={Share08Icon} size={16} strokeWidth={1.8} aria-hidden="true" />
                 Share course
               </button>
             </div>
 
-            <div className="bg-white px-4 py-8 md:px-6">
-              {tab === "Overview" && (
-                <OverviewTab
-                  course={course}
-                  lessons={flat}
-                  more={moreOverview}
-                  onMore={() => setMoreOverview((m) => !m)}
-                />
-              )}
-              {tab === "Q&A" && (
-                <QaTab
-                  course={course}
-                  lecture={current.index + 1}
-                  onOpenLecture={(n) => {
-                    if (!flat[n - 1]) return
-                    goTo(flat[n - 1])
-                    window.scrollTo({ top: 0, behavior: "smooth" })
+            <div className="bg-slate-25 px-4 py-6 md:px-8 md:py-8">
+              {below === "Lesson" && (
+                <LessonSection
+                  lesson={current}
+                  chapters={chapters}
+                  liveSession={course.live}
+                  instructor={course.instructor}
+                  ratingPrompt={showRating}
+                  onRate={(stars) => {
+                    setRatePrompt("done")
+                    notify(`Thanks for rating this course ${stars} star${stars > 1 ? "s" : ""}`)
                   }}
+                  onRateLater={() => setRatePrompt("later")}
+                  onSeek={current.kind === "video" ? seekTo : undefined}
+                  notify={notify}
                 />
               )}
-              {tab === "Notes" && (
-                <NotesPanel
-                  notes={notes}
-                  setNotes={setNotes}
-                  current={lessonRef(current)}
-                  time={time}
-                  editId={editNoteId}
-                  setEditId={setEditNoteId}
-                  onJump={jumpToNote}
-                />
+              {below === "Discussion" && (
+                <div className="rounded-2xl border border-slate-200 bg-white p-4 md:p-6">
+                  {SHOW_ANNOUNCEMENTS && <PinnedAnnouncements items={announcements} />}
+                  <QaTab
+                    course={course}
+                    lecture={current.index + 1}
+                    onOpenLecture={(n) => {
+                      if (!flat[n - 1]) return
+                      goTo(flat[n - 1])
+                      window.scrollTo({ top: 0, behavior: "smooth" })
+                    }}
+                  />
+                </div>
               )}
-              {tab === "Announcements" && <AnnouncementsTab course={course} />}
-              {tab === "Reviews" && (
-                <ReviewsTab course={course} />
+              {below === "Course" && (
+                <div className="flex flex-col rounded-2xl border border-slate-200 bg-white lg:hidden">
+                  <div role="tablist" aria-label="Course tools" className="flex gap-1 border-b border-slate-200 p-2">
+                    {panels.map((p) => {
+                      const active = panel === p
+                      return (
+                        <button
+                          key={p}
+                          type="button"
+                          role="tab"
+                          aria-selected={active}
+                          onClick={() => setPanel(p)}
+                          className={`flex h-10 min-w-0 flex-1 items-center justify-center gap-1.5 rounded-lg text-13 transition ${
+                            active ? `bg-slate-100 text-slate-900 ${fontSemi}` : `text-slate-500 hover:bg-slate-50 hover:text-slate-900 ${fontMedium}`
+                          }`}
+                        >
+                          <HugeiconsIcon icon={panelIcons[p]} size={16} strokeWidth={active ? 2 : 1.8} aria-hidden="true" className={active ? "text-primary-700" : ""} />
+                          <span className="truncate">{p}</span>
+                          {p === "Notes" && notes.length > 0 && (
+                            <span className={`rounded-full bg-slate-200 px-1.5 text-10 tabular-nums text-slate-700 ${fontSemi}`}>{notes.length}</span>
+                          )}
+                        </button>
+                      )
+                    })}
+                  </div>
+                  <div className="max-h-120 min-h-60 overflow-y-auto">
+                    {panel === "Notes" && (
+                      <NotesPanel
+                        compact
+                        notes={notes}
+                        setNotes={setNotes}
+                        current={lessonRef(current)}
+                        time={time}
+                        editId={editNoteId}
+                        setEditId={setEditNoteId}
+                        onJump={jumpToNote}
+                      />
+                    )}
+                    {panel === "Transcript" && (
+                      <TranscriptPanel
+                        lines={lines}
+                        time={time}
+                        isVideo={current.kind === "video"}
+                        onSeek={seekTo}
+                        onSaveNote={saveLineNote}
+                        onAsk={(line) => {
+                          setAskSeed(line)
+                          setPanel("Ask")
+                        }}
+                      />
+                    )}
+                    {panel === "Ask" && (
+                      <AskPanel
+                        lessonTitle={current.title}
+                        instructor={course.instructor}
+                        lines={lines}
+                        chapters={chapters}
+                        time={time}
+                        isVideo={current.kind === "video"}
+                        seed={askSeed}
+                        onSeek={seekTo}
+                        onPostToDiscussion={() => {
+                          openBelow("Discussion")
+                          notify("Ask your question in Discussion. Your instructor gets notified.")
+                        }}
+                      />
+                    )}
+                    {panel === "Contents" && (
+                      <div className="flex flex-col">
+                        <div className="flex flex-col gap-3 border-b border-slate-200 px-4 py-4">
+                          <div className="flex items-baseline justify-between">
+                            <span className={`text-sm text-slate-900 ${fontSemi}`}>Course content</span>
+                            <span className={`text-sm tabular-nums text-slate-900 ${fontSemi}`}>{percent}%</span>
+                          </div>
+                          <div className="h-1 w-full overflow-hidden rounded-full bg-slate-100">
+                            <div className="h-full rounded-full bg-primary-700 transition-all duration-700" style={{ width: `${percent}%` }} />
+                          </div>
+                          <span className={`text-xs text-slate-500 ${fontRegular}`}>{doneCount} of {flat.length} lessons</span>
+                        </div>
+                        {sections.map((s, si) => {
+                          const sLessons = flat.filter((l) => l.section === si)
+                          const done = sLessons.filter((l) => progress.done.includes(l.key)).length
+                          return (
+                            <div key={si} className="border-b border-slate-150 last:border-b-0">
+                              <div className={`flex items-center justify-between px-4 py-3 ${fontSemi}`}>
+                                <span className="text-sm text-slate-900">Section {si + 1}: {s.title}</span>
+                                <span className={`text-xs tabular-nums text-slate-500 ${fontRegular}`}>{done}/{sLessons.length}</span>
+                              </div>
+                              <ul className="flex flex-col pb-1">
+                                {sLessons.map((l) => {
+                                  const isCurrent = l.key === current.key
+                                  const isDone = progress.done.includes(l.key)
+                                  return (
+                                    <li key={l.key}>
+                                      <button
+                                        type="button"
+                                        onClick={() => { goTo(l); setBelow("Lesson"); }}
+                                        className={`flex w-full items-center gap-3 px-4 py-2.5 text-left text-sm transition ${isCurrent ? `bg-primary-50 text-primary-700 ${fontSemi}` : `text-slate-700 hover:bg-slate-50 ${fontRegular}`}`}
+                                      >
+                                        <span className={`size-4 shrink-0 rounded-full border-2 ${isDone ? "border-primary-700 bg-primary-700" : "border-slate-300"}`} />
+                                        <span className="min-w-0 flex-1 truncate">{l.title}</span>
+                                        <span className={`text-xs text-slate-400 ${fontRegular}`}>{l.minutes} min</span>
+                                      </button>
+                                    </li>
+                                  )
+                                })}
+                              </ul>
+                            </div>
+                          )
+                        })}
+                      </div>
+                    )}
+                  </div>
+                </div>
               )}
             </div>
           </div>
 
           {/* Course content sidebar */}
           {sidebar ? (
-            <aside className="lg:h-learn-panel relative flex flex-col border-l border-slate-200 bg-white lg:sticky lg:top-18">
+            <aside aria-label="Lesson tools" className="h-dvh-minus-120 relative flex flex-col border-l border-slate-200 bg-white lg:sticky lg:top-18 lg:h-learn-panel">
               <button
                 type="button"
                 onClick={() => setSidebar(false)}
@@ -702,6 +948,75 @@ function Player({ course }: { course: Course }) {
                 </Svg>
               </button>
 
+              <div role="tablist" aria-label="Lesson tools" className="flex gap-1 border-b border-slate-200 p-2">
+                {panels.map((p) => {
+                  const active = panel === p
+                  return (
+                    <button
+                      key={p}
+                      type="button"
+                      role="tab"
+                      aria-selected={active}
+                      onClick={() => setPanel(p)}
+                      className={`flex h-10 min-w-0 flex-1 items-center justify-center gap-1.5 rounded-lg text-13 transition ${
+                        active ? `bg-slate-100 text-slate-900 ${fontSemi}` : `text-slate-500 hover:bg-slate-50 hover:text-slate-900 ${fontMedium}`
+                      }`}
+                    >
+                      <HugeiconsIcon icon={panelIcons[p]} size={16} strokeWidth={active ? 2 : 1.8} aria-hidden="true" className={active ? "text-primary-700" : ""} />
+                      <span className="truncate">{p}</span>
+                      {p === "Notes" && notes.length > 0 && (
+                        <span className={`rounded-full bg-slate-200 px-1.5 text-10 tabular-nums text-slate-700 ${fontSemi}`}>{notes.length}</span>
+                      )}
+                    </button>
+                  )
+                })}
+              </div>
+
+              {panel === "Notes" && (
+                <div className="scrollbar-thin min-h-0 flex-1 overflow-y-auto">
+                  <NotesPanel
+                    compact
+                    notes={notes}
+                    setNotes={setNotes}
+                    current={lessonRef(current)}
+                    time={time}
+                    editId={editNoteId}
+                    setEditId={setEditNoteId}
+                    onJump={jumpToNote}
+                  />
+                </div>
+              )}
+              {panel === "Transcript" && (
+                <TranscriptPanel
+                  lines={lines}
+                  time={time}
+                  isVideo={current.kind === "video"}
+                  onSeek={seekTo}
+                  onSaveNote={saveLineNote}
+                  onAsk={(line) => {
+                    setAskSeed(line)
+                    setPanel("Ask")
+                  }}
+                />
+              )}
+              {panel === "Ask" && (
+                <AskPanel
+                  lessonTitle={current.title}
+                  instructor={course.instructor}
+                  lines={lines}
+                  chapters={chapters}
+                  time={time}
+                  isVideo={current.kind === "video"}
+                  seed={askSeed}
+                  onSeek={seekTo}
+                  onPostToDiscussion={() => {
+                    openBelow("Discussion")
+                    notify("Ask your question in Discussion. Your instructor gets notified.")
+                  }}
+                />
+              )}
+
+              {panel === "Contents" && (<>
               <div className="flex flex-col gap-4 border-b border-slate-200 px-5 pb-4 pt-5">
                 <div className="flex items-baseline justify-between gap-3">
                   <h2 className={`m-0 text-lg text-slate-900 ${fontHeading}`} style={{ fontVariationSettings: '"wdth" 100' }}>
@@ -721,7 +1036,7 @@ function Player({ course }: { course: Course }) {
                     <div className="h-full rounded-full bg-primary-700 transition-all duration-700" style={{ width: `${percent}%` }} />
                   </div>
                   <span className={`text-xs tabular-nums text-slate-500 ${fontRegular}`}>
-                    {doneCount} of {flat.length} lessons · {minutesLabel(flat.reduce((m, l) => m + l.minutes, 0))} total
+                    {doneCount} of {flat.length} lessons · {skillsChecked} checkpoints passed · {minutesLabel(flat.reduce((m, l) => m + l.minutes, 0))}
                   </span>
                 </div>
                 <label className="flex h-9 items-center gap-2 rounded-lg bg-slate-100 px-3 transition focus-within:bg-white focus-within:ring-1 focus-within:ring-slate-300">
@@ -1061,6 +1376,7 @@ function Player({ course }: { course: Course }) {
                   )
                 })}
               </div>
+              </>)}
             </aside>
           ) : (
             <button
@@ -1077,155 +1393,20 @@ function Player({ course }: { course: Course }) {
           )}
         </div>
       )}
-    </div>
-  )
-}
-
-function HIcon({ icon, size = 18, className = "" }: { icon: IconSvgElement; size?: number; className?: string }) {
-  return <HugeiconsIcon icon={icon} size={size} strokeWidth={1.8} aria-hidden="true" className={`shrink-0 ${className}`} />
-}
-
-function Row({ label, children }: { label: string; children: ReactNode }) {
-  return (
-    <div className="grid grid-cols-1 gap-2 border-t border-slate-100 py-5 first:border-t-0 first:pt-0 last:pb-0 md:grid-cols-label md:gap-6">
-      <h3 className={`text-sm text-slate-900 ${fontSemi}`}>{label}</h3>
-      <div className="min-w-0">{children}</div>
-    </div>
-  )
-}
-
-function OverviewTab({
-  course,
-  lessons,
-  more,
-  onMore,
-}: {
-  course: Course
-  lessons: FlatLesson[]
-  more: boolean
-  onMore: () => void
-}) {
-  const count = (kind: Lesson["kind"]) => lessons.filter((l) => l.kind === kind).length
-  const totalMin = lessons.reduce((sum, l) => sum + l.minutes, 0)
-  const language = /[؀-ۿ]/.test(course.title) ? "Arabic" : "English"
-  const topics = courseTags[course.id] ?? [course.subcategory]
-  const initials = course.instructor
-    .replace(/^(د\.|Dr\.)\s*/, "")
-    .split(" ")
-    .slice(0, 2)
-    .map((w) => w[0])
-    .join("")
-
-  const details: [IconSvgElement, string, string][] = [
-    [ChartBarLineIcon, "Level", course.level],
-    [UserGroupIcon, "Students", course.students.toLocaleString()],
-    [TranslateIcon, "Language", language],
-    [PlayListIcon, "Lectures", String(lessons.length)],
-    [GridViewIcon, "Category", course.category],
-    [HelpCircleIcon, "Quizzes", String(count("quiz"))],
-    [Layers01Icon, "Sub category", course.subcategory],
-    [Task01Icon, "Assignments", String(count("assignment"))],
-  ]
-
-  return (
-    <div className="flex max-w-4xl flex-col">
-      <Row label="About">
-        <p
-          dir="auto"
-          className={`text-start text-sm leading-relaxed text-slate-700 ${fontFor(course.description, fontRegular, "font-normal")}`}
-        >
-          {course.description}
-        </p>
-      </Row>
-
-      <Row label="Instructor">
-        <div className="flex items-center gap-3">
-          <span className={`flex size-10 shrink-0 items-center justify-center rounded-full bg-primary-700 text-sm text-white ${fontSemi}`}>
-            {initials}
-          </span>
-          <div className="min-w-0">
-            <p dir="auto" className={`text-start text-sm text-slate-900 ${fontFor(course.instructor, fontSemi, "font-semibold")}`}>
-              {course.instructor}
-            </p>
-            <p className={`flex flex-wrap items-center gap-x-2 text-xs text-slate-500 ${fontRegular}`}>
-              {course.subcategory} instructor
-              <span className="text-slate-300" aria-hidden="true">•</span>
-              <span className="inline-flex items-center gap-1">
-                <HIcon icon={StarIcon} size={12} className="fill-current text-secondary-500" />
-                <span className={`text-slate-700 ${fontMedium}`}>{course.rating.toFixed(1)}</span>
-              </span>
-              <span className="text-slate-300" aria-hidden="true">•</span>
-              {Math.floor(totalMin / 60)}h {totalMin % 60}m of content
-            </p>
-          </div>
-        </div>
-      </Row>
-
-      <Row label="Course details">
-        <dl className="grid grid-cols-1 gap-x-8 gap-y-2.5 sm:grid-cols-2">
-          {details.map(([icon, label, value]) => (
-            <div key={label} className={`flex items-start gap-2.5 text-sm ${fontRegular}`}>
-              <HIcon icon={icon} size={16} className="mt-0.5 text-slate-400" />
-              <dt className="w-24 shrink-0 text-slate-500">{label}</dt>
-              <dd className={`m-0 min-w-0 text-slate-900 ${fontMedium}`}>{value}</dd>
-            </div>
-          ))}
-        </dl>
-      </Row>
-
-      <Row label="Overview">
-        <div className="relative">
-          <div
-            className={`flex flex-col gap-3 text-sm leading-relaxed text-slate-600 ${fontRegular} ${
-              more ? "" : "max-h-24 overflow-hidden"
-            }`}
-          >
-            <p>
-              In this {course.level.toLowerCase()} course you learn {course.subcategory.toLowerCase()} step by step
-              through {lessons.length} short lessons. Each section ends with a short exercise, so you practise what you
-              learn before moving on.
-            </p>
-            <div>
-              <p className={`mb-2 text-slate-900 ${fontMedium}`}>What you will be able to do by the end</p>
-              <ul className="flex flex-col gap-1.5">
-                {course.outcomes.map((o) => (
-                  <li key={o} dir="auto" className="flex items-start gap-2">
-                    <HIcon icon={Tick02Icon} size={16} className="mt-0.5 text-primary-700" />
-                    {o}
-                  </li>
-                ))}
-              </ul>
-            </div>
-            <div className="flex flex-wrap items-center gap-1.5">
-              <span className={`mr-1 text-slate-900 ${fontMedium}`}>Topics</span>
-              {topics.map((t) => (
-                <span key={t} className={`rounded-md bg-slate-100 px-2 py-0.5 text-xs text-slate-700 ${fontMedium}`}>
-                  {t}
-                </span>
-              ))}
-            </div>
-          </div>
-          {!more && (
-            <div className="pointer-events-none absolute inset-x-0 bottom-0 h-12 bg-gradient-to-t from-white to-white/0" />
-          )}
-        </div>
-        <button
-          type="button"
-          onClick={onMore}
-          aria-expanded={more}
-          className={`mt-2 inline-flex items-center gap-1 text-sm text-primary-700 transition hover:text-primary-800 ${fontSemi}`}
-        >
-          {more ? "Show less" : "Show more"}
-          <HIcon icon={ArrowDown01Icon} size={16} className={`transition-transform ${more ? "rotate-180" : ""}`} />
-        </button>
-      </Row>
+      {sharing && (
+        <ShareCourseDialog
+          course={course}
+          url={`${window.location.origin}${window.location.pathname}#/course/${course.id}`}
+          onClose={() => setSharing(false)}
+        />
+      )}
     </div>
   )
 }
 
 const avatarColors = ["#0d5c4b", "#1d4ed8", "#b45309", "#7c3aed", "#be123c"]
 
-function Avatar({ name }: { name: string }) {
+function Avatar({ name, small = false, medium = false }: { name: string; small?: boolean; medium?: boolean }) {
   const initials = name
     .split(" ")
     .map((p) => p[0])
@@ -1234,7 +1415,7 @@ function Avatar({ name }: { name: string }) {
     .toUpperCase()
   return (
     <span
-      className={`flex size-[44px] shrink-0 items-center justify-center rounded-full text-[14px] text-white ${fontSemi}`}
+      className={`flex shrink-0 items-center justify-center rounded-full text-white ${small ? "size-6 text-10" : medium ? "size-9 text-xs" : "size-11 text-sm"} ${fontSemi}`}
       style={{ background: avatarColors[name.length % avatarColors.length] }}
       aria-hidden="true"
     >
@@ -1269,7 +1450,7 @@ function seedQuestions(course: Course): Question[] {
       created: 993,
       votes: 12,
       answers: [
-        { id: 201, name: course.instructor, instructor: true, text: "I watched the full section first, and the exercises made more sense after that.", when: "5 days ago", votes: 3 },
+        { id: 201, name: course.instructor, instructor: true, text: "Watch the full section first, then do the exercises. They build on each other, so they make more sense once you have seen the whole idea.", when: "5 days ago", votes: 3 },
       ],
     },
     {
@@ -1293,7 +1474,7 @@ function seedQuestions(course: Course): Question[] {
       created: 970,
       votes: 2,
       answers: [
-        { id: 401, name: course.instructor, instructor: true, text: "About an hour for me. It is fine to return to it later, since there is no deadline.", when: "3 weeks ago", votes: 2 },
+        { id: 401, name: course.instructor, instructor: true, text: "Plan for about an hour. There is no deadline, so you can come back to it later.", when: "3 weeks ago", votes: 2 },
       ],
     },
   ]
@@ -1330,7 +1511,7 @@ function UpvoteButton({
       aria-label={active ? `Remove upvote, ${count} upvotes` : `Upvote, ${count} upvotes`}
       aria-pressed={active}
       onClick={onClick}
-      className={`flex items-center gap-1.5 text-[14px] tabular-nums transition hover:text-[#6016fc] ${active ? "text-[#6016fc]" : "text-[#64748b]"} ${fontMedium}`}
+      className={`flex items-center gap-1.5 text-sm tabular-nums transition hover:text-primary-700 ${active ? "text-primary-700" : "text-slate-500"} ${fontMedium}`}
     >
       <svg
         viewBox="0 0 24 24"
@@ -1350,100 +1531,38 @@ function UpvoteButton({
   )
 }
 
-function QuestionSummary({
-  question,
-  voted,
-  onVote,
-  onOpenLecture,
-  onOpen,
-}: {
-  question: Question
-  voted: number[]
-  onVote: (id: number) => void
-  onOpenLecture: (n: number) => void
-  onOpen?: () => void
-}) {
-  const titleCls = `text-left text-[14px] leading-[22px] text-[#1e293b] ${fontFor(question.title, fontSemi)}`
-  const answerCount = (
-    <>
-      <svg viewBox="0 0 24 24" className="size-5" fill="currentColor" aria-hidden="true">
-        <path d="M4 4h12a2 2 0 012 2v7a2 2 0 01-2 2H9.5L5 18.5V15H4a2 2 0 01-2-2V6a2 2 0 012-2z" />
-        <path d="M20 8.5h.5A1.5 1.5 0 0122 10v6.5a1.5 1.5 0 01-1.5 1.5H20v3l-3.8-3H11v-1.5h5.5A3.5 3.5 0 0020 13z" />
-      </svg>
-      {question.answers.length}
-    </>
-  )
-  const countCls = `flex items-center gap-1.5 text-[14px] tabular-nums text-[#334155] ${fontMedium}`
+const actionCls = `flex h-8 items-center gap-1.5 rounded-lg px-2 text-sm transition hover:bg-slate-100 ${fontMedium}`
+
+function VoteAction({ count, active, onClick }: { count: number; active: boolean; onClick: () => void }) {
   return (
-    <div className="flex gap-3 md:gap-5">
-      <Avatar name={question.name} />
-      <div className="flex min-w-0 flex-1 gap-4">
-        <div className="flex min-w-0 flex-1 flex-col gap-2">
-          {onOpen ? (
-            <button type="button" dir="auto" onClick={onOpen} className={`${titleCls} transition-colors hover:text-[#6016fc]`}>
-              {question.title}
-            </button>
-          ) : (
-            <p dir="auto" className={titleCls}>
-              {question.title}
-            </p>
-          )}
-          <div className={`text-[14px] leading-[22px] text-[#475569] ${fontRegular}`}>
-            <p>Question:</p>
-            <p dir="auto" className={`text-left ${fontFor(question.text, fontRegular, "font-normal")}`}>
-              {question.text}
-            </p>
-          </div>
-          <p className={`flex flex-wrap items-center gap-x-2 gap-y-1 text-[12px] text-[#6016fc] ${fontRegular}`}>
-            <span dir="auto" className={`underline underline-offset-2 ${fontFor(question.name, fontRegular, "font-normal")}`}>
-              {question.name}
-            </span>
-            <span className="text-[#94a3b8]">·</span>
-            <button
-              type="button"
-              onClick={() => onOpenLecture(question.lecture)}
-              className="flex items-center gap-1 transition hover:text-[#4f0fd6] hover:underline"
-            >
-              Lecture {question.lecture}
-              <Svg className="size-3.5">
-                <path d="M14 5h5v5M19 5l-8 8M18 14v4a1 1 0 01-1 1H6a1 1 0 01-1-1V7a1 1 0 011-1h4" />
-              </Svg>
-            </button>
-            <span className="text-[#94a3b8]">·</span>
-            <span className="text-[#64748b]">{question.when}</span>
-          </p>
-        </div>
-        <div className="flex shrink-0 flex-col items-start gap-3">
-          <UpvoteButton
-            count={question.votes + (voted.includes(question.id) ? 1 : 0)}
-            active={voted.includes(question.id)}
-            onClick={() => onVote(question.id)}
-          />
-          {onOpen ? (
-            <button
-              type="button"
-              aria-label={`Open question, ${question.answers.length} replies`}
-              onClick={onOpen}
-              className={`${countCls} transition hover:text-[#6016fc]`}
-            >
-              {answerCount}
-            </button>
-          ) : (
-            <span className={countCls} aria-label={`${question.answers.length} replies`}>
-              {answerCount}
-            </span>
-          )}
-        </div>
-      </div>
-    </div>
+    <button
+      type="button"
+      aria-pressed={active}
+      aria-label={active ? `Remove your vote, ${count} votes` : `Mark as helpful, ${count} votes`}
+      onClick={onClick}
+      className={`${actionCls} tabular-nums ${active ? "text-primary-700" : "text-slate-500 hover:text-slate-800"}`}
+    >
+      <HugeiconsIcon icon={ThumbsUpIcon} size={17} strokeWidth={active ? 2.2 : 1.8} />
+      {count}
+    </button>
   )
 }
 
-function ReplyRow({
+function ReplyAction({ onClick }: { onClick: () => void }) {
+  return (
+    <button type="button" onClick={onClick} className={`${actionCls} text-slate-500 hover:text-slate-800`}>
+      <HugeiconsIcon icon={Comment01Icon} size={17} strokeWidth={1.8} />
+      Reply
+    </button>
+  )
+}
+
+function ThreadReply({
   reply,
   voted,
   reported,
   onVote,
+  onReply,
   onReport,
   onEdit,
   onDelete,
@@ -1452,183 +1571,217 @@ function ReplyRow({
   voted: boolean
   reported: boolean
   onVote: () => void
+  onReply: () => void
   onReport: () => void
   onEdit: (text: string, html: string) => void
   onDelete: () => void
 }) {
   const [editing, setEditing] = useState(false)
   return (
-    <div className="flex gap-3">
-      <Avatar name={reply.name} />
-      {editing ? (
-        <NoteEditor
-          extras
-          initial={reply}
-          placeholder="Add a comment...."
-          saveClass={replyBtnClass}
-          onSave={(text, html) => {
-            onEdit(text, html)
-            setEditing(false)
-          }}
-          onCancel={() => setEditing(false)}
-        />
-      ) : (
-        <div className="flex min-w-0 flex-1 flex-col gap-2">
-          <div className="flex items-center gap-3">
-            <p className={`flex min-w-0 flex-1 flex-wrap items-center gap-x-2 gap-y-1 text-[12px] text-[#64748b] ${fontRegular}`}>
-              <span dir="auto" className={`text-[14px] text-[#6016fc] ${fontFor(reply.name, fontSemi)}`}>
-                {reply.name}
-              </span>
-              {reply.instructor ? (
-                <span className={`rounded-[2px] bg-[#f97316] px-1.5 py-0.5 text-[11px] leading-none text-white ${fontMedium}`}>
-                  Instructor
-                </span>
-              ) : (
-                <span className="text-[#94a3b8]">·</span>
-              )}
-              <span>{reply.when}</span>
-            </p>
-            <UpvoteButton count={reply.votes + (voted ? 1 : 0)} active={voted} onClick={onVote} />
-            <ActionMenu
-              label="Reply options"
-              triggerClass={kebabClass}
-              trigger={kebabIcon}
-              items={
-                reply.mine
-                  ? [
-                      { label: "Edit", onClick: () => setEditing(true) },
-                      { label: "Delete", onClick: onDelete },
-                    ]
-                  : [{ label: reported ? "Reported" : "Report Abuse", onClick: onReport, disabled: reported }]
-              }
-            />
-          </div>
-          <NoteBody note={reply} tone="text-[#475569]" />
+    <div className="relative flex gap-3">
+      <span className="absolute -left-6 top-0 h-4.5 w-5 rounded-bl-xl border-b border-l border-slate-200" aria-hidden="true" />
+      <Avatar name={reply.name} medium />
+      <div className="min-w-0 flex-1">
+        <div className="flex min-h-9 flex-wrap items-center gap-x-2 gap-y-1">
+          <span dir="auto" className={`text-sm text-slate-900 ${fontFor(reply.name, fontSemi)}`}>
+            {reply.name}
+          </span>
+          {reply.instructor && (
+            <span className={`flex items-center gap-1 text-xs text-primary-700 ${fontMedium}`}>
+              <HugeiconsIcon icon={CheckmarkBadge01Icon} size={14} strokeWidth={2} />
+              Instructor
+            </span>
+          )}
+          {reply.mine && !reply.instructor && (
+            <span className={`rounded-full bg-slate-100 px-2 py-0.5 text-11 text-slate-600 ${fontMedium}`}>You</span>
+          )}
+          <span className={`text-xs text-slate-400 ${fontRegular}`}>{reply.when}</span>
         </div>
-      )}
-    </div>
-  )
-}
-
-const replyBtnClass = "bg-[#4f46e5] text-white hover:bg-[#4338ca]"
-
-function QuestionDetail({
-  course,
-  question,
-  total,
-  voted,
-  following,
-  onVote,
-  onFollow,
-  onOpenLecture,
-  onBack,
-  onReply,
-  onEditReply,
-  onDeleteReply,
-}: {
-  course: Course
-  question: Question
-  total: number
-  voted: number[]
-  following: boolean
-  onVote: (id: number) => void
-  onFollow: () => void
-  onOpenLecture: (n: number) => void
-  onBack: () => void
-  onReply: (text: string, html: string) => void
-  onEditReply: (id: number, text: string, html: string) => void
-  onDeleteReply: (id: number) => void
-}) {
-  const { user, notify } = useApp()
-  const [reported, setReported] = useLocal<number[]>(`thkee.qaReported.${course.id}`, [])
-  // Remounts the comment box so it empties after each reply.
-  const [composerKey, setComposerKey] = useState(0)
-  const score = (a: QaAnswer) => a.votes + (voted.includes(a.id) ? 1 : 0)
-  // The most upvoted replies always stay first.
-  const replies = [...question.answers].sort((a, b) => score(b) - score(a) || b.id - a.id)
-
-  return (
-    <div className="flex flex-col gap-6">
-      <h3 className={`m-0 border-b border-[#e2e8f0] pb-4 text-[22px] text-[#0f172a] ${fontRegular}`}>
-        Questions and answers ({total})
-      </h3>
-      <button
-        type="button"
-        onClick={onBack}
-        className={`flex h-[32px] items-center gap-2 self-start rounded-[6px] bg-[#e2e8f0] px-3 text-[14px] text-[#1e293b] transition hover:bg-[#cbd5e1] ${fontMedium}`}
-      >
-        <Svg className="size-4" stroke={2}>
-          <path d="M19 12H5M11 6l-6 6 6 6" />
-        </Svg>
-        Go Back to the Questions
-      </button>
-      <QuestionSummary question={question} voted={voted} onVote={onVote} onOpenLecture={onOpenLecture} />
-      <div className="flex flex-col gap-3">
-        <div className="flex items-center justify-between gap-3">
-          <p className={`text-[14px] text-[#0f172a] ${fontSemi}`}>
-            {question.answers.length === 1 ? "1 reply" : `${question.answers.length} replies`}
-          </p>
-          <button
-            type="button"
-            aria-pressed={following}
-            onClick={onFollow}
-            className={`text-[14px] underline underline-offset-4 transition hover:text-[#4f0fd6] ${following ? "text-[#64748b]" : "text-[#6016fc]"} ${fontMedium}`}
-          >
-            {following ? "Following" : "Follow question"}
-          </button>
-        </div>
-        <div className="flex flex-col gap-6 rounded-[6px] border border-[#e2e8f0] p-4 md:p-5">
-          {replies.map((reply) => (
-            <ReplyRow
-              key={reply.id}
-              reply={reply}
-              voted={voted.includes(reply.id)}
-              reported={reported.includes(reply.id)}
-              onVote={() => onVote(reply.id)}
-              onReport={() => {
-                setReported((list) => [...list, reply.id])
-                notify("Thanks, we'll take a look at this reply")
-              }}
-              onEdit={(text, html) => onEditReply(reply.id, text, html)}
-              onDelete={() => onDeleteReply(reply.id)}
-            />
-          ))}
-          <div className="flex gap-3">
-            <Avatar name={user?.name ?? "You"} />
+        {editing ? (
+          <div className="mt-2">
             <NoteEditor
-              key={composerKey}
               extras
-              placeholder="Add a comment...."
-              saveLabel="Reply"
-              saveClass={replyBtnClass}
+              modern
+              boxClass="min-h-24"
+              initial={reply}
+              placeholder="Edit your reply"
+              saveVariant="primary"
               onSave={(text, html) => {
-                onReply(text, html)
-                setComposerKey((k) => k + 1)
+                onEdit(text, html)
+                setEditing(false)
               }}
+              onCancel={() => setEditing(false)}
             />
           </div>
-        </div>
+        ) : (
+          <>
+            <NoteBody note={reply} tone="text-slate-700" />
+            <div className="-ml-2 mt-1 flex items-center gap-1">
+              <VoteAction count={reply.votes + (voted ? 1 : 0)} active={voted} onClick={onVote} />
+              <ReplyAction onClick={onReply} />
+              <ActionMenu
+                label="Reply options"
+                triggerClass={kebabClass}
+                trigger={kebabIcon}
+                items={
+                  reply.mine
+                    ? [
+                        { label: "Edit", onClick: () => setEditing(true) },
+                        { label: "Delete", onClick: onDelete },
+                      ]
+                    : [{ label: reported ? "Reported" : "Report abuse", onClick: onReport, disabled: reported }]
+                }
+              />
+            </div>
+          </>
+        )}
       </div>
     </div>
   )
 }
 
-function QuestionRow({
+function QuestionThread({
   question,
   voted,
+  reported,
+  following,
   onVote,
-  onOpen,
+  onFollow,
+  onReport,
   onOpenLecture,
+  onReply,
+  onEditReply,
+  onDeleteReply,
 }: {
   question: Question
   voted: number[]
+  reported: number[]
+  following: boolean
   onVote: (id: number) => void
-  onOpen: () => void
+  onFollow: () => void
+  onReport: (id: number) => void
   onOpenLecture: (n: number) => void
+  onReply: (text: string, html: string) => void
+  onEditReply: (id: number, text: string, html: string) => void
+  onDeleteReply: (id: number) => void
 }) {
+  const { user } = useApp()
+  const [replying, setReplying] = useState(false)
+  const [expanded, setExpanded] = useState(false)
+  const score = (a: QaAnswer) => a.votes + (voted.includes(a.id) ? 1 : 0)
+  // Instructor replies first, then the most helpful.
+  const replies = [...question.answers].sort(
+    (a, b) => Number(!!b.instructor) - Number(!!a.instructor) || score(b) - score(a) || b.id - a.id,
+  )
+  const visible = expanded ? replies : replies.slice(0, 2)
+  const hidden = replies.length - visible.length
+  const isVoted = voted.includes(question.id)
+
   return (
-    <li>
-      <QuestionSummary question={question} voted={voted} onVote={onVote} onOpen={onOpen} onOpenLecture={onOpenLecture} />
+    <li className="py-5">
+      <div className="flex gap-3">
+        <Avatar name={question.name} medium />
+        <div className="min-w-0 flex-1">
+          <div className={`flex min-h-9 flex-wrap items-center gap-x-2 gap-y-1 text-xs text-slate-400 ${fontRegular}`}>
+            <span dir="auto" className={`text-sm text-slate-900 ${fontFor(question.name, fontSemi)}`}>
+              {question.name}
+            </span>
+            {question.mine && <span className={`rounded-full bg-slate-100 px-2 py-0.5 text-11 text-slate-600 ${fontMedium}`}>You</span>}
+            <span>{question.when}</span>
+            <span aria-hidden="true">·</span>
+            <button
+              type="button"
+              onClick={() => onOpenLecture(question.lecture)}
+              title={`Go to lecture ${question.lecture}`}
+              className="transition hover:text-primary-700 hover:underline"
+            >
+              Lecture {question.lecture}
+            </button>
+          </div>
+          <h3 dir="auto" className={`m-0 text-15 leading-snug text-slate-900 ${fontFor(question.title, fontSemi)}`}>
+            {question.title}
+          </h3>
+          <p dir="auto" className={`m-0 mt-1 text-sm leading-relaxed text-slate-700 ${fontFor(question.text, fontRegular, "font-normal")}`}>
+            {question.text}
+          </p>
+          <div className="-ml-2 mt-1.5 flex flex-wrap items-center gap-1">
+            <VoteAction count={question.votes + (isVoted ? 1 : 0)} active={isVoted} onClick={() => onVote(question.id)} />
+            <ReplyAction onClick={() => setReplying(true)} />
+            <button
+              type="button"
+              aria-pressed={following}
+              onClick={onFollow}
+              className={`${actionCls} ${following ? "text-primary-700" : "text-slate-500 hover:text-slate-800"}`}
+            >
+              <HugeiconsIcon icon={following ? Tick02Icon : Notification01Icon} size={16} strokeWidth={1.8} />
+              {following ? "Following" : "Follow"}
+            </button>
+            {!question.mine && (
+              <ActionMenu
+                label="Question options"
+                triggerClass={kebabClass}
+                trigger={kebabIcon}
+                items={[
+                  {
+                    label: reported.includes(question.id) ? "Reported" : "Report abuse",
+                    onClick: () => onReport(question.id),
+                    disabled: reported.includes(question.id),
+                  },
+                ]}
+              />
+            )}
+          </div>
+        </div>
+      </div>
+
+      {(replies.length > 0 || replying) && (
+        <div className="ml-4.5 mt-2 flex flex-col gap-4 border-l border-slate-200 pl-6 pt-2">
+          {visible.map((reply) => (
+            <ThreadReply
+              key={reply.id}
+              reply={reply}
+              voted={voted.includes(reply.id)}
+              reported={reported.includes(reply.id)}
+              onVote={() => onVote(reply.id)}
+              onReply={() => setReplying(true)}
+              onReport={() => onReport(reply.id)}
+              onEdit={(text, html) => onEditReply(reply.id, text, html)}
+              onDelete={() => onDeleteReply(reply.id)}
+            />
+          ))}
+          {hidden > 0 && (
+            <button
+              type="button"
+              onClick={() => setExpanded(true)}
+              className={`self-start text-sm text-primary-700 transition hover:text-primary-800 hover:underline ${fontMedium}`}
+            >
+              View {hidden} more {hidden === 1 ? "reply" : "replies"}
+            </button>
+          )}
+          {replying && (
+            <div className="relative flex gap-3">
+              <span className="absolute -left-6 top-0 h-4.5 w-5 rounded-bl-xl border-b border-l border-slate-200" aria-hidden="true" />
+              <Avatar name={user?.name ?? "You"} medium />
+              <div className="min-w-0 flex-1">
+                <NoteEditor
+                  extras
+                  modern
+                  boxClass="min-h-24"
+                  placeholder="Write a reply"
+                  saveLabel="Reply"
+                  saveVariant="primary"
+                  onSave={(text, html) => {
+                    onReply(text, html)
+                    setReplying(false)
+                    setExpanded(true)
+                  }}
+                  onCancel={() => setReplying(false)}
+                />
+              </div>
+            </div>
+          )}
+        </div>
+      )}
     </li>
   )
 }
@@ -1643,7 +1796,7 @@ function QaTab({
   onOpenLecture: (n: number) => void
 }) {
   const { user, notify } = useApp()
-  const [items, setItems] = useLocal<Question[]>(`thkee.qa3.${course.id}`, seedQuestions(course))
+  const [items, setItems] = useLocal<Question[]>(`thkee.qa4.${course.id}`, seedQuestions(course))
   const [voted, setVoted] = useLocal<number[]>(`thkee.qaVoted.${course.id}`, [])
   const [followed, setFollowed] = useLocal<number[]>(`thkee.qaFollowed.${course.id}`, [])
   const [search, setSearch] = useState("")
@@ -1652,12 +1805,7 @@ function QaTab({
   const [sort, setSort] = useState("upvoted")
   const [show, setShow] = useState("all")
   const [asking, setAsking] = useState(false)
-  const [openId, setOpenId] = useState<number | null>(null)
-  const rootRef = useRef<HTMLDivElement>(null)
-
-  useEffect(() => {
-    if (openId !== null) rootRef.current?.scrollIntoView({ block: "start" })
-  }, [openId])
+  const [reported, setReported] = useLocal<number[]>(`thkee.qaReported.${course.id}`, [])
 
   const [title, setTitle] = useState("")
   const [text, setText] = useState("")
@@ -1708,81 +1856,39 @@ function QaTab({
   const updateAnswers = (id: number, change: (list: QaAnswer[]) => QaAnswer[]) =>
     setItems((list) => list.map((item) => (item.id === id ? { ...item, answers: change(item.answers) } : item)))
 
-  const opened = items.find((item) => item.id === openId)
-  if (opened)
-    return (
-      <div ref={rootRef} className="scroll-mt-[140px]">
-        <QuestionDetail
-          course={course}
-          question={opened}
-          total={items.length}
-          voted={voted}
-          following={followed.includes(opened.id)}
-          onVote={(id) => toggle(setVoted, id)}
-          onFollow={() => toggle(setFollowed, opened.id)}
-          onOpenLecture={onOpenLecture}
-          onBack={() => setOpenId(null)}
-          onReply={(value, html) =>
-            updateAnswers(opened.id, (list) => [...list, { id: Date.now(), name: user?.name ?? "You", text: value, html, when: "just now", votes: 0, mine: true }])
-          }
-          onEditReply={(id, value, html) =>
-            updateAnswers(opened.id, (list) => list.map((a) => (a.id === id ? { ...a, text: value, html } : a)))
-          }
-          onDeleteReply={(id) => updateAnswers(opened.id, (list) => list.filter((a) => a.id !== id))}
-        />
-      </div>
-    )
-
   const fieldCls = "field"
 
   return (
-    <div ref={rootRef} className="flex scroll-mt-[140px] flex-col gap-6">
-      <label className="field-box">
-        <Svg className="size-[18px] shrink-0 text-[#475569]" stroke={2}>
-          <circle cx="11" cy="11" r="7" />
-          <path d="M20 20l-3.5-3.5" />
-        </Svg>
-        <input
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          placeholder="Search all course questions."
-          aria-label="Search all course questions"
-          className={`min-w-0 flex-1 bg-transparent text-[16px] text-[#0f172a] outline-none placeholder:text-slate-400 md:text-[14px] ${fontRegular}`}
-        />
-      </label>
-      <div className="flex flex-wrap items-center justify-end gap-3">
-        <FilterSelect label="Filter by" options={qaLectureOptions} value={lectureFilter} onChange={setLectureFilter} />
-        <FilterSelect label="Sort by" options={qaSortOptions} value={sort} onChange={setSort} />
-        <FilterSelect label="Filter Questions" options={qaShowOptions} value={show} onChange={setShow} alignRight />
+    <div className="flex flex-col gap-5">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <h3 className={`m-0 flex items-center gap-2 text-lg text-slate-900 ${fontHeading}`} style={{ fontVariationSettings: '"wdth" 100' }}>
+          Questions
+          <span className={`rounded-full bg-slate-100 px-2 py-0.5 font-sans text-xs tabular-nums text-slate-600 ${fontSemi}`}>{shown.length}</span>
+        </h3>
+        {!asking && (
+          <button
+            type="button"
+            onClick={() => setAsking(true)}
+            className={`${buttonClass("yellow", "lg")}`}
+          >
+            <Svg className="size-4" stroke={2.2}>
+              <path d="M12 5v14M5 12h14" />
+            </Svg>
+            Ask a question
+          </button>
+        )}
       </div>
-      <h3 className={`m-0 border-b border-[#e2e8f0] pb-4 text-[22px] text-[#0f172a] ${fontRegular}`}>
-        Questions and answers ({shown.length})
-      </h3>
-      {shown.length === 0 ? (
-        <p className={`py-8 text-center text-[14px] text-[#64748b] ${fontRegular}`}>
-          No questions match these filters.
-        </p>
-      ) : (
-        <ul className="flex flex-col gap-8">
-          {shown.map((item) => (
-            <QuestionRow
-              key={item.id}
-              question={item}
-              voted={voted}
-              onVote={(id) => toggle(setVoted, id)}
-              onOpen={() => setOpenId(item.id)}
-              onOpenLecture={onOpenLecture}
-            />
-          ))}
-        </ul>
-      )}
-      {asking ? (
-        <form onSubmit={post} className="flex flex-col gap-3 rounded-[8px] border border-[#e2e8f0] bg-[#f8fafc] p-4 md:p-5">
+
+      {asking && (
+        <form onSubmit={post} className="fade-up flex flex-col gap-3 rounded-2xl border border-slate-200 bg-slate-25 p-4 md:p-5">
+          <p className={`m-0 text-sm text-slate-600 ${fontRegular}`}>
+            Asking about <span className={`text-slate-900 ${fontSemi}`}>Lecture {lecture}</span>. Search first, someone may have asked already.
+          </p>
           <input
             autoFocus
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            placeholder="Question title"
+            placeholder="Your question in one line"
             aria-label="Question title"
             className={fieldCls}
           />
@@ -1790,179 +1896,88 @@ function QaTab({
             value={text}
             onChange={(e) => setText(e.target.value)}
             rows={4}
-            placeholder="What would you like to ask the instructor or other learners?"
+            placeholder="Add details: what you tried and where you got stuck"
             aria-label="Your question"
             className={fieldCls}
           />
-          <div className="flex items-center justify-end gap-3">
+          <div className="flex items-center justify-end gap-2">
             <button
               type="button"
               onClick={() => setAsking(false)}
-              className={`h-[44px] rounded-[8px] px-4 text-[14px] text-[#0f172a] transition hover:bg-[#e2e8f0] ${fontMedium}`}
+              className={`h-11 rounded-xl px-4 text-sm text-slate-700 transition hover:bg-slate-100 ${fontMedium}`}
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={!title.trim() || !text.trim()}
-              className={`h-[44px] rounded-[8px] bg-[#ffb20d] px-5 text-[14px] text-[#1e293b] transition hover:bg-[#faa104] disabled:opacity-50 ${fontMedium}`}
+              className={`${buttonClass("yellow", "lg")}`}
             >
               Post question
             </button>
           </div>
         </form>
+      )}
+
+      <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
+        <label className="field-box min-w-0 flex-1">
+          <Svg className="size-4.5 shrink-0 text-slate-500" stroke={2}>
+            <circle cx="11" cy="11" r="7" />
+            <path d="M20 20l-3.5-3.5" />
+          </Svg>
+          <input
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search all course questions"
+            aria-label="Search all course questions"
+            className={`min-w-0 flex-1 bg-transparent text-base text-slate-900 outline-none placeholder:text-slate-400 md:text-sm ${fontRegular}`}
+          />
+        </label>
+        <div className="flex flex-wrap items-center gap-2">
+          <FilterSelect label="Lecture" options={qaLectureOptions} value={lectureFilter} onChange={setLectureFilter} />
+          <FilterSelect label="Sort" options={qaSortOptions} value={sort} onChange={setSort} />
+          <FilterSelect label="Show" options={qaShowOptions} value={show} onChange={setShow} alignRight />
+        </div>
+      </div>
+
+      {shown.length === 0 ? (
+        <div className="flex flex-col items-center gap-2 rounded-2xl border border-dashed border-slate-200 px-6 py-10 text-center">
+          <p className={`m-0 text-15 text-slate-900 ${fontSemi}`}>No questions here yet</p>
+          <p className={`m-0 text-sm text-slate-500 ${fontRegular}`}>Try another filter, or be the first to ask.</p>
+        </div>
       ) : (
-        <button
-          type="button"
-          onClick={() => setAsking(true)}
-          className={`h-[44px] self-center rounded-[8px] bg-[#ffb20d] px-5 text-[14px] text-[#1e293b] transition hover:bg-[#faa104] ${fontMedium}`}
-        >
-          Ask your Questions
-        </button>
+        <ul className="m-0 flex list-none flex-col divide-y divide-slate-100 p-0">
+          {shown.map((item) => (
+            <QuestionThread
+              key={item.id}
+              question={item}
+              voted={voted}
+              reported={reported}
+              following={followed.includes(item.id)}
+              onVote={(id) => toggle(setVoted, id)}
+              onFollow={() => toggle(setFollowed, item.id)}
+              onReport={(id) => {
+                setReported((list) => [...list, id])
+                notify("Thanks, we'll take a look at this")
+              }}
+              onOpenLecture={onOpenLecture}
+              onReply={(value, html) =>
+                updateAnswers(item.id, (list) => [...list, { id: Date.now(), name: user?.name ?? "You", text: value, html, when: "just now", votes: 0, mine: true }])
+              }
+              onEditReply={(id, value, html) =>
+                updateAnswers(item.id, (list) => list.map((a) => (a.id === id ? { ...a, text: value, html } : a)))
+              }
+              onDeleteReply={(id) => updateAnswers(item.id, (list) => list.filter((a) => a.id !== id))}
+            />
+          ))}
+        </ul>
       )}
     </div>
-  )
-}
-
-function AnnouncementsTab({ course }: { course: Course }) {
-  const items = [
-    {
-      title: "Urgent assignment submissions",
-      body: `Dear students, we already uploaded two videos about this week's assignment for ${course.title}. Please watch them and submit your work before Thursday.`,
-      date: "Jun 12 · 3:00 PM",
-    },
-    {
-      title: "New practice files added",
-      body: "Dear students, updated exercise files for the hands-on section are ready. You can download them from the lesson resources.",
-      date: "Jun 4 · 11:30 AM",
-    },
-    {
-      title: "Live Q&A session this week",
-      body: "Join me for a live Q&A on Thursday at 7 PM (Riyadh time). Bring your questions about the project.",
-      date: "May 27 · 5:15 PM",
-    },
-    {
-      title: "Welcome to the course",
-      body: "Welcome, everyone! Start with the introduction section, then introduce yourself in the Q&A tab so we can get to know you.",
-      date: "May 20 · 9:00 AM",
-    },
-  ]
-  return (
-    <div className="flex max-w-3xl flex-col gap-2">
-      <h3 className={`m-0 text-lg text-slate-900 ${fontSemi}`}>Announcements</h3>
-      <ul className="divide-y divide-slate-100">
-        {items.map((a) => (
-          <li key={a.title} className="py-4">
-            <p className={`text-xs text-slate-400 ${fontRegular}`}>{a.date}</p>
-            <h4 className={`mt-1 text-15 text-slate-900 ${fontSemi}`}>{a.title}</h4>
-            <p className={`mt-1 text-sm leading-relaxed text-slate-600 ${fontRegular}`}>{a.body}</p>
-          </li>
-        ))}
-      </ul>
-    </div>
-  )
-}
-
-function ReviewStars({ rating }: { rating: number }) {
-  return (
-    <span
-      className="relative inline-flex text-[16px] leading-none"
-      role="img"
-      aria-label={`${rating.toFixed(1)} out of 5`}
-    >
-      <span className="text-[#e2e8f0]">★★★★★</span>
-      <span
-        className="absolute inset-y-0 left-0 overflow-hidden whitespace-nowrap text-[#ffb20d]"
-        style={{ width: `${(rating / 5) * 100}%` }}
-      >
-        ★★★★★
-      </span>
-    </span>
-  )
-}
-
-
-function ReviewForm({
-  initial,
-  onSave,
-  onCancel,
-}: {
-  initial?: Review
-  onSave: (rating: number, body: string) => void
-  onCancel: () => void
-}) {
-  const [stars, setStars] = useState(initial?.rating ?? 0)
-  const [hover, setHover] = useState(0)
-  const [body, setBody] = useState(initial?.body ?? "")
-  const [error, setError] = useState("")
-
-  const submit = (e: FormEvent) => {
-    e.preventDefault()
-    if (!stars) return setError("Please choose a star rating.")
-    if (body.trim().length < 10)
-      return setError("Please write at least 10 characters.")
-    onSave(stars, body.trim())
-  }
-
-  return (
-    <form
-      onSubmit={submit}
-      noValidate
-      className="flex flex-col gap-4 rounded-[8px] border border-[#e2e8f0] bg-[#f8fafc] p-4 md:p-5"
-    >
-      <div
-        className="flex items-center gap-1"
-        role="group"
-        aria-label="Your rating"
-        onMouseLeave={() => setHover(0)}
-      >
-        {[1, 2, 3, 4, 5].map((n) => (
-          <button
-            key={n}
-            type="button"
-            aria-label={`${n} star${n === 1 ? "" : "s"}`}
-            aria-pressed={stars === n}
-            onMouseEnter={() => setHover(n)}
-            onClick={() => setStars(n)}
-            className={`text-[24px] leading-none transition ${n <= (hover || stars) ? "text-[#ffb20d]" : "text-[#cbd5e1]"}`}
-          >
-            ★
-          </button>
-        ))}
-      </div>
-      <textarea
-        autoFocus
-        value={body}
-        onChange={(e) => setBody(e.target.value)}
-        rows={4}
-        placeholder="Share what you liked and what could be better"
-        aria-label="Your review"
-        className={"field"}
-      />
-      {error && (
-        <p className={`text-[14px] text-[#dc2626] ${fontRegular}`}>{error}</p>
-      )}
-      <div className="flex items-center justify-end gap-3">
-        <button
-          type="button"
-          onClick={onCancel}
-          className={`h-[44px] rounded-[8px] px-4 text-[14px] text-[#0f172a] transition hover:bg-[#e2e8f0] ${fontMedium}`}
-        >
-          Cancel
-        </button>
-        <button
-          type="submit"
-          className={`h-[44px] rounded-[8px] bg-[#ffb20d] px-5 text-[14px] text-[#1e293b] transition hover:bg-[#faa104] ${fontMedium}`}
-        >
-          {initial ? "Save review" : "Submit review"}
-        </button>
-      </div>
-    </form>
   )
 }
 
 const kebabClass =
-  "flex size-7 items-center justify-center rounded-[6px] text-[#334155] transition hover:bg-[#f1f5f9]"
+  "flex size-7 items-center justify-center rounded-md text-slate-700 transition hover:bg-slate-150"
 const kebabIcon = (
   <svg viewBox="0 0 24 24" className="size-4" fill="currentColor" aria-hidden="true">
     <circle cx="12" cy="5" r="1.8" />
@@ -1973,230 +1988,3 @@ const kebabIcon = (
 
 const thumbIcon =
   "M7 10v11H4a1 1 0 01-1-1v-9a1 1 0 011-1zM7 10l4-8a3 3 0 013 3v4h5.5a2 2 0 012 2.3l-1.3 8a2 2 0 01-2 1.7H7"
-
-function ReviewRow({
-  review,
-  own,
-  vote,
-  reported,
-  likes,
-  onVote,
-  onReport,
-  onEdit,
-}: {
-  review: Review
-  own: boolean
-  vote?: "up" | "down"
-  reported: boolean
-  likes: number
-  onVote: (vote: "up" | "down") => void
-  onReport: () => void
-  onEdit: () => void
-}) {
-  const [expanded, setExpanded] = useState(false)
-  const long = review.body.length > 240
-
-  const voteButton = (kind: "up" | "down") => (
-    <button
-      type="button"
-      aria-label={kind === "up" ? "Helpful" : "Not helpful"}
-      aria-pressed={vote === kind}
-      onClick={() => onVote(kind)}
-      className={`transition hover:text-[#0d5c4b] ${vote === kind ? "text-[#0d5c4b]" : "text-[#334155]"}`}
-    >
-      <svg
-        viewBox="0 0 24 24"
-        className={`size-[18px] ${kind === "down" ? "rotate-180" : ""}`}
-        fill={vote === kind ? "currentColor" : "none"}
-        stroke="currentColor"
-        strokeWidth="1.8"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        aria-hidden="true"
-      >
-        <path d={thumbIcon} />
-      </svg>
-    </button>
-  )
-
-  return (
-    <div className="flex gap-3 md:gap-4">
-      <Avatar name={review.name} />
-      <div className="flex min-w-0 flex-1 flex-col gap-2">
-        <div className="flex items-start justify-between gap-3">
-          <p
-            dir="auto"
-            className={`min-w-0 truncate text-left text-[16px] text-[#1e293b] ${fontFor(review.name, fontMedium, "font-medium")}`}
-          >
-            {review.name}
-          </p>
-          {own && (
-            <div className="shrink-0">
-              <ActionMenu
-                label="Review options"
-                triggerClass={kebabClass}
-                trigger={kebabIcon}
-                items={[{ label: "Edit", onClick: onEdit }]}
-              />
-            </div>
-          )}
-        </div>
-        <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
-          <span className={`text-[14px] text-[#f5a524] ${fontMedium}`}>
-            {review.rating.toFixed(1)}
-          </span>
-          <ReviewStars rating={review.rating} />
-          <span className={`text-[12px] text-[#64748b] ${fontRegular}`}>
-            Posted {review.when}
-          </span>
-        </div>
-        <div className="relative">
-          <p
-            dir="auto"
-            className={`text-left text-[14px] leading-[22px] text-[#1e293b] ${long && !expanded ? "line-clamp-3" : ""} ${fontFor(review.body, fontRegular, "font-normal")}`}
-          >
-            {review.body}
-          </p>
-          {long && !expanded && (
-            <div className="pointer-events-none absolute inset-x-0 bottom-0 h-[32px] bg-gradient-to-t from-white to-transparent" />
-          )}
-        </div>
-        {long && (
-          <button
-            type="button"
-            aria-expanded={expanded}
-            onClick={() => setExpanded((v) => !v)}
-            className={`flex items-center gap-1 self-center text-[14px] text-[#f5a524] transition hover:text-[#b45309] ${fontMedium}`}
-          >
-            {expanded ? "Show less" : "Show more"}
-            <Svg className={`size-4 transition-transform ${expanded ? "rotate-180" : ""}`} stroke={2.2}>
-              <path d="M6 9l6 6 6-6" />
-            </Svg>
-          </button>
-        )}
-        <div className={`mt-1 flex items-center gap-3 text-[14px] text-[#334155] ${fontRegular}`}>
-          {voteButton("up")}
-          <span className="tabular-nums">{likes}</span>
-          {voteButton("down")}
-          {!own && (
-            <button
-              type="button"
-              onClick={onReport}
-              disabled={reported}
-              className="underline underline-offset-4 transition hover:text-[#0d5c4b] disabled:text-[#94a3b8] disabled:no-underline"
-            >
-              {reported ? "Reported" : "Report"}
-            </button>
-          )}
-        </div>
-      </div>
-    </div>
-  )
-}
-
-function ReviewsTab({ course }: { course: Course }) {
-  const { user, notify } = useApp()
-  // Same key as the course page, so a review written in either place shows in both.
-  const [mine, setMine] = useLocal<Review[]>(`thkee.reviews.${course.id}`, [])
-  const [votes, setVotes] = useLocal<Record<string, "up" | "down">>(
-    `thkee.reviewVotes.${course.id}`,
-    {},
-  )
-  const [reports, setReports] = useLocal<string[]>(
-    `thkee.reviewReports.${course.id}`,
-    [],
-  )
-  const [editing, setEditing] = useState<number | "new" | null>(null)
-  const count = Math.round(course.students * 0.23) + mine.length
-
-  const save = (rating: number, body: string) => {
-    if (editing === "new") {
-      setMine((list) => [
-        { name: user?.name ?? "You", when: "just now", rating, title: "My review", body },
-        ...list,
-      ])
-      notify("Thanks! Your review is posted ✓")
-    } else {
-      setMine((list) =>
-        list.map((r, i) => (i === editing ? { ...r, rating, body } : r)),
-      )
-      notify("Your review is updated ✓")
-    }
-    setEditing(null)
-  }
-
-  const row = (review: Review, own: boolean, baseLikes: number, onEdit: () => void) => {
-    const vote = votes[review.name]
-    return (
-      <ReviewRow
-        review={review}
-        own={own}
-        vote={vote}
-        reported={reports.includes(review.name)}
-        likes={baseLikes + (vote === "up" ? 1 : 0)}
-        onVote={(kind) =>
-          setVotes(({ [review.name]: current, ...rest }) =>
-            current === kind ? rest : { ...rest, [review.name]: kind },
-          )
-        }
-        onReport={() => {
-          setReports((list) => [...list, review.name])
-          notify("Thanks, we'll take a look at this review")
-        }}
-        onEdit={onEdit}
-      />
-    )
-  }
-
-  return (
-    <div className="flex flex-col">
-      <h3
-        className={`-mx-4 m-0 border-b border-[#e2e8f0] px-4 pb-5 text-[22px] text-[#0f172a] md:-mx-6 md:px-6 ${fontRegular}`}
-      >
-        Course Reviews
-      </h3>
-      <div className="flex flex-wrap items-center justify-between gap-4 border-b border-[#e2e8f0] py-6">
-        <div className="flex flex-col gap-1.5">
-          <p className={`text-[14px] text-[#94a3b8] ${fontRegular}`}>
-            <span className={`text-[22px] text-[#0f172a] ${fontBold}`}>
-              {course.rating.toFixed(1)}
-            </span>{" "}
-            out of 5
-          </p>
-          <div className="flex items-center gap-2">
-            <ReviewStars rating={course.rating} />
-            <span className={`text-[14px] text-[#94a3b8] ${fontRegular}`}>
-              {count.toLocaleString()} reviews
-            </span>
-          </div>
-        </div>
-        <button
-          type="button"
-          onClick={() => setEditing(mine.length ? 0 : "new")}
-          className={`h-[44px] rounded-[8px] bg-[#ffb20d] px-5 text-[14px] text-[#1e293b] transition hover:bg-[#faa104] ${fontMedium}`}
-        >
-          {mine.length ? "Edit your review" : "Write a review"}
-        </button>
-      </div>
-      {editing === "new" && (
-        <div className="pt-6">
-          <ReviewForm onSave={save} onCancel={() => setEditing(null)} />
-        </div>
-      )}
-      <ul className="flex flex-col gap-8 pt-8">
-        {mine.map((r, i) => (
-          <li key={i}>
-            {editing === i ? (
-              <ReviewForm initial={r} onSave={save} onCancel={() => setEditing(null)} />
-            ) : (
-              row(r, true, 0, () => setEditing(i))
-            )}
-          </li>
-        ))}
-        {seedReviews.map((r) => (
-          <li key={r.name}>{row(r, false, (r.name.length % 5) + 1, () => {})}</li>
-        ))}
-      </ul>
-    </div>
-  )
-}

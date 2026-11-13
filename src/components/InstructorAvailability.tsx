@@ -4,6 +4,7 @@ import { load, openInstructorAvailability, save, useApp } from "../store";
 import { Checkbox } from "./InstructorAssignments";
 import { ActionMenu } from "./Menus";
 import { Shell } from "./Overlays";
+import { buttonClass } from "./Button"
 
 const imgClose = "/assets/53e9a.svg";
 const imgPlusSmall = "/assets/51771.svg";
@@ -78,9 +79,9 @@ const slotProblem = (slots: Slot[]) => {
   return sorted.some((s, i) => i > 0 && s.start < sorted[i - 1].end) ? "must not overlap" : null;
 };
 
-const titleClass = "m-0 font-['Instrument_Sans:Medium'] text-[24px] font-medium leading-[32px] text-[#0f172a]";
+const titleClass = "m-0 font-instrument-medium text-2xl font-medium leading-8 text-slate-900";
 const titleStyle = { fontVariationSettings: '"wdth" 100' };
-const iconButton = "flex size-[33px] shrink-0 items-center justify-center rounded-[6px] text-[#334155] transition hover:bg-[#f1f5f9]";
+const iconButton = "flex size-8.25 shrink-0 items-center justify-center rounded-md text-slate-700 transition hover:bg-slate-150";
 
 function Icon({ path, className = "size-5" }: { path: string; className?: string }) {
   return (
@@ -96,13 +97,13 @@ const PENCIL = "M4 20l1-4L16.5 4.5a2.1 2.1 0 013 3L8 19l-4 1z";
 
 export function Toggle({ on, label, onChange }: { on: boolean; label: string; onChange: () => void }) {
   return (
-    <button type="button" role="switch" aria-checked={on} aria-label={label} onClick={onChange} className={`relative h-5 w-[34px] shrink-0 rounded-full transition-colors ${on ? "bg-[#1e293b]" : "bg-[#e2e8f0]"}`}>
-      <span className={`absolute top-0.5 size-4 rounded-full bg-white shadow-sm transition-[left] ${on ? "left-4" : "left-0.5"}`} />
+    <button type="button" role="switch" aria-checked={on} aria-label={label} onClick={onChange} className={`relative h-5 w-8.5 shrink-0 rounded-full transition-colors ${on ? "bg-slate-800" : "bg-slate-200"}`}>
+      <span className={`absolute top-0.5 size-4 rounded-full bg-white shadow-sm transition-all ${on ? "left-4" : "left-0.5"}`} />
     </button>
   );
 }
 
-export function TimeSelect({ value, label, onChange, width = "w-[105px]", disabled }: { value: number; label: string; onChange: (minutes: number) => void; width?: string; disabled?: boolean }) {
+export function TimeSelect({ value, label, onChange, width = "w-26.25", disabled }: { value: number; label: string; onChange: (minutes: number) => void; width?: string; disabled?: boolean }) {
   return (
     <span className={`relative inline-flex ${width}`}>
       <select aria-label={label} value={value} disabled={disabled} onChange={(e) => onChange(Number(e.target.value))} className="field pl-3 pr-7">
@@ -120,7 +121,7 @@ function SlotRange({ slot, label, onChange }: { slot: Slot; label: string; onCha
   return (
     <div className="flex items-center gap-2.5">
       <TimeSelect value={slot.start} label={`${label} start`} onChange={(start) => onChange({ ...slot, start })} />
-      <span aria-hidden="true" className="text-[#475569]">
+      <span aria-hidden="true" className="text-slate-600">
         -
       </span>
       <TimeSelect value={slot.end} label={`${label} end`} onChange={(end) => onChange({ ...slot, end })} />
@@ -130,11 +131,11 @@ function SlotRange({ slot, label, onChange }: { slot: Slot; label: string; onCha
 
 function DialogFooter({ onCancel, confirmLabel, onConfirm }: { onCancel: () => void; confirmLabel: string; onConfirm: () => void }) {
   return (
-    <div className="flex items-center justify-end gap-8 border-t border-[#e2e8f0] px-6 py-6">
-      <button type="button" onClick={onCancel} className={`text-[16px] leading-[24px] text-[#1e293b] transition hover:text-[#64748b] ${fontMedium}`}>
+    <div className="flex items-center justify-end gap-8 border-t border-slate-200 px-6 py-6">
+      <button type="button" onClick={onCancel} className={`text-base leading-6 text-slate-800 transition hover:text-slate-500 ${fontMedium}`}>
         Cancel
       </button>
-      <button type="button" onClick={onConfirm} className={`h-[44px] rounded-[8px] bg-[#ffb20d] px-5 text-[16px] leading-[20px] text-[#1e293b] transition hover:bg-[#faa104] ${fontMedium}`}>
+      <button type="button" onClick={onConfirm} className={`${buttonClass("yellow", "lg")}`}>
         {confirmLabel}
       </button>
     </div>
@@ -146,9 +147,9 @@ function NameDialog({ onClose, onContinue }: { onClose: () => void; onContinue: 
   const { notify } = useApp();
   const submit = () => (name.trim() ? onContinue(name.trim()) : notify("Add a name first"));
   return (
-    <Shell title="Add a new schedule" onClose={onClose} hideHeader width="max-w-[480px]" radius="sm:rounded-[12px]">
-      <div className="flex items-center justify-between border-b border-[#e2e8f0] px-6 py-5">
-        <h2 className={`text-[18px] leading-[28px] text-[#1e293b] ${fontSemi}`}>Add a new schedule</h2>
+    <Shell title="Add a new schedule" onClose={onClose} hideHeader width="max-w-120" radius="sm:rounded-xl">
+      <div className="flex items-center justify-between border-b border-slate-200 px-6 py-5">
+        <h2 className={`text-lg leading-7 text-slate-800 ${fontSemi}`}>Add a new schedule</h2>
         <button type="button" onClick={onClose} aria-label="Close" className="flex transition hover:opacity-70">
           <img src={imgClose} alt="" width={20} height={20} className="size-5" />
         </button>
@@ -160,7 +161,7 @@ function NameDialog({ onClose, onContinue }: { onClose: () => void; onContinue: 
           submit();
         }}
       >
-        <label htmlFor="schedule-name" className={`text-[16px] leading-[24px] text-[#0f172a] ${fontRegular}`}>
+        <label htmlFor="schedule-name" className={`text-base leading-6 text-slate-900 ${fontRegular}`}>
           Name
         </label>
         <input id="schedule-name" value={name} onChange={(e) => setName(e.target.value)} placeholder="Working hour" className="field" />
@@ -172,16 +173,16 @@ function NameDialog({ onClose, onContinue }: { onClose: () => void; onContinue: 
 
 function ConfirmDelete({ name, onClose, onConfirm }: { name: string; onClose: () => void; onConfirm: () => void }) {
   return (
-    <Shell title="Delete schedule" onClose={onClose} hideHeader width="max-w-[480px]" radius="sm:rounded-[12px]">
+    <Shell title="Delete schedule" onClose={onClose} hideHeader width="max-w-120" radius="sm:rounded-xl">
       <div className="flex flex-col gap-2 px-6 py-6">
-        <h2 className={`text-[18px] leading-[28px] text-[#1e293b] ${fontSemi}`}>Delete this schedule?</h2>
-        <p className={`text-[14px] leading-[24px] text-[#64748b] ${fontRegular}`}>"{name}" will be removed. You can't restore it.</p>
+        <h2 className={`text-lg leading-7 text-slate-800 ${fontSemi}`}>Delete this schedule?</h2>
+        <p className={`text-sm leading-6 text-slate-500 ${fontRegular}`}>"{name}" will be removed. You can't restore it.</p>
       </div>
-      <div className="flex items-center justify-end gap-8 border-t border-[#e2e8f0] px-6 py-4">
-        <button type="button" onClick={onClose} className={`text-[16px] leading-[24px] text-[#1e293b] transition hover:text-[#64748b] ${fontMedium}`}>
+      <div className="flex items-center justify-end gap-8 border-t border-slate-200 px-6 py-4">
+        <button type="button" onClick={onClose} className={`text-base leading-6 text-slate-800 transition hover:text-slate-500 ${fontMedium}`}>
           Cancel
         </button>
-        <button type="button" onClick={onConfirm} className={`h-[44px] rounded-[8px] bg-[#ef4444] px-5 text-[16px] leading-[20px] text-white transition hover:bg-[#dc2626] ${fontMedium}`}>
+        <button type="button" onClick={onConfirm} className={`h-11 rounded-lg bg-red-500 px-5 text-base leading-5 text-white transition hover:bg-red-600 ${fontMedium}`}>
           Yes, delete
         </button>
       </div>
@@ -212,15 +213,15 @@ function OverrideDialog({ editing, onClose, onSubmit }: { editing?: Override; on
     }
     onSubmit(dates, unavailable, slots);
   };
-  const navButton = "flex size-9 items-center justify-center rounded-[6px] bg-[#f8fafc] text-[#1e293b] transition hover:bg-[#f1f5f9]";
+  const navButton = "flex size-9 items-center justify-center rounded-md bg-slate-25 text-slate-800 transition hover:bg-slate-150";
 
   return (
-    <Shell title="Select the dates to override" onClose={onClose} hideHeader width="max-w-[852px]" radius="sm:rounded-[12px]">
-      <div className="grid gap-6 px-6 py-6 md:grid-cols-[1fr_1fr] md:gap-0">
-        <div className="md:border-r md:border-[#e2e8f0] md:pr-6">
-          <h2 className={`text-[18px] leading-[28px] text-[#1e293b] ${fontSemi}`}>Select the dates to override</h2>
+    <Shell title="Select the dates to override" onClose={onClose} hideHeader width="max-w-213" radius="sm:rounded-xl">
+      <div className="grid gap-6 px-6 py-6 md:grid-cols-2 md:gap-0">
+        <div className="md:border-r md:border-slate-200 md:pr-6">
+          <h2 className={`text-lg leading-7 text-slate-800 ${fontSemi}`}>Select the dates to override</h2>
           <div className="mt-7 flex items-center justify-between">
-            <p className={`text-[16px] leading-[24px] text-[#1e293b] ${fontSemi}`} aria-live="polite">
+            <p className={`text-base leading-6 text-slate-800 ${fontSemi}`} aria-live="polite">
               {month.toLocaleDateString("en-US", { month: "long", year: "numeric" })}
             </p>
             <div className="flex gap-1.5">
@@ -234,7 +235,7 @@ function OverrideDialog({ editing, onClose, onSubmit }: { editing?: Override; on
           </div>
           <div className="mt-4 grid grid-cols-7 justify-items-center gap-y-3">
             {CALENDAR_DAYS.map((d) => (
-              <span key={d} className={`text-[14px] leading-[20px] text-[#94a3b8] ${fontRegular}`}>
+              <span key={d} className={`text-sm leading-5 text-slate-400 ${fontRegular}`}>
                 {d}
               </span>
             ))}
@@ -254,7 +255,7 @@ function OverrideDialog({ editing, onClose, onSubmit }: { editing?: Override; on
                   aria-pressed={selected}
                   aria-label={formatOverrideDate(iso)}
                   onClick={() => pick(iso)}
-                  className={`flex size-8 items-center justify-center rounded-full text-[14px] leading-[20px] transition disabled:cursor-not-allowed disabled:text-[#cbd5e1] focus-visible:outline focus-visible:outline-1 focus-visible:outline-[#faa104] ${selected ? "bg-[#fff0d7] text-[#1e293b]" : isToday ? "bg-[#fdb42d] text-[#1e293b]" : "text-[#334155] hover:outline hover:outline-1 hover:outline-[#faa104] disabled:hover:outline-0"} ${fontRegular}`}
+                  className={`flex size-8 items-center justify-center rounded-full text-sm leading-5 transition disabled:cursor-not-allowed disabled:text-slate-300 focus-visible:outline focus-visible:outline-1 focus-visible:outline-secondary-600 ${selected ? "bg-secondary-100 text-slate-800" : isToday ? "bg-secondary-500 text-slate-800" : "text-slate-700 hover:outline hover:outline-1 hover:outline-secondary-600 disabled:hover:outline-0"} ${fontRegular}`}
                 >
                   {i + 1}
                 </button>
@@ -263,8 +264,8 @@ function OverrideDialog({ editing, onClose, onSubmit }: { editing?: Override; on
           </div>
         </div>
         <div className="md:pl-6">
-          <h3 className={`text-[16px] leading-[24px] text-[#475569] ${fontSemi}`}>Which hours are you available</h3>
-          <p className={`mt-1 text-[12px] leading-[18px] text-[#64748b] ${fontRegular}`}>Set your time to take your session</p>
+          <h3 className={`text-base leading-6 text-slate-600 ${fontSemi}`}>Which hours are you available</h3>
+          <p className={`mt-1 text-xs leading-4.5 text-slate-500 ${fontRegular}`}>Set your time to take your session</p>
           <div className="mt-8 flex flex-col gap-3">
             {!unavailable &&
               slots.map((slot, i) => (
@@ -283,7 +284,7 @@ function OverrideDialog({ editing, onClose, onSubmit }: { editing?: Override; on
               ))}
             <div className="mt-1 flex items-center gap-3">
               <Toggle on={unavailable} label="Mark unavailable all day" onChange={() => setUnavailable(!unavailable)} />
-              <span className={`text-[14px] leading-[20px] text-[#1e293b] ${fontRegular}`}>Mark unavailable all day</span>
+              <span className={`text-sm leading-5 text-slate-800 ${fontRegular}`}>Mark unavailable all day</span>
             </div>
           </div>
         </div>
@@ -295,12 +296,12 @@ function OverrideDialog({ editing, onClose, onSubmit }: { editing?: Override; on
 
 function PageHeading({ action }: { action?: ReactNode }) {
   return (
-    <div className="flex flex-wrap items-center justify-between gap-4 border-b border-[#e2e8f0] bg-white px-4 py-6 md:px-7">
+    <div className="flex flex-wrap items-center justify-between gap-4 border-b border-slate-200 bg-white px-4 py-6 md:px-7">
       <div>
         <h1 className={titleClass} style={titleStyle}>
           My Availability
         </h1>
-        <p className={`mt-1 text-[16px] leading-[24px] text-[#64748b] ${fontRegular}`}>Select a schedule below to edit or create a new one for your event types.</p>
+        <p className={`mt-1 text-base leading-6 text-slate-500 ${fontRegular}`}>Select a schedule below to edit or create a new one for your event types.</p>
       </div>
       {action}
     </div>
@@ -308,12 +309,12 @@ function PageHeading({ action }: { action?: ReactNode }) {
 }
 
 function DefaultBadge() {
-  return <span className={`inline-flex h-5 items-center rounded-[4px] border border-[#a7f3d0] bg-[#ecfdf5] px-2 text-[10px] leading-[16px] tracking-[0.1px] text-[#059669] ${fontMedium}`}>Default</span>;
+  return <span className={`inline-flex h-5 items-center rounded-sm border border-emerald-200 bg-emerald-50 px-2 text-10 leading-4 text-emerald-600 ${fontMedium}`}>Default</span>;
 }
 
-function AddOverrideButton({ onClick, className = "h-[43px] px-4 text-[16px]" }: { onClick: () => void; className?: string }) {
+function AddOverrideButton({ onClick, className = "h-10.75 px-4 text-base" }: { onClick: () => void; className?: string }) {
   return (
-    <button type="button" onClick={onClick} className={`flex items-center justify-center gap-2.5 rounded-[8px] bg-[#f1f5f9] leading-[20px] text-[#1e293b] transition hover:bg-[#e2e8f0] ${className} ${fontMedium}`}>
+    <button type="button" onClick={onClick} className={`flex items-center justify-center gap-2.5 rounded-lg bg-slate-150 leading-5 text-slate-800 transition hover:bg-slate-200 ${className} ${fontMedium}`}>
       <Icon path={PLUS} />
       Add Override
     </button>
@@ -351,20 +352,20 @@ function Editor({ schedule, onSave, onDelete, onMakeDefault }: { schedule: Sched
     <main className="flex flex-1 flex-col bg-white">
       <PageHeading />
       <div className="flex flex-1 flex-col px-4 py-6 md:px-7">
-        <div className="flex flex-1 flex-col overflow-hidden rounded-[12px] border border-[#e2e8f0]">
-          <div className="flex flex-wrap items-center justify-between gap-4 border-b border-[#e2e8f0] px-6 py-3.5">
+        <div className="flex flex-1 flex-col overflow-hidden rounded-xl border border-slate-200">
+          <div className="flex flex-wrap items-center justify-between gap-4 border-b border-slate-200 px-6 py-3.5">
             <div className="flex min-w-0 items-center gap-6">
-              <button type="button" onClick={leave} aria-label="Back to schedules" className="flex shrink-0 text-[#1e293b] transition hover:opacity-70">
-                <Icon path="M20 12H4M10 6l-6 6 6 6" className="size-[18px]" />
+              <button type="button" onClick={leave} aria-label="Back to schedules" className="flex shrink-0 text-slate-800 transition hover:opacity-70">
+                <Icon path="M20 12H4M10 6l-6 6 6 6" className="size-4.5" />
               </button>
               <div className="min-w-0">
                 <div className="flex flex-wrap items-center gap-2.5">
                   {renaming ? (
-                    <input autoFocus aria-label="Schedule name" value={draft.name} onChange={(e) => setDraft({ ...draft, name: e.target.value })} onBlur={() => setRenaming(false)} onKeyDown={(e) => (e.key === "Enter" || e.key === "Escape") && setRenaming(false)} className={`h-7 rounded-[4px] border border-[#cbd5e1] px-2 text-[14px] text-[#0f172a] outline-none focus:border-[#1e293b] ${fontSemi}`} />
+                    <input autoFocus aria-label="Schedule name" value={draft.name} onChange={(e) => setDraft({ ...draft, name: e.target.value })} onBlur={() => setRenaming(false)} onKeyDown={(e) => (e.key === "Enter" || e.key === "Escape") && setRenaming(false)} className={`h-7 rounded-sm border border-slate-300 px-2 text-sm text-slate-900 outline-none focus:border-slate-800 ${fontSemi}`} />
                   ) : (
                     <>
-                      <span className={`text-[14px] leading-[24px] text-[#0f172a] ${fontSemi}`}>{draft.name}</span>
-                      <button type="button" aria-label="Rename schedule" onClick={() => setRenaming(true)} className="flex text-[#94a3b8] transition hover:text-[#475569]">
+                      <span className={`text-sm leading-6 text-slate-900 ${fontSemi}`}>{draft.name}</span>
+                      <button type="button" aria-label="Rename schedule" onClick={() => setRenaming(true)} className="flex text-slate-400 transition hover:text-slate-600">
                         <Icon path={PENCIL} className="size-4" />
                       </button>
                     </>
@@ -372,7 +373,7 @@ function Editor({ schedule, onSave, onDelete, onMakeDefault }: { schedule: Sched
                   {schedule.isDefault && <DefaultBadge />}
                 </div>
                 {groupDays(draft.days).map((g) => (
-                  <p key={g.names.join()} className={`text-[14px] leading-[20px] text-[#64748b] ${fontRegular}`}>
+                  <p key={g.names.join()} className={`text-sm leading-5 text-slate-500 ${fontRegular}`}>
                     {g.names.join(", ")} | {g.slots.map((s) => `${formatShort(s.start)} - ${formatShort(s.end)}`).join(" | ")}
                   </p>
                 ))}
@@ -380,25 +381,25 @@ function Editor({ schedule, onSave, onDelete, onMakeDefault }: { schedule: Sched
             </div>
             <div className="flex flex-wrap items-center gap-4">
               <Checkbox checked={schedule.isDefault} onChange={() => (schedule.isDefault ? notify("Set another schedule as default to change this") : onMakeDefault())}>
-                <span className={`text-[14px] leading-[20px] text-[#475569] ${fontRegular}`}>Set as Default</span>
+                <span className={`text-sm leading-5 text-slate-600 ${fontRegular}`}>Set as Default</span>
               </Checkbox>
-              <button type="button" onClick={() => (schedule.isDefault ? notify("Set another schedule as default before deleting this one") : setConfirming(true))} className={`h-[35px] w-[78px] rounded-[8px] border border-[#fca5a5] text-[14px] leading-[20px] text-[#dc2626] transition hover:bg-[#fef2f2] ${fontMedium}`}>
+              <button type="button" onClick={() => (schedule.isDefault ? notify("Set another schedule as default before deleting this one") : setConfirming(true))} className={`h-8.75 w-19.5 rounded-lg border border-red-300 text-sm leading-5 text-red-600 transition hover:bg-red-50 ${fontMedium}`}>
                 Delete
               </button>
-              <button type="button" onClick={submit} className={`h-[35px] w-[78px] rounded-[8px] bg-[#1e293b] text-[14px] leading-[20px] text-white transition hover:bg-[#0f172a] ${fontMedium}`}>
+              <button type="button" onClick={submit} className={`h-8.75 w-19.5 rounded-lg bg-slate-800 text-sm leading-5 text-white transition hover:bg-slate-900 ${fontMedium}`}>
                 Save
               </button>
             </div>
           </div>
           <div className="flex flex-1 flex-col lg:flex-row">
-            <div className="min-w-0 border-[#e2e8f0] px-6 py-6 lg:basis-[58%] lg:border-r lg:px-8">
-              <div className="flex justify-end border-b border-[#f1f5f9] pb-5">
+            <div className="min-w-0 border-slate-200 px-6 py-6 lg:basis-29/50 lg:border-r lg:px-8">
+              <div className="flex justify-end border-b border-slate-150 pb-5">
                 <ActionMenu
                   label={`Time zone: ${draft.timezone}`}
-                  triggerClass={`flex items-center gap-2.5 text-[14px] leading-[24px] text-[#334155] ${fontRegular}`}
+                  triggerClass={`flex items-center gap-2.5 text-sm leading-6 text-slate-700 ${fontRegular}`}
                   trigger={
                     <>
-                      <Icon path="M12 3a9 9 0 100 18 9 9 0 000-18zM3 12h18M12 3c3 3 3 15 0 18M12 3c-3 3-3 15 0 18" className="size-[18px] text-[#1e293b]" />
+                      <Icon path="M12 3a9 9 0 100 18 9 9 0 000-18zM3 12h18M12 3c3 3 3 15 0 18M12 3c-3 3-3 15 0 18" className="size-4.5 text-slate-800" />
                       {draft.timezone}
                       <img src="/assets/933a3.svg" alt="" width={16} height={16} className="size-4" />
                     </>
@@ -409,9 +410,9 @@ function Editor({ schedule, onSave, onDelete, onMakeDefault }: { schedule: Sched
               <ul className="mt-5 flex flex-col gap-4">
                 {draft.days.map((day, i) => (
                   <li key={DAY_NAMES[i]} className="flex flex-wrap items-start gap-x-4 gap-y-2 sm:flex-nowrap">
-                    <div className="flex h-[35px] w-[122px] shrink-0 items-center gap-4">
+                    <div className="flex h-8.75 w-30.5 shrink-0 items-center gap-4">
                       <Toggle on={day.on} label={`${SHORT_DAYS[i]} available`} onChange={() => setDay(i, (d) => ({ ...d, on: !d.on }))} />
-                      <span className={`text-[14px] leading-[20px] text-[#475569] ${fontSemi}`}>{DAY_NAMES[i]}</span>
+                      <span className={`text-sm leading-5 text-slate-600 ${fontSemi}`}>{DAY_NAMES[i]}</span>
                     </div>
                     {day.on ? (
                       <div className="flex flex-col gap-3">
@@ -440,21 +441,21 @@ function Editor({ schedule, onSave, onDelete, onMakeDefault }: { schedule: Sched
                         ))}
                       </div>
                     ) : (
-                      <span className={`flex h-[35px] items-center text-[14px] leading-[20px] text-[#94a3b8] ${fontRegular}`}>Unavailable</span>
+                      <span className={`flex h-8.75 items-center text-sm leading-5 text-slate-400 ${fontRegular}`}>Unavailable</span>
                     )}
                   </li>
                 ))}
               </ul>
             </div>
-            <div className="min-w-0 flex-1 border-t border-[#e2e8f0] px-6 py-6 lg:border-t-0">
-              <div className="flex min-h-[43px] flex-wrap items-center justify-between gap-3 border-b border-[#f1f5f9] pb-4">
-                <h2 className={`text-[16px] leading-[24px] text-[#0f172a] ${fontSemi}`}>Override date</h2>
+            <div className="min-w-0 flex-1 border-t border-slate-200 px-6 py-6 lg:border-t-0">
+              <div className="flex min-h-10.75 flex-wrap items-center justify-between gap-3 border-b border-slate-150 pb-4">
+                <h2 className={`text-base leading-6 text-slate-900 ${fontSemi}`}>Override date</h2>
                 {draft.overrides.length > 0 && <AddOverrideButton onClick={() => setOverrideDialog({})} />}
               </div>
               {draft.overrides.length === 0 ? (
                 <div className="flex flex-col items-center gap-4 px-4 py-14 text-center">
-                  <p className={`text-[14px] leading-[24px] text-[#64748b] ${fontRegular}`}>Want to override ? Click to add in here</p>
-                  <AddOverrideButton onClick={() => setOverrideDialog({})} className="h-[35px] px-3.5 text-[14px]" />
+                  <p className={`text-sm leading-6 text-slate-500 ${fontRegular}`}>Want to override ? Click to add in here</p>
+                  <AddOverrideButton onClick={() => setOverrideDialog({})} className="h-8.75 px-3.5 text-sm" />
                 </div>
               ) : (
                 <ul className="mt-5 flex flex-col gap-5">
@@ -462,9 +463,9 @@ function Editor({ schedule, onSave, onDelete, onMakeDefault }: { schedule: Sched
                     .sort((a, b) => a.date.localeCompare(b.date))
                     .map((o) => (
                       <li key={o.id} className="flex items-center gap-8">
-                        <div className="w-[120px] shrink-0">
-                          <p className={`whitespace-nowrap text-[14px] leading-[22px] text-[#475569] ${fontRegular}`}>{formatOverrideDate(o.date)}</p>
-                          <p className={`text-[12px] leading-[22px] text-[#94a3b8] ${fontRegular}`}>{o.unavailable ? "Unavailable all day" : o.slots.map((s) => `${formatUpper(s.start)} - ${formatUpper(s.end)}`).join(", ")}</p>
+                        <div className="w-30 shrink-0">
+                          <p className={`whitespace-nowrap text-sm leading-5.5 text-slate-600 ${fontRegular}`}>{formatOverrideDate(o.date)}</p>
+                          <p className={`text-xs leading-5.5 text-slate-400 ${fontRegular}`}>{o.unavailable ? "Unavailable all day" : o.slots.map((s) => `${formatUpper(s.start)} - ${formatUpper(s.end)}`).join(", ")}</p>
                         </div>
                         <div className="flex items-center gap-2">
                           <button type="button" aria-label={`Edit override for ${formatOverrideDate(o.date)}`} onClick={() => setOverrideDialog({ editing: o })} className={iconButton}>
@@ -539,26 +540,26 @@ export default function InstructorAvailability({ scheduleId }: { scheduleId?: st
     <main className="flex flex-1 flex-col bg-white">
       <PageHeading
         action={
-          <button type="button" onClick={() => setAdding(true)} className={`flex h-[43px] items-center gap-2 rounded-[8px] bg-[#ffb20d] px-5 text-[16px] leading-[20px] text-[#1e293b] transition hover:bg-[#faa104] ${fontMedium}`}>
-            <img src={imgPlusSmall} alt="" width={18} height={18} className="size-[18px]" />
+          <button type="button" onClick={() => setAdding(true)} className={`${buttonClass("yellow", "lg")}`}>
+            <img src={imgPlusSmall} alt="" width={18} height={18} className="size-4.5" />
             Add New
           </button>
         }
       />
       <div className="px-4 py-6 md:px-7">
-        <ul className="rounded-[12px] border border-[#e2e8f0]">
+        <ul className="rounded-xl border border-slate-200">
           {schedules.map((s) => (
-            <li key={s.id} className="flex items-center gap-4 border-b border-[#e2e8f0] px-6 py-3 last:border-b-0">
+            <li key={s.id} className="flex items-center gap-4 border-b border-slate-200 px-6 py-3 last:border-b-0">
               <button type="button" onClick={() => openInstructorAvailability(s.id)} className="min-w-0 flex-1 text-left">
                 <span className="flex flex-wrap items-center gap-2.5">
-                  <span className={`text-[14px] leading-[24px] text-[#0f172a] ${fontSemi}`}>{s.name}</span>
+                  <span className={`text-sm leading-6 text-slate-900 ${fontSemi}`}>{s.name}</span>
                   {s.isDefault && <DefaultBadge />}
                 </span>
-                <span className={`mt-0.5 block text-[14px] leading-[22px] text-[#64748b] ${fontRegular}`}>{listSummary(s.days).join("  |  ") || "Unavailable all week"}</span>
+                <span className={`mt-0.5 block text-sm leading-5.5 text-slate-500 ${fontRegular}`}>{listSummary(s.days).join("  |  ") || "Unavailable all week"}</span>
               </button>
               <ActionMenu
                 label={`More actions for ${s.name}`}
-                triggerClass="flex size-8 shrink-0 items-center justify-center rounded-full text-[#475569] transition hover:bg-[#f1f5f9]"
+                triggerClass="flex size-8 shrink-0 items-center justify-center rounded-full text-slate-600 transition hover:bg-slate-150"
                 trigger={
                   <svg viewBox="0 0 24 24" className="size-5" fill="currentColor" aria-hidden="true">
                     <circle cx="12" cy="5" r="1.7" />

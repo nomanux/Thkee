@@ -132,7 +132,7 @@ const violet = "#6d28d9";
 
 export function TeachIcon() {
   return (
-    <svg viewBox="0 0 60 60" className="size-[60px]" fill="none" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <svg viewBox="0 0 60 60" className="size-15" fill="none" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
       <circle cx="12" cy="10" r="4" stroke={orange} />
       <path d="M6 22h12l14-4v5l-9 5v24h-5V40h-3v12H10V30H6z" stroke={orange} />
       <path d="M22 13h34v26H26" stroke={violet} />
@@ -143,7 +143,7 @@ export function TeachIcon() {
 
 export function InspireIcon() {
   return (
-    <svg viewBox="0 0 60 60" className="size-[60px]" fill="none" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <svg viewBox="0 0 60 60" className="size-15" fill="none" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
       <path d="M30 6l3 7 7 1-5 5 1 7-6-3-6 3 1-7-5-5 7-1z" stroke={violet} />
       <path d="M12 8l3 4M48 8l-3 4M6 22h5M49 22h5M12 34l3-3M48 34l-3-3" stroke={violet} />
       <path d="M21 56v-7c-3-3-3-7-3-9 0-2 1-3 3-3v-3c0-2 3-2 3 0v-1c0-2 3-2 3 0v-1c0-2 3-2 3 0v1c0-2 3-2 3 0v5c2 0 4 1 4 4 0 4-2 6-4 8v6" stroke={orange} />
@@ -153,7 +153,7 @@ export function InspireIcon() {
 
 export function TrophyIcon() {
   return (
-    <svg viewBox="0 0 60 60" className="size-[60px]" fill="none" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <svg viewBox="0 0 60 60" className="size-15" fill="none" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
       <path d="M17 6h26v14c0 8-6 14-13 14s-13-6-13-14z" stroke={orange} />
       <path d="M17 10H8c0 10 3 16 11 18M43 10h9c0 10-3 16-11 18M30 34v8M22 42h16v6H22zM12 54h36" stroke={orange} />
       <path d="M30 11l2.4 5 5.6.7-4 3.8 1 5.5-5-2.7-5 2.7 1-5.5-4-3.8 5.6-.7z" stroke={violet} />

@@ -18,6 +18,7 @@ import { buildCurriculum } from "./CourseDetailsPage";
 import { ActionMenu, FilterSelect } from "./Menus";
 import { CourseThumb } from "./Overlays";
 import { isBestseller, Stars } from "./SearchPage";
+import { buttonClass } from "./Button"
 
 const tabs = ["All Courses", "Wishlist", "Archived"] as const;
 type Tab = (typeof tabs)[number];
@@ -190,7 +191,7 @@ function ContinueCard({ course }: { course: Course }) {
           <button
             type="button"
             onClick={() => openLearning(course.id)}
-            className={`flex h-10 items-center gap-2 rounded-lg bg-primary-700 px-4 text-sm text-white shadow-primary-xs transition hover:bg-primary-800 ${fontSemi}`}
+            className={`${buttonClass("primary", "lg")}`}
           >
             Resume
             <Icon icon={ArrowRight01Icon} size={16} />
@@ -357,7 +358,7 @@ export default function MyLearningPage({ initialTab = "All Courses" }: { initial
             <button
               type="button"
               onClick={filtered ? clearFilters : () => openSearch({})}
-              className={`mt-1 h-10 rounded-lg bg-primary-700 px-5 text-sm text-white transition hover:bg-primary-800 ${fontSemi}`}
+              className={`${buttonClass("primary", "lg")} mt-1`}
             >
               {filtered ? "Clear filters" : "Browse courses"}
             </button>

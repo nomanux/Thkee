@@ -4,6 +4,7 @@ import { load, openInstructorApps, save, useApp } from "../store";
 import { Toggle } from "./InstructorAvailability";
 import { ActionMenu, FilterSelect } from "./Menus";
 import { Shell } from "./Overlays";
+import { buttonClass } from "./Button"
 
 const imgClose = "/assets/53e9a.svg";
 const imgPlusSmall = "/assets/51771.svg";
@@ -47,7 +48,7 @@ const newConnection = (id: AppId): Connection => ({ email: appById(id).email, ca
 
 const STORE_KEY = "thkee.instructorApps";
 const SEED: AppsState = { connections: { google: newConnection("google") }, addTo: null };
-const titleClass = "m-0 flex h-[42px] items-center font-['Instrument_Sans:Medium'] text-[24px] font-medium leading-[32px] text-[#0f172a]";
+const titleClass = "m-0 flex h-10.5 items-center font-instrument-medium text-2xl font-medium leading-8 text-slate-900";
 const titleStyle = { fontVariationSettings: '"wdth" 100' };
 
 function AppLogo({ app, size = "size-8" }: { app: AppId; size?: string }) {
@@ -88,7 +89,7 @@ function AppLogo({ app, size = "size-8" }: { app: AppId; size?: string }) {
 
 function UnlinkIcon() {
   return (
-    <svg viewBox="0 0 24 24" className="size-[18px] shrink-0" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <svg viewBox="0 0 24 24" className="size-4.5 shrink-0" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
       <path d="M9 7l2-2a4.5 4.5 0 016.5 6.5l-2 2M15 17l-2 2a4.5 4.5 0 01-6.5-6.5l2-2M9 15l6-6M4 4l2 2M20 20l-2-2" />
     </svg>
   );
@@ -99,9 +100,9 @@ function AppDialog({ dialog, onClose, onConfirm }: { dialog: DialogState; onClos
   const connecting = dialog.kind === "connect";
   const title = connecting ? "Connect to the Apps" : `Disconnect ${app.name}?`;
   return (
-    <Shell title={title} onClose={onClose} hideHeader width="max-w-[476px]" radius="sm:rounded-[12px]">
-      <div className="flex items-center justify-between gap-4 border-b border-[#e2e8f0] px-5 py-4">
-        <h2 className={`text-[16px] leading-[24px] text-[#1e293b] ${fontSemi}`}>{title}</h2>
+    <Shell title={title} onClose={onClose} hideHeader width="max-w-119" radius="sm:rounded-xl">
+      <div className="flex items-center justify-between gap-4 border-b border-slate-200 px-5 py-4">
+        <h2 className={`text-base leading-6 text-slate-800 ${fontSemi}`}>{title}</h2>
         <button type="button" onClick={onClose} aria-label="Close" className="flex transition hover:opacity-70">
           <img src={imgClose} alt="" width={20} height={20} className="size-5" />
         </button>
@@ -110,12 +111,12 @@ function AppDialog({ dialog, onClose, onConfirm }: { dialog: DialogState; onClos
         <div className="flex gap-4">
           <AppLogo app={app.id} size="size-10" />
           <div>
-            <p className={`text-[14px] leading-[20px] text-[#1e293b] ${fontSemi}`}>{app.name}</p>
-            <p className={`mt-0.5 text-[14px] leading-[20px] text-[#334155] ${fontRegular}`}>{app.description}</p>
+            <p className={`text-sm leading-5 text-slate-800 ${fontSemi}`}>{app.name}</p>
+            <p className={`mt-0.5 text-sm leading-5 text-slate-700 ${fontRegular}`}>{app.description}</p>
           </div>
         </div>
         {connecting ? (
-          <p className={`flex items-start gap-3 rounded-[6px] bg-[#ecfdf5] px-3 py-2.5 text-[12px] leading-[18px] text-[#047857] ${fontMedium}`}>
+          <p className={`flex items-start gap-3 rounded-md bg-emerald-50 px-3 py-2.5 text-xs leading-4.5 text-emerald-700 ${fontMedium}`}>
             <svg viewBox="0 0 24 24" className="mt-0.5 size-4 shrink-0" fill="#047857" aria-hidden="true">
               <circle cx="12" cy="12" r="11" />
               <path d="M7 12.5l3.2 3.2L17 9" fill="none" stroke="#fff" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" />
@@ -123,7 +124,7 @@ function AppDialog({ dialog, onClose, onConfirm }: { dialog: DialogState; onClos
             If you connect your {app.short} calendar to this, you will receive all updates automatically.
           </p>
         ) : (
-          <p className={`flex items-start gap-3 rounded-[6px] bg-[#fef2f2] px-3 py-2.5 text-[12px] leading-[18px] text-[#b91c1c] ${fontMedium}`}>
+          <p className={`flex items-start gap-3 rounded-md bg-red-50 px-3 py-2.5 text-xs leading-4.5 text-red-700 ${fontMedium}`}>
             <svg viewBox="0 0 24 24" className="mt-0.5 size-4 shrink-0" fill="#dc2626" aria-hidden="true">
               <path d="M12 2L1 21h22L12 2z" />
               <path d="M12 9v5M12 17.5v.01" stroke="#fff" strokeWidth="2" strokeLinecap="round" />
@@ -132,11 +133,11 @@ function AppDialog({ dialog, onClose, onConfirm }: { dialog: DialogState; onClos
           </p>
         )}
       </div>
-      <div className="flex items-center justify-end gap-6 border-t border-[#e2e8f0] px-5 py-5">
-        <button type="button" onClick={onClose} className={`text-[16px] leading-[24px] text-[#1e293b] transition hover:text-[#64748b] ${fontMedium}`}>
+      <div className="flex items-center justify-end gap-6 border-t border-slate-200 px-5 py-5">
+        <button type="button" onClick={onClose} className={`text-base leading-6 text-slate-800 transition hover:text-slate-500 ${fontMedium}`}>
           {connecting ? "Cancel" : "Not Now"}
         </button>
-        <button type="button" onClick={onConfirm} className={`h-[36px] rounded-[8px] px-4 text-[16px] leading-[20px] transition ${connecting ? "bg-[#ffb20d] text-[#1e293b] hover:bg-[#faa104]" : "bg-[#dc2626] text-white hover:bg-[#b91c1c]"} ${fontMedium}`}>
+        <button type="button" onClick={onConfirm} className={`h-9 rounded-lg px-4 text-base leading-5 transition ${connecting ? "bg-secondary-500 text-slate-800 hover:bg-secondary-600" : "bg-red-600 text-white hover:bg-red-700"} ${fontMedium}`}>
           {connecting ? "Connect Now" : "Disconnect Now"}
         </button>
       </div>
@@ -157,21 +158,21 @@ function AppStore({ state, onDialog }: { state: AppsState; onDialog: (dialog: Di
     return () => window.removeEventListener("resize", measure);
   }, []);
   const move = (direction: number) => scroller.current?.scrollBy({ left: direction * 415, behavior: "smooth" });
-  const arrow = (on: boolean) => `flex size-9 items-center justify-center rounded-[6px] text-[#334155] transition disabled:cursor-not-allowed disabled:opacity-40 ${on ? "bg-[#f1f5f9] hover:bg-[#e2e8f0]" : "hover:bg-[#f8fafc]"}`;
+  const arrow = (on: boolean) => `flex size-9 items-center justify-center rounded-md text-slate-700 transition disabled:cursor-not-allowed disabled:opacity-40 ${on ? "bg-slate-150 hover:bg-slate-200" : "hover:bg-slate-25"}`;
 
   return (
     <main className="flex flex-1 flex-col bg-white">
-      <div className="border-b border-[#e2e8f0] px-4 py-6 md:px-7">
+      <div className="border-b border-slate-200 px-4 py-6 md:px-7">
         <h1 className={titleClass} style={titleStyle}>
           App Store
         </h1>
       </div>
       <div className="flex flex-1 flex-col px-4 py-6 md:px-7">
-        <section className="flex-1 overflow-hidden rounded-[12px] border border-[#e2e8f0] p-6">
+        <section className="flex-1 overflow-hidden rounded-xl border border-slate-200 p-6">
           <div className="flex items-start justify-between gap-4">
             <div>
-              <h2 className={`text-[18px] leading-[28px] text-[#1e293b] ${fontSemi}`}>All calendar apps</h2>
-              <p className={`mt-1 text-[14px] leading-[20px] text-[#64748b] ${fontRegular}`}>Supercharge your workflow & connect the tool you use everyday.</p>
+              <h2 className={`text-lg leading-7 text-slate-800 ${fontSemi}`}>All calendar apps</h2>
+              <p className={`mt-1 text-sm leading-5 text-slate-500 ${fontRegular}`}>Supercharge your workflow & connect the tool you use everyday.</p>
             </div>
             <div className="flex shrink-0 gap-2.5">
               <button type="button" aria-label="Previous apps" disabled={edges.start} onClick={() => move(-1)} className={arrow(!edges.start)}>
@@ -186,17 +187,17 @@ function AppStore({ state, onDialog }: { state: AppsState; onDialog: (dialog: Di
               </button>
             </div>
           </div>
-          <div ref={scroller} onScroll={measure} className="mt-6 flex gap-8 overflow-x-auto [scrollbar-width:none]">
+          <div ref={scroller} onScroll={measure} className="mt-6 flex gap-8 overflow-x-auto scrollbar-none">
             {APPS.map((app) => {
               const connected = Boolean(state.connections[app.id]);
               return (
-                <article key={app.id} className="flex w-[382px] max-w-full shrink-0 flex-col rounded-[12px] border border-[#e2e8f0] p-6">
+                <article key={app.id} className="flex w-95.5 max-w-full shrink-0 flex-col rounded-xl border border-slate-200 p-6">
                   <div className="flex items-center gap-5 pl-1">
                     <AppLogo app={app.id} />
-                    <h3 className={`text-[16px] leading-[24px] text-[#1e293b] ${fontSemi}`}>{app.name}</h3>
+                    <h3 className={`text-base leading-6 text-slate-800 ${fontSemi}`}>{app.name}</h3>
                   </div>
-                  <p className={`mt-5 min-h-[72px] flex-1 text-[14px] leading-[24px] text-[#475569] ${fontRegular}`}>{app.description}</p>
-                  <button type="button" onClick={() => onDialog(connected ? { kind: "disconnect", app: app.id, addToOnly: false } : { kind: "connect", app: app.id, forAddTo: false })} className={`mt-3 h-[43px] w-full rounded-[8px] text-[16px] leading-[20px] transition ${connected ? "bg-[#f1f5f9] text-[#dc2626] hover:bg-[#e2e8f0]" : "bg-[#1e293b] text-white hover:bg-[#0f172a]"} ${fontMedium}`}>
+                  <p className={`mt-5 min-h-18 flex-1 text-sm leading-6 text-slate-600 ${fontRegular}`}>{app.description}</p>
+                  <button type="button" onClick={() => onDialog(connected ? { kind: "disconnect", app: app.id, addToOnly: false } : { kind: "connect", app: app.id, forAddTo: false })} className={`mt-3 h-10.75 w-full rounded-lg text-base leading-5 transition ${connected ? "bg-slate-150 text-red-600 hover:bg-slate-200" : "bg-slate-800 text-white hover:bg-slate-900"} ${fontMedium}`}>
                     {connected ? "Disconnect" : "Connect"}
                   </button>
                 </article>
@@ -211,7 +212,7 @@ function AppStore({ state, onDialog }: { state: AppsState; onDialog: (dialog: Di
 
 const addTrigger = (
   <>
-    <svg viewBox="0 0 24 24" className="size-[18px]" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
+    <svg viewBox="0 0 24 24" className="size-4.5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
       <path d="M12 5v14M5 12h14" />
     </svg>
     Add
@@ -222,10 +223,10 @@ function InstalledApps({ state, setState, onDialog }: { state: AppsState; setSta
   const { notify } = useApp();
   const connected = APPS.filter((a) => state.connections[a.id]);
   const notConnected = APPS.filter((a) => !state.connections[a.id]);
-  const addTriggerClass = `flex h-[35px] items-center gap-2 rounded-[8px] border border-[#cbd5e1] px-3 text-[14px] leading-[20px] text-[#334155] transition hover:bg-[#f8fafc] ${fontMedium}`;
+  const addTriggerClass = `flex h-8.75 items-center gap-2 rounded-lg border border-slate-300 px-3 text-sm leading-5 text-slate-700 transition hover:bg-slate-25 ${fontMedium}`;
   const emailOptions = [...new Set([...(state.addTo ? [state.addTo.email] : []), ...connected.map((a) => state.connections[a.id]!.email)])];
-  const sectionTitle = `text-[14px] leading-[20px] text-[#0f172a] ${fontSemi}`;
-  const sectionText = `mt-1 text-[12px] leading-[18px] text-[#64748b] ${fontRegular}`;
+  const sectionTitle = `text-sm leading-5 text-slate-900 ${fontSemi}`;
+  const sectionText = `mt-1 text-xs leading-4.5 text-slate-500 ${fontRegular}`;
 
   const toggleCalendar = (id: AppId, name: string) => {
     const connection = state.connections[id]!;
@@ -234,37 +235,37 @@ function InstalledApps({ state, setState, onDialog }: { state: AppsState; setSta
 
   return (
     <main className="flex flex-1 flex-col bg-white">
-      <div className="flex flex-wrap items-center justify-between gap-4 border-b border-[#e2e8f0] px-4 py-6 md:px-7">
+      <div className="flex flex-wrap items-center justify-between gap-4 border-b border-slate-200 px-4 py-6 md:px-7">
         <h1 className={titleClass} style={titleStyle}>
           Installed Apps
         </h1>
-        <button type="button" onClick={() => openInstructorApps("store")} className={`flex h-[36px] items-center gap-2 rounded-[8px] bg-[#ffb20d] px-3 text-[14px] leading-[20px] text-[#1e293b] transition hover:bg-[#faa104] ${fontMedium}`}>
-          <img src={imgPlusSmall} alt="" width={18} height={18} className="size-[18px]" />
+        <button type="button" onClick={() => openInstructorApps("store")} className={`${buttonClass("yellow", "md")}`}>
+          <img src={imgPlusSmall} alt="" width={18} height={18} className="size-4.5" />
           Connect apps
         </button>
       </div>
       <div className="flex flex-1 flex-col px-4 py-6 md:px-7">
-        <section className="flex flex-1 flex-col gap-5 rounded-[12px] border border-[#e2e8f0] p-6">
+        <section className="flex flex-1 flex-col gap-5 rounded-xl border border-slate-200 p-6">
           <div>
-            <h2 className={`text-[18px] leading-[28px] text-[#1e293b] ${fontSemi}`}>All connected apps</h2>
-            <p className={`mt-1 text-[14px] leading-[20px] text-[#64748b] ${fontRegular}`}>Supercharge your workflow & connect the tool you use everyday.</p>
+            <h2 className={`text-lg leading-7 text-slate-800 ${fontSemi}`}>All connected apps</h2>
+            <p className={`mt-1 text-sm leading-5 text-slate-500 ${fontRegular}`}>Supercharge your workflow & connect the tool you use everyday.</p>
           </div>
 
-          <div className="rounded-[12px] border border-[#e2e8f0]">
-            <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#f1f5f9] px-6 py-4">
+          <div className="rounded-xl border border-slate-200">
+            <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-150 px-6 py-4">
               <div>
                 <h3 className={sectionTitle}>Add to calendar</h3>
                 <p className={sectionText}>Select where new events should be added when you're booked.</p>
               </div>
               {state.addTo ? (
                 <div className="flex flex-wrap items-center gap-4">
-                  <p className={`flex items-center gap-2.5 text-[12px] leading-[18px] text-[#94a3b8] ${fontRegular}`}>
-                    <span aria-hidden="true" className="size-2 rounded-full bg-[#10b981]" />
+                  <p className={`flex items-center gap-2.5 text-xs leading-4.5 text-slate-400 ${fontRegular}`}>
+                    <span aria-hidden="true" className="size-2 rounded-full bg-emerald-500" />
                     <span>
-                      Connected with <span className="text-[#334155]">{state.addTo.email}</span>
+                      Connected with <span className="text-slate-700">{state.addTo.email}</span>
                     </span>
                   </p>
-                  <button type="button" onClick={() => onDialog({ kind: "disconnect", app: state.addTo!.app, addToOnly: true })} className={`flex h-[32px] items-center gap-2 rounded-[8px] border border-[#fca5a5] px-3 text-[14px] leading-[20px] text-[#dc2626] transition hover:bg-[#fef2f2] ${fontSemi}`}>
+                  <button type="button" onClick={() => onDialog({ kind: "disconnect", app: state.addTo!.app, addToOnly: true })} className={`flex h-8 items-center gap-2 rounded-lg border border-red-300 px-3 text-sm leading-5 text-red-600 transition hover:bg-red-50 ${fontSemi}`}>
                     <UnlinkIcon />
                     Disconnect
                   </button>
@@ -274,7 +275,7 @@ function InstalledApps({ state, setState, onDialog }: { state: AppsState; setSta
               )}
             </div>
             <div className="flex flex-col gap-2 px-6 py-5">
-              <p className={`text-[14px] leading-[20px] text-[#1e293b] ${fontRegular}`}>Add events to</p>
+              <p className={`text-sm leading-5 text-slate-800 ${fontRegular}`}>Add events to</p>
               <div className={`[&_ul]:w-full ${state.addTo ? "" : "pointer-events-none"}`}>
                 <FilterSelect
                   plain
@@ -287,8 +288,8 @@ function InstalledApps({ state, setState, onDialog }: { state: AppsState; setSta
             </div>
           </div>
 
-          <div className="rounded-[12px] border border-[#e2e8f0]">
-            <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#f1f5f9] px-6 py-4">
+          <div className="rounded-xl border border-slate-200">
+            <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-150 px-6 py-4">
               <div>
                 <h3 className={sectionTitle}>Check for conflicts</h3>
                 <p className={sectionText}>Choose the calendar that will be used to detect conflicts and prevent overlapping bookings.</p>
@@ -302,20 +303,20 @@ function InstalledApps({ state, setState, onDialog }: { state: AppsState; setSta
               )}
             </div>
             <div className="flex flex-col gap-4 p-4 md:px-6">
-              {connected.length === 0 && <p className={`py-6 text-center text-[14px] leading-[24px] text-[#64748b] ${fontRegular}`}>No calendars connected yet.</p>}
+              {connected.length === 0 && <p className={`py-6 text-center text-sm leading-6 text-slate-500 ${fontRegular}`}>No calendars connected yet.</p>}
               {connected.map((app) => {
                 const connection = state.connections[app.id]!;
                 return (
-                  <article key={app.id} className="rounded-[12px] border border-[#e2e8f0]">
-                    <div className="flex items-center gap-5 border-b border-[#f1f5f9] px-6 py-4">
+                  <article key={app.id} className="rounded-xl border border-slate-200">
+                    <div className="flex items-center gap-5 border-b border-slate-150 px-6 py-4">
                       <AppLogo app={app.id} />
                       <div className="min-w-0 flex-1">
-                        <p className={`text-[14px] leading-[22px] text-[#1e293b] ${fontSemi}`}>{app.name}</p>
-                        <p className={`truncate text-[12px] leading-[18px] text-[#64748b] ${fontRegular}`}>{connection.email}</p>
+                        <p className={`text-sm leading-5.5 text-slate-800 ${fontSemi}`}>{app.name}</p>
+                        <p className={`truncate text-xs leading-4.5 text-slate-500 ${fontRegular}`}>{connection.email}</p>
                       </div>
                       <ActionMenu
                         label={`More actions for ${app.name}`}
-                        triggerClass="flex size-8 shrink-0 items-center justify-center rounded-full text-[#475569] transition hover:bg-[#f1f5f9]"
+                        triggerClass="flex size-8 shrink-0 items-center justify-center rounded-full text-slate-600 transition hover:bg-slate-150"
                         trigger={
                           <svg viewBox="0 0 24 24" className="size-5" fill="currentColor" aria-hidden="true">
                             <circle cx="12" cy="5" r="1.7" />
@@ -327,11 +328,11 @@ function InstalledApps({ state, setState, onDialog }: { state: AppsState; setSta
                       />
                     </div>
                     <div className="flex flex-col gap-4 px-6 py-5">
-                      <p className={`text-[12px] leading-[18px] text-[#94a3b8] ${fontRegular}`}>Toggle the calendars to check for conflicts to prevent double bookings</p>
+                      <p className={`text-xs leading-4.5 text-slate-400 ${fontRegular}`}>Toggle the calendars to check for conflicts to prevent double bookings</p>
                       {connection.calendars.map((calendar) => (
                         <div key={calendar.name} className="flex items-center gap-2.5">
                           <Toggle on={calendar.on} label={`Check ${calendar.name} for conflicts`} onChange={() => toggleCalendar(app.id, calendar.name)} />
-                          <span className={`text-[14px] leading-[20px] text-[#334155] ${fontRegular}`}>{calendar.name}</span>
+                          <span className={`text-sm leading-5 text-slate-700 ${fontRegular}`}>{calendar.name}</span>
                         </div>
                       ))}
                     </div>

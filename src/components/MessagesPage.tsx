@@ -7,6 +7,7 @@ import { useApp, useStoredState } from "../store";
 import { ActionMenu } from "./Menus";
 import { NoteBody, NoteEditor } from "./Notes";
 import { Shell } from "./Overlays";
+import { buttonClass } from "./Button"
 
 type Message = { id: string; mine: boolean; text: string; html?: string; at: string };
 type Thread = { id: string; name: string; unread: number; messages: Message[] };
@@ -72,7 +73,7 @@ function Icon({ icon, size = 18, className = "" }: { icon: IconSvgElement; size?
   return <HugeiconsIcon icon={icon} size={size} strokeWidth={1.8} aria-hidden="true" className={`shrink-0 ${className}`} />;
 }
 
-function Avatar({ name, className = "size-10 text-[14px]" }: { name: string; className?: string }) {
+function Avatar({ name, className = "size-10 text-sm" }: { name: string; className?: string }) {
   const initials = name
     .replace(/^Dr\.\s*/, "")
     .split(" ")
@@ -88,10 +89,10 @@ function Avatar({ name, className = "size-10 text-[14px]" }: { name: string; cla
   );
 }
 
-const iconButton = "flex size-9 items-center justify-center rounded-[8px] text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900";
+const iconButton = "flex size-9 items-center justify-center rounded-lg text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900";
 const dots = <Icon icon={MoreVerticalIcon} />;
 
-function Chevron({ open, className = "size-4 text-[#0f172a]" }: { open?: boolean; className?: string }) {
+function Chevron({ open, className = "size-4 text-slate-900" }: { open?: boolean; className?: string }) {
   return (
     <svg viewBox="0 0 24 24" className={`transition-transform ${open ? "rotate-180" : ""} ${className}`} fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
       <path d="M6 9l6 6 6-6" />
@@ -104,14 +105,14 @@ function ReportAbuseDialog({ onClose }: { onClose: () => void }) {
   const [open, setOpen] = useState(false);
   const [showError, setShowError] = useState(false);
   const [done, setDone] = useState(false);
-  const footer = "flex items-center justify-end gap-4 border-t border-[#e2e8f0] px-6 py-4";
+  const footer = "flex items-center justify-end gap-4 border-t border-slate-200 px-6 py-4";
 
   if (done) {
     return (
-      <Shell title="Report abuse" onClose={onClose} width="max-w-[564px]" radius="sm:rounded-[12px]">
-        <p className={`p-6 text-[14px] leading-[24px] text-[#64748b] ${fontRegular}`}>Thank you for helping maintain the integrity of our marketplace. We will review your report as soon as possible. As a matter of policy we will only follow up if we require additional information.</p>
+      <Shell title="Report abuse" onClose={onClose} width="max-w-141" radius="sm:rounded-xl">
+        <p className={`p-6 text-sm leading-6 text-slate-500 ${fontRegular}`}>Thank you for helping maintain the integrity of our marketplace. We will review your report as soon as possible. As a matter of policy we will only follow up if we require additional information.</p>
         <div className={footer}>
-          <button type="button" onClick={onClose} className={`h-[44px] rounded-[8px] bg-[#ffb20d] px-8 text-[14px] text-[#1e293b] transition hover:bg-[#faa104] ${fontMedium}`}>
+          <button type="button" onClick={onClose} className={`${buttonClass("yellow", "lg")}`}>
             OK
           </button>
         </div>
@@ -121,11 +122,11 @@ function ReportAbuseDialog({ onClose }: { onClose: () => void }) {
 
   const invalid = showError && !issue;
   return (
-    <Shell title="Report abuse" onClose={onClose} width="max-w-[564px]" radius="sm:rounded-[12px]">
+    <Shell title="Report abuse" onClose={onClose} width="max-w-141" radius="sm:rounded-xl">
       <div className="flex flex-col gap-6 p-6">
-        <p className={`text-[14px] leading-[24px] text-[#64748b] ${fontRegular}`}>Flagged content is reviewed by Thkee staff to determine whether it violates Terms of Service or Community Guidelines. If you have a question or technical issue, please contact our Support team here.</p>
+        <p className={`text-sm leading-6 text-slate-500 ${fontRegular}`}>Flagged content is reviewed by Thkee staff to determine whether it violates Terms of Service or Community Guidelines. If you have a question or technical issue, please contact our Support team here.</p>
         <div className="flex flex-col gap-2">
-          <span id="issue-type" className={`text-[14px] leading-[20px] text-[#0f172a] ${fontMedium}`}>
+          <span id="issue-type" className={`text-sm leading-5 text-slate-900 ${fontMedium}`}>
             Issue type
           </span>
           <div
@@ -140,12 +141,12 @@ function ReportAbuseDialog({ onClose }: { onClose: () => void }) {
               }
             }}
           >
-            <button type="button" aria-haspopup="listbox" aria-expanded={open} aria-labelledby="issue-type" aria-invalid={invalid} onClick={() => setOpen((o) => !o)} className={`flex h-[44px] w-full items-center justify-between rounded-[8px] border bg-white px-4 text-left text-[14px] transition ${invalid ? "border-[#ef4444]" : "border-[#e2e8f0]"} ${issue ? "text-[#0f172a]" : "text-[#94a3b8]"} ${fontRegular}`}>
+            <button type="button" aria-haspopup="listbox" aria-expanded={open} aria-labelledby="issue-type" aria-invalid={invalid} onClick={() => setOpen((o) => !o)} className={`flex h-11 w-full items-center justify-between rounded-lg border bg-white px-4 text-left text-sm transition ${invalid ? "border-red-500" : "border-slate-200"} ${issue ? "text-slate-900" : "text-slate-400"} ${fontRegular}`}>
               {issue || "Select an issue"}
-              <Chevron open={open} className="size-4 text-[#64748b]" />
+              <Chevron open={open} className="size-4 text-slate-500" />
             </button>
             {open && (
-              <ul role="listbox" aria-labelledby="issue-type" className="pop-in absolute inset-x-0 top-[calc(100%+4px)] z-20 flex flex-col gap-0.5 rounded-[8px] bg-white p-1 shadow-[0_8px_24px_rgba(15,23,42,0.15)]">
+              <ul role="listbox" aria-labelledby="issue-type" className="pop-in absolute inset-x-0 top-full mt-1 z-20 flex flex-col gap-0.5 rounded-lg bg-white p-1 shadow-2xl">
                 {issueTypes.map((type) => (
                   <li key={type} role="presentation">
                     <button
@@ -156,7 +157,7 @@ function ReportAbuseDialog({ onClose }: { onClose: () => void }) {
                         setIssue(type);
                         setOpen(false);
                       }}
-                      className={`w-full rounded-[4px] px-3 py-2 text-left text-[14px] leading-[20px] text-[#334155] transition ${issue === type ? "bg-[#ffefd6]" : "hover:bg-[#f1f5f9]"} ${fontRegular}`}
+                      className={`w-full rounded-sm px-3 py-2 text-left text-sm leading-5 text-slate-700 transition ${issue === type ? "bg-secondary-100" : "hover:bg-slate-150"} ${fontRegular}`}
                     >
                       {type}
                     </button>
@@ -165,18 +166,18 @@ function ReportAbuseDialog({ onClose }: { onClose: () => void }) {
               </ul>
             )}
           </div>
-          {invalid && <p className={`text-[12px] leading-[18px] text-[#dc2626] ${fontRegular}`}>Please select an issue.</p>}
+          {invalid && <p className={`text-xs leading-4.5 text-red-600 ${fontRegular}`}>Please select an issue.</p>}
         </div>
         <div className="flex flex-col gap-2">
-          <span className={`text-[14px] leading-[20px] text-[#0f172a] ${fontMedium}`}>Issue details</span>
+          <span className={`text-sm leading-5 text-slate-900 ${fontMedium}`}>Issue details</span>
           <NoteEditor placeholder="Tell us more about the issue" hideActions autoFocus={false} />
         </div>
       </div>
       <div className={footer}>
-        <button type="button" onClick={onClose} className={`h-[44px] rounded-[8px] px-4 text-[14px] text-[#1e293b] transition hover:bg-[#f1f5f9] ${fontMedium}`}>
+        <button type="button" onClick={onClose} className={`h-11 rounded-lg px-4 text-sm text-slate-800 transition hover:bg-slate-150 ${fontMedium}`}>
           Cancel
         </button>
-        <button type="button" onClick={() => (issue ? setDone(true) : setShowError(true))} className={`h-[44px] w-[150px] rounded-[8px] bg-[#ffb20d] text-[14px] text-[#1e293b] transition hover:bg-[#faa104] ${fontMedium}`}>
+        <button type="button" onClick={() => (issue ? setDone(true) : setShowError(true))} className={`h-11 w-37.5 rounded-lg bg-secondary-500 text-sm text-slate-800 transition hover:bg-secondary-600 ${fontMedium}`}>
           Save
         </button>
       </div>
@@ -190,21 +191,21 @@ function ThreadRow({ thread, selected, onOpen, onToggleRead, onReport }: { threa
   const preview = last ? `${last.mine ? "You: " : ""}${last.text || "Sent an image"}` : "No messages yet";
   return (
     <li className="group relative px-2">
-      <button type="button" aria-current={selected ? "true" : undefined} onClick={onOpen} className={`flex w-full items-center gap-3 rounded-[10px] px-3 py-3 text-left transition-colors ${selected ? "bg-[#eef7f3]" : "hover:bg-slate-50"}`}>
-        <Avatar name={thread.name} className="size-11 text-[15px]" />
+      <button type="button" aria-current={selected ? "true" : undefined} onClick={onOpen} className={`flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left transition-colors ${selected ? "bg-primary-100" : "hover:bg-slate-50"}`}>
+        <Avatar name={thread.name} className="size-11 text-15" />
         <span className="flex min-w-0 flex-1 flex-col gap-0.5">
           <span className="flex items-baseline gap-2">
-            <span dir="auto" className={`min-w-0 flex-1 truncate text-[14px] leading-[20px] text-slate-900 ${fontFor(thread.name, unread ? fontSemi : fontMedium)}`}>
+            <span dir="auto" className={`min-w-0 flex-1 truncate text-sm leading-5 text-slate-900 ${fontFor(thread.name, unread ? fontSemi : fontMedium)}`}>
               {thread.name}
             </span>
-            {last && <span className={`shrink-0 text-[12px] leading-[16px] ${unread ? `text-[#0d5c4b] ${fontMedium}` : `text-slate-500 ${fontRegular}`}`}>{listStamp(last.at)}</span>}
+            {last && <span className={`shrink-0 text-xs leading-4 ${unread ? `text-primary-700 ${fontMedium}` : `text-slate-500 ${fontRegular}`}`}>{listStamp(last.at)}</span>}
           </span>
           <span className="flex items-center gap-2">
-            <span dir="auto" className={`min-w-0 flex-1 truncate text-[13px] leading-[20px] ${unread ? `text-slate-800 ${fontMedium}` : `text-slate-500 ${fontRegular}`}`}>
+            <span dir="auto" className={`min-w-0 flex-1 truncate text-13 leading-5 ${unread ? `text-slate-800 ${fontMedium}` : `text-slate-500 ${fontRegular}`}`}>
               {preview}
             </span>
             {unread && (
-              <span aria-label={`${thread.unread} unread`} className={`flex h-5 min-w-5 shrink-0 items-center justify-center rounded-full bg-[#0d5c4b] px-1.5 text-[11px] text-white ${fontSemi}`}>
+              <span aria-label={`${thread.unread} unread`} className={`flex h-5 min-w-5 shrink-0 items-center justify-center rounded-full bg-primary-700 px-1.5 text-11 text-white ${fontSemi}`}>
                 {thread.unread}
               </span>
             )}
@@ -230,7 +231,7 @@ function ThreadRow({ thread, selected, onOpen, onToggleRead, onReport }: { threa
 function DayDivider({ label }: { label: string }) {
   return (
     <div className="my-2 flex justify-center">
-      <span className={`rounded-full border border-slate-200 bg-white px-3 py-0.5 text-[12px] leading-[18px] text-slate-500 ${fontMedium}`}>{label}</span>
+      <span className={`rounded-full border border-slate-200 bg-white px-3 py-0.5 text-xs leading-4.5 text-slate-500 ${fontMedium}`}>{label}</span>
     </div>
   );
 }
@@ -248,16 +249,16 @@ function ThreadView({ thread, onBack, onSend, onMarkUnread, onReport }: { thread
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
-      <header className="flex h-[68px] shrink-0 items-center gap-3 border-b border-slate-200 px-3 sm:px-5">
+      <header className="flex h-17 shrink-0 items-center gap-3 border-b border-slate-200 px-3 sm:px-5">
         <button type="button" onClick={onBack} aria-label="Back to messages" className={`${iconButton} md:hidden`}>
           <Icon icon={ArrowLeft01Icon} size={20} />
         </button>
         <Avatar name={thread.name} />
         <div className="min-w-0 flex-1">
-          <p dir="auto" className={`truncate text-[15px] leading-[22px] text-slate-900 ${fontFor(thread.name, fontSemi)}`}>
+          <p dir="auto" className={`truncate text-15 leading-5.5 text-slate-900 ${fontFor(thread.name, fontSemi)}`}>
             {thread.name}
           </p>
-          <p className={`truncate text-[13px] leading-[18px] text-slate-500 ${fontRegular}`}>{course ? `Instructor · ${course}` : "Instructor"}</p>
+          <p className={`truncate text-13 leading-4.5 text-slate-500 ${fontRegular}`}>{course ? `Instructor · ${course}` : "Instructor"}</p>
         </div>
         <ActionMenu
           label={`Options for ${thread.name}`}
@@ -273,12 +274,12 @@ function ThreadView({ thread, onBack, onSend, onMarkUnread, onReport }: { thread
       <div ref={scroller} className="min-h-0 flex-1 overflow-y-auto bg-slate-50/70 px-3 py-5 sm:px-6">
         {messages.length === 0 ? (
           <div className="flex h-full flex-col items-center justify-center gap-2 text-center">
-            <Avatar name={thread.name} className="size-16 text-[20px]" />
-            <p dir="auto" className={`mt-2 text-[16px] leading-[24px] text-slate-900 ${fontFor(thread.name, fontSemi)}`}>
+            <Avatar name={thread.name} className="size-16 text-xl" />
+            <p dir="auto" className={`mt-2 text-base leading-6 text-slate-900 ${fontFor(thread.name, fontSemi)}`}>
               {thread.name}
             </p>
-            {course && <p className={`text-[13px] leading-[18px] text-slate-500 ${fontRegular}`}>Instructor · {course}</p>}
-            <p className={`mt-2 max-w-[320px] text-[14px] leading-[20px] text-slate-600 ${fontRegular}`}>This is the start of your conversation. Ask a question about the course or say hello.</p>
+            {course && <p className={`text-13 leading-4.5 text-slate-500 ${fontRegular}`}>Instructor · {course}</p>}
+            <p className={`mt-2 max-w-80 text-sm leading-5 text-slate-600 ${fontRegular}`}>This is the start of your conversation. Ask a question about the course or say hello.</p>
           </div>
         ) : (
           <ol className="flex flex-col">
@@ -293,16 +294,16 @@ function ThreadView({ thread, onBack, onSend, onMarkUnread, onReport }: { thread
                 <Fragment key={message.id}>
                   {newDay && <DayDivider label={dayLabel(message.at)} />}
                   <li className={`flex items-end gap-2 ${mine ? "justify-end" : ""} ${first && !newDay ? "mt-4" : "mt-1"}`}>
-                    {!mine && (lastInGroup ? <Avatar name={thread.name} className="size-8 text-[12px]" /> : <span className="w-8 shrink-0" />)}
-                    <div className={`flex min-w-0 max-w-[80%] flex-col sm:max-w-[520px] ${mine ? "items-end" : "items-start"}`}>
+                    {!mine && (lastInGroup ? <Avatar name={thread.name} className="size-8 text-xs" /> : <span className="w-8 shrink-0" />)}
+                    <div className={`flex min-w-0 max-w-4/5 flex-col sm:max-w-130 ${mine ? "items-end" : "items-start"}`}>
                       <div
-                        className={`max-w-full rounded-[18px] px-3.5 py-2 ${
-                          mine ? `bg-[#0d5c4b] [&_a]:!text-white [&_code]:!bg-white/15 ${lastInGroup ? "rounded-br-[6px]" : ""}` : `border border-slate-200 bg-white ${lastInGroup ? "rounded-bl-[6px]" : ""}`
+                        className={`max-w-full rounded-2xl px-3.5 py-2 ${
+                          mine ? `bg-primary-700 [&_a]:!text-white [&_code]:!bg-white/15 ${lastInGroup ? "rounded-br-md" : ""}` : `border border-slate-200 bg-white ${lastInGroup ? "rounded-bl-md" : ""}`
                         }`}
                       >
                         <NoteBody note={message} tone={mine ? "text-white" : "text-slate-800"} className="break-words" />
                       </div>
-                      {lastInGroup && <span className={`mt-1 px-1 text-[11px] leading-[16px] text-slate-400 ${fontRegular}`}>{formatClock(message.at)}</span>}
+                      {lastInGroup && <span className={`mt-1 px-1 text-11 leading-4 text-slate-400 ${fontRegular}`}>{formatClock(message.at)}</span>}
                     </div>
                   </li>
                 </Fragment>
@@ -317,8 +318,8 @@ function ThreadView({ thread, onBack, onSend, onMarkUnread, onReport }: { thread
           key={thread.id}
           placeholder={`Message ${thread.name}`}
           saveLabel="Send"
-          saveClass="!h-[44px] shrink-0 bg-[#ffb20d] !px-4 text-[#1e293b] hover:bg-[#faa104]"
-          boxClass="min-h-[96px] max-h-[240px] !p-3"
+          saveSize="lg"
+          boxClass="min-h-24 max-h-60 !p-3"
           imageOnly
           sideAction
           submitOnEnter
@@ -326,7 +327,7 @@ function ThreadView({ thread, onBack, onSend, onMarkUnread, onReport }: { thread
           autoFocus={false}
           onSave={onSend}
         />
-        <p className={`mt-2 hidden text-[12px] leading-[16px] text-slate-400 sm:block ${fontRegular}`}>Press Enter to send, Shift + Enter for a new line.</p>
+        <p className={`mt-2 hidden text-xs leading-4 text-slate-400 sm:block ${fontRegular}`}>Press Enter to send, Shift + Enter for a new line.</p>
       </div>
     </div>
   );
@@ -335,11 +336,11 @@ function ThreadView({ thread, onBack, onSend, onMarkUnread, onReport }: { thread
 function EmptyThread() {
   return (
     <div className="flex flex-1 flex-col items-center justify-center gap-3 bg-slate-50/70 p-6 text-center">
-      <span className="flex size-14 items-center justify-center rounded-full bg-[#eef7f3] text-[#0d5c4b]">
+      <span className="flex size-14 items-center justify-center rounded-full bg-primary-100 text-primary-700">
         <Icon icon={MessageMultiple01Icon} size={26} />
       </span>
-      <p className={`mt-1 text-[16px] leading-[24px] text-slate-900 ${fontSemi}`}>Your messages</p>
-      <p className={`max-w-[300px] text-[14px] leading-[20px] text-slate-500 ${fontRegular}`}>Pick a conversation from the list, or start a new one with an instructor.</p>
+      <p className={`mt-1 text-base leading-6 text-slate-900 ${fontSemi}`}>Your messages</p>
+      <p className={`max-w-75 text-sm leading-5 text-slate-500 ${fontRegular}`}>Pick a conversation from the list, or start a new one with an instructor.</p>
     </div>
   );
 }
@@ -349,34 +350,34 @@ function NewChat({ onPick, onBack }: { onPick: (name: string) => void; onBack: (
   const matches = people.filter((name) => name.toLowerCase().includes(query.trim().toLowerCase()));
   return (
     <div className="flex min-h-0 flex-1 flex-col">
-      <header className="flex h-[68px] shrink-0 items-center gap-3 border-b border-slate-200 px-3 sm:px-5">
+      <header className="flex h-17 shrink-0 items-center gap-3 border-b border-slate-200 px-3 sm:px-5">
         <button type="button" onClick={onBack} aria-label="Back to messages" className={`${iconButton} md:hidden`}>
           <Icon icon={ArrowLeft01Icon} size={20} />
         </button>
-        <p className={`text-[15px] leading-[22px] text-slate-900 ${fontSemi}`}>New message</p>
+        <p className={`text-15 leading-5.5 text-slate-900 ${fontSemi}`}>New message</p>
       </header>
       <div className="flex flex-col gap-2 border-b border-slate-200 px-3 py-3 sm:px-5">
         <label className="field-box">
-          <span className={`text-[14px] text-slate-500 ${fontRegular}`}>To:</span>
-          <input autoFocus value={query} onChange={(e) => setQuery(e.target.value)} onKeyDown={(e) => e.key === "Escape" && onBack()} placeholder="Search instructors" aria-label="Search instructors" className={`min-w-0 flex-1 bg-transparent text-[16px] text-slate-900 outline-none placeholder:text-slate-400 md:text-[14px] ${fontRegular}`} />
+          <span className={`text-sm text-slate-500 ${fontRegular}`}>To:</span>
+          <input autoFocus value={query} onChange={(e) => setQuery(e.target.value)} onKeyDown={(e) => e.key === "Escape" && onBack()} placeholder="Search instructors" aria-label="Search instructors" className={`min-w-0 flex-1 bg-transparent text-base text-slate-900 outline-none placeholder:text-slate-400 md:text-sm ${fontRegular}`} />
         </label>
       </div>
-      <p className={`px-5 pb-1 pt-4 text-[12px] uppercase tracking-[0.04em] text-slate-500 ${fontMedium}`}>Your instructors</p>
+      <p className={`px-5 pb-1 pt-4 text-xs uppercase tracking-wider text-slate-500 ${fontMedium}`}>Your instructors</p>
       <ul className="min-h-0 flex-1 overflow-y-auto px-2 pb-3">
         {matches.map((name) => (
           <li key={name}>
-            <button type="button" onClick={() => onPick(name)} className="flex w-full items-center gap-3 rounded-[10px] px-3 py-2.5 text-left transition-colors hover:bg-slate-50">
-              <Avatar name={name} className="size-9 text-[13px]" />
+            <button type="button" onClick={() => onPick(name)} className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left transition-colors hover:bg-slate-50">
+              <Avatar name={name} className="size-9 text-13" />
               <span className="flex min-w-0 flex-col">
-                <span dir="auto" className={`truncate text-[14px] leading-[20px] text-slate-900 ${fontFor(name, fontMedium)}`}>
+                <span dir="auto" className={`truncate text-sm leading-5 text-slate-900 ${fontFor(name, fontMedium)}`}>
                   {name}
                 </span>
-                {courseOf(name) && <span className={`truncate text-[12px] leading-[16px] text-slate-500 ${fontRegular}`}>{courseOf(name)}</span>}
+                {courseOf(name) && <span className={`truncate text-xs leading-4 text-slate-500 ${fontRegular}`}>{courseOf(name)}</span>}
               </span>
             </button>
           </li>
         ))}
-        {matches.length === 0 && <li className={`px-3 py-4 text-[14px] text-slate-500 ${fontRegular}`}>No instructors match your search.</li>}
+        {matches.length === 0 && <li className={`px-3 py-4 text-sm text-slate-500 ${fontRegular}`}>No instructors match your search.</li>}
       </ul>
     </div>
   );
@@ -417,16 +418,16 @@ export default function MessagesPage() {
     setOpenName(null);
   };
   const paneOpen = creating || !!open;
-  const tab = (active: boolean) => `flex h-[30px] flex-1 items-center justify-center gap-1.5 rounded-[6px] text-[13px] transition-colors ${active ? `bg-white text-slate-900 shadow-[0_1px_2px_rgba(15,23,42,0.08)] ${fontMedium}` : `text-slate-600 hover:text-slate-900 ${fontRegular}`}`;
+  const tab = (active: boolean) => `flex h-7.5 flex-1 items-center justify-center gap-1.5 rounded-md text-13 transition-colors ${active ? `bg-white text-slate-900 shadow-sm ${fontMedium}` : `text-slate-600 hover:text-slate-900 ${fontRegular}`}`;
 
   return (
-    <main className="w-full bg-white pt-[56px]">
-      <div className="mx-auto max-w-[1272px] px-0 sm:px-4 sm:pb-8 sm:pt-6 md:pt-8">
-        <div className="flex h-[calc(100dvh-56px)] min-h-[520px] overflow-hidden bg-white sm:h-[calc(100dvh-56px-56px)] sm:rounded-[12px] sm:border sm:border-slate-200 sm:shadow-[0_1px_2px_rgba(15,23,42,0.04)] md:h-[calc(100dvh-56px-64px)]">
-          <aside className={`min-h-0 w-full flex-col border-slate-200 md:flex md:w-[320px] md:shrink-0 md:border-r lg:w-[360px] ${paneOpen ? "hidden" : "flex"}`}>
+    <main className="w-full bg-white pt-14">
+      <div className="mx-auto max-w-318 px-0 sm:px-4 sm:pb-8 sm:pt-6 md:pt-8">
+        <div className="flex h-dvh-minus-56 min-h-130 overflow-hidden bg-white sm:h-dvh-minus-112 sm:rounded-xl sm:border sm:border-slate-200 sm:shadow-sm md:h-dvh-minus-120">
+          <aside className={`min-h-0 w-full flex-col border-slate-200 md:flex md:w-80 md:shrink-0 md:border-r lg:w-90 ${paneOpen ? "hidden" : "flex"}`}>
             <div className="flex flex-col gap-3 px-4 pb-3 pt-4">
               <div className="flex h-9 items-center justify-between gap-2">
-                <h1 className="m-0 font-['Instrument_Sans:Medium'] text-[22px] font-medium leading-[28px] text-slate-900" style={headingStyle}>
+                <h1 className="m-0 font-instrument-medium text-22 font-medium leading-7 text-slate-900" style={headingStyle}>
                   Messages
                 </h1>
                 <div className="flex items-center gap-0.5">
@@ -439,7 +440,7 @@ export default function MessagesPage() {
                       setCreating(true);
                       setOpenName(null);
                     }}
-                    className={`${iconButton} ${creating ? "bg-[#eef7f3] text-[#0d5c4b]" : ""}`}
+                    className={`${iconButton} ${creating ? "bg-primary-100 text-primary-700" : ""}`}
                   >
                     <Icon icon={PencilEdit02Icon} size={20} />
                   </button>
@@ -447,15 +448,15 @@ export default function MessagesPage() {
               </div>
               <label className="field-box">
                 <Icon icon={Search01Icon} size={16} className="text-slate-400" />
-                <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search messages" aria-label="Search messages" className={`min-w-0 flex-1 bg-transparent text-[16px] text-slate-900 outline-none placeholder:text-slate-400 md:text-[14px] ${fontRegular}`} />
+                <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search messages" aria-label="Search messages" className={`min-w-0 flex-1 bg-transparent text-base text-slate-900 outline-none placeholder:text-slate-400 md:text-sm ${fontRegular}`} />
               </label>
-              <div role="tablist" aria-label="Filter conversations" className="flex rounded-[8px] bg-slate-100 p-0.5">
+              <div role="tablist" aria-label="Filter conversations" className="flex rounded-lg bg-slate-100 p-0.5">
                 <button type="button" role="tab" aria-selected={!unreadOnly} onClick={() => setUnreadOnly(false)} className={tab(!unreadOnly)}>
                   All
                 </button>
                 <button type="button" role="tab" aria-selected={unreadOnly} onClick={() => setUnreadOnly(true)} className={tab(unreadOnly)}>
                   Unread
-                  {unreadCount > 0 && <span className={`rounded-full bg-[#0d5c4b] px-1.5 text-[11px] leading-[16px] text-white ${fontSemi}`}>{unreadCount}</span>}
+                  {unreadCount > 0 && <span className={`rounded-full bg-primary-700 px-1.5 text-11 leading-4 text-white ${fontSemi}`}>{unreadCount}</span>}
                 </button>
               </div>
             </div>
@@ -465,8 +466,8 @@ export default function MessagesPage() {
               ))}
               {shown.length === 0 && (
                 <li className="flex flex-col items-center gap-1 px-6 py-12 text-center">
-                  <p className={`text-[14px] text-slate-900 ${fontMedium}`}>{q ? "No results" : "You're all caught up"}</p>
-                  <p className={`text-[13px] text-slate-500 ${fontRegular}`}>{q ? "No conversations match your search." : "There are no unread messages."}</p>
+                  <p className={`text-sm text-slate-900 ${fontMedium}`}>{q ? "No results" : "You're all caught up"}</p>
+                  <p className={`text-13 text-slate-500 ${fontRegular}`}>{q ? "No conversations match your search." : "There are no unread messages."}</p>
                 </li>
               )}
             </ul>

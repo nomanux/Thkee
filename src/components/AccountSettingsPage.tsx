@@ -31,19 +31,19 @@ const socials = [
 const MAX_PHOTO_BYTES = 1024 * 1024;
 
 const fieldBox = "field";
-const labelClass = `text-[14px] leading-[20px] text-slate-900 ${fontMedium}`;
-const hintClass = `text-[14px] leading-[20px] text-slate-500 ${fontRegular}`;
+const labelClass = `text-sm leading-5 text-slate-900 ${fontMedium}`;
+const hintClass = `text-sm leading-5 text-slate-500 ${fontRegular}`;
 // Help text under a field is smaller than the field text, so it never reads like a placeholder.
 const helpClass = "field-help";
-const primaryButton = `h-[36px] shrink-0 rounded-[8px] bg-[#ffb20d] px-4 text-[14px] text-slate-800 transition hover:bg-[#faa104] disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-[#ffb20d] ${fontMedium}`;
-const secondaryButton = `h-[36px] shrink-0 rounded-[8px] border border-slate-300 bg-white px-4 text-[14px] text-slate-800 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-white ${fontMedium}`;
-const dangerButton = `h-[36px] shrink-0 rounded-[8px] bg-[#dc2626] px-4 text-[14px] text-white transition hover:bg-[#b91c1c] disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-[#dc2626] ${fontMedium}`;
+const primaryButton = `h-9 shrink-0 rounded-lg bg-secondary-500 px-4 text-sm text-slate-800 transition hover:bg-secondary-600 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-secondary-500 ${fontMedium}`;
+const secondaryButton = `h-9 shrink-0 rounded-lg border border-slate-300 bg-white px-4 text-sm text-slate-800 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-white ${fontMedium}`;
+const dangerButton = `h-9 shrink-0 rounded-lg bg-red-600 px-4 text-sm text-white transition hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-red-600 ${fontMedium}`;
 
 
 function FieldError({ id, message }: { id: string; message?: string }) {
   if (!message) return null;
   return (
-    <p id={`${id}-error`} className={`text-[14px] leading-[20px] text-[#dc2626] ${fontRegular}`}>
+    <p id={`${id}-error`} className={`text-sm leading-5 text-red-600 ${fontRegular}`}>
       {message}
     </p>
   );
@@ -68,7 +68,7 @@ export function TextField({ id, label, value, onChange, placeholder, error, hint
 }
 
 export function LinkField({ id, label, value, onChange, placeholder, prefix, icon, type = "text" }: { id: string; label: string; value: string; onChange: (value: string) => void; placeholder?: string; prefix?: string; icon: ReactNode; type?: string }) {
-  const text = `text-[16px] leading-[20px] md:text-[14px] ${fontRegular}`;
+  const text = `text-base leading-5 md:text-sm ${fontRegular}`;
   return (
     <div className="flex min-w-0 flex-col gap-1.5">
       <label htmlFor={id} className={labelClass}>
@@ -98,9 +98,9 @@ export function SelectField({ id, label, value, onChange, placeholder, options }
 
 export function CheckField({ checked, onChange, children }: { checked: boolean; onChange: (checked: boolean) => void; children: ReactNode }) {
   return (
-    <label className={`flex cursor-pointer items-start gap-2 text-[14px] leading-[20px] tracking-[-0.01px] text-slate-600 ${fontRegular}`}>
+    <label className={`flex cursor-pointer items-start gap-2 text-sm leading-5 text-slate-600 ${fontRegular}`}>
       <input type="checkbox" checked={checked} onChange={(e) => onChange(e.target.checked)} className="peer sr-only" />
-      <span className="mt-0.5 size-4 shrink-0 rounded-[3.5px] peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-[#0d5c4b]">{checked ? <img src={imgCheckboxOn} alt="" width={16} height={16} className="block size-4" /> : <span className="block size-4 rounded-[3.5px] border border-slate-300 bg-white" />}</span>
+      <span className="mt-0.5 size-4 shrink-0 rounded-sm peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-primary-700">{checked ? <img src={imgCheckboxOn} alt="" width={16} height={16} className="block size-4" /> : <span className="block size-4 rounded-sm border border-slate-300 bg-white" />}</span>
       {children}
     </label>
   );
@@ -118,7 +118,7 @@ export function ToggleRow({ title, description, checked, onChange }: { title: st
           {description}
         </p>
       </div>
-      <button type="button" role="switch" aria-checked={checked} aria-labelledby={`${id}-title`} aria-describedby={`${id}-text`} onClick={() => onChange(!checked)} className={`relative h-6 w-11 shrink-0 rounded-full transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0d5c4b] ${checked ? "bg-[#0d5c4b]" : "bg-slate-300"}`}>
+      <button type="button" role="switch" aria-checked={checked} aria-labelledby={`${id}-title`} aria-describedby={`${id}-text`} onClick={() => onChange(!checked)} className={`relative h-6 w-11 shrink-0 rounded-full transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-700 ${checked ? "bg-primary-700" : "bg-slate-300"}`}>
         <span className={`absolute left-0.5 top-0.5 size-5 rounded-full bg-white shadow-sm transition-transform ${checked ? "translate-x-5" : ""}`} />
       </button>
     </div>
@@ -128,10 +128,10 @@ export function ToggleRow({ title, description, checked, onChange }: { title: st
 function SectionHeading({ title, subtitle }: { title: string; subtitle: string }) {
   return (
     <div className="flex flex-col gap-0.5 pb-4">
-      <h2 className={`m-0 text-[18px] leading-[26px] text-slate-900 ${fontHeading}`} style={{ fontVariationSettings: '"wdth" 100' }}>
+      <h2 className={`m-0 text-lg leading-6.5 text-slate-900 ${fontHeading}`} style={{ fontVariationSettings: '"wdth" 100' }}>
         {title}
       </h2>
-      <p className={`text-[14px] leading-[22px] text-slate-500 ${fontRegular}`}>{subtitle}</p>
+      <p className={`text-sm leading-5.5 text-slate-500 ${fontRegular}`}>{subtitle}</p>
     </div>
   );
 }
@@ -139,7 +139,7 @@ function SectionHeading({ title, subtitle }: { title: string; subtitle: string }
 export function Card({ title, description, footer, danger, children }: { title: string; description?: string; footer?: ReactNode; danger?: boolean; children: ReactNode }) {
   return (
     <section className="border-t border-slate-200 py-5">
-      <h3 className={`m-0 text-[14px] leading-[22px] ${danger ? "text-[#b91c1c]" : "text-slate-900"} ${fontSemi}`}>{title}</h3>
+      <h3 className={`m-0 text-sm leading-5.5 ${danger ? "text-red-700" : "text-slate-900"} ${fontSemi}`}>{title}</h3>
       {description && <p className={`mt-0.5 ${hintClass}`}>{description}</p>}
       <div className="mt-3">
         {children}
@@ -190,9 +190,9 @@ function ProfileSection() {
       <Card title="Profile photo">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:gap-5">
           {draft.photo ? (
-            <img src={draft.photo} alt="Your profile" className="size-[72px] shrink-0 rounded-full object-cover" />
+            <img src={draft.photo} alt="Your profile" className="size-18 shrink-0 rounded-full object-cover" />
           ) : (
-            <span aria-hidden="true" className={`flex size-[72px] shrink-0 items-center justify-center rounded-full bg-[#0d5c4b] text-[24px] text-white ${fontSemi}`}>
+            <span aria-hidden="true" className={`flex size-18 shrink-0 items-center justify-center rounded-full bg-primary-700 text-2xl text-white ${fontSemi}`}>
               {initials}
             </span>
           )}
@@ -203,7 +203,7 @@ function ProfileSection() {
                 {draft.photo ? "Change photo" : "Upload photo"}
               </button>
               {draft.photo && (
-                <button type="button" onClick={() => set("photo")("")} className={`h-[36px] rounded-[8px] px-3 text-[14px] text-[#dc2626] transition hover:bg-[#fef2f2] ${fontMedium}`}>
+                <button type="button" onClick={() => set("photo")("")} className={`h-9 rounded-lg px-3 text-sm text-red-600 transition hover:bg-red-50 ${fontMedium}`}>
                   Remove
                 </button>
               )}
@@ -305,9 +305,9 @@ function ChangePasswordDialog({ onClose }: { onClose: () => void }) {
   };
 
   return (
-    <Shell title="Change Password" onClose={onClose} width="max-w-[587px]" radius="sm:rounded-[12px]">
+    <Shell title="Change Password" onClose={onClose} width="max-w-146.75" radius="sm:rounded-xl">
       <div className="flex flex-col gap-5 p-6">
-        <p className={`text-[14px] leading-[24px] text-slate-700 ${fontRegular}`}>
+        <p className={`text-sm leading-6 text-slate-700 ${fontRegular}`}>
           In-case you forgot your current password, proceed to{" "}
           <button
             type="button"
@@ -315,7 +315,7 @@ function ChangePasswordDialog({ onClose }: { onClose: () => void }) {
               notify("A password reset link has been sent to your email");
               onClose();
             }}
-            className="text-[#faa104] underline transition hover:text-[#e08f00]"
+            className="text-secondary-600 underline transition hover:text-amber-600"
           >
             forgot password
           </button>{" "}
@@ -362,7 +362,7 @@ function SecuritySection() {
           </button>
         }
       >
-        <div className="max-w-[420px]">
+        <div className="max-w-105">
           <TextField id="email" label="Email" type="email" placeholder="you@example.com" value={email} onChange={setEmail} error={emailError} />
         </div>
       </Card>
@@ -482,7 +482,7 @@ function AddCardDialog({ onClose }: { onClose: () => void }) {
   const field = (key: keyof typeof errors) => ({ "aria-invalid": !!show(key), "aria-describedby": show(key) ? `card-${key}-error` : undefined, className: fieldBox });
 
   return (
-    <Shell title="Add a card" onClose={onClose} width="max-w-[520px]" radius="sm:rounded-[12px]">
+    <Shell title="Add a card" onClose={onClose} width="max-w-130" radius="sm:rounded-xl">
       <form
         noValidate
         onSubmit={(e) => {
@@ -554,9 +554,9 @@ function PaymentSection() {
       <SectionHeading title="Payment Methods" subtitle="Manage the cards saved to your account." />
       {savedCards.length === 0 ? (
         <div className="flex flex-col items-center border-t border-slate-200 px-4 py-8 text-center">
-          <img src="/illustrations/credit-card.svg" alt="Credit card" width={1000} height={1000} className="float-y h-auto w-full max-w-[160px]" />
-          <h3 className={`m-0 mt-4 text-[16px] leading-[24px] text-slate-900 ${fontSemi}`}>No saved cards yet</h3>
-          <p className={`mt-1 max-w-[360px] ${hintClass}`}>Add a card to check out faster. Your default card is selected first at checkout.</p>
+          <img src="/illustrations/credit-card.svg" alt="Credit card" width={1000} height={1000} className="float-y h-auto w-full max-w-40" />
+          <h3 className={`m-0 mt-4 text-base leading-6 text-slate-900 ${fontSemi}`}>No saved cards yet</h3>
+          <p className={`mt-1 max-w-90 ${hintClass}`}>Add a card to check out faster. Your default card is selected first at checkout.</p>
           <button type="button" onClick={() => setAdding(true)} className={`mt-5 ${primaryButton}`}>
             Add card
           </button>
@@ -571,16 +571,16 @@ function PaymentSection() {
             </button>
           }
         >
-          <ul className="divide-y divide-slate-200 rounded-[8px] border border-slate-200">
+          <ul className="divide-y divide-slate-200 rounded-lg border border-slate-200">
             {savedCards.map((c, i) => (
               <li key={c.id} className="flex flex-wrap items-center gap-3 px-4 py-3">
-                <span className="flex h-[32px] w-[48px] shrink-0 items-center justify-center rounded-[4px] border border-slate-200 bg-white">
+                <span className="flex h-8 w-12 shrink-0 items-center justify-center rounded-sm border border-slate-200 bg-white">
                   <BrandBadge brand={c.brand} />
                 </span>
                 <div className="min-w-0 flex-1">
                   <p className={`flex items-center gap-2 ${labelClass}`}>
                     {c.brand} ending in {c.last4}
-                    {i === 0 && <span className={`rounded-full bg-[#eef7f3] px-2 py-0.5 text-[12px] leading-[16px] text-[#0d5c4b] ${fontMedium}`}>Default</span>}
+                    {i === 0 && <span className={`rounded-full bg-primary-100 px-2 py-0.5 text-xs leading-4 text-primary-700 ${fontMedium}`}>Default</span>}
                   </p>
                   <p className={hintClass}>
                     Expires {c.expiry}
@@ -589,11 +589,11 @@ function PaymentSection() {
                 </div>
                 <div className="flex items-center gap-1">
                   {i > 0 && (
-                    <button type="button" onClick={() => setDefaultCard(c.id)} className={`h-[36px] rounded-[8px] px-3 text-[14px] text-slate-700 transition hover:bg-slate-100 ${fontMedium}`}>
+                    <button type="button" onClick={() => setDefaultCard(c.id)} className={`h-9 rounded-lg px-3 text-sm text-slate-700 transition hover:bg-slate-100 ${fontMedium}`}>
                       Make default
                     </button>
                   )}
-                  <button type="button" onClick={() => removeCard(c.id)} aria-label={`Remove ${c.brand} ending in ${c.last4}`} className={`h-[36px] rounded-[8px] px-3 text-[14px] text-[#dc2626] transition hover:bg-[#fef2f2] ${fontMedium}`}>
+                  <button type="button" onClick={() => removeCard(c.id)} aria-label={`Remove ${c.brand} ending in ${c.last4}`} className={`h-9 rounded-lg px-3 text-sm text-red-600 transition hover:bg-red-50 ${fontMedium}`}>
                     Remove
                   </button>
                 </div>
@@ -612,16 +612,16 @@ function CloseAccountDialog({ onClose }: { onClose: () => void }) {
   const [losesData, setLosesData] = useState(false);
   const [losesEmail, setLosesEmail] = useState(false);
   return (
-    <Shell title="Close your account" onClose={onClose} width="max-w-[587px]" radius="sm:rounded-[12px]" hideHeader>
+    <Shell title="Close your account" onClose={onClose} width="max-w-146.75" radius="sm:rounded-xl" hideHeader>
       <div className="flex flex-col gap-8 p-6 sm:p-10">
-        <div className="flex items-start gap-[22px]">
+        <div className="flex items-start gap-5.5">
           <div className="flex min-w-0 flex-1 flex-col gap-2.5">
-            <p className={`text-[24px] leading-[30px] tracking-[-0.5px] text-black sm:text-[30px] sm:leading-[36px] ${fontHeading}`} style={{ fontVariationSettings: '"wdth" 100' }}>
+            <p className={`text-2xl leading-7.5 tracking-tight text-black sm:text-3xl sm:leading-9 ${fontHeading}`} style={{ fontVariationSettings: '"wdth" 100' }}>
               Are you sure you want to close your account?
             </p>
-            <p className={`text-[14px] leading-[24px] tracking-[-0.01px] text-slate-500 ${fontRegular}`}>Continue with closing requires you to confirm the information below</p>
+            <p className={`text-sm leading-6 text-slate-500 ${fontRegular}`}>Continue with closing requires you to confirm the information below</p>
           </div>
-          <img src={imgCloseAccount} alt="" width={149} height={130} className="hidden h-[130px] w-[149px] shrink-0 object-cover sm:block" />
+          <img src={imgCloseAccount} alt="" width={149} height={130} className="hidden h-32.5 w-37.25 shrink-0 object-cover sm:block" />
         </div>
         <div className="flex flex-col gap-3">
           <CheckField checked={losesData} onChange={setLosesData}>
@@ -669,12 +669,12 @@ function CloseSection() {
         }
       >
         <div className="flex flex-col gap-4">
-          <ul className={`flex list-disc flex-col gap-1 pl-5 text-[14px] leading-[24px] text-slate-600 ${fontRegular}`}>
+          <ul className={`flex list-disc flex-col gap-1 pl-5 text-sm leading-6 text-slate-600 ${fontRegular}`}>
             <li>Closing your account is permanent and cannot be undone.</li>
             <li>Ensure you have saved any important information or data before proceeding.</li>
             <li>If you have any pending transactions or issues, please resolve them before closing your account.</li>
           </ul>
-          <div className="flex max-w-[420px] flex-col gap-1.5">
+          <div className="flex max-w-105 flex-col gap-1.5">
             <label htmlFor="close-password" className={labelClass}>
               Current password
             </label>
@@ -708,11 +708,11 @@ export default function AccountSettingsPage({ section }: { section: string }) {
   const current = sections.some((s) => s.id === section) ? section : "profile";
 
   return (
-    <main className="w-full flex-1 bg-white pt-[56px]">
-      <div className="mx-auto flex max-w-[1272px] flex-col gap-5 px-4 pb-10 pt-6 md:flex-row md:gap-10 md:pt-8">
-        <aside className="shrink-0 md:w-[220px] md:self-start md:sticky md:top-[88px]">
+    <main className="w-full flex-1 bg-white pt-14">
+      <div className="mx-auto flex max-w-318 flex-col gap-5 px-4 pb-10 pt-6 md:flex-row md:gap-10 md:pt-8">
+        <aside className="shrink-0 md:w-55 md:self-start md:sticky md:top-22">
           <div>
-            <h1 className="m-0 mb-3 font-['Instrument_Sans:Medium'] text-[20px] font-medium leading-[28px] text-slate-900" style={{ fontVariationSettings: '"wdth" 100' }}>
+            <h1 className="m-0 mb-3 font-instrument-medium text-xl font-medium leading-7 text-slate-900" style={{ fontVariationSettings: '"wdth" 100' }}>
               Account Settings
             </h1>
             <nav aria-label="Account settings" className="-mx-3 flex gap-1 overflow-x-auto md:flex-col md:overflow-visible">
@@ -720,7 +720,7 @@ export default function AccountSettingsPage({ section }: { section: string }) {
                 const active = s.id === current;
                 const danger = s.id === "close";
                 return (
-                  <button key={s.id} type="button" aria-current={active ? "page" : undefined} onClick={() => openAccount(s.id)} className={`flex h-[36px] shrink-0 items-center gap-2.5 whitespace-nowrap rounded-[8px] px-3 text-left text-[14px] transition-colors ${active ? (danger ? `bg-red-50 text-red-700 ${fontMedium}` : `bg-[#eef7f3] text-[#0d5c4b] ${fontMedium}`) : danger ? `text-red-600 hover:bg-red-50 ${fontRegular}` : `text-slate-600 hover:bg-slate-100 hover:text-slate-900 ${fontRegular}`}`}>
+                  <button key={s.id} type="button" aria-current={active ? "page" : undefined} onClick={() => openAccount(s.id)} className={`flex h-9 shrink-0 items-center gap-2.5 whitespace-nowrap rounded-lg px-3 text-left text-sm transition-colors ${active ? (danger ? `bg-red-50 text-red-700 ${fontMedium}` : `bg-primary-100 text-primary-700 ${fontMedium}`) : danger ? `text-red-600 hover:bg-red-50 ${fontRegular}` : `text-slate-600 hover:bg-slate-100 hover:text-slate-900 ${fontRegular}`}`}>
                     <HugeiconsIcon icon={s.icon} size={18} strokeWidth={1.7} aria-hidden="true" className="shrink-0" />
                     {s.label}
                   </button>
@@ -729,7 +729,7 @@ export default function AccountSettingsPage({ section }: { section: string }) {
             </nav>
           </div>
         </aside>
-        <div className="min-w-0 max-w-[720px] flex-1">
+        <div className="min-w-0 max-w-180 flex-1">
           {current === "profile" && <ProfileSection />}
           {current === "security" && <SecuritySection />}
           {current === "privacy" && <PrivacySection />}

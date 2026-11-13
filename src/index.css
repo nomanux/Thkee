@@ -26,6 +26,9 @@
   --color-secondary-900: #613f00;
 
   /* AI accents (violet). */
+  --color-ai-50: #f5f1ff;
+  --color-ai-100: #ebe3ff;
+  --color-ai-200: #d6c6ff;
   --color-ai-600: #6016fc;
   --color-ai-800: #3d1299;
   --color-ai-900: #2e0a78;
@@ -61,6 +64,46 @@
   --shadow-primary-tile: 0 1px 2px rgba(13, 92, 75, 0.08), 0 8px 24px -12px rgba(13, 92, 75, 0.25);
   --shadow-ai-button: 0 6px 16px -8px rgba(96, 22, 252, 0.7);
   --shadow-fab: 0 6px 16px rgba(46, 10, 120, 0.3);
+
+  /* Brand and partner colours (logos, social links, payment badges). */
+  --color-mada: #162f6a;
+  --color-mada-green: #84bd00;
+  --color-visa: #1a4c9b;
+  --color-paypal: #009cde;
+  --color-facebook: #1877f2;
+  --color-linkedin: #0a66c2;
+  --color-telegram: #229ed9;
+  --color-ai-500: #7b42ff;
+  --color-ai-950: #11012a;
+  --color-ocean-600: #0a6be0;
+  --color-ocean-700: #0050c8;
+  --color-ocean-900: #0f2f6a;
+
+  /* Extra font sizes used by display headings. */
+  --text-19: 19px;
+  --text-28: 28px;
+  --text-32: 32px;
+  --text-34: 34px;
+  --text-40: 40px;
+  --text-44: 44px;
+  --text-46: 46px;
+  --text-50: 50px;
+  --text-52: 52px;
+
+  /* Font families. Each weight is its own @font-face family. */
+  --font-arabic: "IBM Plex Sans Arabic", sans-serif;
+  --font-instrument-bold: "Instrument Sans:Bold", "Instrument Sans", sans-serif;
+  --font-instrument-medium: "Instrument Sans:Medium", "Instrument Sans", sans-serif;
+  --font-inter-bold: "Inter:Bold", Inter, sans-serif;
+  --font-inter-medium: "Inter:Medium", Inter, sans-serif;
+  --font-inter-regular: "Inter:Regular", Inter, sans-serif;
+  --font-inter-semibold: "Inter:Semi Bold", Inter, sans-serif;
+  --font-jakarta: "Plus Jakarta Sans", sans-serif;
+  /* Named animations used in components. */
+  --animate-badge-shine: badge-shine 4s ease-in-out infinite;
+  --animate-badge-shine-fast: badge-shine 3.5s ease-in-out infinite;
+  --animate-feat-drift: feat-drift 14s ease-in-out infinite;
+  --animate-feat-drift-slow: feat-drift 16s ease-in-out infinite reverse;
 }
 
 /* Layout helpers that need calc() or several properties. */
@@ -69,6 +112,10 @@
 }
 @utility h-below-header {
   height: calc(100dvh - 64px);
+}
+/* Lesson video: 16:9, at most about 58% of the screen height, so the lesson bar stays in view. */
+@utility max-w-player {
+  max-width: calc(58dvh * 16 / 9);
 }
 @utility h-learn-panel {
   height: calc(100dvh - 72px);
@@ -492,4 +539,238 @@ body {
 @utility scrollbar-none {
   scrollbar-width: none;
   &::-webkit-scrollbar { display: none; }
+}
+
+/* Layout helpers with no Tailwind scale equivalent (calc sizes, custom grid templates). */
+@utility grid-cols-aside-110 {
+  grid-template-columns: 110px minmax(0,1fr);
+}
+@utility grid-cols-aside-168 {
+  grid-template-columns: 168px minmax(0,1fr);
+}
+@utility grid-cols-aside-245 {
+  grid-template-columns: 245px minmax(0,1fr);
+}
+@utility grid-cols-aside-278 {
+  grid-template-columns: 278px minmax(0,1fr);
+}
+@utility grid-cols-aside-312 {
+  grid-template-columns: minmax(0,312px) minmax(0,1fr);
+}
+@utility grid-cols-aside-320 {
+  grid-template-columns: 320px minmax(0,1fr);
+}
+@utility grid-cols-aside-384 {
+  grid-template-columns: 384px minmax(0,1fr);
+}
+@utility grid-cols-aside-396 {
+  grid-template-columns: 396px 1fr;
+}
+@utility grid-cols-aside-424 {
+  grid-template-columns: 424px minmax(0,1fr);
+}
+@utility grid-cols-aside-44 {
+  grid-template-columns: 44px 1fr;
+}
+@utility grid-cols-aside-52 {
+  grid-template-columns: 52px 1fr;
+}
+@utility grid-cols-aside-64 {
+  grid-template-columns: 64px 1fr;
+}
+@utility grid-cols-auto-main {
+  grid-template-columns: auto 1fr;
+}
+@utility grid-cols-auto-main-auto {
+  grid-template-columns: auto 1fr auto;
+}
+@utility grid-cols-co-requests {
+  grid-template-columns: 254fr 269fr 156fr 170fr 230fr;
+}
+@utility grid-cols-content {
+  grid-template-columns: max-content;
+}
+@utility grid-cols-courses-list {
+  grid-template-columns: 81.33px minmax(220px,549px) minmax(90px,130px) minmax(90px,134px) minmax(170px,1fr) minmax(90px,135px) minmax(200px,276px) 85px;
+}
+@utility grid-cols-courses-table {
+  grid-template-columns: minmax(0,1fr) 96px 96px 110px 120px 88px;
+}
+@utility grid-cols-live-schedule {
+  grid-template-columns: minmax(170px,1fr) 190px 70px 100px 90px 36px;
+}
+@utility grid-cols-main-300 {
+  grid-template-columns: 1fr 300px;
+}
+@utility grid-cols-main-320 {
+  grid-template-columns: minmax(0,1fr) 320px;
+}
+@utility grid-cols-main-380 {
+  grid-template-columns: minmax(0,1fr) 380px;
+}
+@utility grid-cols-main-420 {
+  grid-template-columns: minmax(0,1fr) 420px;
+}
+@utility grid-cols-main-auto {
+  grid-template-columns: minmax(0,1fr) auto;
+}
+@utility grid-cols-overview-table {
+  grid-template-columns: minmax(0,1fr) 80px 64px 140px 104px;
+}
+@utility grid-cols-overview-table-sm {
+  grid-template-columns: minmax(0,1fr) 56px 112px 92px;
+}
+@utility grid-cols-reports-summary {
+  grid-template-columns: 1.15fr 1fr 1fr 1fr 1.15fr;
+}
+@utility grid-cols-reports-table {
+  grid-template-columns: 100px 140px minmax(180px,1fr) 110px 110px 140px 140px 70px;
+}
+@utility grid-cols-sessions-table {
+  grid-template-columns: 64px minmax(0,1fr) 170px 170px;
+}
+@utility grid-cols-split-left {
+  grid-template-columns: minmax(0,1.05fr) minmax(0,1fr);
+}
+@utility grid-cols-split-right {
+  grid-template-columns: minmax(0,1fr) minmax(0,1.05fr);
+}
+@utility grid-cols-thumb-72 {
+  grid-template-columns: 72px auto 1fr;
+}
+@utility grid-cols-thumb-88 {
+  grid-template-columns: 88px auto 1fr;
+}
+@utility grid-rows-collapsed {
+  grid-template-rows: 0fr;
+}
+@utility grid-rows-content {
+  grid-template-rows: max-content;
+}
+@utility grid-rows-expanded {
+  grid-template-rows: 1fr;
+}
+@utility h-dvh-minus-112 {
+  height: calc(100dvh - 112px);
+}
+@utility h-dvh-minus-120 {
+  height: calc(100dvh - 120px);
+}
+@utility h-dvh-minus-56 {
+  height: calc(100dvh - 56px);
+}
+@utility h-dvh-minus-70 {
+  height: calc(100dvh - 70px);
+}
+@utility h-vh-70 {
+  height: 70vh;
+}
+@utility max-h-dvh-92 {
+  max-height: 92dvh;
+}
+@utility max-h-dvh-minus-218 {
+  max-height: calc(100dvh - 218px);
+}
+@utility max-h-dvh-minus-72 {
+  max-height: calc(100dvh - 72px);
+}
+@utility max-h-dvh-minus-76 {
+  max-height: calc(100dvh - 76px);
+}
+@utility max-w-vw-85 {
+  max-width: 85vw;
+}
+@utility min-h-dvh-minus-64 {
+  min-height: calc(100dvh - 64px);
+}
+@utility min-h-dvh-minus-72 {
+  min-height: calc(100dvh - 72px);
+}
+@utility min-w-menu {
+  min-width: max(100%, 180px);
+}
+@utility text-em-115 {
+  font-size: 1.15em;
+}
+@utility top-vh-15 {
+  top: 15vh;
+}
+@utility w-col-2 {
+  width: calc((100% - 20px) / 2);
+}
+@utility w-col-3 {
+  width: calc((100% - 40px) / 3);
+}
+@utility w-col-4 {
+  width: calc((100% - 60px) / 4);
+}
+@utility w-dialog-lg {
+  width: min(880px, calc(100vw - 48px));
+}
+@utility w-full-minus-16 {
+  width: calc(100% - 64px);
+}
+@utility w-full-minus-8 {
+  width: calc(100% - 32px);
+}
+@utility translate-y-above {
+  --tw-translate-y: calc(-100% - 8px);
+  translate: var(--tw-translate-x) var(--tw-translate-y);
+}
+@utility inset-hero-art {
+  inset: 7.62% 24.08% 7.62% 26.58%;
+}
+@utility bg-size-shine {
+  background-size: 250% 100%;
+}
+@utility text-display-fluid {
+  font-size: clamp(42px, 7.2vw, 84px);
+}
+@utility bg-glow-duo {
+  background-image: radial-gradient(60% 60% at 70% 30%, rgb(16 185 129 / 0.14), transparent 70%), radial-gradient(50% 50% at 20% 90%, rgb(255 178 13 / 0.16), transparent 70%);
+}
+@utility bg-glow-corner {
+  background-image: radial-gradient(120% 120% at 100% 0%, var(--color-primary-100) 0%, transparent 55%);
+}
+
+/* Single-purpose helpers that Tailwind has no class for. */
+@utility font-synthesis-style {
+  font-synthesis: style;
+}
+@utility decoration-skip-ink-none {
+  text-decoration-skip-ink: none;
+}
+@utility underline-from-font {
+  text-underline-position: from-font;
+}
+@utility scrollbar-none {
+  scrollbar-width: none;
+}
+@utility animation-delay-2000 {
+  animation-delay: 2s;
+}
+@utility animation-delay-1200 {
+  animation-delay: 1.2s;
+}
+@utility animation-duration-2400 {
+  animation-duration: 2.4s;
+}
+@utility animation-paused {
+  animation-play-state: paused;
+}
+@utility clip-corner {
+  clip-path: polygon(0 0, 100% 0, 0 100%);
+}
+@utility bg-grid-lines {
+  background-image: linear-gradient(#fff 1px, transparent 1px), linear-gradient(90deg, #fff 1px, transparent 1px);
+}
+@utility bg-grid-32 {
+  background-size: 32px 32px;
+}
+@utility mask-fade-radial {
+  mask-image: radial-gradient(ellipse at 70% 40%, black, transparent 70%);
+  -webkit-mask-image: radial-gradient(ellipse at 70% 40%, black, transparent 70%);
+}
+@utility writing-vertical {
+  writing-mode: vertical-rl;
 }

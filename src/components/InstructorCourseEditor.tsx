@@ -72,6 +72,7 @@ import CoursePagePreview, {
 } from "./CoursePagePreview";
 import { NoteBody, NoteEditor } from "./Notes";
 import { Shell } from "./Overlays";
+import { buttonClass } from "./Button"
 
 type Point = { id: string; text: string };
 type LectureKind = "Video" | "Quiz" | "Assignment" | "Article";
@@ -1924,7 +1925,7 @@ function MediaTile({
           <button
             type="button"
             onClick={() => input.current?.click()}
-            className={`h-8 rounded-lg border border-slate-200 bg-white px-3 text-13 leading-4.5 text-slate-900 transition hover:bg-slate-50 ${fontMedium}`}
+            className={`${buttonClass("secondary", "md")}`}
           >
             {filled ? "Replace" : "Upload"}
           </button>
@@ -3140,7 +3141,7 @@ function LectureDrawer({
               <button
                 type="button"
                 onClick={() => fileRef.current?.click()}
-                className={`flex h-8 shrink-0 items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-2.5 text-13 leading-4.5 text-slate-700 transition hover:border-primary-700/50 hover:text-primary-700 ${fontMedium}`}
+                className={`${buttonClass("secondary", "md")} shrink-0`}
               >
                 <HugeiconsIcon
                   icon={Attachment01Icon}
@@ -3235,7 +3236,7 @@ function LectureDrawer({
           <button
             type="button"
             onClick={save}
-            className={`h-10 rounded-10 bg-primary-700 px-5 text-sm leading-5 text-white shadow-primary-button transition hover:bg-primary-800 ${fontMedium}`}
+            className={`${buttonClass("primary", "lg")}`}
           >
             Save lecture
           </button>
@@ -3779,7 +3780,7 @@ function QuizDrawer({
               <button
                 type="button"
                 onClick={() => addQuestion()}
-                className={`flex h-11 items-center gap-2 rounded-10 bg-primary-700 px-5 text-sm leading-5 text-white transition hover:bg-primary-800 ${fontMedium}`}
+                className={`${buttonClass("primary", "lg")}`}
               >
                 <Icon path={PLUS} className="size-4.5" />
                 Write a question
@@ -3920,7 +3921,7 @@ function QuizDrawer({
                   </button>
                   {/* Pick a type first, so the editor opens ready for that kind of question. */}
                   {typeMenu && (
-                    <div className="pop-in mb-1 flex flex-col gap-0.5 rounded-xl border border-slate-200 bg-white p-1 shadow-[0_12px_28px_-16px_rgba(15,23,42,0.35)]">
+                    <div className="pop-in mb-1 flex flex-col gap-0.5 rounded-xl border border-slate-200 bg-white p-1 shadow-2xl">
                       {KIND_ORDER.map((kind) => (
                         <button
                           key={kind}
@@ -3957,9 +3958,9 @@ function QuizDrawer({
             </aside>
 
             {onInstructions && (
-              <section className="min-w-0 flex-1 bg-[#f4f6f8] px-4 py-6 @4xl:px-8 @4xl:py-8">
-                <div className="relative mx-auto max-w-170 overflow-hidden rounded-2xl bg-white p-5 shadow-[0_1px_2px_rgba(15,23,42,0.05),0_16px_40px_-20px_rgba(15,23,42,0.22)] ring-1 ring-slate-200/80 @4xl:p-7">
-                  <span aria-hidden="true" className="absolute inset-x-0 top-0 h-1 bg-[linear-gradient(90deg,#0d5c4b,#10b981)]" />
+              <section className="min-w-0 flex-1 bg-primary-50 px-4 py-6 @4xl:px-8 @4xl:py-8">
+                <div className="relative mx-auto max-w-170 overflow-hidden rounded-2xl bg-white p-5 shadow-2xl ring-1 ring-slate-200/80 @4xl:p-7">
+                  <span aria-hidden="true" className="absolute inset-x-0 top-0 h-1 bg-linear-90 from-primary-700 to-emerald-500" />
                   <div className="flex flex-wrap items-start gap-3">
                     <div className="min-w-0 flex-1">
                       <h3
@@ -4015,9 +4016,9 @@ function QuizDrawer({
             )}
             {/* The question being edited, on the page itself instead of inside a card. */}
             {active && (
-              <section className="min-w-0 flex-1 bg-[#f4f6f8] px-4 py-6 @4xl:px-8 @4xl:py-8">
-                <div className="relative mx-auto max-w-170 overflow-hidden rounded-2xl bg-white p-5 shadow-[0_1px_2px_rgba(15,23,42,0.05),0_16px_40px_-20px_rgba(15,23,42,0.22)] ring-1 ring-slate-200/80 @4xl:p-7">
-                  <span aria-hidden="true" className="absolute inset-x-0 top-0 h-1 bg-[linear-gradient(90deg,#0d5c4b,#10b981)]" />
+              <section className="min-w-0 flex-1 bg-primary-50 px-4 py-6 @4xl:px-8 @4xl:py-8">
+                <div className="relative mx-auto max-w-170 overflow-hidden rounded-2xl bg-white p-5 shadow-2xl ring-1 ring-slate-200/80 @4xl:p-7">
+                  <span aria-hidden="true" className="absolute inset-x-0 top-0 h-1 bg-linear-90 from-primary-700 to-emerald-500" />
                   <div className="flex flex-wrap items-center gap-3">
                     <p
                       className={`m-0 text-xs leading-4 text-slate-500 ${fontMedium}`}
@@ -4054,7 +4055,7 @@ function QuizDrawer({
                     value={active.text}
                     onChange={(e) => patchActive({ text: e.target.value })}
                     placeholder={kind === "truefalse" ? "Type a statement, e.g. Frames can hold other frames." : kind === "blank" ? "e.g. In Figma, a ___ holds the layout of a screen." : kind === "order" ? "e.g. Put these steps in order to publish a prototype." : "Type your question…"}
-                    className={`field-sizing-content mt-3 block min-h-[44px] w-full resize-none border-0 border-b-2 border-transparent bg-transparent px-0 pb-2 pt-1 text-[22px] leading-[32px] tracking-[-0.2px] text-slate-900 outline-none transition placeholder:text-slate-300 hover:border-slate-100 focus:border-[#0d5c4b]/40 ${fontSemi}`}
+                    className={`field-sizing-content mt-3 block min-h-11 w-full resize-none border-0 border-b-2 border-transparent bg-transparent px-0 pb-2 pt-1 text-22 leading-8 text-slate-900 outline-none transition placeholder:text-slate-300 hover:border-slate-100 focus:border-primary-700/40 ${fontSemi}`}
                   />                  {kind === "blank" && (
                     <div className="mt-2 flex flex-wrap items-center gap-2">
                       <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={insertBlank} className={`flex h-7 items-center gap-1.5 rounded-full border border-dashed border-primary-700/40 px-2.5 text-xs leading-4 text-primary-700 transition hover:bg-primary-50 ${fontMedium}`}>
@@ -4236,7 +4237,7 @@ function QuizDrawer({
                   <Icon path="M4 5h16v14H4zM15 5v14" className="size-4.5 shrink-0" />
                   <span className="@6xl:sr-only">Show settings</span>
                 </button>
-                <span aria-hidden="true" className={`ml-2 truncate text-xs leading-4 text-slate-400 @6xl:ml-0 @6xl:mt-3 @6xl:[writing-mode:vertical-rl] ${fontMedium}`}>
+                <span aria-hidden="true" className={`ml-2 truncate text-xs leading-4 text-slate-400 @6xl:ml-0 @6xl:mt-3 @6xl:writing-vertical ${fontMedium}`}>
                   {meta.label}
                 </span>
               </aside>
@@ -4269,7 +4270,7 @@ function QuizDrawer({
                           role="radio"
                           aria-checked={kind === k}
                           onClick={() => setKind(k)}
-                          className={`flex h-8 items-center gap-2 rounded-lg px-2 text-left text-13 leading-4.5 transition ${kind === k ? `bg-white text-slate-900 shadow-[0_1px_2px_rgba(15,23,42,0.12)] ${fontSemi}` : `text-slate-500 hover:text-slate-900 ${fontMedium}`}`}
+                          className={`flex h-8 items-center gap-2 rounded-lg px-2 text-left text-13 leading-4.5 transition ${kind === k ? `bg-white text-slate-900 shadow-sm ${fontSemi}` : `text-slate-500 hover:text-slate-900 ${fontMedium}`}`}
                         >
                           <Icon path={QUESTION_KINDS[k].icon} className={`size-4 shrink-0 ${kind === k ? "text-primary-700" : ""}`} />
                           {QUESTION_KINDS[k].label}
@@ -4463,14 +4464,14 @@ function QuizDrawer({
           <button
             type="button"
             onClick={close}
-            className={`h-10 rounded-10 border border-slate-200 bg-white px-4 text-sm leading-5 text-slate-700 transition hover:bg-slate-50 ${fontMedium}`}
+            className={`${buttonClass("secondary", "lg")}`}
           >
             Cancel
           </button>
           <button
             type="button"
             onClick={saveAll}
-            className={`h-10 rounded-10 bg-primary-700 px-5 text-sm leading-5 text-white shadow-primary-button transition hover:bg-primary-800 ${fontMedium}`}
+            className={`${buttonClass("primary", "lg")}`}
           >
             Save quiz
           </button>
@@ -4642,16 +4643,16 @@ function AssignmentDrawer({ lecture, context, onCancel, onSave }: { lecture: Lec
     });
   };
 
-  const sideTitle = `m-0 text-11 uppercase leading-3.5 tracking-[0.08em] text-slate-500 ${fontSemi}`;
+  const sideTitle = `m-0 text-11 uppercase leading-3.5 tracking-label text-slate-500 ${fontSemi}`;
   const PANEL = "M4 5h16v14H4zM15 5v14";
   const spinner = <span aria-hidden="true" className="size-3.5 animate-spin rounded-full border-2 border-current border-t-transparent" />;
   const aiChip = `flex items-center gap-1.5 rounded-full bg-violet-50 px-2.5 py-1 text-xs leading-4 text-violet-700 transition hover:bg-violet-100 disabled:opacity-60 ${fontMedium}`;
-  const card = "relative mx-auto max-w-170 overflow-hidden rounded-2xl bg-white p-5 shadow-[0_1px_2px_rgba(15,23,42,0.05),0_16px_40px_-20px_rgba(15,23,42,0.22)] ring-1 ring-slate-200/80 @4xl:p-7";
-  const stripe = <span aria-hidden="true" className="absolute inset-x-0 top-0 h-1 bg-[linear-gradient(90deg,#6d28d9,#a78bfa)]" />;
+  const card = "relative mx-auto max-w-170 overflow-hidden rounded-2xl bg-white p-5 shadow-2xl ring-1 ring-slate-200/80 @4xl:p-7";
+  const stripe = <span aria-hidden="true" className="absolute inset-x-0 top-0 h-1 bg-linear-90 from-violet-700 to-violet-400" />;
   const label = `m-0 text-13 leading-4.5 text-slate-900 ${fontSemi}`;
 
   return (
-    <Shell title={`Edit ${lectureName(lecture)}`} variant="drawer" drawerWidth="xl:max-w-[1180px]" hideHeader onClose={close}>
+    <Shell title={`Edit ${lectureName(lecture)}`} variant="drawer" drawerWidth="xl:max-w-295" hideHeader onClose={close}>
       <div className="@container flex min-h-full flex-col bg-white">
         <div className="sticky top-0 z-20 flex items-center gap-2 border-b border-slate-100 bg-white/95 px-5 py-3 backdrop-blur-sm">
           <div className="min-w-0 flex-1">
@@ -4751,7 +4752,7 @@ function AssignmentDrawer({ lecture, context, onCancel, onSave }: { lecture: Lec
           </aside>
 
           {/* Centre: one white sheet on a grey canvas, so the eye lands on the work. */}
-          <section className="min-w-0 flex-1 bg-[#f4f6f8] px-4 py-6 @4xl:px-8 @4xl:py-8">
+          <section className="min-w-0 flex-1 bg-primary-50 px-4 py-6 @4xl:px-8 @4xl:py-8">
             {onInstructions ? (
               <div className={card}>
                 {stripe}
@@ -4773,7 +4774,7 @@ function AssignmentDrawer({ lecture, context, onCancel, onSave }: { lecture: Lec
                   </span>
                 </div>
                 <div className="mt-4 flex">
-                  <NoteEditor key={`assign-instructions-${rev}`} modern hideActions hideUnderline autoFocus={false} initial={instructions} placeholder="e.g. Design a login screen for a food delivery app. Share a Figma link and a short note on your choices." boxClass="min-h-[260px]" onChange={(text, html) => setData((d) => ({ ...d, instructions: { text, html } }))} />
+                  <NoteEditor key={`assign-instructions-${rev}`} modern hideActions hideUnderline autoFocus={false} initial={instructions} placeholder="e.g. Design a login screen for a food delivery app. Share a Figma link and a short note on your choices." boxClass="min-h-65" onChange={(text, html) => setData((d) => ({ ...d, instructions: { text, html } }))} />
                 </div>
               </div>
             ) : active ? (
@@ -4796,21 +4797,21 @@ function AssignmentDrawer({ lecture, context, onCancel, onSave }: { lecture: Lec
                   </span>
                 </div>
                 <div className="mt-2 flex">
-                  <NoteEditor key={`${active.id}-prompt-${rev}`} modern hideActions hideUnderline autoFocus={false} initial={active.prompt} placeholder="Write the question…" boxClass="min-h-[140px]" onChange={(text, html) => patchQuestion(active.id, { prompt: { text, html } })} />
+                  <NoteEditor key={`${active.id}-prompt-${rev}`} modern hideActions hideUnderline autoFocus={false} initial={active.prompt} placeholder="Write the question…" boxClass="min-h-35" onChange={(text, html) => patchQuestion(active.id, { prompt: { text, html } })} />
                 </div>
                 <p className={`${label} mt-5`}>
                   Model answer <span className={`text-slate-400 ${fontRegular}`}>(optional)</span>
                 </p>
                 <p className={`m-0 mt-0.5 text-xs leading-4 text-slate-500 ${fontRegular}`}>Learners see this after they submit.</p>
                 <div className="mt-2 flex">
-                  <NoteEditor key={`${active.id}-model-${rev}`} modern hideActions hideUnderline autoFocus={false} initial={active.model} placeholder="Write the model answer…" boxClass="min-h-[120px]" onChange={(text, html) => patchQuestion(active.id, { model: { text, html } })} />
+                  <NoteEditor key={`${active.id}-model-${rev}`} modern hideActions hideUnderline autoFocus={false} initial={active.model} placeholder="Write the model answer…" boxClass="min-h-30" onChange={(text, html) => patchQuestion(active.id, { model: { text, html } })} />
                 </div>
               </div>
             ) : (
               <div className={`${card} text-center`}>
                 {stripe}
                 <p className={`m-0 text-base text-slate-900 ${fontSemi}`}>No questions yet</p>
-                <button type="button" onClick={addQuestion} className={`mx-auto mt-4 flex h-10 items-center gap-2 rounded-10 bg-primary-700 px-4 text-sm text-white transition hover:bg-primary-800 ${fontMedium}`}>
+                <button type="button" onClick={addQuestion} className={`${buttonClass("primary", "lg")} mx-auto mt-4`}>
                   <Icon path={PLUS} className="size-4" />
                   Add a question
                 </button>
@@ -4839,7 +4840,7 @@ function AssignmentDrawer({ lecture, context, onCancel, onSave }: { lecture: Lec
                   <p className={`m-0 text-13 leading-4.5 text-slate-700 ${fontMedium}`}>How learners answer</p>
                   <div role="radiogroup" aria-label="How learners answer" className="mt-2 flex flex-col gap-0.5 rounded-xl bg-slate-100 p-0.5">
                     {(Object.keys(ASSIGN_ANSWERS) as AssignAnswer[]).map((k) => (
-                      <button key={k} type="button" role="radio" aria-checked={active.answer === k} onClick={() => patchQuestion(active.id, { answer: k })} className={`flex h-8 items-center gap-2 rounded-lg px-2 text-left text-13 leading-4.5 transition ${active.answer === k ? `bg-white text-slate-900 shadow-[0_1px_2px_rgba(15,23,42,0.12)] ${fontSemi}` : `text-slate-500 hover:text-slate-900 ${fontMedium}`}`}>
+                      <button key={k} type="button" role="radio" aria-checked={active.answer === k} onClick={() => patchQuestion(active.id, { answer: k })} className={`flex h-8 items-center gap-2 rounded-lg px-2 text-left text-13 leading-4.5 transition ${active.answer === k ? `bg-white text-slate-900 shadow-sm ${fontSemi}` : `text-slate-500 hover:text-slate-900 ${fontMedium}`}`}>
                         <Icon path={ASSIGN_ANSWERS[k].icon} className={`size-4 shrink-0 ${active.answer === k ? "text-violet-600" : ""}`} />
                         {ASSIGN_ANSWERS[k].label}
                       </button>
@@ -4939,10 +4940,10 @@ function AssignmentDrawer({ lecture, context, onCancel, onSave }: { lecture: Lec
             </button>
             <span aria-hidden="true" className="mx-2 h-6 w-px bg-slate-200" />
           </div>
-          <button type="button" onClick={close} className={`h-10 rounded-10 border border-slate-200 bg-white px-4 text-sm leading-5 text-slate-700 transition hover:bg-slate-50 ${fontMedium}`}>
+          <button type="button" onClick={close} className={`${buttonClass("secondary", "lg")}`}>
             Cancel
           </button>
-          <button type="button" onClick={saveAll} className={`h-10 rounded-10 bg-primary-700 px-5 text-sm leading-5 text-white shadow-[0_1px_2px_rgba(13,92,75,0.25),0_8px_20px_-10px_rgba(13,92,75,0.6)] transition hover:bg-primary-800 ${fontMedium}`}>
+          <button type="button" onClick={saveAll} className={`${buttonClass("primary", "lg")}`}>
             Save assignment
           </button>
         </footer>
@@ -5222,7 +5223,7 @@ function ArticleDrawer({
           <button
             type="button"
             onClick={close}
-            className={`h-10 rounded-10 border border-slate-200 bg-white px-4 text-sm leading-5 text-slate-700 transition hover:bg-slate-50 ${fontMedium}`}
+            className={`${buttonClass("secondary", "lg")}`}
           >
             Cancel
           </button>
@@ -5235,7 +5236,7 @@ function ArticleDrawer({
                 preview,
               })
             }
-            className={`h-10 rounded-10 bg-primary-700 px-5 text-sm leading-5 text-white shadow-primary-button transition hover:bg-primary-800 ${fontMedium}`}
+            className={`${buttonClass("primary", "lg")}`}
           >
             Save article
           </button>
@@ -5502,7 +5503,7 @@ function CurriculumSection({
             <button
               type="button"
               onClick={addSection}
-              className={`flex h-11 items-center gap-2 rounded-10 bg-primary-700 px-5 text-15 leading-5.5 text-white shadow-primary-button transition hover:bg-primary-800 ${fontMedium}`}
+              className={`${buttonClass("primary", "lg")}`}
             >
               <Icon path={PLUS} className="size-5" />
               Create your first lecture
@@ -6280,7 +6281,7 @@ function PromotionsSection({ draft, update }: SectionProps) {
       <button
         type="button"
         onClick={addCoupon}
-        className={`mt-4 flex h-10 items-center gap-2 rounded-lg border border-slate-300 bg-white px-4 text-sm leading-5 text-slate-800 transition hover:bg-slate-50 ${fontMedium}`}
+        className={`${buttonClass("secondary", "lg")} mt-4`}
       >
         <Icon path={PLUS} className="size-4.5 text-slate-500" />
         Add coupon
@@ -6432,13 +6433,13 @@ function TipsSection({ draft, courseId, status, onSubmit }: { draft: Draft; cour
   return (
     <div className="flex flex-col gap-8">
       {/* Hero: one number, one sentence and the next action. */}
-      <section className="relative overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-[0_1px_2px_rgba(15,23,42,0.04)]">
-        <div aria-hidden="true" className="absolute inset-0 bg-[radial-gradient(120%_120%_at_100%_0%,#e7f5ef_0%,transparent_55%)]" />
+      <section className="relative overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+        <div aria-hidden="true" className="absolute inset-0 bg-glow-corner" />
         <div className="relative flex items-center gap-5 p-5 sm:p-6">
-          <div className="relative size-[84px] shrink-0">
+          <div className="relative size-21 shrink-0">
             <svg viewBox="0 0 80 80" className="size-full -rotate-90" aria-hidden="true">
               <circle cx="40" cy="40" r={R} fill="none" stroke="#e2e8f0" strokeWidth="7" />
-              <circle cx="40" cy="40" r={R} fill="none" stroke={ready ? "#10b981" : "#0d5c4b"} strokeWidth="7" strokeLinecap="round" strokeDasharray={C} strokeDashoffset={C * (1 - done / items.length)} className="transition-[stroke-dashoffset] duration-700 ease-out" />
+              <circle cx="40" cy="40" r={R} fill="none" stroke={ready ? "#10b981" : "#0d5c4b"} strokeWidth="7" strokeLinecap="round" strokeDasharray={C} strokeDashoffset={C * (1 - done / items.length)} className="transition-all duration-700 ease-out" />
             </svg>
             <span className="absolute inset-0 flex flex-col items-center justify-center">
               {ready ? (
@@ -6452,7 +6453,7 @@ function TipsSection({ draft, courseId, status, onSubmit }: { draft: Draft; cour
             </span>
           </div>
           <div className="min-w-0 flex-1">
-            <p className={`m-0 text-11 uppercase leading-3.5 tracking-[0.08em] ${ready ? "text-emerald-700" : "text-primary-700"} ${fontSemi}`}>
+            <p className={`m-0 text-11 uppercase leading-3.5 tracking-label ${ready ? "text-emerald-700" : "text-primary-700"} ${fontSemi}`}>
               {ready ? (status === "pending" ? "In review" : status === "published" ? "Live" : "Ready for review") : `${items.length - done} ${items.length - done === 1 ? "step" : "steps"} left`}
             </p>
             <h2 className={`m-0 mt-1 text-xl leading-7 text-slate-900 ${fontSemi}`}>
@@ -6464,14 +6465,14 @@ function TipsSection({ draft, courseId, status, onSubmit }: { draft: Draft; cour
             <div className="mt-4 flex flex-wrap gap-2">
               {ready ? (
                 onSubmit && (
-                  <button type="button" onClick={onSubmit} className={`flex h-10 items-center gap-2 rounded-10 bg-primary-700 px-4 text-sm leading-5 text-white shadow-[0_8px_20px_-10px_rgba(13,92,75,0.7)] transition hover:bg-primary-800 ${fontMedium}`}>
+                  <button type="button" onClick={onSubmit} className={`${buttonClass("primary", "lg")}`}>
                     Submit for review
                     <Icon path="M5 12h14M13 6l6 6-6 6" className="size-4" />
                   </button>
                 )
               ) : (
                 next && (
-                  <button type="button" onClick={() => openCourseEditor(courseId, next.section)} className={`flex h-10 items-center gap-2 rounded-10 bg-primary-700 px-4 text-sm leading-5 text-white shadow-[0_8px_20px_-10px_rgba(13,92,75,0.7)] transition hover:bg-primary-800 ${fontMedium}`}>
+                  <button type="button" onClick={() => openCourseEditor(courseId, next.section)} className={`${buttonClass("primary", "lg")}`}>
                     Continue
                     <Icon path="M5 12h14M13 6l6 6-6 6" className="size-4" />
                   </button>
@@ -6479,7 +6480,7 @@ function TipsSection({ draft, courseId, status, onSubmit }: { draft: Draft; cour
               )}
             </div>
           </div>
-          <img src="/illustrations/course-checklist.svg" alt="" aria-hidden="true" className="float-y hidden h-[150px] w-auto shrink-0 sm:block" />
+          <img src="/illustrations/course-checklist.svg" alt="" aria-hidden="true" className="float-y hidden h-37.5 w-auto shrink-0 sm:block" />
         </div>
         {/* One segment per step, so progress reads at a glance. */}
         <div className="relative flex gap-1 px-5 pb-5 sm:px-6">
@@ -6565,7 +6566,7 @@ function TipsSection({ draft, courseId, status, onSubmit }: { draft: Draft; cour
                   role="tab"
                   aria-selected={topic === t.topic}
                   onClick={() => setTopic(t.topic)}
-                  className={`flex h-8 items-center gap-1.5 rounded-lg px-3 text-13 leading-4.5 transition ${topic === t.topic ? `bg-white text-slate-900 shadow-[0_1px_2px_rgba(15,23,42,0.12)] ${fontSemi}` : `text-slate-500 hover:text-slate-900 ${fontMedium}`}`}
+                  className={`flex h-8 items-center gap-1.5 rounded-lg px-3 text-13 leading-4.5 transition ${topic === t.topic ? `bg-white text-slate-900 shadow-sm ${fontSemi}` : `text-slate-500 hover:text-slate-900 ${fontMedium}`}`}
                 >
                   {t.topic}
                   <span className={`text-11 tabular-nums ${count === t.tips.length ? "text-emerald-600" : "text-slate-400"}`}>
@@ -6581,7 +6582,7 @@ function TipsSection({ draft, courseId, status, onSubmit }: { draft: Draft; cour
             const open = openTip === tip.id;
             const isApplied = applied.includes(tip.id);
             return (
-              <li key={tip.id} className={`rounded-xl border bg-white transition ${open ? "border-primary-700/25 shadow-[0_10px_28px_-18px_rgba(13,92,75,0.45)]" : "border-slate-200 hover:border-slate-300"}`}>
+              <li key={tip.id} className={`rounded-xl border bg-white transition ${open ? "border-primary-700/25 shadow-2xl shadow-primary-700/68" : "border-slate-200 hover:border-slate-300"}`}>
                 <div className="flex items-start gap-3 px-4 py-3">
                   <button
                     type="button"
@@ -6697,7 +6698,7 @@ function RichGuide({
             <button
               type="button"
               onClick={primary.onClick}
-              className={`flex h-9 items-center gap-1.5 rounded-lg bg-primary-700 px-3.5 text-sm leading-5 text-white shadow-primary-xs transition hover:bg-primary-800 ${fontMedium}`}
+              className={`${buttonClass("primary", "md")}`}
             >
               {primary.label}
               {arrow}
@@ -6974,7 +6975,7 @@ function SettingsSection({
               type="button"
               disabled={hasStudents}
               onClick={() => setDeleting(true)}
-              className={`h-9 shrink-0 rounded-lg bg-red-600 px-4 text-sm leading-5 text-white transition hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-red-600 ${fontMedium}`}
+              className={`${buttonClass("danger", "md")} shrink-0`}
             >
               Delete
             </button>
@@ -7455,7 +7456,7 @@ function Editor({
             type="button"
             aria-label="Preview as a student"
             onClick={() => setFullPreview(true)}
-            className={`flex h-9 items-center gap-2 rounded-lg border border-slate-200 bg-white px-2.5 text-sm leading-5 text-slate-900 transition hover:bg-slate-50 sm:px-3 ${fontMedium}`}
+            className={`${buttonClass("secondary", "md")}`}
           >
             <Icon path={EYE} className="size-4.5 text-slate-600" />
             <span className="hidden sm:inline">Preview</span>
@@ -7618,7 +7619,7 @@ function Editor({
                     <button
                       type="button"
                       onClick={() => setShowPreview(true)}
-                      className={`hidden h-9 items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 text-13 leading-5 text-slate-900 shadow-xs transition hover:bg-slate-50 @5xl:flex ${fontMedium}`}
+                      className={`${buttonClass("secondary", "md")} hidden`}
                     >
                       <Icon path={PANEL} className="size-4" />
                       Show live preview

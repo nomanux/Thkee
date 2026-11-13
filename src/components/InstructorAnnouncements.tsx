@@ -39,9 +39,9 @@ const SEED: Store = { quota: 4, items: { "responsive-design": seedList("responsi
 const STORE_KEY = "thkee.instructorAnnouncements";
 const COURSE_PAGE = 3;
 const DETAIL_PAGE = 6;
-const titleClass = "m-0 font-['Instrument_Sans:Medium'] text-[24px] font-medium leading-[32px] text-[#0f172a]";
+const titleClass = "m-0 font-instrument-medium text-2xl font-medium leading-8 text-slate-900";
 const titleStyle = { fontVariationSettings: '"wdth" 100' };
-const yellowButton = `flex h-[36px] shrink-0 items-center rounded-[8px] bg-[#ffb20d] px-5 text-[16px] leading-[20px] tracking-[-0.01px] text-[#1e293b] transition hover:bg-[#faa104] ${fontMedium}`;
+const yellowButton = `flex h-9 shrink-0 items-center rounded-lg bg-secondary-500 px-5 text-base leading-5 text-slate-800 transition hover:bg-secondary-600 ${fontMedium}`;
 
 const formatDateTime = (date: Date) => {
   const day = date.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
@@ -54,28 +54,28 @@ const makePreview = (text: string) => (text.length > 60 ? `${text.slice(0, 60).t
 
 function GreenMegaphone() {
   const mask = `url(${imgMegaphone}) center / contain no-repeat`;
-  return <span aria-hidden="true" className="mt-0.5 size-[22px] shrink-0 bg-[#059669]" style={{ mask, WebkitMask: mask }} />;
+  return <span aria-hidden="true" className="mt-0.5 size-5.5 shrink-0 bg-emerald-600" style={{ mask, WebkitMask: mask }} />;
 }
 
 function EmptyAnnouncements() {
   return (
     <div className="flex flex-col items-center gap-5 px-6 py-6 text-center">
-      <svg viewBox="0 0 64 72" className="h-[64px] w-[56px] text-[#38bdf8]" fill="none" stroke="currentColor" strokeWidth="1" strokeLinejoin="round" strokeLinecap="round" aria-hidden="true">
+      <svg viewBox="0 0 64 72" className="h-16 w-14 text-sky-400" fill="none" stroke="currentColor" strokeWidth="1" strokeLinejoin="round" strokeLinecap="round" aria-hidden="true">
         <path d="M8 30l24-8 24 8-24 8-24-8zM8 30v28l24 10 24-10V30M32 38v30" />
         <path d="M8 30L2 38l24 8 6-8M56 30l6 8-24 8-6-8" />
         <path d="M32 30l12-4-12-4-12 4 12 4z" fill="currentColor" fillOpacity="0.25" />
         <circle cx="46" cy="9" r="8" />
         <path d="M24 56h.01M38 54h.01M30 60c1-2 3-2 4 0M32 14l-4-4M26 20l-3-3" />
       </svg>
-      <p className={`text-[14px] leading-[24px] text-[#475569] ${fontRegular}`}>No Announcement.</p>
+      <p className={`text-sm leading-6 text-slate-600 ${fontRegular}`}>No Announcement.</p>
     </div>
   );
 }
 
 function ModalHeader({ title, onClose }: { title: string; onClose: () => void }) {
   return (
-    <div className="flex items-center justify-between gap-4 border-b border-[#f1f5f9] px-6 py-5">
-      <h2 className={`text-[16px] leading-[24px] text-[#0f172a] ${fontSemi}`}>{title}</h2>
+    <div className="flex items-center justify-between gap-4 border-b border-slate-150 px-6 py-5">
+      <h2 className={`text-base leading-6 text-slate-900 ${fontSemi}`}>{title}</h2>
       <button type="button" onClick={onClose} aria-label="Close" className="flex transition hover:opacity-70">
         <img src={imgClose} alt="" width={20} height={20} className="size-5" />
       </button>
@@ -83,7 +83,7 @@ function ModalHeader({ title, onClose }: { title: string; onClose: () => void })
   );
 }
 
-const fieldLabel = `text-[14px] leading-[20px] text-[#1e293b] ${fontMedium}`;
+const fieldLabel = `text-sm leading-5 text-slate-800 ${fontMedium}`;
 const fieldInput = "field";
 
 function AnnouncementFields({ title, setTitle, initial, onBody }: { title: string; setTitle: (v: string) => void; initial?: Announcement; onBody: (text: string, html: string) => void }) {
@@ -105,11 +105,11 @@ function AnnouncementFields({ title, setTitle, initial, onBody }: { title: strin
 
 function ModalFooter({ onCancel, onPublish }: { onCancel: () => void; onPublish: () => void }) {
   return (
-    <div className="flex items-center justify-end gap-8 border-t border-[#f1f5f9] px-6 py-4">
-      <button type="button" onClick={onCancel} className={`text-[16px] leading-[24px] text-[#1e293b] transition hover:text-[#64748b] ${fontMedium}`}>
+    <div className="flex items-center justify-end gap-8 border-t border-slate-150 px-6 py-4">
+      <button type="button" onClick={onCancel} className={`text-base leading-6 text-slate-800 transition hover:text-slate-500 ${fontMedium}`}>
         Cancel
       </button>
-      <button type="button" onClick={onPublish} className={`h-[44px] w-[150px] rounded-[8px] bg-[#ffb20d] text-[16px] leading-[20px] text-[#1e293b] transition hover:bg-[#faa104] ${fontMedium}`}>
+      <button type="button" onClick={onPublish} className={`h-11 w-37.5 rounded-lg bg-secondary-500 text-base leading-5 text-slate-800 transition hover:bg-secondary-600 ${fontMedium}`}>
         Publish
       </button>
     </div>
@@ -141,11 +141,11 @@ export function CreateModal({ fixedCourse, onClose, onPublish }: { fixedCourse?:
   };
 
   return (
-    <Shell title="Create Announcement" onClose={onClose} hideHeader width="max-w-[638px]" radius="sm:rounded-[16px]">
+    <Shell title="Create Announcement" onClose={onClose} hideHeader width="max-w-159.5" radius="sm:rounded-2xl">
       <ModalHeader title="Create Announcement" onClose={onClose} />
       <div className="flex flex-col gap-4 px-6 py-5">
         {fixedCourse ? (
-          <p className={`text-[18px] leading-[28px] text-[#1e293b] ${fontSemi}`}>{fixedCourse.title}</p>
+          <p className={`text-lg leading-7 text-slate-800 ${fontSemi}`}>{fixedCourse.title}</p>
         ) : (
           <div className="flex flex-col gap-2">
             <p className={fieldLabel}>Course</p>
@@ -154,19 +154,19 @@ export function CreateModal({ fixedCourse, onClose, onPublish }: { fixedCourse?:
             </div>
           </div>
         )}
-        <div className="grid gap-[26px] sm:grid-cols-2">
-          <label className="flex h-[40px] cursor-pointer items-center gap-2.5 rounded-[8px] border border-[#cbd5e1] bg-[#f8fafc] px-4">
-            <input type="radio" name="announcement-type" checked readOnly className="size-4 accent-[#1e293b]" />
-            <span className={`text-[14px] leading-[20px] text-[#1e293b] ${fontMedium}`}>Educational announcement</span>
+        <div className="grid gap-6.5 sm:grid-cols-2">
+          <label className="flex h-10 cursor-pointer items-center gap-2.5 rounded-lg border border-slate-300 bg-slate-25 px-4">
+            <input type="radio" name="announcement-type" checked readOnly className="size-4 accent-slate-800" />
+            <span className={`text-sm leading-5 text-slate-800 ${fontMedium}`}>Educational announcement</span>
           </label>
-          <label className="flex h-[40px] cursor-not-allowed items-center gap-2.5 rounded-[8px] border border-[#f1f5f9] px-4">
+          <label className="flex h-10 cursor-not-allowed items-center gap-2.5 rounded-lg border border-slate-150 px-4">
             <input type="radio" name="announcement-type" disabled className="size-4" />
-            <span className={`text-[14px] leading-[20px] text-[#64748b] ${fontRegular}`}>Promotional email(Upcoming)</span>
+            <span className={`text-sm leading-5 text-slate-500 ${fontRegular}`}>Promotional email(Upcoming)</span>
           </label>
         </div>
-        <p className={`text-[16px] leading-[24px] text-[#1e293b] ${fontMedium}`}>Announcement Details</p>
+        <p className={`text-base leading-6 text-slate-800 ${fontMedium}`}>Announcement Details</p>
         <Checkbox checked={publishNow} onChange={() => setPublishNow(!publishNow)}>
-          <span className={`text-[14px] leading-[20px] text-[#334155] ${fontRegular}`}>Publish Now</span>
+          <span className={`text-sm leading-5 text-slate-700 ${fontRegular}`}>Publish Now</span>
         </Checkbox>
         <div className={`grid gap-5 sm:grid-cols-2 ${publishNow ? "opacity-50" : ""}`}>
           <div className="flex flex-col gap-2">
@@ -182,7 +182,7 @@ export function CreateModal({ fixedCourse, onClose, onPublish }: { fixedCourse?:
             <input id="announcement-time" type="time" value={time} disabled={publishNow} onChange={(e) => setTime(e.target.value)} className={fieldInput} />
           </div>
         </div>
-        <p className={`flex items-center gap-2.5 rounded-[8px] bg-[#ecfdf5] px-3 py-3.5 text-[12px] leading-[18px] text-[#059669] ${fontRegular}`}>
+        <p className={`flex items-center gap-2.5 rounded-lg bg-emerald-50 px-3 py-3.5 text-xs leading-4.5 text-emerald-600 ${fontRegular}`}>
           <GreenMegaphone />
           <span>
             This announcement will be published at <span className={fontSemi}>{notice}</span>
@@ -190,7 +190,7 @@ export function CreateModal({ fixedCourse, onClose, onPublish }: { fixedCourse?:
         </p>
         <AnnouncementFields title={title} setTitle={setTitle} onBody={(text, html) => setBody({ text, html })} />
         <Checkbox checked={sendEmail} onChange={() => setSendEmail(!sendEmail)}>
-          <span className={`text-[14px] leading-[20px] text-[#334155] ${fontRegular}`}>Send this as an email to students.</span>
+          <span className={`text-sm leading-5 text-slate-700 ${fontRegular}`}>Send this as an email to students.</span>
         </Checkbox>
       </div>
       <ModalFooter onCancel={onClose} onPublish={publish} />
@@ -212,11 +212,11 @@ export function EditModal({ course, announcement, onClose, onSave }: { course: A
   };
 
   return (
-    <Shell title="Edit" onClose={onClose} hideHeader width="max-w-[638px]" radius="sm:rounded-[16px]">
+    <Shell title="Edit" onClose={onClose} hideHeader width="max-w-159.5" radius="sm:rounded-2xl">
       <ModalHeader title="Edit" onClose={onClose} />
       <div className="flex flex-col gap-4 px-6 py-5">
-        <p className={`text-[18px] leading-[28px] text-[#1e293b] ${fontSemi}`}>{course.title}</p>
-        <p className={`mt-3 text-[16px] leading-[24px] text-[#1e293b] ${fontMedium}`}>Announcement Details</p>
+        <p className={`text-lg leading-7 text-slate-800 ${fontSemi}`}>{course.title}</p>
+        <p className={`mt-3 text-base leading-6 text-slate-800 ${fontMedium}`}>Announcement Details</p>
         <AnnouncementFields title={title} setTitle={setTitle} initial={announcement} onBody={(text, html) => setBody({ text, html })} />
       </div>
       <ModalFooter onCancel={onClose} onPublish={publish} />
@@ -226,21 +226,21 @@ export function EditModal({ course, announcement, onClose, onSave }: { course: A
 
 export function DeleteModal({ announcement, onClose, onConfirm }: { announcement: Announcement; onClose: () => void; onConfirm: () => void }) {
   return (
-    <Shell title="Please confirm" onClose={onClose} hideHeader width="max-w-[634px]" radius="sm:rounded-[16px]">
+    <Shell title="Please confirm" onClose={onClose} hideHeader width="max-w-158.5" radius="sm:rounded-2xl">
       <ModalHeader title="Please confirm" onClose={onClose} />
       <div className="flex flex-col gap-5 px-6 py-5">
-        <p className={`text-[16px] leading-[24px] text-[#334155] ${fontMedium}`}>Are you sure you want to delete this announcement?</p>
-        <div className="rounded-[6px] bg-[#fef2f2] px-2 py-3">
-          <p className={`whitespace-pre-wrap text-[12px] leading-[18px] text-[#94a3b8] ${fontRegular}`}>{announcement.stamp}</p>
-          <p className={`mt-3 text-[14px] leading-[20px] text-[#dc2626] ${fontSemi}`}>{announcement.title}</p>
+        <p className={`text-base leading-6 text-slate-700 ${fontMedium}`}>Are you sure you want to delete this announcement?</p>
+        <div className="rounded-md bg-red-50 px-2 py-3">
+          <p className={`whitespace-pre-wrap text-xs leading-4.5 text-slate-400 ${fontRegular}`}>{announcement.stamp}</p>
+          <p className={`mt-3 text-sm leading-5 text-red-600 ${fontSemi}`}>{announcement.title}</p>
         </div>
-        <p className={`text-[14px] leading-[20px] text-[#64748b] ${fontRegular}`}>N.B.: If you delete this announcement, you can't restore it.</p>
+        <p className={`text-sm leading-5 text-slate-500 ${fontRegular}`}>N.B.: If you delete this announcement, you can't restore it.</p>
       </div>
-      <div className="flex items-center justify-end gap-8 border-t border-[#f1f5f9] px-6 py-4">
-        <button type="button" onClick={onClose} className={`text-[16px] leading-[24px] text-[#1e293b] transition hover:text-[#64748b] ${fontMedium}`}>
+      <div className="flex items-center justify-end gap-8 border-t border-slate-150 px-6 py-4">
+        <button type="button" onClick={onClose} className={`text-base leading-6 text-slate-800 transition hover:text-slate-500 ${fontMedium}`}>
           Cancel
         </button>
-        <button type="button" onClick={onConfirm} className={`h-[44px] rounded-[8px] bg-[#ef4444] px-6 text-[16px] leading-[20px] text-white transition hover:bg-[#dc2626] ${fontMedium}`}>
+        <button type="button" onClick={onConfirm} className={`h-11 rounded-lg bg-red-500 px-6 text-base leading-5 text-white transition hover:bg-red-600 ${fontMedium}`}>
           Yes, I confirm
         </button>
       </div>
@@ -255,15 +255,15 @@ function CourseList({ store, onCreate, onShow }: { store: Store; onCreate: () =>
 
   return (
     <main className="flex flex-1 flex-col bg-white">
-      <div className="flex flex-wrap items-center gap-6 border-b border-[#e2e8f0] px-4 py-6 md:px-7">
-        <h1 className={`flex h-[42px] items-center ${titleClass}`} style={titleStyle}>
+      <div className="flex flex-wrap items-center gap-6 border-b border-slate-200 px-4 py-6 md:px-7">
+        <h1 className={`flex h-10.5 items-center ${titleClass}`} style={titleStyle}>
           Announcements
         </h1>
         <button type="button" onClick={onCreate} className={yellowButton}>
           Create announcement
         </button>
-        <p className={`text-[12px] leading-[18px] text-[#475569] ${fontRegular}`}>
-          <span className={`text-[#334155] ${fontSemi}`}>
+        <p className={`text-xs leading-4.5 text-slate-600 ${fontRegular}`}>
+          <span className={`text-slate-700 ${fontSemi}`}>
             {store.quota} of {SEED.quota}
           </span>{" "}
           left this month
@@ -273,26 +273,26 @@ function CourseList({ store, onCreate, onShow }: { store: Store; onCreate: () =>
         {shown.map((course) => {
           const items = (store.items[course.id] ?? []).slice(0, 2);
           return (
-            <section key={course.id} className="rounded-[8px] border border-[#e2e8f0]">
-              <div className="flex flex-wrap items-center gap-4 border-b border-[#e2e8f0] px-4 py-4">
-                <img src={course.image} alt="" className="h-10 w-[50px] shrink-0 rounded-[4px] object-cover" />
-                <h2 className={`min-w-0 flex-1 text-[16px] leading-[24px] text-[#0f172a] ${fontSemi}`}>{course.title}</h2>
-                <button type="button" onClick={() => openInstructorAnnouncements(course.id)} className={`h-[43px] rounded-[8px] border border-[#ffb20d] px-4 text-[16px] leading-[20px] text-[#1e293b] transition hover:bg-[#fff9f0] ${fontRegular}`}>
+            <section key={course.id} className="rounded-lg border border-slate-200">
+              <div className="flex flex-wrap items-center gap-4 border-b border-slate-200 px-4 py-4">
+                <img src={course.image} alt="" className="h-10 w-12.5 shrink-0 rounded-sm object-cover" />
+                <h2 className={`min-w-0 flex-1 text-base leading-6 text-slate-900 ${fontSemi}`}>{course.title}</h2>
+                <button type="button" onClick={() => openInstructorAnnouncements(course.id)} className={`h-10.75 rounded-lg border border-secondary-500 px-4 text-base leading-5 text-slate-800 transition hover:bg-secondary-50 ${fontRegular}`}>
                   See All
                 </button>
               </div>
               {items.length === 0 ? (
                 <EmptyAnnouncements />
               ) : (
-                <ul className="divide-y divide-[#f1f5f9]">
+                <ul className="divide-y divide-slate-150">
                   {items.map((item) => (
                     <li key={item.id} className="flex flex-wrap items-center gap-4 px-4 py-4">
                       <GreenMegaphone />
                       <div className="min-w-0 flex-1">
-                        <p className={`text-[14px] leading-[24px] text-[#475569] ${fontSemi}`}>{item.title}</p>
-                        <p className={`truncate text-[14px] leading-[24px] text-[#64748b] ${fontRegular}`}>{item.preview}</p>
+                        <p className={`text-sm leading-6 text-slate-600 ${fontSemi}`}>{item.title}</p>
+                        <p className={`truncate text-sm leading-6 text-slate-500 ${fontRegular}`}>{item.preview}</p>
                       </div>
-                      <button type="button" onClick={() => onShow(course.id, item.id)} className={`h-[35px] rounded-[6px] bg-[#f1f5f9] px-3 text-[14px] leading-[20px] text-[#1e293b] transition hover:bg-[#e2e8f0] ${fontMedium}`}>
+                      <button type="button" onClick={() => onShow(course.id, item.id)} className={`h-8.75 rounded-md bg-slate-150 px-3 text-sm leading-5 text-slate-800 transition hover:bg-slate-200 ${fontMedium}`}>
                         Show Announcement
                       </button>
                     </li>
@@ -321,16 +321,16 @@ function CourseDetail({ course, items, expanded, setExpanded, onCreate, onEdit, 
   const shown = list.slice(start, start + DETAIL_PAGE);
 
   return (
-    <main className="flex flex-1 flex-col bg-[#f1f5f9]">
+    <main className="flex flex-1 flex-col bg-slate-150">
       <div className="flex flex-wrap items-center justify-between gap-4 bg-white px-4 py-3 md:px-7">
-        <h1 className={`max-w-[480px] ${titleClass}`} style={titleStyle}>
+        <h1 className={`max-w-120 ${titleClass}`} style={titleStyle}>
           {course.title}
         </h1>
-        <nav aria-label="Breadcrumb" className={`flex flex-wrap items-center gap-2 text-[12px] leading-[18px] text-[#475569] ${fontRegular}`}>
-          <button type="button" onClick={() => openInstructorAnnouncements()} className="text-[#1e293b] transition hover:underline">
+        <nav aria-label="Breadcrumb" className={`flex flex-wrap items-center gap-2 text-xs leading-4.5 text-slate-600 ${fontRegular}`}>
+          <button type="button" onClick={() => openInstructorAnnouncements()} className="text-slate-800 transition hover:underline">
             Announcements
           </button>
-          <svg viewBox="0 0 24 24" className="size-3 text-[#94a3b8]" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+          <svg viewBox="0 0 24 24" className="size-3 text-slate-400" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
             <path d="M9 6l6 6-6 6" />
           </svg>
           <span aria-current="page">{course.title}</span>
@@ -352,7 +352,7 @@ function CourseDetail({ course, items, expanded, setExpanded, onCreate, onEdit, 
                   setTab(t.key as "educational" | "promotional");
                   setPage(1);
                 }}
-                className={`border-b-2 px-6 pb-4 pt-1 text-[14px] leading-[24px] transition ${tab === t.key ? "border-[#ffb20d] text-[#334155]" : "border-transparent text-[#64748b] hover:text-[#334155]"} ${fontSemi}`}
+                className={`border-b-2 px-6 pb-4 pt-1 text-sm leading-6 transition ${tab === t.key ? "border-secondary-500 text-slate-700" : "border-transparent text-slate-500 hover:text-slate-700"} ${fontSemi}`}
               >
                 {t.label}
               </button>
@@ -363,23 +363,23 @@ function CourseDetail({ course, items, expanded, setExpanded, onCreate, onEdit, 
           </button>
         </div>
         {shown.length === 0 && (
-          <div className="rounded-[8px] bg-white">
+          <div className="rounded-lg bg-white">
             <EmptyAnnouncements />
           </div>
         )}
         {shown.map((item) => {
           const open = expanded === item.id;
           return (
-            <article key={item.id} className={`rounded-[8px] border bg-white px-6 py-[18px] ${open ? "border-[#1e293b]" : "border-white"}`}>
+            <article key={item.id} className={`rounded-lg border bg-white px-6 py-4.5 ${open ? "border-slate-800" : "border-white"}`}>
               <div className="flex items-start gap-4">
                 <GreenMegaphone />
                 <button type="button" aria-expanded={open} onClick={() => setExpanded(open ? null : item.id)} className="min-w-0 flex-1 text-left">
-                  <span className={`block text-[14px] leading-[24px] text-[#1e293b] ${open ? fontSemi : fontMedium}`}>{item.title}</span>
-                  {!open && <span className={`block truncate text-[14px] leading-[28px] text-[#64748b] ${fontRegular}`}>{item.preview}</span>}
+                  <span className={`block text-sm leading-6 text-slate-800 ${open ? fontSemi : fontMedium}`}>{item.title}</span>
+                  {!open && <span className={`block truncate text-sm leading-7 text-slate-500 ${fontRegular}`}>{item.preview}</span>}
                 </button>
                 <ActionMenu
                   label={`More actions for ${item.title}`}
-                  triggerClass="flex size-[31px] items-center justify-center rounded-[6px] bg-[#f1f5f9] text-[#1e293b] transition hover:bg-[#e2e8f0]"
+                  triggerClass="flex size-7.75 items-center justify-center rounded-md bg-slate-150 text-slate-800 transition hover:bg-slate-200"
                   trigger={
                     <svg viewBox="0 0 24 24" className="size-4" fill="currentColor" aria-hidden="true">
                       <circle cx="5" cy="12" r="2" />
@@ -401,21 +401,21 @@ function CourseDetail({ course, items, expanded, setExpanded, onCreate, onEdit, 
                     },
                   ]}
                 />
-                <button type="button" aria-label={open ? "Collapse announcement" : "Expand announcement"} onClick={() => setExpanded(open ? null : item.id)} className={`flex size-[31px] items-center justify-center transition ${open ? "text-[#1e293b]" : "text-[#94a3b8]"}`}>
+                <button type="button" aria-label={open ? "Collapse announcement" : "Expand announcement"} onClick={() => setExpanded(open ? null : item.id)} className={`flex size-7.75 items-center justify-center transition ${open ? "text-slate-800" : "text-slate-400"}`}>
                   <svg viewBox="0 0 24 24" className={`size-5 transition-transform ${open ? "rotate-180" : ""}`} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                     <path d="M6 9l6 6 6-6" />
                   </svg>
                 </button>
               </div>
               {open && (
-                <div className="mt-3 md:pl-[38px] md:pr-[150px]">
-                  <NoteBody note={{ text: item.text, html: item.html }} tone="text-[#64748b]" className="!leading-[28px]" />
-                  <p className={`mt-5 flex items-center gap-3 text-[12px] leading-[18px] text-[#1e293b] ${fontRegular}`}>
-                    <svg viewBox="0 0 24 24" className="size-4 shrink-0 text-[#94a3b8]" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <div className="mt-3 md:pl-9.5 md:pr-37.5">
+                  <NoteBody note={{ text: item.text, html: item.html }} tone="text-slate-500" className="!leading-7" />
+                  <p className={`mt-5 flex items-center gap-3 text-xs leading-4.5 text-slate-800 ${fontRegular}`}>
+                    <svg viewBox="0 0 24 24" className="size-4 shrink-0 text-slate-400" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                       <rect x="3" y="5" width="18" height="16" rx="2" />
                       <path d="M3 10h18M8 3v4M16 3v4" />
                     </svg>
-                    <span className="italic [font-synthesis:style]">Published Time: {item.published}</span>
+                    <span className="italic font-synthesis-style">Published Time: {item.published}</span>
                   </p>
                 </div>
               )}

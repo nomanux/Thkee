@@ -27,9 +27,9 @@ const feedbackFor = (answer: string, i: number) => {
 
 function Frame({ title, actions, children }: { title: string; actions: React.ReactNode; children: React.ReactNode }) {
   return (
-    <div className="bg-gradient-to-b from-[#5b1bf0] to-[#2a0480]">
-      <div className="flex flex-wrap items-center gap-3 bg-[#2a0480] px-4 py-3 md:px-6">
-        <p className={`min-w-0 flex-1 truncate text-[17px] text-white md:text-[20px] ${fontRegular}`}>{title}</p>
+    <div className="bg-gradient-to-b from-ai-600 to-ai-900">
+      <div className="flex flex-wrap items-center gap-3 bg-ai-900 px-4 py-3 md:px-6">
+        <p className={`min-w-0 flex-1 truncate text-17 text-white md:text-xl ${fontRegular}`}>{title}</p>
         {actions}
       </div>
       <div className="p-3 md:p-5">{children}</div>
@@ -80,9 +80,9 @@ export function AssignmentPanel({
     notify("Assignment submitted — your instructor has reviewed it ✓");
   };
 
-  const ghostBtn = `h-[38px] rounded-[6px] px-3 text-[14px] text-white transition hover:bg-white/10 ${fontMedium}`;
-  const whiteBtn = `h-[38px] rounded-[6px] bg-white px-4 text-[14px] text-[#0f172a] transition hover:bg-[#f1f5f9] disabled:opacity-50 ${fontMedium}`;
-  const yellowBtn = `h-[38px] rounded-[6px] bg-[#ffb20d] px-4 text-[14px] text-[#1e293b] transition hover:bg-[#faa104] disabled:opacity-50 ${fontMedium}`;
+  const ghostBtn = `h-9.5 rounded-md px-3 text-sm text-white transition hover:bg-white/10 ${fontMedium}`;
+  const whiteBtn = `h-9.5 rounded-md bg-white px-4 text-sm text-slate-900 transition hover:bg-slate-150 disabled:opacity-50 ${fontMedium}`;
+  const yellowBtn = `h-9.5 rounded-md bg-secondary-500 px-4 text-sm text-slate-800 transition hover:bg-secondary-600 disabled:opacity-50 ${fontMedium}`;
 
   const actions =
     mode === "edit" ? (
@@ -135,13 +135,13 @@ export function AssignmentPanel({
 
   return (
     <Frame title={title} actions={actions}>
-      <div className="relative overflow-hidden rounded-[8px] bg-white">
-        <div ref={scrollRef} onScroll={onScroll} className="max-h-[560px] overflow-y-auto px-5 py-6 md:px-10 md:py-8">
+      <div className="relative overflow-hidden rounded-lg bg-white">
+        <div ref={scrollRef} onScroll={onScroll} className="max-h-140 overflow-y-auto px-5 py-6 md:px-10 md:py-8">
           {mode === "edit" && (
             <ol key="edit" className="fade-up flex flex-col gap-8">
               {ASSIGNMENT_QUESTIONS.map((q, i) => (
                 <li key={i} className="flex flex-col gap-4">
-                  <label htmlFor={`asg-${i}`} className={`text-[14px] leading-[22px] text-[#1e293b] ${fontRegular}`}>
+                  <label htmlFor={`asg-${i}`} className={`text-sm leading-5.5 text-slate-800 ${fontRegular}`}>
                     {i + 1}. {q}
                   </label>
                   <textarea
@@ -154,7 +154,7 @@ export function AssignmentPanel({
                   />
                 </li>
               ))}
-              <p className={`text-[13px] text-[#64748b] ${fontRegular}`}>
+              <p className={`text-13 text-slate-500 ${fontRegular}`}>
                 {answered}/{ASSIGNMENT_QUESTIONS.length} answered · Your answers are saved when you preview.
               </p>
             </ol>
@@ -163,19 +163,19 @@ export function AssignmentPanel({
           {mode === "preview" && (
             <div key="preview" className="fade-up flex flex-col gap-5">
               {preview.map((q, i) => (
-                <div key={i} className="rounded-[6px] border border-dashed border-[#93c5fd] px-4 py-3">
-                  <div className="grid grid-cols-[52px_1fr] gap-y-3">
-                    <span className={`text-[15px] text-[#0f172a] ${fontSemi}`}>Ques:</span>
-                    <span className={`text-[15px] text-[#0f172a] ${fontSemi}`}>{q}</span>
-                    <span className={`text-[15px] text-[#0f172a] ${fontSemi}`}>Ans:</span>
-                    <span className={`whitespace-pre-wrap text-[14px] leading-[22px] ${answers[i].trim() ? "text-[#475569]" : "italic text-[#dc2626]"} ${fontRegular}`}>
+                <div key={i} className="rounded-md border border-dashed border-blue-300 px-4 py-3">
+                  <div className="grid grid-cols-aside-52 gap-y-3">
+                    <span className={`text-15 text-slate-900 ${fontSemi}`}>Ques:</span>
+                    <span className={`text-15 text-slate-900 ${fontSemi}`}>{q}</span>
+                    <span className={`text-15 text-slate-900 ${fontSemi}`}>Ans:</span>
+                    <span className={`whitespace-pre-wrap text-sm leading-5.5 ${answers[i].trim() ? "text-slate-600" : "italic text-red-600"} ${fontRegular}`}>
                       {answers[i].trim() || "Not answered yet"}
                     </span>
                   </div>
                 </div>
               ))}
               {ASSIGNMENT_QUESTIONS.length > 3 && (
-                <button type="button" onClick={() => setShowAll((v) => !v)} className={`flex h-[44px] items-center gap-2 self-center rounded-[8px] bg-[#f1f5f9] px-5 text-[15px] text-[#1e293b] hover:bg-[#e2e8f0] ${fontMedium}`}>
+                <button type="button" onClick={() => setShowAll((v) => !v)} className={`flex h-11 items-center gap-2 self-center rounded-lg bg-slate-150 px-5 text-15 text-slate-800 hover:bg-slate-200 ${fontMedium}`}>
                   {showAll ? "Show less" : "Show more"}
                   <svg viewBox="0 0 24 24" className={`size-4 transition-transform ${showAll ? "rotate-180" : ""}`} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
                     <path d="M6 9l6 6 6-6" />
@@ -188,17 +188,17 @@ export function AssignmentPanel({
           {mode === "result" && (
             <div key="result" className="fade-up flex flex-col gap-6">
               {ASSIGNMENT_QUESTIONS.map((q, i) => (
-                <div key={i} className="overflow-hidden rounded-[8px] border border-[#e2e8f0]">
-                  <div className="grid grid-cols-[44px_1fr] gap-y-3 bg-[#f1f5f9] px-4 py-4 md:grid-cols-[64px_1fr] md:px-6">
-                    <span className={`text-[14px] text-[#0f172a] ${fontRegular}`}>Q{i + 1}:</span>
-                    <span className={`text-[16px] text-[#1e293b] ${fontSemi}`}>{q}</span>
-                    <span className={`text-[14px] text-[#94a3b8] ${fontRegular}`}>Ans:</span>
-                    <span className={`whitespace-pre-wrap text-[14px] leading-[22px] text-[#475569] ${fontRegular}`}>{answers[i].trim() || "—"}</span>
+                <div key={i} className="overflow-hidden rounded-lg border border-slate-200">
+                  <div className="grid grid-cols-aside-44 gap-y-3 bg-slate-150 px-4 py-4 md:grid-cols-aside-64 md:px-6">
+                    <span className={`text-sm text-slate-900 ${fontRegular}`}>Q{i + 1}:</span>
+                    <span className={`text-base text-slate-800 ${fontSemi}`}>{q}</span>
+                    <span className={`text-sm text-slate-400 ${fontRegular}`}>Ans:</span>
+                    <span className={`whitespace-pre-wrap text-sm leading-5.5 text-slate-600 ${fontRegular}`}>{answers[i].trim() || "—"}</span>
                   </div>
                   <div className="px-4 py-4 md:px-6">
-                    <div className="border-l-4 border-[#5b1bf0] pl-3">
-                      <p className={`text-[15px] text-[#0f172a] ${fontSemi}`}>Instructor Feedback:</p>
-                      <p className={`mt-1 text-[14px] leading-[22px] text-[#1e293b] ${fontRegular}`}>{feedbackFor(answers[i], i)}</p>
+                    <div className="border-l-4 border-ai-600 pl-3">
+                      <p className={`text-15 text-slate-900 ${fontSemi}`}>Instructor Feedback:</p>
+                      <p className={`mt-1 text-sm leading-5.5 text-slate-800 ${fontRegular}`}>{feedbackFor(answers[i], i)}</p>
                     </div>
                   </div>
                 </div>
@@ -212,13 +212,13 @@ export function AssignmentPanel({
             type="button"
             onClick={() => scrollRef.current?.scrollTo({ top: 0, behavior: "smooth" })}
             aria-label="Back to top"
-            className="fade-up absolute bottom-5 right-6 flex size-10 items-center justify-center rounded-full bg-white text-[#0f172a] shadow-[0_6px_16px_rgba(15,23,42,0.18)] transition hover:scale-105"
+            className="fade-up absolute bottom-5 right-6 flex size-10 items-center justify-center rounded-full bg-white text-slate-900 shadow-xl transition hover:scale-105"
           >
             <svg viewBox="0 0 40 40" className="absolute inset-0 -rotate-90" aria-hidden="true">
               <circle cx="20" cy="20" r="18" fill="none" stroke="#e2e8f0" strokeWidth="2.5" />
               <circle cx="20" cy="20" r="18" fill="none" stroke="#ffb20d" strokeWidth="2.5" strokeLinecap="round" strokeDasharray={`${read * 113.1} 113.1`} />
             </svg>
-            <svg viewBox="0 0 24 24" className="relative size-[18px]" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" aria-hidden="true">
+            <svg viewBox="0 0 24 24" className="relative size-4.5" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" aria-hidden="true">
               <path d="M12 19V5M6 11l6-6 6 6" />
             </svg>
           </button>

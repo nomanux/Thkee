@@ -116,8 +116,8 @@ export function DatePicker({
   const shift = (by: number) => setMonth(new Date(month.getFullYear(), month.getMonth() + by, 1));
   const canPrev = !minDate || new Date(month.getFullYear(), month.getMonth(), 0) >= minDate;
   const canNext = !maxDate || new Date(month.getFullYear(), month.getMonth() + 1, 1) <= maxDate;
-  const arrow = "flex size-8 items-center justify-center rounded-[8px] text-slate-500 transition hover:bg-slate-100 hover:text-slate-900 disabled:pointer-events-none disabled:opacity-30";
-  const footLink = `rounded-[6px] px-2 py-1 text-[13px] leading-[18px] text-[#0d5c4b] transition hover:bg-[#eef7f3] disabled:pointer-events-none disabled:opacity-40 ${fontMedium}`;
+  const arrow = "flex size-8 items-center justify-center rounded-lg text-slate-500 transition hover:bg-slate-100 hover:text-slate-900 disabled:pointer-events-none disabled:opacity-30";
+  const footLink = `rounded-md px-2 py-1 text-13 leading-4.5 text-primary-700 transition hover:bg-primary-100 disabled:pointer-events-none disabled:opacity-40 ${fontMedium}`;
 
   return (
     <div ref={wrap} className={`relative ${className}`} onKeyDown={(e) => e.key === "Escape" && open && (e.stopPropagation(), close())}>
@@ -132,10 +132,10 @@ export function DatePicker({
         aria-describedby={describedBy}
         aria-label={ariaLabel ? `${ariaLabel}${value ? `: ${formatDate(value)}` : ""}` : undefined}
         onClick={() => (open ? close() : show())}
-        className={`field group flex h-[36px] items-center justify-between gap-2 text-left disabled:cursor-not-allowed disabled:bg-slate-50 disabled:text-slate-400 ${open ? "!border-[#0d5c4b]/60 bg-white shadow-[0_0_0_3px_rgb(13_92_75/0.12)]" : ""}`}
+        className={`field group flex h-9 items-center justify-between gap-2 text-left disabled:cursor-not-allowed disabled:bg-slate-50 disabled:text-slate-400 ${open ? "!border-primary-700/60 bg-white shadow-xs" : ""}`}
       >
         <span className={`min-w-0 truncate ${value ? "" : "text-slate-400"}`}>{value ? formatDate(value) : placeholder}</span>
-        <HugeiconsIcon icon={Calendar03Icon} size={18} strokeWidth={1.8} aria-hidden="true" className={`shrink-0 transition-colors ${open ? "text-[#0d5c4b]" : "text-slate-500 group-hover:text-slate-700"}`} />
+        <HugeiconsIcon icon={Calendar03Icon} size={18} strokeWidth={1.8} aria-hidden="true" className={`shrink-0 transition-colors ${open ? "text-primary-700" : "text-slate-500 group-hover:text-slate-700"}`} />
       </button>
 
       {open && (
@@ -143,13 +143,13 @@ export function DatePicker({
           role="dialog"
           aria-label="Choose a date"
           style={{ width: PANEL_WIDTH }}
-          className={`pop-in absolute z-30 rounded-[12px] border border-slate-200 bg-white p-3 shadow-[0_1px_2px_rgba(15,23,42,0.05),0_16px_36px_-8px_rgba(15,23,42,0.2)] ${place.right ? "right-0" : "left-0"} ${place.up ? "bottom-full mb-1.5" : "top-full mt-1.5"}`}
+          className={`pop-in absolute z-30 rounded-xl border border-slate-200 bg-white p-3 shadow-2xl ${place.right ? "right-0" : "left-0"} ${place.up ? "bottom-full mb-1.5" : "top-full mt-1.5"}`}
         >
           <div className="flex items-center justify-between">
             <button type="button" aria-label="Previous month" disabled={!canPrev} onClick={() => shift(-1)} className={arrow}>
               <HugeiconsIcon icon={ArrowLeft01Icon} size={18} strokeWidth={1.8} aria-hidden="true" />
             </button>
-            <p aria-live="polite" className={`text-[14px] leading-[20px] text-slate-900 ${fontSemi}`}>
+            <p aria-live="polite" className={`text-sm leading-5 text-slate-900 ${fontSemi}`}>
               {month.toLocaleDateString("en-US", { month: "long", year: "numeric" })}
             </p>
             <button type="button" aria-label="Next month" disabled={!canNext} onClick={() => shift(1)} className={arrow}>
@@ -159,7 +159,7 @@ export function DatePicker({
 
           <div ref={grid} role="grid" onKeyDown={onGridKey} className="mt-2 grid grid-cols-7 justify-items-center gap-y-0.5">
             {WEEKDAYS.map((day) => (
-              <span key={day} role="columnheader" className={`pb-1 text-[12px] leading-[18px] text-slate-500 ${fontMedium}`}>
+              <span key={day} role="columnheader" className={`pb-1 text-xs leading-4.5 text-slate-500 ${fontMedium}`}>
                 {day}
               </span>
             ))}
@@ -181,16 +181,16 @@ export function DatePicker({
                   aria-label={d.toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long", year: "numeric" })}
                   onClick={() => pick(d)}
                   onFocus={() => setFocus(d)}
-                  className={`relative flex size-9 items-center justify-center rounded-full text-[14px] leading-[20px] outline-none transition focus-visible:ring-2 focus-visible:ring-[#0d5c4b]/40 ${
+                  className={`relative flex size-9 items-center justify-center rounded-full text-sm leading-5 outline-none transition focus-visible:ring-2 focus-visible:ring-primary-700/40 ${
                     isSelected
-                      ? `bg-[#0d5c4b] text-white ${fontSemi}`
+                      ? `bg-primary-700 text-white ${fontSemi}`
                       : off
                         ? `cursor-not-allowed text-slate-300 ${fontRegular}`
-                        : `${inMonth ? "text-slate-700" : "text-slate-400"} hover:bg-[#eef7f3] hover:text-[#0d5c4b] ${isToday ? fontSemi : fontRegular}`
+                        : `${inMonth ? "text-slate-700" : "text-slate-400"} hover:bg-primary-100 hover:text-primary-700 ${isToday ? fontSemi : fontRegular}`
                   }`}
                 >
                   {d.getDate()}
-                  {isToday && !isSelected && <span aria-hidden="true" className="absolute bottom-1 size-1 rounded-full bg-[#faa104]" />}
+                  {isToday && !isSelected && <span aria-hidden="true" className="absolute bottom-1 size-1 rounded-full bg-secondary-600" />}
                 </button>
               );
             })}
@@ -219,12 +219,12 @@ export function DateField({ id, label, value, onChange, error, hint, min, max, r
   const describedBy = error ? `${id}-error` : hint ? `${id}-hint` : undefined;
   return (
     <div className="flex flex-col gap-1.5">
-      <label htmlFor={id} className={`text-[14px] leading-[20px] text-slate-900 ${fontMedium}`}>
+      <label htmlFor={id} className={`text-sm leading-5 text-slate-900 ${fontMedium}`}>
         {label} {required && <span className={`text-slate-500 ${fontRegular}`}>(Required)</span>}
       </label>
       <DatePicker id={id} value={value} onChange={onChange} min={min} max={max} invalid={!!error} describedBy={describedBy} placeholder={placeholder} />
       {error && (
-        <p id={`${id}-error`} className={`text-[14px] leading-[20px] text-[#dc2626] ${fontRegular}`}>
+        <p id={`${id}-error`} className={`text-sm leading-5 text-red-600 ${fontRegular}`}>
           {error}
         </p>
       )}

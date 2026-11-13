@@ -81,12 +81,12 @@ export default function Hero() {
     <div
       ref={rootRef}
       id="top"
-      className="relative w-full overflow-hidden pt-[56px] font-['Plus_Jakarta_Sans',sans-serif] text-white"
+      className="relative w-full overflow-hidden pt-14 font-jakarta text-white"
       style={{ background: "radial-gradient(ellipse 90% 70% at 50% 0%, #0b9c70 0%, #065c43 42%, #03281d 100%)" }}
     >
       <div
         aria-hidden="true"
-        className="absolute inset-x-0 -bottom-[160px] -top-[40px]"
+        className="absolute inset-x-0 -bottom-40 -top-10"
         style={{
           ...layer(0.12, 8),
           backgroundImage: "linear-gradient(rgba(255,255,255,0.06) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.06) 1px, transparent 1px)",
@@ -95,11 +95,11 @@ export default function Hero() {
           WebkitMaskImage: "radial-gradient(ellipse 75% 65% at 50% 35%, #000 25%, transparent 80%)",
         }}
       />
-      <div aria-hidden="true" className="absolute -left-[120px] -top-[160px]" style={layer(0.4, -36)}>
-        <div className="hero-drift size-[460px] rounded-full" style={{ background: "radial-gradient(circle, rgba(255,180,0,0.32), rgba(255,180,0,0) 70%)", animationDuration: "16s" }} />
+      <div aria-hidden="true" className="absolute -left-30 -top-40" style={layer(0.4, -36)}>
+        <div className="hero-drift size-115 rounded-full" style={{ background: "radial-gradient(circle, rgba(255,180,0,0.32), rgba(255,180,0,0) 70%)", animationDuration: "16s" }} />
       </div>
-      <div aria-hidden="true" className="absolute -right-[180px] top-[120px]" style={layer(0.25, 44)}>
-        <div className="hero-drift size-[520px] rounded-full" style={{ background: "radial-gradient(circle, rgba(60,230,170,0.30), rgba(60,230,170,0) 70%)", animationDuration: "20s", animationDirection: "reverse" }} />
+      <div aria-hidden="true" className="absolute -right-45 top-30" style={layer(0.25, 44)}>
+        <div className="hero-drift size-130 rounded-full" style={{ background: "radial-gradient(circle, rgba(60,230,170,0.30), rgba(60,230,170,0) 70%)", animationDuration: "20s", animationDirection: "reverse" }} />
       </div>
       {sparkles.map((s, i) => (
         <div key={i} aria-hidden="true" className="absolute" style={{ top: s.top, left: s.left, right: s.right, ...layer(s.depth, s.mouse) }}>
@@ -110,15 +110,15 @@ export default function Hero() {
       ))}
 
       <section
-        className="relative z-[1] mx-auto flex max-w-[1200px] flex-col items-center gap-7 px-6 py-[72px] text-center sm:py-24"
+        className="relative z-1 mx-auto flex max-w-300 flex-col items-center gap-7 px-6 py-18 text-center sm:py-24"
         style={{ ...layer(0.25, -6), opacity: "calc(1 - var(--sy, 0) / 650)" }}
       >
-        <div className="hero-rise inline-flex items-center gap-2.5 rounded-full border border-white/[0.28] bg-white/[0.07] px-[18px] py-[9px] text-[12px] font-bold uppercase tracking-[1.6px]">
-          <span className="hero-pulse size-2 rounded-full bg-[#ffb400]" />
+        <div className="hero-rise inline-flex items-center gap-2.5 rounded-full border border-white/28 bg-white/7 px-4.5 py-2.25 text-xs font-bold uppercase tracking-widest">
+          <span className="hero-pulse size-2 rounded-full bg-secondary-500" />
           AI-powered learning platform
         </div>
 
-        <h1 className="hero-rise m-0 max-w-[960px] text-[clamp(42px,7.2vw,84px)] font-extrabold leading-[1.02] tracking-[-2.5px]" style={{ animationDelay: "0.1s" }}>
+        <h1 className="hero-rise m-0 max-w-240 text-display-fluid font-extrabold leading-none tracking-tighter" style={{ animationDelay: "0.1s" }}>
           Connect, Learn, and{" "}
           <span
             className="hero-shimmer bg-clip-text text-transparent"
@@ -128,7 +128,7 @@ export default function Hero() {
           </span>
         </h1>
 
-        <p className="hero-rise m-0 max-w-[640px] text-[14px] leading-[22px] text-white/[0.84]" style={{ animationDelay: "0.2s" }}>
+        <p className="hero-rise m-0 max-w-160 text-sm leading-5.5 text-white/84" style={{ animationDelay: "0.2s" }}>
           Discover expert-led courses, join live sessions, and learn from instructors around the world.
         </p>
 
@@ -136,7 +136,7 @@ export default function Hero() {
           <button
             type="button"
             onClick={() => setOverlay({ type: "catalog" })}
-            className="inline-flex items-center justify-center gap-2.5 rounded-[12px] bg-[#ffb400] px-[30px] py-4 text-[17px] font-bold text-[#1a1200] shadow-[0_10px_30px_rgba(255,180,0,0.45)] transition hover:-translate-y-0.5 hover:bg-[#ffc233] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+            className="inline-flex items-center justify-center gap-2.5 rounded-xl bg-secondary-500 px-7.5 py-4 text-17 font-bold text-stone-900 shadow-2xl shadow-secondary-500/68 transition hover:-translate-y-0.5 hover:bg-amber-400 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
           >
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#1a1200" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
               <path d="M22 10L12 5 2 10l10 5 10-5z" />
@@ -147,7 +147,7 @@ export default function Hero() {
           <button
             type="button"
             onClick={() => setOverlay({ type: "instructor" })}
-            className="inline-flex items-center justify-center gap-2.5 rounded-[12px] border border-white/30 bg-white/10 px-7 py-4 text-[17px] font-semibold text-white transition hover:bg-white/[0.18] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+            className="inline-flex items-center justify-center gap-2.5 rounded-xl border border-white/30 bg-white/10 px-7 py-4 text-17 font-semibold text-white transition hover:bg-white/18 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
           >
             Become an Instructor
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ffffff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -160,17 +160,17 @@ export default function Hero() {
         <div className="hero-rise flex flex-wrap items-center justify-center gap-3.5" style={{ animationDelay: "0.4s" }}>
           <div className="flex">
             {avatarGradients.map((g, i) => (
-              <span key={g} className={`size-[34px] rounded-full border-2 border-[#065c43] ${i ? "-ml-2.5" : ""}`} style={{ background: g }} />
+              <span key={g} className={`size-8.5 rounded-full border-2 border-emerald-800 ${i ? "-ml-2.5" : ""}`} style={{ background: g }} />
             ))}
           </div>
-          <div className="text-[14px] text-white/[0.88]">
-            <span className="text-[#ffb400]">★</span> Trusted by <strong>1000+</strong> learners and <strong>50+</strong> expert instructors
+          <div className="text-sm text-white/88">
+            <span className="text-secondary-500">★</span> Trusted by <strong>1000+</strong> learners and <strong>50+</strong> expert instructors
           </div>
         </div>
       </section>
 
-      <div className="group relative z-[1] overflow-hidden border-t border-white/[0.14] bg-[rgba(3,40,29,0.92)] py-[18px] backdrop-blur-md">
-        <div className="hero-marquee flex w-max group-hover:[animation-play-state:paused]">
+      <div className="group relative z-1 overflow-hidden border-t border-white/14 bg-emerald-950/92 py-4.5 backdrop-blur-md">
+        <div className="hero-marquee flex w-max group-hover:animation-paused">
           {[0, 1].map((copy) => (
             <div key={copy} aria-hidden={copy === 1 || undefined} className="flex flex-none items-center">
               {tickerTopics.map((t) => (
@@ -179,9 +179,9 @@ export default function Hero() {
                   type="button"
                   tabIndex={copy === 1 ? -1 : undefined}
                   onClick={() => openSearch({ category: t.category })}
-                  className="inline-flex items-center gap-3.5 pr-11 text-[15px] font-semibold text-white/[0.88] transition-colors hover:text-[#ffd166]"
+                  className="inline-flex items-center gap-3.5 pr-11 text-15 font-semibold text-white/88 transition-colors hover:text-secondary-300"
                 >
-                  <span className="size-[7px] rounded-full bg-[#ffb400]" />
+                  <span className="size-1.75 rounded-full bg-secondary-500" />
                   {t.label}
                 </button>
               ))}

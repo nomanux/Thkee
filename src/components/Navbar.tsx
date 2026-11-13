@@ -17,6 +17,7 @@ import {
 import { categories, courses } from "../data";
 import { fontFor, fontMedium, fontRegular, fontSemi } from "../fonts";
 import { formatPrice, load, openAccount, openMessages, openMyLearning, openPurchaseHistory, scrollToId, useApp, type Lang } from "../store";
+import { buttonClass } from "./Button"
 
 const imgLogo = "/assets/820a1.svg";
 const imgChevronDown = "/assets/edb9c.svg";
@@ -47,8 +48,8 @@ function useDismiss(open: boolean, close: () => void) {
 
 const isMac = typeof navigator !== "undefined" && /Mac|iPhone|iPad|iPod/i.test((navigator as Navigator & { userAgentData?: { platform?: string } }).userAgentData?.platform || navigator.platform || navigator.userAgent);
 
-const menuPanel ="pop-in absolute top-[calc(100%+8px)] z-40 overflow-hidden rounded-[12px] border border-slate-200 bg-white p-2 shadow-[0_16px_40px_rgba(15,23,42,0.18)]";
-const menuItem = `flex w-full items-center justify-between gap-3 rounded-[8px] px-3 py-2.5 text-left text-[15px] text-slate-800 transition hover:bg-slate-100 ${fontMedium}`;
+const menuPanel ="pop-in absolute top-full mt-2 z-40 overflow-hidden rounded-xl border border-slate-200 bg-white p-2 shadow-2xl";
+const menuItem = `flex w-full items-center justify-between gap-3 rounded-lg px-3 py-2.5 text-left text-15 text-slate-800 transition hover:bg-slate-100 ${fontMedium}`;
 
 function SearchBox({ onDone, autoFocus = false, shortcut = false }: { onDone?: () => void; autoFocus?: boolean; shortcut?: boolean }) {
   const { setOverlay, openSearch, route } = useApp();
@@ -103,8 +104,8 @@ function SearchBox({ onDone, autoFocus = false, shortcut = false }: { onDone?: (
 
   return (
     <div ref={ref} className="relative w-full">
-      <div className="flex h-[36px] w-full items-center gap-[8px] rounded-[8px] border border-transparent bg-white/[0.08] px-[12px] transition-colors hover:bg-white/[0.11] focus-within:border-[#12b981]/60 focus-within:bg-[#041f1a]">
-        <img alt="" className="size-[16px] shrink-0 opacity-80" src={imgSearch} />
+      <div className="flex h-9 w-full items-center gap-2 rounded-lg border border-transparent bg-white/8 px-3 transition-colors hover:bg-white/11 focus-within:border-emerald-500/60 focus-within:bg-mist-900">
+        <img alt="" className="size-4 shrink-0 opacity-80" src={imgSearch} />
         <input
           ref={inputRef}
           type="search"
@@ -120,10 +121,10 @@ function SearchBox({ onDone, autoFocus = false, shortcut = false }: { onDone?: (
           placeholder="What do you want to learn?"
           aria-label="Search courses"
           aria-keyshortcuts={shortcut ? (isMac ? "Meta+K" : "Control+K") : undefined}
-          className={`min-w-0 flex-1 bg-transparent text-[14px] leading-[20px] text-slate-100 placeholder:text-white/55 focus:outline-none ${fontRegular}`}
+          className={`min-w-0 flex-1 bg-transparent text-sm leading-5 text-slate-100 placeholder:text-white/55 focus:outline-none ${fontRegular}`}
         />
         {shortcut && !query && (
-          <kbd className={`hidden shrink-0 rounded-[5px] border border-white/15 px-1.5 text-[12px] leading-[18px] text-white/55 lg:block ${fontMedium}`}>{isMac ? "⌘K" : "Ctrl K"}</kbd>
+          <kbd className={`hidden shrink-0 rounded-sm border border-white/15 px-1.5 text-xs leading-4.5 text-white/55 lg:block ${fontMedium}`}>{isMac ? "⌘K" : "Ctrl K"}</kbd>
         )}
       </div>
       {open && query.trim() && (
@@ -144,19 +145,19 @@ function SearchBox({ onDone, autoFocus = false, shortcut = false }: { onDone?: (
               >
                 <span className="min-w-0">
                   <span dir="auto" className={`block truncate text-left ${fontFor(c.title, fontMedium, "font-medium")}`}>{c.title}</span>
-                  <span className={`block text-[13px] text-slate-500 ${fontRegular}`}>
+                  <span className={`block text-13 text-slate-500 ${fontRegular}`}>
                     {c.category} · {c.instructor}
                   </span>
                 </span>
-                <span className={`shrink-0 text-[13px] text-[#0d5c4b] ${fontSemi}`}>{formatPrice(c.price)}</span>
+                <span className={`shrink-0 text-13 text-primary-700 ${fontSemi}`}>{formatPrice(c.price)}</span>
               </button>
             ))
           ) : (
-            <p className={`px-3 py-3 text-[14px] text-slate-500 ${fontRegular}`}>No courses match "{query.trim()}"</p>
+            <p className={`px-3 py-3 text-sm text-slate-500 ${fontRegular}`}>No courses match "{query.trim()}"</p>
           )}
           <button
             type="button"
-            className={`${menuItem} mt-1 border-t border-slate-200 text-[#0d5c4b]`}
+            className={`${menuItem} mt-1 border-t border-slate-200 text-primary-700`}
             onClick={() => {
               openSearch({ q: query });
               finish();
@@ -187,14 +188,14 @@ function ExploreMenu() {
         aria-expanded={open}
         aria-haspopup="true"
         onClick={() => setOpen((o) => !o)}
-        className={`flex h-[36px] items-center justify-center gap-1.5 rounded-[8px] pl-3 pr-2 transition-colors hover:bg-white/[0.14] ${open ? "bg-white/[0.14]" : "bg-white/[0.08]"}`}
+        className={`flex h-9 items-center justify-center gap-1.5 rounded-lg pl-3 pr-2 transition-colors hover:bg-white/14 ${open ? "bg-white/14" : "bg-white/8"}`}
       >
-        <span className={`text-[14px] leading-[20px] text-white ${fontSemi}`}>Explore</span>
-        <img alt="" className={`size-[16px] opacity-80 transition-transform ${open ? "rotate-180" : ""}`} src={imgChevronDown} />
+        <span className={`text-sm leading-5 text-white ${fontSemi}`}>Explore</span>
+        <img alt="" className={`size-4 opacity-80 transition-transform ${open ? "rotate-180" : ""}`} src={imgChevronDown} />
       </button>
       {open && (
-        <div className="pop-in absolute left-0 top-[calc(100%+10px)] z-40 flex w-[min(880px,calc(100vw-48px))] overflow-hidden rounded-[18px] border border-slate-200 bg-white shadow-[0_24px_60px_rgba(15,23,42,0.22)]">
-          <ul className="flex w-[300px] shrink-0 flex-col gap-1 border-r border-slate-200 bg-slate-50 p-3" role="menu">
+        <div className="pop-in absolute left-0 top-full mt-2.5 z-40 flex w-dialog-lg overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl">
+          <ul className="flex w-75 shrink-0 flex-col gap-1 border-r border-slate-200 bg-slate-50 p-3" role="menu">
             {categories.map((cat, i) => (
               <li key={cat.name}>
                 <button
@@ -204,7 +205,7 @@ function ExploreMenu() {
                   onMouseEnter={() => setActive(i)}
                   onFocus={() => setActive(i)}
                   onClick={() => go({ category: cat.name })}
-                  className={`flex w-full items-center justify-between gap-3 rounded-[12px] px-4 py-3 text-left text-[16px] leading-[22px] transition-colors ${fontMedium} ${i === active ? "bg-[#e7f5f1] text-[#0d5c4b]" : "text-slate-900 hover:bg-slate-100"}`}
+                  className={`flex w-full items-center justify-between gap-3 rounded-xl px-4 py-3 text-left text-base leading-5.5 transition-colors ${fontMedium} ${i === active ? "bg-primary-200 text-primary-700" : "text-slate-900 hover:bg-slate-100"}`}
                 >
                   {cat.name}
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true" className="shrink-0">
@@ -215,7 +216,7 @@ function ExploreMenu() {
             ))}
           </ul>
           <div key={current.name} className="fade-up flex min-w-0 flex-1 flex-col gap-6 p-7">
-            <button type="button" onClick={() => go({ category: current.name })} className={`group flex items-center justify-between gap-3 text-left text-[17px] text-[#0d5c4b] ${fontSemi}`}>
+            <button type="button" onClick={() => go({ category: current.name })} className={`group flex items-center justify-between gap-3 text-left text-17 text-primary-700 ${fontSemi}`}>
               All {current.name}
               <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" className="transition-transform group-hover:translate-x-1">
                 <path d="M5 12h14M13 6l6 6-6 6" />
@@ -229,20 +230,20 @@ function ExploreMenu() {
                     key={sub}
                     type="button"
                     onClick={() => go({ category: current.name, sub })}
-                    className={`flex items-baseline justify-between gap-2 rounded-[8px] py-2.5 text-left text-[14px] text-slate-700 transition-colors hover:text-[#0d5c4b] ${fontRegular}`}
+                    className={`flex items-baseline justify-between gap-2 rounded-lg py-2.5 text-left text-sm text-slate-700 transition-colors hover:text-primary-700 ${fontRegular}`}
                   >
                     {sub}
-                    <span className="text-[12px] text-slate-400">{count}</span>
+                    <span className="text-xs text-slate-400">{count}</span>
                   </button>
                 );
               })}
             </div>
             <div className="mt-auto flex flex-wrap items-center gap-3 border-t border-slate-200 pt-5">
-              <button type="button" onClick={() => go({})} className={`rounded-full bg-slate-900 px-4 py-2 text-[14px] text-white transition hover:bg-[#0d5c4b] ${fontMedium}`}>
+              <button type="button" onClick={() => go({})} className={`rounded-full bg-slate-900 px-4 py-2 text-sm text-white transition hover:bg-primary-700 ${fontMedium}`}>
                 Browse all {courses.length} courses
               </button>
-              <button type="button" onClick={() => go({ live: true })} className={`flex items-center gap-2 rounded-full border border-slate-200 px-4 py-2 text-[14px] text-slate-900 transition hover:border-[#0d5c4b] hover:text-[#0d5c4b] ${fontMedium}`}>
-                <span className="size-2 rounded-full bg-[#ef4444]" /> Live classes
+              <button type="button" onClick={() => go({ live: true })} className={`flex items-center gap-2 rounded-full border border-slate-200 px-4 py-2 text-sm text-slate-900 transition hover:border-primary-700 hover:text-primary-700 ${fontMedium}`}>
+                <span className="size-2 rounded-full bg-red-500" /> Live classes
               </button>
             </div>
           </div>
@@ -258,12 +259,12 @@ function LanguageMenu() {
   const ref = useDismiss(open, () => setOpen(false));
   return (
     <div ref={ref} className="relative hidden sm:block">
-      <button type="button" aria-expanded={open} aria-label="Change language" onClick={() => setOpen((o) => !o)} className="flex h-[36px] items-center justify-center gap-[4px] rounded-[8px] px-[8px] transition hover:bg-white/10">
-        <img alt="" className="size-[18px]" src={imgGlobe} />
-        <span className={`text-[14px] leading-[20px] text-white ${fontMedium}`}>{lang}</span>
+      <button type="button" aria-expanded={open} aria-label="Change language" onClick={() => setOpen((o) => !o)} className="flex h-9 items-center justify-center gap-1 rounded-lg px-2 transition hover:bg-white/10">
+        <img alt="" className="size-4.5" src={imgGlobe} />
+        <span className={`text-sm leading-5 text-white ${fontMedium}`}>{lang}</span>
       </button>
       {open && (
-        <div className={`${menuPanel} right-0 w-[180px]`}>
+        <div className={`${menuPanel} right-0 w-45`}>
           {languages.map((l) => (
             <button
               key={l.code}
@@ -276,7 +277,7 @@ function LanguageMenu() {
               }}
             >
               {l.label}
-              {lang === l.code && <span className="text-[#0d5c4b]">✓</span>}
+              {lang === l.code && <span className="text-primary-700">✓</span>}
             </button>
           ))}
         </div>
@@ -309,7 +310,7 @@ function UserAvatar({ photo, initials, className }: { photo: string; initials: s
   if (photo) return <img src={photo} alt="" className={`shrink-0 rounded-full object-cover ${className}`} />;
   return (
     <span
-      className={`flex shrink-0 items-center justify-center rounded-full bg-[linear-gradient(140deg,#1fae86_0%,#0d5c4b_100%)] tracking-[0.02em] text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.28),inset_0_-1px_0_rgba(0,0,0,0.18)] ${className} ${fontSemi}`}
+      className={`flex shrink-0 items-center justify-center rounded-full bg-linear-140 from-emerald-500 to-primary-700 tracking-wide text-white shadow-inner ${className} ${fontSemi}`}
     >
       {initials}
     </span>
@@ -353,27 +354,27 @@ function UserMenu() {
   };
   return (
     <div ref={ref} className="relative">
-      <button type="button" aria-expanded={open} aria-label="Account menu" onClick={() => setOpen((o) => !o)} className={`group relative flex size-[32px] items-center justify-center rounded-full ring-1 ring-white/20 ring-offset-2 ring-offset-[#03241d] transition-[box-shadow] duration-200 hover:ring-white/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ffb20d] ${open ? "ring-white/60" : ""}`}
+      <button type="button" aria-expanded={open} aria-label="Account menu" onClick={() => setOpen((o) => !o)} className={`group relative flex size-8 items-center justify-center rounded-full ring-1 ring-white/20 ring-offset-2 ring-offset-emerald-950 transition-all duration-200 hover:ring-white/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-secondary-500 ${open ? "ring-white/60" : ""}`}
       >
-        <UserAvatar photo={photo} initials={initials} className="size-full text-[13px]" />
+        <UserAvatar photo={photo} initials={initials} className="size-full text-13" />
       </button>
       {open && (
         <div
           role="menu"
-          className="pop-in absolute right-0 top-[calc(100%+10px)] z-40 max-h-[calc(100dvh-72px)] w-[284px] overflow-y-auto rounded-[16px] border border-slate-200 bg-white p-1.5 shadow-[0_1px_2px_rgba(15,23,42,0.06),0_20px_48px_-8px_rgba(15,23,42,0.24)] [scrollbar-width:thin]"
+          className="pop-in absolute right-0 top-full mt-2.5 z-40 max-h-dvh-minus-72 w-71 overflow-y-auto rounded-2xl border border-slate-200 bg-white p-1.5 shadow-2xl scrollbar-thin"
         >
           <button
             type="button"
             role="menuitem"
             onClick={() => pick(() => openAccount("profile"))}
-            className="group flex w-full items-center gap-3 rounded-[12px] bg-[#f6f8f7] p-3 text-left transition hover:bg-[#eef4f1]"
+            className="group flex w-full items-center gap-3 rounded-xl bg-primary-50 p-3 text-left transition hover:bg-primary-100"
           >
-            <UserAvatar photo={photo} initials={initials} className="size-[40px] text-[14px]" />
+            <UserAvatar photo={photo} initials={initials} className="size-10 text-sm" />
             <span className="min-w-0 flex-1">
-              <span className={`block truncate text-[15px] leading-[20px] text-slate-900 ${fontSemi}`}>{user.name}</span>
-              <span className={`block truncate text-[14px] leading-[20px] text-slate-500 ${fontRegular}`}>{user.email}</span>
+              <span className={`block truncate text-15 leading-5 text-slate-900 ${fontSemi}`}>{user.name}</span>
+              <span className={`block truncate text-sm leading-5 text-slate-500 ${fontRegular}`}>{user.email}</span>
             </span>
-            <span className={`shrink-0 text-[14px] text-[#0d5c4b] opacity-0 transition group-hover:opacity-100 ${fontMedium}`}>Edit</span>
+            <span className={`shrink-0 text-sm text-primary-700 opacity-0 transition group-hover:opacity-100 ${fontMedium}`}>Edit</span>
           </button>
           {groups.map((items, i) => (
             <div key={i} className="mt-1.5 border-t border-slate-100 pt-1.5">
@@ -383,11 +384,11 @@ function UserMenu() {
                   type="button"
                   role="menuitem"
                   onClick={() => pick(item.onClick)}
-                  className={`group flex h-[38px] w-full items-center gap-3 rounded-[10px] px-2.5 text-left text-[14px] text-slate-700 transition-colors hover:bg-slate-100 hover:text-slate-900 ${fontMedium}`}
+                  className={`group flex h-9.5 w-full items-center gap-3 rounded-xl px-2.5 text-left text-sm text-slate-700 transition-colors hover:bg-slate-100 hover:text-slate-900 ${fontMedium}`}
                 >
                   <MenuIcon name={item.icon} />
                   <span className="flex-1 truncate">{item.label}</span>
-                  {!!item.badge && <span className={`rounded-full bg-[#ffb20d] px-1.5 text-[12px] leading-[18px] text-slate-800 ${fontSemi}`}>{item.badge}</span>}
+                  {!!item.badge && <span className={`rounded-full bg-secondary-500 px-1.5 text-xs leading-4.5 text-slate-800 ${fontSemi}`}>{item.badge}</span>}
                 </button>
               ))}
             </div>
@@ -397,7 +398,7 @@ function UserMenu() {
               type="button"
               role="menuitem"
               onClick={() => pick(logout)}
-              className={`group flex h-[38px] w-full items-center gap-3 rounded-[10px] px-2.5 text-left text-[14px] text-slate-700 transition-colors hover:bg-[#fef2f2] hover:text-[#b91c1c] ${fontMedium}`}
+              className={`group flex h-9.5 w-full items-center gap-3 rounded-xl px-2.5 text-left text-sm text-slate-700 transition-colors hover:bg-red-50 hover:text-red-700 ${fontMedium}`}
             >
               <MenuIcon name="logout" />
               Log out
@@ -412,10 +413,10 @@ function UserMenu() {
 function CartButton({ className = "" }: { className?: string }) {
   const { cart, setOverlay } = useApp();
   return (
-    <button type="button" aria-label={`Cart, ${cart.length} items`} onClick={() => setOverlay({ type: "cart" })} className={`relative flex size-[36px] items-center justify-center rounded-[8px] transition hover:bg-white/10 ${className}`}>
-      <img alt="" className="size-[19px]" src={imgCart} />
+    <button type="button" aria-label={`Cart, ${cart.length} items`} onClick={() => setOverlay({ type: "cart" })} className={`relative flex size-9 items-center justify-center rounded-lg transition hover:bg-white/10 ${className}`}>
+      <img alt="" className="size-4.75" src={imgCart} />
       {cart.length > 0 && (
-        <span className={`absolute -right-0.5 -top-0.5 flex min-w-[18px] items-center justify-center rounded-full bg-[#ffb20d] px-1 text-[11px] leading-[18px] text-slate-800 ${fontSemi}`}>{cart.length}</span>
+        <span className={`absolute -right-0.5 -top-0.5 flex min-w-4.5 items-center justify-center rounded-full bg-secondary-500 px-1 text-11 leading-4.5 text-slate-800 ${fontSemi}`}>{cart.length}</span>
       )}
     </button>
   );
@@ -446,44 +447,44 @@ export default function Navbar({ solid = false }: { solid?: boolean }) {
     setOverlay(o);
     setMenuOpen(false);
   };
-  const mobileItem = `flex w-full items-center justify-between rounded-[8px] px-4 py-3 text-left text-[16px] text-white transition hover:bg-white/10 ${fontMedium}`;
+  const mobileItem = `flex w-full items-center justify-between rounded-lg px-4 py-3 text-left text-base text-white transition hover:bg-white/10 ${fontMedium}`;
 
   return (
     <header
-      className={`fixed inset-x-0 top-0 z-[100] flex h-[56px] items-center justify-center border-b backdrop-blur-[20px] transition-colors duration-300 ${
-        solid || scrolled || menuOpen ? "border-white/[0.06] bg-[rgba(3,36,29,0.94)] shadow-[0_6px_20px_rgba(0,0,0,0.14)]" : "border-white/[0.08] bg-[rgba(3,40,29,0.4)]"
+      className={`fixed inset-x-0 top-0 z-100 flex h-14 items-center justify-center border-b backdrop-blur-lg transition-colors duration-300 ${
+        solid || scrolled || menuOpen ? "border-white/6 bg-emerald-950/94 shadow-xl" : "border-white/8 bg-emerald-950/40"
       }`}
     >
-      <nav className="relative flex w-full max-w-[1272px] items-center px-[16px]" aria-label="Main">
-        <div className="flex shrink-0 items-center gap-[20px]">
-          <button type="button" aria-label="Thkee home" onClick={goHome} className="py-[2px]">
-            <img alt="Thkee" className="h-[22px] w-[74.5px]" src={imgLogo} />
+      <nav className="relative flex w-full max-w-318 items-center px-4" aria-label="Main">
+        <div className="flex shrink-0 items-center gap-5">
+          <button type="button" aria-label="Thkee home" onClick={goHome} className="py-0.5">
+            <img alt="Thkee" className="h-5.5 w-18.5" src={imgLogo} />
           </button>
           <ExploreMenu />
         </div>
-        <div className="hidden min-w-px max-w-[440px] flex-[1_0_0] pl-[10px] md:flex">
+        <div className="hidden min-w-px max-w-110 grow shrink-0 basis-0 pl-2.5 md:flex">
           <SearchBox shortcut />
         </div>
-        <div className="ml-auto flex shrink-0 items-center gap-[4px] sm:gap-[6px]">
-          <button type="button" onClick={() => openMyLearning()} className={`hidden h-[36px] items-center whitespace-nowrap rounded-[8px] px-[10px] text-[14px] leading-[20px] text-white/80 transition hover:bg-white/10 hover:text-white xl:flex ${fontMedium}`}>
+        <div className="ml-auto flex shrink-0 items-center gap-1 sm:gap-1.5">
+          <button type="button" onClick={() => openMyLearning()} className={`hidden h-9 items-center whitespace-nowrap rounded-lg px-2.5 text-sm leading-5 text-white/80 transition hover:bg-white/10 hover:text-white xl:flex ${fontMedium}`}>
             My learning
           </button>
-          <button type="button" onClick={() => open({ type: "instructor" })} className={`hidden h-[36px] items-center whitespace-nowrap rounded-[8px] px-[10px] text-[14px] leading-[20px] text-white/80 transition hover:bg-white/10 hover:text-white xl:flex ${fontMedium}`}>
+          <button type="button" onClick={() => open({ type: "instructor" })} className={`hidden h-9 items-center whitespace-nowrap rounded-lg px-2.5 text-sm leading-5 text-white/80 transition hover:bg-white/10 hover:text-white xl:flex ${fontMedium}`}>
             {teachLabel}
           </button>
-          <div className="mx-[6px] hidden h-[20px] w-px bg-white/20 xl:block" />
+          <div className="mx-1.5 hidden h-5 w-px bg-white/20 xl:block" />
           <CartButton className="hidden lg:flex" />
           <LanguageMenu />
           {user ? (
-            <div className="ml-[6px]">
+            <div className="ml-1.5">
               <UserMenu />
             </div>
           ) : (
-            <div className="ml-[4px] flex items-center gap-[6px]">
-              <button type="button" onClick={() => (openAuth(), setMenuOpen(false))} className={`hidden h-[36px] items-center rounded-[8px] px-[12px] text-[14px] leading-[20px] text-white transition hover:bg-white/10 sm:flex ${fontMedium}`}>
+            <div className="ml-1 flex items-center gap-1.5">
+              <button type="button" onClick={() => (openAuth(), setMenuOpen(false))} className={`hidden h-9 items-center rounded-lg px-3 text-sm leading-5 text-white transition hover:bg-white/10 sm:flex ${fontMedium}`}>
                 Log in
               </button>
-              <button type="button" onClick={() => (openAuth(), setMenuOpen(false))} className={`flex h-[36px] items-center whitespace-nowrap rounded-[8px] bg-[#ffb20d] px-[14px] text-[14px] leading-[20px] text-slate-800 transition hover:bg-[#faa104] ${fontSemi}`}>
+              <button type="button" onClick={() => (openAuth(), setMenuOpen(false))} className={`${buttonClass("yellow", "md")}`}>
                 Sign up
               </button>
             </div>
@@ -493,32 +494,32 @@ export default function Navbar({ solid = false }: { solid?: boolean }) {
             aria-label={menuOpen ? "Close menu" : "Open menu"}
             aria-expanded={menuOpen}
             onClick={() => setMenuOpen((o) => !o)}
-            className="relative flex size-[36px] items-center justify-center rounded-[8px] text-white hover:bg-white/10 focus-visible:outline-2 focus-visible:outline-white xl:hidden"
+            className="relative flex size-9 items-center justify-center rounded-lg text-white hover:bg-white/10 focus-visible:outline-2 focus-visible:outline-white xl:hidden"
           >
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
               {menuOpen ? <path d="M6 6l12 12M18 6L6 18" /> : <path d="M4 7h16M4 12h16M4 17h16" />}
             </svg>
-            {!menuOpen && cart.length > 0 && <span className="absolute right-1.5 top-1.5 size-[8px] rounded-full bg-[#ffb20d] lg:hidden" />}
+            {!menuOpen && cart.length > 0 && <span className="absolute right-1.5 top-1.5 size-2 rounded-full bg-secondary-500 lg:hidden" />}
           </button>
         </div>
       </nav>
       {menuOpen && (
-        <div className="pop-in absolute inset-x-4 top-[60px] flex max-h-[calc(100dvh-76px)] flex-col gap-1 overflow-y-auto rounded-[12px] border border-white/10 bg-[#041f1a] p-3 shadow-[0_20px_40px_rgba(0,0,0,0.35)] xl:hidden">
+        <div className="pop-in absolute inset-x-4 top-15 flex max-h-dvh-minus-76 flex-col gap-1 overflow-y-auto rounded-xl border border-white/10 bg-mist-900 p-3 shadow-2xl xl:hidden">
           <div className="mb-2 md:hidden">
             <SearchBox onDone={() => setMenuOpen(false)} />
           </div>
           <button type="button" className={`${mobileItem} lg:hidden`} onClick={() => (openSearch({}), setMenuOpen(false))}>
-            All courses <span className="text-[14px] text-white/60">{courses.length}</span>
+            All courses <span className="text-sm text-white/60">{courses.length}</span>
           </button>
           <button type="button" className={`${mobileItem} lg:hidden`} onClick={() => (openSearch({ live: true }), setMenuOpen(false))}>
             <span className="flex items-center gap-2">
-              <span className="size-[8px] rounded-full bg-[#ef4444]" /> Live classes
+              <span className="size-2 rounded-full bg-red-500" /> Live classes
             </span>
           </button>
           <div className="flex flex-col lg:hidden">
-            <p className={`px-4 pb-1 pt-3 text-[12px] uppercase tracking-[1px] text-white/50 ${fontSemi}`}>Explore</p>
+            <p className={`px-4 pb-1 pt-3 text-xs uppercase tracking-label text-white/50 ${fontSemi}`}>Explore</p>
             {categories.map((cat) => (
-              <details key={cat.name} className="group rounded-[8px] open:bg-white/5">
+              <details key={cat.name} className="group rounded-lg open:bg-white/5">
                 <summary className={`${mobileItem} cursor-pointer list-none [&::-webkit-details-marker]:hidden`}>
                   {cat.name}
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true" className="shrink-0 transition-transform group-open:rotate-90">
@@ -526,11 +527,11 @@ export default function Navbar({ solid = false }: { solid?: boolean }) {
                   </svg>
                 </summary>
                 <div className="flex flex-col pb-2 pl-4">
-                  <button type="button" onClick={() => (openSearch({ category: cat.name }), setMenuOpen(false))} className={`px-4 py-2 text-left text-[15px] text-[#7ff0c0] ${fontMedium}`}>
+                  <button type="button" onClick={() => (openSearch({ category: cat.name }), setMenuOpen(false))} className={`px-4 py-2 text-left text-15 text-green-300 ${fontMedium}`}>
                     All {cat.name} →
                   </button>
                   {cat.subs.map((sub) => (
-                    <button key={sub} type="button" onClick={() => (openSearch({ category: cat.name, sub }), setMenuOpen(false))} className={`px-4 py-2 text-left text-[14px] text-white/80 hover:text-white ${fontRegular}`}>
+                    <button key={sub} type="button" onClick={() => (openSearch({ category: cat.name, sub }), setMenuOpen(false))} className={`px-4 py-2 text-left text-sm text-white/80 hover:text-white ${fontRegular}`}>
                       {sub}
                     </button>
                   ))}
@@ -555,7 +556,7 @@ export default function Navbar({ solid = false }: { solid?: boolean }) {
           </button>
           <button type="button" className={`${mobileItem} lg:hidden`} onClick={() => open({ type: "cart" })}>
             Cart
-            {cart.length > 0 && <span className={`rounded-full bg-[#ffb20d] px-2 text-[13px] text-slate-800 ${fontSemi}`}>{cart.length}</span>}
+            {cart.length > 0 && <span className={`rounded-full bg-secondary-500 px-2 text-13 text-slate-800 ${fontSemi}`}>{cart.length}</span>}
           </button>
           <div className="flex gap-2 px-4 py-2 sm:hidden">
             {languages.map((l) => (
@@ -563,18 +564,18 @@ export default function Navbar({ solid = false }: { solid?: boolean }) {
                 key={l.code}
                 type="button"
                 onClick={() => setLang(l.code)}
-                className={`flex flex-1 items-center justify-center gap-2 rounded-[8px] border px-3 py-2 text-[15px] ${fontMedium} ${lang === l.code ? "border-[#ffb20d] text-[#ffb20d]" : "border-white/15 text-white"}`}
+                className={`flex flex-1 items-center justify-center gap-2 rounded-lg border px-3 py-2 text-15 ${fontMedium} ${lang === l.code ? "border-secondary-500 text-secondary-500" : "border-white/15 text-white"}`}
               >
                 {l.label}
               </button>
             ))}
           </div>
           {user ? (
-            <button type="button" className={`${mobileItem} text-[#fca5a5] sm:hidden`} onClick={() => (logout(), setMenuOpen(false))}>
+            <button type="button" className={`${mobileItem} text-red-300 sm:hidden`} onClick={() => (logout(), setMenuOpen(false))}>
               Log out ({user.name})
             </button>
           ) : (
-            <button type="button" className={`mt-2 rounded-[8px] bg-slate-100 px-4 py-3 text-center text-[16px] text-slate-800 sm:hidden ${fontMedium}`} onClick={() => (openAuth(), setMenuOpen(false))}>
+            <button type="button" className={`mt-2 rounded-lg bg-slate-100 px-4 py-3 text-center text-base text-slate-800 sm:hidden ${fontMedium}`} onClick={() => (openAuth(), setMenuOpen(false))}>
               Log in
             </button>
           )}
