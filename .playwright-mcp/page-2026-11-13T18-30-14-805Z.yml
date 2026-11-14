@@ -1,0 +1,187 @@
+- generic [ref=f4e3]:
+  - banner [ref=f4e4]:
+    - generic [ref=f4e5]:
+      - button "Back to my classes" [ref=f4e6]
+      - generic: Back to my classes
+    - button "Thkee home" [ref=f4e9]:
+      - img "Thkee" [ref=f4e10]
+    - generic [ref=f4e12]:
+      - 'heading "Python Programming: From Zero to Hero" [level=1] [ref=f4e13]'
+      - paragraph [ref=f4e14]:
+        - generic [ref=f4e15]: Lesson 1 of 36
+        - text: /Welcome to the course
+    - generic [ref=f4e16]:
+      - button "0% complete. Finish every lesson to get your certificate" [ref=f4e17]:
+        - generic [ref=f4e19]:
+          - generic [ref=f4e20]: 0%
+          - text: complete
+      - generic [ref=f4e23]:
+        - button "Notes and highlights" [ref=f4e24]
+        - generic: Notes and highlights
+      - generic "Guest" [ref=f4e27]: G
+  - generic [ref=f4e28]:
+    - generic [ref=f4e29]:
+      - generic [ref=f4e31]:
+        - 'img "Python Programming: From Zero to Hero" [ref=f4e34]'
+        - button "Play" [ref=f4e36]
+        - button "Play lesson" [ref=f4e37]
+        - generic: "In this lesson: Welcome to the course. Watch, then check yourself at the end of each chapter."
+        - 'button "Next: How this course works" [ref=f4e41]'
+        - generic [ref=f4e45]:
+          - paragraph [ref=f4e46]:
+            - text: Chapter 1 of 4
+            - generic [aria-hidden] [ref=f4e47]: /
+            - generic [ref=f4e48]: Why it matters
+          - slider "Seek" [ref=f4e49] [cursor=pointer]
+          - generic [ref=f4e55]:
+            - generic [ref=f4e56]:
+              - button "Play (k)" [ref=f4e57]
+              - generic: Play (k)
+            - generic [ref=f4e60]:
+              - button "Back 10s (j)" [ref=f4e61]
+              - generic: Back 10s (j)
+            - generic [ref=f4e66]:
+              - button "Forward 10s (l)" [ref=f4e67]
+              - generic: Forward 10s (l)
+            - generic [ref=f4e72]:
+              - generic [ref=f4e73]:
+                - button "Mute (m)" [ref=f4e74]
+                - generic: Mute (m)
+              - slider "Volume": "1"
+            - generic [ref=f4e79]: 0:00/16:00
+            - generic [ref=f4e80]:
+              - generic [ref=f4e81]:
+                - button "Add a note" [ref=f4e82]
+                - generic: Add a note
+              - generic [ref=f4e89]:
+                - button "Settings" [ref=f4e90]
+                - generic: Settings
+              - generic [ref=f4e95]:
+                - button "Hide course content" [ref=f4e96]
+                - generic: Hide course content
+              - generic [ref=f4e100]:
+                - button "Fullscreen (f)" [ref=f4e101]
+                - generic: Fullscreen (f)
+      - generic [ref=f4e106]:
+        - generic [ref=f4e107]:
+          - heading "Welcome to the course" [level=2] [ref=f4e108]
+          - generic [ref=f4e109]:
+            - text: 16 min
+            - generic [aria-hidden] [ref=f4e110]: ·
+            - generic [ref=f4e111]: 0 of 4 checkpoints
+        - generic [ref=f4e116]:
+          - button "Mark complete" [ref=f4e117]
+          - button "Next lesson" [ref=f4e120]
+      - generic [ref=f4e123]:
+        - tablist "Lesson sections" [ref=f4e124]:
+          - tab "Resources" [selected] [ref=f4e125]
+          - tab "Lesson" [ref=f4e129]
+          - tab "Discussion" [ref=f4e134]
+        - button "Share course" [ref=f4e140]
+      - generic [ref=f4e147]:
+        - generic [ref=f4e148]:
+          - heading "Resources (3)" [level=2] [ref=f4e149]:
+            - text: Resources
+            - generic [ref=f4e150]: (3)
+          - button "Download all" [ref=f4e151]
+        - list [ref=f4e154]:
+          - listitem [ref=f4e155]:
+            - button "Download Welcome to the course checklist.pdf, 120 KB" [ref=f4e156]:
+              - generic [ref=f4e161]:
+                - generic [ref=f4e162]: Welcome to the course checklist
+                - generic [ref=f4e163]: PDF · 120 KB
+              - generic [ref=f4e164]: Download
+          - listitem [ref=f4e168]:
+            - button "Download Worked example templates.docx, 38 KB" [ref=f4e169]:
+              - generic [ref=f4e174]:
+                - generic [ref=f4e175]: Worked example templates
+                - generic [ref=f4e176]: DOCX · 38 KB
+              - generic [ref=f4e177]: Download
+          - listitem [ref=f4e181]:
+            - button "Download Practice examples.txt, 4 KB" [ref=f4e182]:
+              - generic [ref=f4e187]:
+                - generic [ref=f4e188]: Practice examples
+                - generic [ref=f4e189]: TXT · 4 KB
+              - generic [ref=f4e190]: Download
+    - complementary "Lesson tools" [ref=f4e194]:
+      - button "Hide course content" [ref=f4e195]
+      - tablist "Lesson tools" [ref=f4e198]:
+        - tab "Contents" [selected] [ref=f4e199]
+        - tab "Notes" [ref=f4e205]
+        - tab "Transcript" [ref=f4e211]
+        - tab "Ask" [ref=f4e218]
+      - generic [ref=f4e223]:
+        - generic [ref=f4e224]:
+          - heading "Course content" [level=2] [ref=f4e225]
+          - generic [ref=f4e226]: 0%
+        - progressbar "Course progress" [ref=f4e228]
+        - textbox "Search lessons" [ref=f4e233]
+      - generic [ref=f4e234]:
+        - generic [ref=f4e235]:
+          - 'button "Section 1: Introduction and setup 0 / 6 1h 46m" [expanded] [ref=f4e236]':
+            - generic [ref=f4e237]:
+              - generic [ref=f4e238]: "Section 1: Introduction and setup"
+              - generic [ref=f4e239]:
+                - generic [ref=f4e240]: 0 / 6
+                - text: 1h 46m
+          - list [ref=f4e245]:
+            - listitem [ref=f4e246]:
+              - checkbox "Mark \"Welcome to the course\" as complete" [ref=f4e247]
+              - button "Welcome to the course 16 min" [ref=f4e248]:
+                - generic [ref=f4e249]: Welcome to the course
+                - generic [ref=f4e250]: 16 min
+            - listitem [ref=f4e253]:
+              - checkbox "Mark \"How this course works\" as complete" [ref=f4e254]
+              - button "How this course works 17 min" [ref=f4e255]:
+                - generic [ref=f4e256]: How this course works
+                - generic [ref=f4e257]: 17 min
+            - listitem [ref=f4e260]:
+              - checkbox "Mark \"Set up your tools\" as complete" [ref=f4e261]
+              - button "Set up your tools 18 min" [ref=f4e262]:
+                - generic [ref=f4e263]: Set up your tools
+                - generic [ref=f4e264]: 18 min
+            - listitem [ref=f4e267]:
+              - checkbox "Mark \"Meet your learning community\" as complete" [ref=f4e268]
+              - button "Meet your learning community 19 min" [ref=f4e269]:
+                - generic [ref=f4e270]: Meet your learning community
+                - generic [ref=f4e271]: 19 min
+            - listitem [ref=f4e274]:
+              - checkbox "Mark \"Your first quick win\" as complete" [ref=f4e275]
+              - button "Your first quick win 20 min" [ref=f4e276]:
+                - generic [ref=f4e277]: Your first quick win
+                - generic [ref=f4e278]: 20 min
+            - listitem [ref=f4e281]:
+              - checkbox "Mark \"Course resources\" as complete" [ref=f4e282]
+              - button "Course resources 16 min" [ref=f4e283]:
+                - generic [ref=f4e284]: Course resources
+                - generic [ref=f4e285]: 16 min
+        - 'button "Section 2: Core concepts 0 / 6 1h 47m" [ref=f4e289]':
+          - generic [ref=f4e290]:
+            - generic [ref=f4e291]: "Section 2: Core concepts"
+            - generic [ref=f4e292]:
+              - generic [ref=f4e293]: 0 / 6
+              - text: 1h 47m
+        - 'button "Section 3: Hands-on practice 0 / 6 1h 48m" [ref=f4e299]':
+          - generic [ref=f4e300]:
+            - generic [ref=f4e301]: "Section 3: Hands-on practice"
+            - generic [ref=f4e302]:
+              - generic [ref=f4e303]: 0 / 6
+              - text: 1h 48m
+        - 'button "Section 4: Going deeper 0 / 6 1h 49m" [ref=f4e309]':
+          - generic [ref=f4e310]:
+            - generic [ref=f4e311]: "Section 4: Going deeper"
+            - generic [ref=f4e312]:
+              - generic [ref=f4e313]: 0 / 6
+              - text: 1h 49m
+        - 'button "Section 5: Real-world project 0 / 6 1h 50m" [ref=f4e319]':
+          - generic [ref=f4e320]:
+            - generic [ref=f4e321]: "Section 5: Real-world project"
+            - generic [ref=f4e322]:
+              - generic [ref=f4e323]: 0 / 6
+              - text: 1h 50m
+        - 'button "Section 6: Career and next steps 0 / 6 1h 46m" [ref=f4e329]':
+          - generic [ref=f4e330]:
+            - generic [ref=f4e331]: "Section 6: Career and next steps"
+            - generic [ref=f4e332]:
+              - generic [ref=f4e333]: 0 / 6
+              - text: 1h 46m

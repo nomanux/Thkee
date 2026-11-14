@@ -1,0 +1,187 @@
+- generic [ref=f21e3]:
+  - complementary [ref=f21e4]:
+    - generic [ref=f21e5]:
+      - button "Thkee Instructor" [ref=f21e7]:
+        - img "Thkee" [ref=f21e8]
+        - generic [ref=f21e9]: Instructor
+      - navigation "Instructor" [ref=f21e10]:
+        - button "Dashboard" [ref=f21e13]
+        - generic [ref=f21e16]:
+          - paragraph [ref=f21e17]: Recorded courses
+          - button "Courses" [ref=f21e19]
+          - button "Assignments 3" [ref=f21e23]:
+            - generic [ref=f21e25]: Assignments
+            - generic [ref=f21e26]: "3"
+          - button "Q&A 2" [ref=f21e28]:
+            - generic [ref=f21e31]: Q&A
+            - generic [ref=f21e32]: "2"
+          - button "Reviews 7" [ref=f21e34]:
+            - generic [ref=f21e36]: Reviews
+            - generic [ref=f21e37]: "7"
+          - button "Reports" [ref=f21e39]
+        - generic [ref=f21e42]:
+          - paragraph [ref=f21e43]: Live sessions
+          - button "All Sessions" [ref=f21e45]
+          - button "Schedule" [ref=f21e49]
+          - button "Availability" [ref=f21e53]
+          - button "Connected Apps" [ref=f21e57]
+        - generic [ref=f21e62]:
+          - paragraph [ref=f21e63]: Communication
+          - button "Messages" [ref=f21e65]
+          - button "Announcements" [ref=f21e69]
+          - button "Co-Instructor Requests 7" [ref=f21e73]:
+            - generic [ref=f21e75]: Co-Instructor Requests
+            - generic [ref=f21e76]: "7"
+      - generic [ref=f21e77]:
+        - button "Switch to student view" [ref=f21e78]
+        - generic [ref=f21e81]:
+          - generic [aria-hidden] [ref=f21e82]: "Y"
+          - generic [ref=f21e83]:
+            - paragraph [ref=f21e84]: Instructor
+            - paragraph [ref=f21e85]: Signed in
+          - button "Collapse sidebar" [ref=f21e86]
+  - generic [ref=f21e89]:
+    - banner [ref=f21e90]:
+      - navigation "Breadcrumb" [ref=f21e91]:
+        - button "Instructor" [ref=f21e92]
+        - generic [ref=f21e95]: Recorded courses
+        - generic [ref=f21e98]: Q&A
+      - generic [ref=f21e101]:
+        - searchbox "Search instructor pages" [ref=f21e104]
+        - generic [ref=f21e105]: ⌘K
+      - generic [ref=f21e106]:
+        - button "Help" [ref=f21e107]
+        - button "Notifications, 2 unread" [ref=f21e111]
+        - button "Account menu" [ref=f21e118]:
+          - generic [aria-hidden] [ref=f21e120]: "Y"
+    - main [ref=f21e124]:
+      - generic [ref=f21e125]:
+        - generic [ref=f21e127]:
+          - heading "Q&A" [level=1] [ref=f21e128]
+          - paragraph [ref=f21e129]: 2 questions are waiting for your reply.
+        - generic [ref=f21e130]:
+          - 'button "Course: All Courses" [ref=f21e132]':
+            - text: "Course:"
+            - generic [ref=f21e133]: All courses
+          - generic [ref=f21e135]:
+            - button "All 6" [pressed] [ref=f21e136]:
+              - text: All
+              - generic [ref=f21e137]: "6"
+            - button "Needs reply 2" [ref=f21e138]:
+              - text: Needs reply
+              - generic [ref=f21e139]: "2"
+            - button "Answered 4" [ref=f21e140]:
+              - text: Answered
+              - generic [ref=f21e141]: "4"
+        - list [ref=f21e142]:
+          - listitem [ref=f21e143]:
+            - generic [ref=f21e144]:
+              - generic [aria-hidden] [ref=f21e145]: RG
+              - generic [ref=f21e146]:
+                - generic [ref=f21e147]:
+                  - generic [ref=f21e148]:
+                    - generic [ref=f21e149]: Rachel Green
+                    - generic [ref=f21e150]: 2 hours ago
+                    - generic [ref=f21e151]: Needs reply
+                  - button "More actions for Auto layout keeps squashing my text" [ref=f21e153]
+                - paragraph [ref=f21e158]:
+                  - button "UI/UX Design with Figma" [ref=f21e159]
+                  - generic [aria-hidden] [ref=f21e160]: ·
+                  - text: Lecture 5
+                - heading "Auto layout keeps squashing my text" [level=3] [ref=f21e161]
+                - paragraph [ref=f21e162]: When I put a long label inside a horizontal auto layout button, the text gets cut off instead of wrapping. Which resizing setting should I use?
+                - generic [ref=f21e163]:
+                  - button "Upvote, 4 upvotes" [ref=f21e164]: "4"
+                  - button "Reply" [ref=f21e168]
+          - listitem [ref=f21e169]:
+            - generic [ref=f21e170]:
+              - generic [aria-hidden] [ref=f21e171]: MB
+              - generic [ref=f21e172]:
+                - generic [ref=f21e173]:
+                  - generic [ref=f21e174]:
+                    - generic [ref=f21e175]: Marcus Bell
+                    - generic [ref=f21e176]: 5 hours ago
+                    - generic [ref=f21e177]: Needs reply
+                  - button "More actions for Variants or separate components?" [ref=f21e179]
+                - paragraph [ref=f21e184]:
+                  - button "Design Systems in Figma" [ref=f21e185]
+                  - generic [aria-hidden] [ref=f21e186]: ·
+                  - text: Lecture 3
+                - heading "Variants or separate components?" [level=3] [ref=f21e187]
+                - paragraph [ref=f21e188]: For a button with primary, secondary and ghost styles plus three sizes, should I make one component with variants or separate components for each?
+                - generic [ref=f21e189]:
+                  - button "Upvote, 2 upvotes" [ref=f21e190]: "2"
+                  - button "Reply" [ref=f21e194]
+          - listitem [ref=f21e195]:
+            - generic [ref=f21e196]:
+              - generic [aria-hidden] [ref=f21e197]: PN
+              - generic [ref=f21e198]:
+                - generic [ref=f21e199]:
+                  - generic [ref=f21e200]:
+                    - generic [ref=f21e201]: Priya Nair
+                    - generic [ref=f21e202]: 4 days ago
+                    - generic [ref=f21e203]: Featured
+                  - button "More actions for Styles vs variables for colours" [ref=f21e205]
+                - paragraph [ref=f21e210]:
+                  - button "Design Systems in Figma" [ref=f21e211]
+                  - generic [aria-hidden] [ref=f21e212]: ·
+                  - text: Lecture 2
+                - heading "Styles vs variables for colours" [level=3] [ref=f21e213]
+                - paragraph [ref=f21e214]: Figma has both colour styles and variables now. Which one should I use for my design system?
+                - generic [ref=f21e215]:
+                  - button "Upvote, 3 upvotes" [ref=f21e216]: "3"
+                  - button "1 reply" [ref=f21e220]
+                  - button "Reply" [ref=f21e224]
+          - listitem [ref=f21e225]:
+            - generic [ref=f21e227]:
+              - generic [ref=f21e228]:
+                - generic [ref=f21e229]:
+                  - generic [ref=f21e230]: Devon Lane
+                  - generic [ref=f21e231]: 2 days ago
+                - button "More actions for How many breakpoints should I design?" [ref=f21e233]
+              - paragraph [ref=f21e238]:
+                - button "UI/UX Design with Figma" [ref=f21e239]
+                - generic [aria-hidden] [ref=f21e240]: ·
+                - text: Lecture 4
+              - heading "How many breakpoints should I design?" [level=3] [ref=f21e241]
+              - paragraph [ref=f21e242]: Do I need to design every screen for mobile, tablet and desktop, or is it fine to do mobile and desktop only?
+              - generic [ref=f21e243]:
+                - button "Upvote, 6 upvotes" [ref=f21e244]: "6"
+                - button "2 replies" [ref=f21e248]
+                - button "Reply" [ref=f21e252]
+          - listitem [ref=f21e253]:
+            - generic [ref=f21e254]:
+              - generic [aria-hidden] [ref=f21e255]: OH
+              - generic [ref=f21e256]:
+                - generic [ref=f21e257]:
+                  - generic [ref=f21e258]:
+                    - generic [ref=f21e259]: Omar Haddad
+                    - generic [ref=f21e260]: 1 week ago
+                  - button "More actions for Smart animate isn't working between frames" [ref=f21e262]
+                - paragraph [ref=f21e267]:
+                  - button "UI/UX Design with Figma" [ref=f21e268]
+                  - generic [aria-hidden] [ref=f21e269]: ·
+                  - text: Lecture 6
+                - heading "Smart animate isn't working between frames" [level=3] [ref=f21e270]
+                - paragraph [ref=f21e271]: My prototype just jumps between two frames instead of animating the card. I set the transition to Smart animate. What am I missing?
+                - generic [ref=f21e272]:
+                  - button "Upvote, 1 upvotes" [ref=f21e273]: "1"
+                  - button "1 reply" [ref=f21e277]
+                  - button "Reply" [ref=f21e281]
+          - listitem [ref=f21e282]:
+            - generic [ref=f21e284]:
+              - generic [ref=f21e285]:
+                - generic [ref=f21e286]:
+                  - generic [ref=f21e287]: Devon Lane
+                  - generic [ref=f21e288]: 2 weeks ago
+                - button "More actions for How do I hand off spacing to developers?" [ref=f21e290]
+              - paragraph [ref=f21e295]:
+                - button "UI/UX Design with Figma" [ref=f21e296]
+                - generic [aria-hidden] [ref=f21e297]: ·
+                - text: Lecture 2
+              - heading "How do I hand off spacing to developers?" [level=3] [ref=f21e298]
+              - paragraph [ref=f21e299]: Developers keep asking me for padding values. What is the cleanest way to share spacing without writing it on every screen?
+              - generic [ref=f21e300]:
+                - button "Upvote, 0 upvotes" [ref=f21e301]: "0"
+                - button "1 reply" [ref=f21e305]
+                - button "Reply" [ref=f21e309]

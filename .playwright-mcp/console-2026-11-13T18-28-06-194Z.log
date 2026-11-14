@@ -1,0 +1,6 @@
+[   95815ms] [ERROR] [vite] ReferenceError: Folder01Icon is not defined
+    at http://localhost:8443/src/components/LearnPage.tsx?t=1794594581090:41:13 @ http://localhost:8443/@vite/client:357
+[   95837ms] [ERROR] [vite] Failed to reload /src/components/LearnPage.tsx. This could be due to syntax errors or importing non-existent modules. (see errors above) @ http://localhost:8443/@vite/client:357
+[   95920ms] [ERROR] [vite] ReferenceError: Folder01Icon is not defined
+    at http://localhost:8443/src/components/LearnPage.tsx?t=1794594581090:41:13 @ http://localhost:8443/@vite/client:357
+[   95920ms] [ERROR] [vite] Failed to reload /src/components/LearnPage.tsx. This could be due to syntax errors or importing non-existent modules. (see errors above) @ http://localhost:8443/@vite/client:357
