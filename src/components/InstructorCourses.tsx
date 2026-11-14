@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, type ChangeEvent, type FormEvent } from "react";
+import PageHeader, { pageBody, pageShell } from "./PageHeader";
 import { categories } from "../data";
 import { fontBold, fontMedium, fontRegular, fontSemi } from "../fonts";
 import { load, openCourseEditor, save, useApp, useStoredState } from "../store";
@@ -365,17 +366,16 @@ export default function InstructorCourses({ startNew }: { startNew?: boolean }) 
   const iconBtn = "flex size-9 items-center justify-center rounded-lg text-slate-500 transition hover:bg-slate-150 hover:text-slate-900";
 
   return (
-    <main className="@container flex flex-1 flex-col bg-primary-50">
-      <div className="flex w-full flex-col gap-6 px-4 py-6 md:px-8 md:py-8">
-        {/* Header */}
-        <div className="flex flex-wrap items-end justify-between gap-4">
-          <div>
-            <h1 className={`m-0 text-28 leading-9 tracking-tight text-slate-900 ${fontBold}`}>Courses</h1>
-            <p className={`mt-1 text-15 leading-5.5 text-slate-500 ${fontRegular}`}>
+    <main className={`@container ${pageShell}`}>
+      <div className={`w-full ${pageBody}`}>
+        <PageHeader
+          title="Courses"
+          description={
+            <>
               Create, edit and track all your recorded courses. <span className={`text-slate-900 ${fontSemi}`}>{totalSales.toLocaleString("en-US")}</span> sales so far.
-            </p>
-          </div>
-          <div className="flex items-center gap-2">
+            </>
+          }
+        >
             <input ref={backupInput} type="file" accept=".json,application/json" onChange={pickBackup} className="sr-only" tabIndex={-1} aria-label="Course backup file" />
             <ActionMenu
               label="Course backup"
@@ -402,8 +402,7 @@ export default function InstructorCourses({ startNew }: { startNew?: boolean }) 
               <Icon d={I.plus} className="size-4.5" />
               New course
             </button>
-          </div>
-        </div>
+        </PageHeader>
 
         {courses.length === 0 ? (
           <div className="flex flex-col items-center justify-center gap-5 rounded-2xl border border-dashed border-slate-300 bg-white px-6 py-16 text-center">
@@ -460,7 +459,7 @@ export default function InstructorCourses({ startNew }: { startNew?: boolean }) 
                   </label>
                   <label className="relative">
                     <span className="sr-only">Sort by</span>
-                    <select value={sort} onChange={(e) => setSort(e.target.value as SortKey)} className={`h-9 appearance-none rounded-xl border border-slate-200 bg-white pl-3 pr-8 text-sm text-slate-900 shadow-sm outline-none transition hover:border-slate-300 hover:bg-slate-50 focus:border-primary-700/60 focus:ring-3 focus:ring-primary-700/12 ${fontMedium}`}>
+                    <select value={sort} onChange={(e) => setSort(e.target.value as SortKey)} className={`h-9 appearance-none rounded-lg border border-slate-300 bg-white pl-3 pr-8 text-sm text-slate-900 outline-none transition hover:border-slate-400 hover:bg-slate-50 focus:border-primary-700/60 focus:ring-3 focus:ring-primary-700/12 ${fontMedium}`}>
                       <option value="updated">Recently updated</option>
                       <option value="purchases">Most sales</option>
                       <option value="favorites">Most favourited</option>

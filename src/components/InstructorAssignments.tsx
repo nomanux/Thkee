@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import PageHeader, { pageShell } from "./PageHeader";
 import { HugeiconsIcon, type IconSvgElement } from "@hugeicons/react";
 import {
   ArrowLeft01Icon,
@@ -421,7 +422,7 @@ function SubmissionList({
   ];
 
   return (
-    <div className="flex flex-col gap-5 px-4 pb-10 pt-6 md:px-7">
+    <div className="flex flex-col gap-5 px-4 pb-10 pt-6 md:px-8">
       {todo.length > 0 && (
         <section className="flex flex-col gap-4 rounded-2xl bg-primary-900 p-5 text-white sm:flex-row sm:items-center md:p-6">
           <div className="flex min-w-0 flex-1 flex-col gap-1">
@@ -1356,20 +1357,17 @@ export default function InstructorAssignments({
   const waiting = SUBMISSIONS.filter((s) => !reviews[s.id]?.checked).length;
 
   return (
-    <main className="flex flex-1 flex-col bg-slate-25">
+    <main className={pageShell}>
       {!submission && (
-        <div className="flex flex-col gap-1 border-b border-slate-200 bg-white px-4 py-6 md:px-7">
-          <h1
-            className="m-0 font-instrument-medium text-2xl font-medium leading-8 text-slate-900"
-            style={{ fontVariationSettings: '"wdth" 100' }}
-          >
-            Assignments
-          </h1>
-          <p className={`m-0 text-sm text-slate-500 ${fontRegular}`}>
-            {waiting > 0
-              ? `${waiting} of ${SUBMISSIONS.length} submissions need your review.`
-              : "Every submission has been reviewed."}
-          </p>
+        <div className="px-4 pt-6 md:px-8">
+          <PageHeader
+            title="Assignments"
+            description={
+              waiting > 0
+                ? `${waiting} of ${SUBMISSIONS.length} submissions need your review.`
+                : "Every submission has been reviewed."
+            }
+          />
         </div>
       )}
       {submission ? (

@@ -14,7 +14,7 @@ function useWidth() {
 }
 
 const MARGIN = { top: 8, right: 8, bottom: 32, left: 64 };
-const tickClass = `fill-slate-600 text-xs ${fontRegular}`;
+const tickClass = `fill-slate-400 text-xs ${fontRegular}`;
 
 export type ChartSeries = { key: string; label: string; color: string; values: number[] };
 
@@ -26,7 +26,7 @@ function Axes({ width, height, plotHeight, months, ticks, yMax, tickLabel }: { w
         const y = MARGIN.top + plotHeight * (1 - t / yMax);
         return (
           <g key={t}>
-            {t > 0 && <line x1={MARGIN.left} x2={width - MARGIN.right} y1={y} y2={y} stroke="#e2e8f0" strokeDasharray="3 3" />}
+            <line x1={MARGIN.left} x2={width - MARGIN.right} y1={y} y2={y} stroke={t === 0 ? "#cbd5e1" : "#f1f5f9"} />
             <text x={MARGIN.left - 14} y={y + 4} textAnchor="end" className={tickClass}>
               {tickLabel(t)}
             </text>
@@ -37,7 +37,6 @@ function Axes({ width, height, plotHeight, months, ticks, yMax, tickLabel }: { w
         const x = MARGIN.left + band * (i + 0.5);
         return (
           <g key={m}>
-            <line x1={x} x2={x} y1={MARGIN.top} y2={MARGIN.top + plotHeight} stroke="#e2e8f0" strokeDasharray="3 3" />
             {(band >= 58 || i % 2 === 0) && (
               <text x={x} y={height - 8} textAnchor="middle" className={tickClass}>
                 {m}
@@ -46,8 +45,6 @@ function Axes({ width, height, plotHeight, months, ticks, yMax, tickLabel }: { w
           </g>
         );
       })}
-      <line x1={MARGIN.left} x2={MARGIN.left} y1={MARGIN.top} y2={MARGIN.top + plotHeight} stroke="#94a3b8" />
-      <line x1={MARGIN.left} x2={width - MARGIN.right} y1={MARGIN.top + plotHeight} y2={MARGIN.top + plotHeight} stroke="#94a3b8" />
     </>
   );
 }
@@ -94,7 +91,7 @@ export function LineChart({ months, series, yMax, ticks, height = 216, markers, 
         <defs>
           {series.map((s) => (
             <linearGradient key={s.key} id={`area-${s.key}`} x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0" stopColor={s.color} stopOpacity="0.2" />
+              <stop offset="0" stopColor={s.color} stopOpacity="0.12" />
               <stop offset="1" stopColor={s.color} stopOpacity="0.01" />
             </linearGradient>
           ))}
@@ -112,7 +109,7 @@ export function LineChart({ months, series, yMax, ticks, height = 216, markers, 
         })}
         {hover !== null && (
           <g>
-            <line x1={xAt(hover)} x2={xAt(hover)} y1={MARGIN.top} y2={baseline} stroke="#64748b" />
+            <line x1={xAt(hover)} x2={xAt(hover)} y1={MARGIN.top} y2={baseline} stroke="#cbd5e1" />
             {series.map((s) => (
               <circle key={s.key} cx={xAt(hover)} cy={yAt(s.values[hover])} r="4" fill={s.color} stroke="#fff" strokeWidth="2" />
             ))}

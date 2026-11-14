@@ -56,9 +56,9 @@ export function FilterSelect({
         aria-label={plain && !id ? `${label}: ${selectedLabel ?? placeholder ?? ""}` : undefined}
         aria-expanded={open}
         onClick={() => setOpen((o) => !o)}
-        className={`group flex items-center gap-2 border bg-white text-slate-500 shadow-sm outline-none transition-all duration-150 focus-visible:border-primary-700/60 focus-visible:ring-3 focus-visible:ring-primary-700/12 ${
-          open ? "border-primary-700/60 ring-3 ring-primary-700/12" : "border-slate-200 hover:border-slate-300 hover:bg-slate-50"
-        } ${plain ? "h-9 w-full justify-between rounded-xl pl-3 pr-2.5 text-sm" : large ? "h-9 rounded-xl pl-3 pr-2.5 text-sm" : "h-8 rounded-lg pl-2.5 pr-2 text-13"} ${fontRegular}`}
+        className={`group flex items-center gap-2 border bg-white text-slate-500 outline-none transition-all duration-150 focus-visible:border-primary-700/60 focus-visible:ring-3 focus-visible:ring-primary-700/12 ${
+          open ? "border-primary-700/60 ring-3 ring-primary-700/12" : "border-slate-300 hover:border-slate-400 hover:bg-slate-50"
+        } ${plain ? "h-9 w-full justify-between rounded-lg pl-3 pr-2.5 text-sm" : large ? "h-9 rounded-lg pl-3 pr-2.5 text-sm" : "h-8 rounded-lg pl-2.5 pr-2 text-13"} ${fontRegular}`}
       >
         <span className="min-w-0 truncate whitespace-nowrap">
           {plain ? (

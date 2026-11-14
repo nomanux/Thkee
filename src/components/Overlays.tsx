@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState, type FormEvent, type ReactNode } from "react";
-import { categories, categoryColors, courses, experts, infoPages, type Course } from "../data";
+import { categories, courses, experts, infoPages, type Course } from "../data";
 import { fontBold, fontFor, fontHeading, fontMedium, fontRegular, fontSemi } from "../fonts";
 import { ExpertAvatar } from "./Experts";
 import { formatPrice, useApp, openLearning } from "../store";
@@ -65,8 +65,23 @@ export function Shell({ title, onClose, children, variant = "modal", width = "ma
   );
 }
 
+// One Liniqo e-learning illustration per top-level category: soft brand-green lines with a yellow accent on a light tint.
+const THUMB_ART: Record<string, string> = {
+  Design: "color-swatch-fan",
+  "Personal & Professional Growth": "progress-bar-path",
+  "Teaching & Training": "live-class-video-grid",
+  "Information Technology": "coding-exercise-editor",
+  Business: "benchmark-comparison-bars",
+  Language: "language-learning-speech-bubbles",
+};
+
+// Courses may store a subcategory (e.g. "Arabic") as their category, so map it back to its parent.
+function thumbArt(category: string) {
+  const parent = categories.find((c) => c.name === category || (c.subs as readonly string[]).includes(category))?.name;
+  return `/illustrations/thumbs/thumb-${(parent && THUMB_ART[parent]) || "video-lesson-player"}.svg?v=3`;
+}
+
 export function CourseThumb({ course, className = "", showTitle = true }: { course: Course; className?: string; showTitle?: boolean }) {
-  const [from, to] = categoryColors(course.category);
   if (course.image) {
     return (
       <div className={`relative overflow-hidden bg-slate-900 ${className}`}>
@@ -83,16 +98,15 @@ export function CourseThumb({ course, className = "", showTitle = true }: { cour
     );
   }
   return (
-    <div className={`relative overflow-hidden ${className}`} style={{ backgroundImage: `linear-gradient(135deg, ${from}, ${to})` }}>
-      <div className="absolute -right-6 -top-6 size-27.5 rounded-full bg-white/10" />
-      <div className="absolute -bottom-10 left-6 size-22.5 rounded-full bg-white/10" />
-      <span className={`absolute left-3 top-3 rounded-full bg-white/20 px-2.5 py-1 text-11 uppercase tracking-wider text-white backdrop-blur ${fontSemi}`}>{course.category}</span>
+    <div className={`relative overflow-hidden bg-linear-135 from-primary-50 to-primary-200 ${className}`}>
+      <img src={thumbArt(course.category)} alt="" aria-hidden="true" loading="lazy" className="pointer-events-none absolute right-0 top-0 h-full origin-right scale-125 select-none" />
+      <span className={`absolute left-3 top-3 max-w-3/5 truncate rounded-full bg-white/80 px-2.5 py-1 text-11 uppercase tracking-wider text-primary-800 ring-1 ring-inset ring-primary-300 backdrop-blur ${fontSemi}`}>{course.category}</span>
       {course.live && (
         <span className={`absolute right-3 top-3 flex items-center gap-1.5 rounded-full bg-red-500 px-2.5 py-1 text-11 uppercase text-white ${fontSemi}`}>
           <span className="size-1.5 animate-pulse rounded-full bg-white" /> Live
         </span>
       )}
-      {showTitle && <span dir="auto" className={`absolute bottom-3 left-3 right-3 line-clamp-2 text-left text-17 leading-6 text-white ${fontFor(course.title, fontHeading, "font-bold")}`}>{course.title}</span>}
+      {showTitle && <span dir="auto" className={`absolute bottom-3 left-3 right-2/5 line-clamp-2 text-left text-17 leading-6 text-primary-900 ${fontFor(course.title, fontHeading, "font-bold")}`}>{course.title}</span>}
     </div>
   );
 }

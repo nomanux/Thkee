@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import PageHeader, { pageBody, pageShell } from "./PageHeader";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { Comment01Icon, ThumbsUpIcon } from "@hugeicons/core-free-icons";
 import { fontBold, fontHeading, fontMedium, fontRegular, fontSemi } from "../fonts";
@@ -383,11 +384,11 @@ export default function InstructorQa({ questionId, newQuestionCourse }: { questi
     <ActionMenu
       label={`Course: ${allCourses ? "All Courses" : course}`}
       alignLeft
-      triggerClass={`flex items-center gap-3 text-left text-xl leading-8 text-slate-900 ${fontHeading}`}
+      triggerClass={`flex h-9 items-center gap-2 rounded-lg border border-slate-200 bg-white pl-3 pr-2.5 text-sm text-slate-500 shadow-xs transition hover:border-slate-300 hover:bg-slate-50 ${fontRegular}`}
       trigger={
         <>
-          {allCourses ? "All Courses" : course}
-          <img src={imgChevronLarge} alt="" width={24} height={24} className="size-6 shrink-0" />
+          Course: <span className={`max-w-56 truncate text-slate-900 ${fontMedium}`}>{allCourses ? "All courses" : course}</span>
+          <img src={imgChevronLarge} alt="" width={18} height={18} className="size-4.5 shrink-0" />
         </>
       }
       items={[{ label: "All Courses", onClick: () => setCourse("all") }, ...COURSES.map((name) => ({ label: name, onClick: () => setCourse(name) }))]}
@@ -415,20 +416,14 @@ export default function InstructorQa({ questionId, newQuestionCourse }: { questi
   );
 
   return (
-    <main className="flex flex-1 flex-col bg-slate-150">
-      <div className="bg-white px-4 py-6 md:px-7">
-        <h1 className={titleClass} style={titleStyle}>
-          Question and Answers
-        </h1>
-      </div>
-      <div className="flex flex-col gap-4 px-4 pb-8 pt-5 md:pl-8 md:pr-7">
-        <div className="flex flex-wrap items-center justify-between gap-4">
-          <div>
-            {courseMenu}
-            <p className={`m-0 mt-1 text-13 text-slate-600 ${fontRegular}`}>
-              {unanswered === 0 ? "All questions have a reply" : `${unanswered} ${unanswered === 1 ? "question is" : "questions are"} waiting for your reply`}
-            </p>
-          </div>
+    <main className={pageShell}>
+      <div className={pageBody}>
+        <PageHeader
+          title="Q&A"
+          description={unanswered === 0 ? "All questions have a reply." : `${unanswered} ${unanswered === 1 ? "question is" : "questions are"} waiting for your reply.`}
+        />
+        <div className="-mt-2 flex flex-wrap items-center justify-between gap-3">
+          {courseMenu}
           <div className="flex flex-wrap items-center gap-3">
             {segments}
             {!allCourses && (

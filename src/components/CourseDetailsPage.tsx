@@ -147,7 +147,7 @@ function PriceBlock({ price, originalPrice, discount }: { price: number; origina
           <span className={`text-26 leading-none tracking-tight text-slate-900 tabular-nums ${fontBold}`}>{formatPrice(price)}</span>
           {sale && (
             <>
-              <span className={`text-15 leading-none text-slate-400 line-through tabular-nums ${fontRegular}`}>{formatPrice(originalPrice!)}</span>
+              <span className={`text-15 leading-none text-slate-500 line-through tabular-nums ${fontRegular}`}>{formatPrice(originalPrice!)}</span>
               <span className={`rounded-full bg-red-50 px-1.5 py-0.5 text-11 leading-none text-red-700 ring-1 ring-inset ring-red-200 ${fontSemi}`}>{discount}% off</span>
             </>
           )}
@@ -302,7 +302,7 @@ function Card({ title, children, id }: { title: string; children: ReactNode; id?
 
 function SeeMore({ open, onClick, more = "See more", less = "See less" }: { open: boolean; onClick: () => void; more?: string; less?: string }) {
   return (
-    <button type="button" onClick={onClick} className={`mt-5 inline-flex items-center gap-1.5 text-15 text-slate-900 transition hover:text-primary-700 ${fontSemi}`}>
+    <button type="button" onClick={onClick} className={`mt-5 inline-flex items-center gap-1.5 text-15 text-slate-800 transition hover:text-primary-700 ${fontSemi}`}>
       {open ? less : more}
       <Icon name="chevron" className={`size-4 transition-transform ${open ? "rotate-180" : ""}`} />
     </button>
@@ -432,16 +432,16 @@ function Details({ course }: { course: Course }) {
             ))}
             {course.live && <span className={`rounded-full bg-red-500 px-3 py-1 text-xs text-white ${fontSemi}`}>● Live cohort</span>}
           </div>
-          <p dir="auto" className={`max-w-162.5 text-left text-base leading-6 text-slate-150 ${fontFor(course.description, fontMedium, "font-medium")}`}>
+          <p dir="auto" className={`max-w-162.5 text-left text-base leading-6 text-slate-200 ${fontFor(course.description, fontMedium, "font-medium")}`}>
             {course.description}
           </p>
           <div className="flex flex-wrap gap-x-12 gap-y-4 pt-3">
             <div className="flex flex-col gap-1">
-              <span className={`text-15 text-slate-500 ${fontMedium}`}>Created by</span>
+              <span className={`text-15 text-slate-400 ${fontMedium}`}>Created by</span>
               <span dir="auto" className={`text-15 text-white ${fontFor(course.instructor, fontMedium, "font-medium")}`}>{course.instructor}</span>
             </div>
             <div className="flex flex-col gap-1">
-              <span className={`text-15 text-slate-500 ${fontMedium}`}>Review</span>
+              <span className={`text-15 text-slate-400 ${fontMedium}`}>Review</span>
               <span className={`flex flex-wrap items-center gap-2 text-sm text-slate-300 ${fontRegular}`}>
                 <span className={`text-base text-secondary-500 ${fontBold}`}>{course.rating.toFixed(1)}</span>
                 <StarRow rating={course.rating} />
@@ -450,9 +450,9 @@ function Details({ course }: { course: Course }) {
               </span>
             </div>
           </div>
-          <div className={`flex flex-wrap items-center gap-x-12 gap-y-2 pt-3 text-sm text-slate-25 ${fontRegular}`}>
+          <div className={`flex flex-wrap items-center gap-x-12 gap-y-2 pt-3 text-sm text-slate-300 ${fontRegular}`}>
             <span>
-              <span className={`text-slate-500 ${fontMedium}`}>Last Updated : </span>
+              <span className={`text-slate-400 ${fontMedium}`}>Last Updated : </span>
               {formatDate(course.launched)}
             </span>
             <span className="flex items-center gap-2">
@@ -562,7 +562,7 @@ function Details({ course }: { course: Course }) {
               </ul>
             </div>
 
-            <button type="button" onClick={share} className={`flex items-center justify-center gap-2 border-t border-slate-200 pt-3 text-13 text-slate-900 transition hover:text-primary-700 ${fontSemi}`}>
+            <button type="button" onClick={share} className={`flex items-center justify-center gap-2 border-t border-slate-200 pt-3 text-13 text-slate-800 transition hover:text-primary-700 ${fontSemi}`}>
               <Icon name="share" className="size-4" />
               Share this course
             </button>
@@ -589,7 +589,7 @@ function Objectives({ course }: { course: Course }) {
       <ul className={`grid grid-cols-1 gap-x-8 gap-y-3 text-sm text-slate-700 sm:grid-cols-2 ${fontRegular}`}>
         {items.map((item) => (
           <li key={item} dir="auto" className="flex items-start gap-3 text-left">
-            <span className="mt-0.5 text-emerald-500">
+            <span className="mt-0.5 text-emerald-600">
               <Icon name="check" className="size-4.5" />
             </span>
             {item}
@@ -691,11 +691,11 @@ function CourseContent({ course }: { course: Course }) {
                 <ul className="flex flex-col pb-2">
                   {section.lessons.map((lesson) => (
                     <li key={lesson.title} className={`flex items-center gap-3 px-4 py-3 text-sm md:px-5 md:pl-15 ${fontRegular}`}>
-                      <span className="text-slate-400">
+                      <span className="text-slate-500">
                         <Icon name={lesson.kind} className="size-4" />
                       </span>
                       {lesson.preview ? (
-                        <button type="button" onClick={() => setPreviewLesson(lesson.title)} className="flex-1 text-left text-slate-900 underline-offset-2 hover:text-primary-700 hover:underline">
+                        <button type="button" onClick={() => setPreviewLesson(lesson.title)} className="flex-1 text-left text-slate-700 underline-offset-2 hover:text-primary-700 hover:underline">
                           {lesson.title}
                         </button>
                       ) : (
@@ -706,7 +706,7 @@ function CourseContent({ course }: { course: Course }) {
                           Preview
                         </button>
                       )}
-                      <span className="w-13 shrink-0 text-right text-13 text-slate-400">{lesson.kind === "quiz" ? "Quiz" : lesson.kind === "assignment" ? "Task" : `${lesson.minutes}min`}</span>
+                      <span className="w-13 shrink-0 text-right text-13 text-slate-500">{lesson.kind === "quiz" ? "Quiz" : lesson.kind === "assignment" ? "Task" : `${lesson.minutes}min`}</span>
                     </li>
                   ))}
                 </ul>
@@ -759,7 +759,7 @@ function Instructor({ course }: { course: Course }) {
           See instructor courses
         </button>
       </div>
-      <div className={`mt-5 flex flex-wrap gap-x-8 gap-y-2 text-sm text-slate-900 ${fontSemi}`}>
+      <div className={`mt-5 flex flex-wrap gap-x-8 gap-y-2 text-sm text-slate-700 ${fontSemi}`}>
         <span className="flex items-center gap-2">
           <span className="text-secondary-500">★</span>
           {rating.toFixed(1)} rating
@@ -815,10 +815,10 @@ function Reviews({ course, ratingsCount }: { course: Course; ratingsCount: numbe
   const shown = hover || stars;
   // Words and colours for each star level, and quick highlights that match the mood of the rating.
   const LEVELS = [
-    { label: "Tap a star to rate", tone: "text-slate-400" },
+    { label: "Tap a star to rate", tone: "text-slate-500" },
     { label: "Poor", tone: "text-red-600" },
-    { label: "Fair", tone: "text-orange-600" },
-    { label: "Good", tone: "text-amber-600" },
+    { label: "Fair", tone: "text-orange-700" },
+    { label: "Good", tone: "text-amber-700" },
     { label: "Very good", tone: "text-lime-700" },
     { label: "Excellent", tone: "text-emerald-700" },
   ];
@@ -877,7 +877,7 @@ function Reviews({ course, ratingsCount }: { course: Course; ratingsCount: numbe
               <div className="flex min-w-0 flex-1 flex-col gap-0.5">
                 <div className="flex flex-wrap items-center justify-between gap-1.5">
                   <p className={`text-sm text-slate-900 ${fontSemi}`}>
-                    {rev.name} <span className={`text-xs text-slate-400 ${fontRegular}`}>· {rev.when}</span>
+                    {rev.name} <span className={`text-xs text-slate-500 ${fontRegular}`}>· {rev.when}</span>
                   </p>
                   <StarRow rating={rev.rating} size={13} />
                 </div>
@@ -942,8 +942,8 @@ function Reviews({ course, ratingsCount }: { course: Course; ratingsCount: numbe
           {stars > 0 && (
             <div className="fade-up flex flex-col gap-5">
               <div className="flex flex-col gap-2">
-                <span className={`text-sm text-slate-900 ${fontMedium}`}>
-                  {stars >= 4 ? "What stood out?" : "What could be better?"} <span className={`text-slate-400 ${fontRegular}`}>(optional)</span>
+                <span className={`text-sm text-slate-800 ${fontMedium}`}>
+                  {stars >= 4 ? "What stood out?" : "What could be better?"} <span className={`text-slate-500 ${fontRegular}`}>(optional)</span>
                 </span>
                 <div className="flex flex-wrap gap-1.5">
                   {highlights.map((t) => {
@@ -968,13 +968,13 @@ function Reviews({ course, ratingsCount }: { course: Course; ratingsCount: numbe
                 </div>
               </div>
               <label className="flex flex-col gap-1.5">
-                <span className={`text-sm text-slate-900 ${fontMedium}`}>
-                  Title <span className={`text-slate-400 ${fontRegular}`}>(optional)</span>
+                <span className={`text-sm text-slate-800 ${fontMedium}`}>
+                  Title <span className={`text-slate-500 ${fontRegular}`}>(optional)</span>
                 </span>
                 <input value={title} maxLength={80} onChange={(e) => setTitle(e.target.value)} placeholder={stars >= 4 ? "e.g. Clear, practical and worth it" : "e.g. Good start, but too fast for me"} className={inputClass} />
               </label>
               <label className="flex flex-col gap-1.5">
-                <span className={`text-sm text-slate-900 ${fontMedium}`}>Your review</span>
+                <span className={`text-sm text-slate-800 ${fontMedium}`}>Your review</span>
                 <textarea
                   value={body}
                   maxLength={MAX_BODY}
@@ -987,8 +987,8 @@ function Reviews({ course, ratingsCount }: { course: Course; ratingsCount: numbe
                   className={`${inputClass} field-sizing-content min-h-27.5 resize-none`}
                 />
                 <span className={`flex justify-between text-xs ${fontRegular}`}>
-                  <span className={bodyLength > 0 && bodyLength < 10 ? "text-amber-600" : "text-slate-400"}>{bodyLength < 10 ? `At least 10 characters (${10 - bodyLength} to go)` : "Looks good"}</span>
-                  <span className="tabular-nums text-slate-400">
+                  <span className={bodyLength > 0 && bodyLength < 10 ? "text-amber-700" : "text-slate-500"}>{bodyLength < 10 ? `At least 10 characters (${10 - bodyLength} to go)` : "Looks good"}</span>
+                  <span className="tabular-nums text-slate-500">
                     {body.length}/{MAX_BODY}
                   </span>
                 </span>

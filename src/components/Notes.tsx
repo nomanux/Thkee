@@ -218,6 +218,20 @@ export function ArticleReader({
   const [draft, setDraft] = useState("");
   const wrapRef = useRef<HTMLDivElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
+  // "In this article": built from the headings the instructor writes. Text before the first heading counts as the introduction.
+  const outline = useMemo(
+    () =>
+      article.flatMap((b, i) =>
+        b.heading ? [{ index: i, title: b.heading }] : i === 0 ? [{ index: 0, title: "Introduction" }] : [],
+      ),
+    [],
+  );
+  const [activeBlock, setActiveBlock] = useState(0);
+  const blockEl = (i: number) => scrollRef.current?.querySelector<HTMLElement>(`[data-block="${i}"]`);
+  const jumpTo = (i: number) => {
+    const el = blockEl(i);
+    if (el && scrollRef.current) scrollRef.current.scrollTo({ top: Math.max(0, el.offsetTop - 24), behavior: "smooth" });
+  };
 
   useEffect(() => {
     if (done || left <= 0) return;
@@ -232,6 +246,8 @@ export function ArticleReader({
     if (!el) return;
     const max = el.scrollHeight - el.clientHeight;
     setRead(max > 0 ? el.scrollTop / max : 1);
+    const reached = outline.filter((o) => (blockEl(o.index)?.offsetTop ?? Infinity) - 120 <= el.scrollTop);
+    setActiveBlock(el.scrollTop + el.clientHeight >= el.scrollHeight - 8 ? (outline.at(-1)?.index ?? 0) : (reached.at(-1)?.index ?? outline[0]?.index ?? 0));
     setPop(null);
     if (!done && el.scrollTop + el.clientHeight >= el.scrollHeight - 8) onComplete();
   };
@@ -313,50 +329,109 @@ export function ArticleReader({
   const iconBtn = "flex size-8 items-center justify-center rounded-md text-slate-900 transition hover:bg-white";
 
   return (
-    <div className="bg-slate-800">
-      <div className="flex flex-wrap items-center gap-3 bg-cyan-950 px-4 py-3 md:px-4">
-        <p className={`min-w-0 flex-1 truncate text-base text-white md:text-lg ${fontRegular}`}>{lesson.title}</p>
-        <span className={`flex items-center gap-1.5 text-sm text-white/90 tabular-nums ${fontRegular}`}>
-          <svg viewBox="0 0 24 24" className="size-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
-            <circle cx="12" cy="12" r="9" />
-            <path d="M12 7v5l3 2" />
+    <div className="border-b border-slate-200 bg-white">
+      {/* Light reading toolbar: what this is, how far you are, text size, focus view and lesson navigation. */}
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-2 border-b border-slate-200 px-4 py-2.5 md:px-8">
+        <span className={`flex items-center gap-1.5 text-13 text-slate-600 ${fontMedium}`}>
+          <svg viewBox="0 0 24 24" className="size-4 text-primary-700" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <path d="M4 5a2 2 0 012-2h6v18H6a2 2 0 01-2-2zM12 3h6a2 2 0 012 2v14a2 2 0 01-2 2h-6" />
           </svg>
-          {done ? "Completed" : `${clock(Math.max(0, left))} min left`}
+          Article · {lesson.minutes} min read
         </span>
-        <button type="button" onClick={onBack} disabled={!onBack} className={`h-8.5 rounded-md bg-white px-3 text-sm text-slate-900 transition hover:bg-slate-150 disabled:opacity-40 ${fontMedium}`}>
-          Back
-        </button>
-        <button type="button" onClick={onNext} disabled={!onNext} className={`${buttonClass("yellow", "md")}`}>
-          Next
-        </button>
-      </div>
-
-      <div className="p-3 md:p-4">
-        <div ref={wrapRef} className="relative overflow-hidden rounded-md bg-secondary-50">
-          <div className="flex items-center justify-center gap-2 bg-slate-200 px-3 py-2">
-            <button type="button" onClick={() => setZoom((z) => Math.max(80, z - 10))} aria-label="Zoom out" className={iconBtn}>
-              <svg viewBox="0 0 24 24" className="size-4" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" aria-hidden="true">
-                <path d="M5 12h14" />
-              </svg>
+        <span className={`text-13 tabular-nums ${done ? "text-primary-700" : "text-slate-500"} ${fontRegular}`}>{done ? "Completed" : `${Math.round(read * 100)}% read`}</span>
+        <div className="ml-auto flex items-center gap-1">
+          <div className="flex items-center rounded-lg border border-slate-200" role="group" aria-label="Text size">
+            <button type="button" onClick={() => setZoom((z) => Math.max(80, z - 10))} disabled={zoom <= 80} aria-label="Smaller text" className={`flex h-8 w-9 items-center justify-center text-13 text-slate-700 transition hover:bg-slate-50 disabled:text-slate-300 ${fontSemi}`}>
+              A
             </button>
-            <span className={`w-12 rounded-sm bg-white py-1 text-center text-11 text-slate-900 ${fontRegular}`}>{zoom}%</span>
-            <button type="button" onClick={() => setZoom((z) => Math.min(150, z + 10))} aria-label="Zoom in" className={iconBtn}>
-              <svg viewBox="0 0 24 24" className="size-4" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" aria-hidden="true">
-                <path d="M12 5v14M5 12h14" />
-              </svg>
-            </button>
-            <button type="button" onClick={onToggleExpand} aria-label={expanded ? "Exit expanded view" : "Expand reading view"} aria-pressed={expanded} className={`${iconBtn} absolute right-3`}>
-              <svg viewBox="0 0 24 24" className="size-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
-                {expanded ? <path d="M9 4v5H4M15 4v5h5M9 20v-5H4M15 20v-5h5" /> : <path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5" />}
-              </svg>
+            <span className="h-4 w-px bg-slate-200" aria-hidden="true" />
+            <button type="button" onClick={() => setZoom((z) => Math.min(150, z + 10))} disabled={zoom >= 150} aria-label="Larger text" className={`flex h-8 w-9 items-center justify-center text-lg text-slate-700 transition hover:bg-slate-50 disabled:text-slate-300 ${fontSemi}`}>
+              A
             </button>
           </div>
+          <button type="button" onClick={onToggleExpand} aria-label={expanded ? "Exit focus view" : "Focus view"} aria-pressed={expanded} title={expanded ? "Exit focus view" : "Focus view"} className="flex size-8 items-center justify-center rounded-lg text-slate-600 transition hover:bg-slate-100 hover:text-slate-900">
+            <svg viewBox="0 0 24 24" className="size-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
+              {expanded ? <path d="M9 4v5H4M15 4v5h5M9 20v-5H4M15 20v-5h5" /> : <path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5" />}
+            </svg>
+          </button>
+          <span className="mx-1 h-5 w-px bg-slate-200" aria-hidden="true" />
+          <button type="button" onClick={onBack} disabled={!onBack} aria-label="Previous lesson" title="Previous lesson" className="flex size-8 items-center justify-center rounded-lg text-slate-600 transition hover:bg-slate-100 hover:text-slate-900 disabled:text-slate-300 disabled:hover:bg-transparent">
+            <svg viewBox="0 0 24 24" className="size-4.5" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <path d="M15 6l-6 6 6 6" />
+            </svg>
+          </button>
+          <button type="button" onClick={onNext} disabled={!onNext} aria-label="Next lesson" title="Next lesson" className="flex size-8 items-center justify-center rounded-lg text-slate-600 transition hover:bg-slate-100 hover:text-slate-900 disabled:text-slate-300 disabled:hover:bg-transparent">
+            <svg viewBox="0 0 24 24" className="size-4.5" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <path d="M9 6l6 6-6 6" />
+            </svg>
+          </button>
+        </div>
+      </div>
+      <div className="h-0.5 bg-slate-100" aria-hidden="true">
+        <div className="h-full bg-primary-700 transition-all duration-200" style={{ width: `${done ? 100 : Math.round(read * 100)}%` }} />
+      </div>
 
-          <div ref={scrollRef} onScroll={onScroll} onMouseUp={onMouseUp} className={`overflow-y-auto px-5 py-6 transition-all duration-300 md:px-8 md:py-8 ${expanded ? "max-h-dvh-minus-218 min-h-110" : "max-h-110"}`}>
-            <div className={`flex flex-col gap-6 text-slate-800 ${fontRegular}`} style={{ fontSize: `${(14 * zoom) / 100}px`, lineHeight: 1.75 }}>
+      <div>
+        <div ref={wrapRef} className="relative overflow-hidden bg-slate-50">
+
+          <div ref={scrollRef} onScroll={onScroll} onMouseUp={onMouseUp} className={`@container relative overflow-y-auto px-4 py-6 transition-all duration-300 md:px-8 md:py-8 ${expanded ? "max-h-dvh-minus-218 min-h-110" : "max-h-140"}`}>
+            <div className="mx-auto flex justify-center gap-12">
+            {outline.length > 1 && (
+              <nav aria-label="In this article" className="hidden w-52 shrink-0 @5xl:block">
+                <div className="sticky top-0 flex flex-col gap-3">
+                  <span className={`text-xs uppercase tracking-wider text-slate-500 ${fontSemi}`}>In this article</span>
+                  <ol className="flex flex-col border-l-2 border-slate-150">
+                    {outline.map((o) => {
+                      const on = o.index === activeBlock;
+                      const passed = o.index < activeBlock;
+                      return (
+                        <li key={o.index}>
+                          <button
+                            type="button"
+                            onClick={() => jumpTo(o.index)}
+                            aria-current={on ? "location" : undefined}
+                            className={`-ml-0.5 block w-full border-l-2 py-1.5 pl-3 text-left text-13 leading-5 transition ${
+                              on ? `border-primary-700 text-slate-900 ${fontSemi}` : passed ? `border-transparent text-slate-500 hover:text-slate-900 ${fontRegular}` : `border-transparent text-slate-600 hover:text-slate-900 ${fontRegular}`
+                            }`}
+                          >
+                            {o.title}
+                          </button>
+                        </li>
+                      );
+                    })}
+                  </ol>
+                  <span className={`text-xs tabular-nums text-slate-500 ${fontRegular}`}>
+                    Part {Math.max(1, outline.findIndex((o) => o.index === activeBlock) + 1)} of {outline.length}
+                  </span>
+                </div>
+              </nav>
+            )}
+            {/* A readable column that still uses the space: wider in focus view, when the side panel is hidden. */}
+            {/* The article sits on the grey canvas as a white page, so the reading area stands apart from the rest of the screen. */}
+            <div className={`flex min-w-0 flex-1 ${expanded ? "max-w-4xl" : "max-w-3xl"} flex-col gap-6 rounded-2xl border border-slate-200 bg-white px-6 py-8 shadow-sm md:px-12 md:py-12 text-slate-700 ${fontRegular}`} style={{ fontSize: `${(17 * zoom) / 100}px`, lineHeight: 1.8 }}>
+              <header className="mb-2 flex flex-col gap-2 border-b border-slate-200 pb-6">
+                <span dir="auto" className={`text-start text-xs uppercase tracking-wider text-primary-700 ${fontSemi}`}>{lesson.sectionTitle.replace(/^\d+\.\s*/, "")}</span>
+                <h2 dir="auto" className={`m-0 text-start text-3xl leading-tight text-slate-900 ${fontSemi}`}>{lesson.title}</h2>
+                <span className={`text-sm text-slate-500 ${fontRegular}`}>{lesson.minutes} min read · Select any text to highlight it or add a note</span>
+                {outline.length > 1 && (
+                  <nav aria-label="In this article" className="mt-2 flex flex-wrap items-center gap-1.5 @5xl:hidden">
+                    <span className={`mr-1 text-xs uppercase tracking-wider text-slate-500 ${fontSemi}`}>Jump to</span>
+                    {outline.map((o) => (
+                      <button
+                        key={o.index}
+                        type="button"
+                        onClick={() => jumpTo(o.index)}
+                        className={`rounded-full border px-3 py-1 text-13 leading-5 transition ${o.index === activeBlock ? `border-primary-700 bg-primary-50 text-primary-800 ${fontSemi}` : `border-slate-200 text-slate-700 hover:border-slate-400 ${fontRegular}`}`}
+                      >
+                        {o.title}
+                      </button>
+                    ))}
+                  </nav>
+                )}
+              </header>
               {article.map((block, i) => (
-                <div key={i} className="flex flex-col gap-1">
-                  {block.heading && <h3 className={`m-0 text-em-115 text-slate-900 ${fontMedium}`}>{block.heading}</h3>}
+                <div key={i} data-block={i} className="flex flex-col gap-1">
+                  {block.heading && <h3 className={`m-0 mt-4 text-em-115 text-slate-900 ${fontSemi}`}>{block.heading}</h3>}
                   <Paragraph
                     index={i}
                     text={block.text}
@@ -368,11 +443,29 @@ export function ArticleReader({
                   />
                 </div>
               ))}
-              {!done && (
-                <button type="button" onClick={onComplete} className={`self-start rounded-md bg-slate-900 px-4 py-2 text-sm text-white hover:bg-slate-800 ${fontMedium}`}>
-                  Mark as complete
-                </button>
-              )}
+              {/* End of article: confirm and move on along the path. */}
+              <div className="mt-6 flex flex-col gap-4 rounded-2xl border border-slate-200 bg-slate-25 p-5 sm:flex-row sm:items-center">
+                <div className="flex min-w-0 flex-1 flex-col gap-0.5">
+                  <p className={`m-0 text-base leading-6 text-slate-900 ${fontSemi}`}>{done ? "You finished this article" : "You reached the end"}</p>
+                  <p className={`m-0 text-sm leading-5 text-slate-600 ${fontRegular}`}>{done ? "Your progress is saved on your path." : "Mark it complete to move along your path."}</p>
+                </div>
+                <div className="flex shrink-0 items-center gap-2">
+                  {!done && (
+                    <button type="button" onClick={onComplete} className={buttonClass("secondary", "md")}>
+                      Mark complete
+                    </button>
+                  )}
+                  {onNext && (
+                    <button type="button" onClick={onNext} className={buttonClass("primary", "md")}>
+                      Next lesson
+                      <svg viewBox="0 0 24 24" className="size-4" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                        <path d="M9 6l6 6-6 6" />
+                      </svg>
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
             </div>
           </div>
 
@@ -461,7 +554,6 @@ export function ArticleReader({
             </button>
           )}
 
-          {done && <span className={`fade-up absolute bottom-4 right-4 rounded-md bg-emerald-700 px-3 py-2 text-sm text-white shadow-lg ${fontMedium}`}>Completed!</span>}
         </div>
       </div>
     </div>

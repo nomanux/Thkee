@@ -599,6 +599,7 @@ function fileStyle(name: string): { icon: IconSvgElement; tone: string } {
 }
 
 export function LessonSection({
+  part = "lesson",
   lesson,
   chapters,
   liveSession,
@@ -609,6 +610,7 @@ export function LessonSection({
   onSeek,
   notify,
 }: {
+  part?: "lesson" | "resources"
   lesson: LessonInfo
   chapters: Chapter[]
   liveSession: boolean
@@ -638,11 +640,74 @@ export function LessonSection({
   ]
   const allDone = files.every((f) => downloaded.includes(f.name))
   const points = useMemo(() => keyPoints(lesson, chapters), [lesson, chapters])
-  const card = "flex flex-col gap-3 rounded-2xl border border-slate-200 bg-white p-5"
-  const h = `m-0 text-lg text-slate-900 ${fontHeading}`
+
+  if (part === "resources")
+    return (
+      <>
+      {/* Actionable list: rows with one clear action each, scanned top to bottom. */}
+      <section className="flex max-w-3xl flex-col gap-1">
+        <div className="flex items-center justify-between gap-3">
+          <h2 className={`m-0 text-sm text-slate-500 ${fontRegular}`}>
+            {files.length} files for this lesson
+          </h2>
+          <button
+            type="button"
+            onClick={() => {
+              setDownloaded(files.map((f) => f.name))
+              notify(`Downloading ${files.length} files`)
+            }}
+            className={`flex items-center gap-1.5 text-13 transition ${allDone ? "text-primary-700" : "text-primary-700 hover:text-primary-800"} ${fontSemi}`}
+          >
+            <Icon icon={allDone ? Tick02Icon : Download04Icon} size={15} />
+            {allDone ? "All downloaded" : "Download all"}
+          </button>
+        </div>
+        <ul className="m-0 flex list-none flex-col divide-y divide-slate-100 p-0">
+          {files.map((f) => {
+            const done = downloaded.includes(f.name)
+            const style = fileStyle(f.name)
+            const ext = f.name.split(".").pop()?.toUpperCase()
+            return (
+              <li key={f.name}>
+                <button
+                  type="button"
+                  aria-label={done ? `${f.name}, downloaded. Download again` : `Download ${f.name}, ${f.size}`}
+                  onClick={() => {
+                    setDownloaded((list) => (list.includes(f.name) ? list : [...list, f.name]))
+                    notify(`Downloading ${f.name}`)
+                  }}
+                  className="group -mx-2 flex w-full items-center gap-3 rounded-lg px-2 py-2.5 text-start transition hover:bg-slate-50"
+                >
+                  <span className={`flex size-9 shrink-0 items-center justify-center rounded-lg ${style.tone}`}>
+                    <Icon icon={style.icon} size={18} />
+                  </span>
+                  <span className="min-w-0 flex-1">
+                    <span dir="auto" className={`block truncate text-sm text-slate-900 ${fontMedium}`}>
+                      {f.name.replace(/\.[^.]+$/, "")}
+                    </span>
+                    <span className={`block text-xs tabular-nums text-slate-500 ${fontRegular}`}>
+                      {ext} · {f.size}
+                    </span>
+                  </span>
+                  <span
+                    className={`flex shrink-0 items-center gap-1 text-13 transition ${
+                      done ? "text-primary-700" : "text-slate-600 group-hover:text-primary-700"
+                    } ${fontMedium}`}
+                  >
+                    <Icon icon={done ? Tick02Icon : Download04Icon} size={16} />
+                    <span className="hidden sm:inline">{done ? "Downloaded" : "Download"}</span>
+                  </span>
+                </button>
+              </li>
+            )
+          })}
+        </ul>
+      </section>
+      </>
+    )
 
   return (
-    <div className="grid grid-cols-1 gap-5 xl:grid-cols-2">
+    <div className="grid grid-cols-1 gap-x-10 gap-y-8 xl:grid-cols-2">
       {ratingPrompt && (
         <section className="fade-up flex flex-col gap-3 rounded-2xl border border-secondary-200 bg-secondary-50 p-5 xl:col-span-2 sm:flex-row sm:items-center">
           <div className="flex min-w-0 flex-1 flex-col gap-0.5">
@@ -669,72 +734,17 @@ export function LessonSection({
         </section>
       )}
 
-      <section className="flex flex-col gap-2.5 xl:col-span-2">
-        <div className="flex items-center justify-between gap-3">
-          <h2 className={`m-0 flex items-center gap-2 text-sm text-slate-900 ${fontSemi}`}>
-            Lesson materials
-            <span className={`rounded-full bg-slate-100 px-2 py-0.5 text-11 tabular-nums text-slate-600 ${fontMedium}`}>{files.length}</span>
-          </h2>
-          <button
-            type="button"
-            onClick={() => {
-              setDownloaded(files.map((f) => f.name))
-              notify(`Downloading ${files.length} files`)
-            }}
-            className={`flex items-center gap-1.5 text-13 transition ${allDone ? "text-primary-700" : "text-slate-600 hover:text-primary-700"} ${fontMedium}`}
-          >
-            <Icon icon={allDone ? Tick02Icon : Download04Icon} size={15} />
-            {allDone ? "All downloaded" : "Download all"}
-          </button>
-        </div>
-        <ul className="m-0 flex list-none flex-wrap gap-2 p-0">
-          {files.map((f) => {
-            const done = downloaded.includes(f.name)
-            const style = fileStyle(f.name)
-            return (
-              <li key={f.name} className="min-w-0 max-w-full">
-                <button
-                  type="button"
-                  aria-label={done ? `${f.name}, downloaded. Download again` : `Download ${f.name}, ${f.size}`}
-                  onClick={() => {
-                    setDownloaded((list) => (list.includes(f.name) ? list : [...list, f.name]))
-                    notify(`Downloading ${f.name}`)
-                  }}
-                  className="group flex h-11 max-w-full items-center gap-2.5 rounded-xl border border-slate-200 bg-white pl-1.5 pr-3 text-left transition hover:border-slate-300 hover:shadow-sm"
-                >
-                  <span className={`flex size-8 shrink-0 items-center justify-center rounded-lg ${style.tone}`}>
-                    <Icon icon={style.icon} size={17} />
-                  </span>
-                  <span dir="auto" className={`min-w-0 truncate text-13 text-slate-900 ${fontMedium}`}>
-                    {f.name}
-                  </span>
-                  <span className={`shrink-0 text-xs tabular-nums text-slate-400 ${fontRegular}`}>{f.size}</span>
-                  <Icon
-                    icon={done ? Tick02Icon : Download04Icon}
-                    size={16}
-                    className={`shrink-0 ${done ? "text-primary-700" : "text-slate-400 group-hover:text-primary-700"}`}
-                  />
-                </button>
-              </li>
-            )
-          })}
-        </ul>
-      </section>
-
-      <section className={card}>
-        <h2 className={h} style={headingStyle}>
-          Key points
-        </h2>
-        <ul className="m-0 flex list-none flex-col gap-3 p-0">
-          {points.map((p) => (
+      {/* Reading content: flat — typography and spacing do the grouping, no box. */}
+      <section className="flex flex-col gap-3">
+        <h2 className={`m-0 text-base text-slate-900 ${fontSemi}`}>Key points</h2>
+        <ol className="m-0 flex list-none flex-col gap-2.5 p-0">
+          {points.map((p, i) => (
             <li key={p} className={`flex items-start gap-3 text-sm leading-relaxed text-slate-700 ${fontRegular}`}>
-              <span className="mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full bg-primary-100 text-primary-700">
-                <Icon icon={Tick02Icon} size={12} />
-              </span>
+              <span className={`w-4 shrink-0 text-end tabular-nums text-slate-400 ${fontSemi}`}>{i + 1}.</span>
               {p}
             </li>
           ))}
-        </ul>
+        </ol>
       </section>
 
       {liveSession && (
@@ -824,6 +834,8 @@ export function LessonBar({
   minutes,
   done,
   hasNext,
+  nextTitle,
+  chapterLabel,
   checksDone,
   checksTotal,
   onToggleDone,
@@ -834,6 +846,8 @@ export function LessonBar({
   minutes: number
   done: boolean
   hasNext: boolean
+  nextTitle?: string
+  chapterLabel?: string
   checksDone: number
   checksTotal: number
   onToggleDone: () => void
@@ -842,6 +856,11 @@ export function LessonBar({
   return (
     <div className="flex flex-col gap-4 border-b border-slate-200 bg-white px-4 py-5 md:flex-row md:items-center md:justify-between md:px-8">
       <div className="flex min-w-0 flex-col gap-1.5">
+        {chapterLabel && (
+          <span dir="auto" className={`text-start text-xs uppercase tracking-wider text-primary-700 ${fontSemi}`}>
+            {chapterLabel} · {sectionTitle}
+          </span>
+        )}
         <h2 dir="auto" className={`m-0 text-start text-xl leading-tight text-slate-900 md:text-2xl ${fontFor(title, fontHeading)}`} style={headingStyle}>
           {title}
         </h2>
@@ -850,7 +869,10 @@ export function LessonBar({
           {checksTotal > 0 && (
             <>
               <span className="text-slate-300" aria-hidden="true">·</span>
-              <span className={`flex items-center gap-1 ${checksDone === checksTotal ? "text-primary-700" : ""}`}>
+              <span
+                title="Short questions inside the video that check you understood each part"
+                className={`flex cursor-help items-center gap-1 ${checksDone === checksTotal ? "text-primary-700" : ""}`}
+              >
                 <Icon icon={Target02Icon} size={13} />
                 {checksDone} of {checksTotal} checkpoints
               </span>
@@ -863,15 +885,22 @@ export function LessonBar({
           type="button"
           onClick={onToggleDone}
           aria-pressed={done}
-          className={buttonClass(done ? "soft" : "secondary", "lg")}
+          className={buttonClass(done ? "soft" : "ghost", "lg")}
         >
           <Icon icon={done ? CheckmarkCircle02Icon : Tick02Icon} size={17} />
           {done ? "Completed" : "Mark complete"}
         </button>
         {hasNext && (
-          <button type="button" onClick={onNext} className={`${buttonClass("dark", "lg")} group/nx`}>
-            Next lesson
-            <Icon icon={ArrowRight01Icon} size={16} className="transition-transform group-hover/nx:translate-x-0.5" />
+          <button
+            type="button"
+            onClick={onNext}
+            className="group/nx flex h-12 max-w-72 items-center gap-3 rounded-xl bg-primary-700 py-1.5 pl-4 pr-3 text-left text-white shadow-primary-button transition hover:bg-primary-800"
+          >
+            <span className="flex min-w-0 flex-col">
+              <span className={`text-11 uppercase leading-4 tracking-wider text-primary-200 ${fontSemi}`}>Up next</span>
+              <span dir="auto" className={`truncate text-start text-sm leading-5 ${fontSemi}`}>{nextTitle ?? "Next lesson"}</span>
+            </span>
+            <Icon icon={ArrowRight01Icon} size={18} className="shrink-0 transition-transform group-hover/nx:translate-x-0.5" />
           </button>
         )}
       </div>

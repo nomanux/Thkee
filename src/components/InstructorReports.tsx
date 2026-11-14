@@ -1,25 +1,19 @@
 import { useState, type ReactNode } from "react";
+import PageHeader, { pageBody, pageShell } from "./PageHeader";
 import { fontHeading, fontMedium, fontRegular, fontSemi } from "../fonts";
 import { openInstructorReports, openInstructorReviews, useApp } from "../store";
 import { Checkbox } from "./InstructorAssignments";
-import { BarChart, Donut, LineChart, type ChartSeries } from "./InstructorCharts";
+import { Donut, LineChart, type ChartSeries } from "./InstructorCharts";
 import { Pagination } from "./InstructorCourses";
 import { FilterSelect } from "./Menus";
-import { buttonClass } from "./Button"
+import { buttonClass } from "./Button";
+import { HugeiconsIcon, type IconSvgElement } from "@hugeicons/react";
+import { ArrowDownRight01Icon, ArrowRight01Icon, ArrowUpRight01Icon, Calendar03Icon, Download04Icon, ReturnRequestIcon, StarIcon, UserGroupIcon } from "@hugeicons/core-free-icons";
 
 
 const MONTHS = ["May 2021", "June 2021", "July 2021", "Aug 2021", "Sep 2021", "Oct 2021", "Nov 2021", "Dec 2021", "Jan 2022", "Feb 2022", "Mar 2022"];
-const PROMOTIONAL = [165, 210, 315, 262, 325, 478, 370, 222, 355, 555, 428];
-const ENROLLMENTS = [165, 210, 315, 262, 325, 478, 370, 222, 355, 555, 428];
-const RATINGS = [4.7, 4.5, 4.2, 4.6, 5, 3.6, 4.4, 4.6, 5, 3.6, 4.4];
 
 const COLORS = { organic: "#6bafc9", ad: "#0b3d7a", affiliate: "#991b1b", promotional: "#ffb20d" };
-const OVERVIEW_SERIES: ChartSeries[] = [
-  { key: "organic", label: "Organic", color: COLORS.organic, values: [120, 190, 240, 180, 210, 300, 260, 200, 280, 390, 330] },
-  { key: "ad", label: "Ad program", color: COLORS.ad, values: [90, 130, 170, 140, 160, 220, 190, 150, 210, 280, 240] },
-  { key: "affiliate", label: "Affiliate", color: COLORS.affiliate, values: [60, 80, 110, 90, 100, 140, 120, 95, 130, 170, 150] },
-  { key: "promotional", label: "Promotional", color: COLORS.promotional, values: PROMOTIONAL },
-];
 const REVENUE_SERIES: ChartSeries[] = [
   { key: "organic", label: "Organic", color: COLORS.organic, values: [118, 118, 160, 92, 115, 165, 128, 175, 262, 208, 212] },
   { key: "ad", label: "Ad program", color: COLORS.ad, values: [48, 56, 108, 58, 63, 102, 82, 134, 168, 152, 180] },
@@ -90,21 +84,7 @@ function useToggles(initial: string[]) {
   return { on, toggle: (key: string) => setOn((list) => (list.includes(key) ? list.filter((k) => k !== key) : [...list, key])) };
 }
 
-const downloadCsv = (filename: string, header: string, values: number[]) => {
-  const csv = [`Month,${header}`, ...MONTHS.map((m, i) => `${m},${values[i]}`)].join("\n");
-  const url = URL.createObjectURL(new Blob([csv], { type: "text/csv" }));
-  const link = document.createElement("a");
-  link.href = url;
-  link.download = filename;
-  link.click();
-  URL.revokeObjectURL(url);
-};
 
-const TABS = [
-  { key: "revenue", label: "Total Revenue", value: "$3,416.62", note: "this month", highlight: "$192.16" },
-  { key: "enrollments", label: "Total Enrollments", value: "1,823", note: "13 this month" },
-  { key: "rating", label: "Instructor Rating", value: "4.2", note: "7 ratings this month" },
-];
 
 const PAYOUT_TIP = "Your payout schedule is monthly. Expected earnings shown are based on current sales, subject to change with additional sales or refunds before payout.";
 export const PAYOUT_TILES: { value: string; label: string; bg: string; color: string; icon: ReactNode; tip: string }[] = [
@@ -114,112 +94,311 @@ export const PAYOUT_TILES: { value: string; label: string; bg: string; color: st
   { value: "43", label: "Total Sales", bg: "#ede9fe", color: "#7c3aed", icon: <path d="M3 4h2l2.4 11h10.2L20 7H6M9 20h.01M17 20h.01" />, tip: "Course sales made during this payout period." },
 ];
 
-function Overview() {
-  const [tab, setTab] = useState("revenue");
-  const [period, setPeriod] = useState("all");
-  const { on, toggle } = useToggles(["promotional"]);
-  const visibleSeries = OVERVIEW_SERIES.filter((s) => on.includes(s.key));
+// ---------- Overview: what an instructor needs first ----------
+// 1. How much did I earn, is it growing?  2. When do I get paid?
+// 3. Are learners coming and happy?       4. Which channel and which course drive it?
 
+const MONTHLY_ENROLLMENTS = [96, 120, 148, 131, 152, 201, 176, 139, 184, 232, 244];
+const MONTHLY_RATING = [4.7, 4.5, 4.2, 4.6, 5, 3.6, 4.4, 4.6, 5, 3.6, 4.4];
+const MONTHLY_REFUNDS = [12, 18, 9, 22, 15, 30, 14, 25, 19, 41, 28];
+const MONTHLY_REVENUE = MONTHS.map((_, i) => REVENUE_SERIES.reduce((sum, s) => sum + s.values[i], 0));
+const TOP_COURSES = [
+  { title: "Database Management Systems", students: 812, revenue: 1640.5, rating: 4.6, completion: 68 },
+  { title: "Object Oriented Java Programming", students: 604, revenue: 1122.3, rating: 4.3, completion: 54 },
+  { title: "Fundamental of Data Structure", students: 407, revenue: 653.82, rating: 3.8, completion: 41 },
+];
+const BRAND = "#0d5c4b";
+
+const usd = (v: number) => `$${v.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+const usdShort = (v: number) => (v >= 1000 ? `$${(v / 1000).toFixed(1)}K` : `$${Math.round(v)}`);
+const pctChange = (now: number, before: number) => (before ? ((now - before) / before) * 100 : 0);
+
+function HIcon({ icon, size = 16, className = "" }: { icon: IconSvgElement; size?: number; className?: string }) {
+  return <HugeiconsIcon icon={icon} size={size} strokeWidth={1.8} aria-hidden="true" className={`shrink-0 ${className}`} />;
+}
+
+/** Signed change vs. last month. `goodWhenUp` decides the color, the arrow always shows direction. */
+function Delta({ value, goodWhenUp = true }: { value: number; goodWhenUp?: boolean }) {
+  const up = value >= 0;
+  const good = up === goodWhenUp;
   return (
-    <main className="flex flex-1 flex-col bg-white">
-      <div className="flex flex-wrap items-center gap-6 border-b border-slate-200 bg-white px-4 py-6 md:px-7">
-        <h1 className={`flex h-10.5 items-center ${titleClass}`} style={titleStyle}>
-          Reports overview
-        </h1>
-        {tab !== "revenue" && (
-          <button type="button" onClick={() => (tab === "rating" ? downloadCsv("instructor-rating.csv", "Rating", RATINGS) : downloadCsv("total-enrollments.csv", "Enrollments", ENROLLMENTS))} className={`${buttonClass("yellow", "lg")}`}>
-            Download CSV
+    <span className={`inline-flex items-center gap-0.5 rounded-full px-1.5 py-0.5 text-xs ${good ? "bg-primary-50 text-primary-700" : "bg-red-50 text-red-700"} ${fontMedium}`}>
+      <HIcon icon={up ? ArrowUpRight01Icon : ArrowDownRight01Icon} size={12} />
+      {Math.abs(value).toFixed(0)}%
+    </span>
+  );
+}
+
+/** A headline number with a plain-language comparison: no chart to decode. */
+function StatTile({ icon, label, value, delta, goodWhenUp, now, before, unit, action }: { icon: IconSvgElement; label: string; value: string; delta: number; goodWhenUp?: boolean; now: string; before: string; unit?: string; action?: { label: string; onClick: () => void } }) {
+  return (
+    <div className="flex flex-col rounded-2xl border border-slate-200 bg-white p-5">
+      <div className="flex items-center gap-2.5">
+        <span className="flex size-9 items-center justify-center rounded-xl bg-primary-700 text-white">
+          <HIcon icon={icon} size={18} />
+        </span>
+        <p className={`text-13 text-slate-600 ${fontMedium}`}>{label}</p>
+        {action && (
+          <button type="button" onClick={action.onClick} className={`ml-auto inline-flex items-center gap-0.5 text-13 text-primary-700 transition hover:text-primary-800 ${fontSemi}`}>
+            {action.label}
+            <HIcon icon={ArrowRight01Icon} size={14} />
           </button>
         )}
       </div>
-      <div className="flex flex-col gap-6 px-4 py-6 md:px-7">
-        <div role="tablist" aria-label="Report metric" className="flex overflow-x-auto border-y border-slate-200 bg-slate-25">
-          {TABS.map((t) => {
-            const active = t.key === tab;
-            return (
-              <button key={t.key} type="button" role="tab" aria-selected={active} onClick={() => setTab(t.key)} className={`flex w-54 shrink-0 flex-col gap-1.5 border-t-4 px-6 py-5 text-left transition ${active ? "border-secondary-500 bg-white" : "border-transparent hover:bg-slate-150"}`}>
-                <span className={`text-base leading-6 ${active ? "text-slate-500" : "text-slate-400"} ${fontRegular}`}>{t.label}</span>
-                <span className={`text-2xl leading-8 ${active ? "text-slate-800" : "text-slate-600"} ${fontHeading}`}>{t.value}</span>
-                <span className={`text-sm leading-6 ${active ? "text-slate-500" : "text-slate-400"} ${fontRegular}`}>
-                  {t.highlight && <span className={active ? "text-secondary-600" : ""}>{t.highlight} </span>}
-                  {t.note}
-                </span>
-              </button>
-            );
-          })}
+      <div className="mt-4 flex items-center gap-2.5">
+        <p className={`text-3xl leading-none text-slate-900 ${fontHeading}`}>{value}</p>
+        <Delta value={delta} goodWhenUp={goodWhenUp} />
+      </div>
+      <dl className={`mt-4 grid grid-cols-2 gap-3 border-t border-slate-100 pt-3 text-xs ${fontRegular}`}>
+        <div>
+          <dt className="text-slate-400">This month</dt>
+          <dd className={`m-0 mt-0.5 text-sm text-slate-800 ${fontSemi}`}>
+            {now}
+            {unit && <span className={`text-slate-400 ${fontRegular}`}> {unit}</span>}
+          </dd>
         </div>
+        <div>
+          <dt className="text-slate-400">Last month</dt>
+          <dd className={`m-0 mt-0.5 text-sm text-slate-600 ${fontMedium}`}>
+            {before}
+            {unit && <span className={`text-slate-400 ${fontRegular}`}> {unit}</span>}
+          </dd>
+        </div>
+      </dl>
+    </div>
+  );
+}
 
-        {tab === "revenue" ? (
-          <>
-            <section className="rounded-lg border border-slate-200 bg-white p-6">
-              <div className="flex flex-wrap items-center justify-between gap-4">
-                <h2 className={titleClass} style={titleStyle}>
-                  Report analytics
-                </h2>
-                <SeriesToggles series={OVERVIEW_SERIES} on={on} toggle={toggle} />
-                <PeriodSelect value={period} onChange={setPeriod} />
-              </div>
-              <div className="mt-6">
-                <LineChart months={MONTHS} series={visibleSeries} yMax={750} ticks={[0, 250, 500, 750]} markers tickLabel={money} valueLabel={money} />
-              </div>
-              <div className="mt-6 flex justify-center">
-                <button type="button" onClick={() => openInstructorReports("revenue")} className={`${buttonClass("secondary", "lg")}`}>
-                  Revenue Report
-                  <svg viewBox="0 0 24 24" className="size-4 text-secondary-500" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                    <path d="M9 6l6 6-6 6" />
-                  </svg>
+function Overview() {
+  const [range, setRange] = useState<"6m" | "12m">("12m");
+  const span = range === "6m" ? 6 : MONTHS.length;
+  const from = MONTHS.length - span;
+  const months = MONTHS.slice(from);
+  const revenue = MONTHLY_REVENUE.slice(from);
+  const last = MONTHS.length - 1;
+
+  const periodRevenue = revenue.reduce((a, b) => a + b, 0);
+  const thisMonth = MONTHLY_REVENUE[last];
+  const revenueDelta = pctChange(thisMonth, MONTHLY_REVENUE[last - 1]);
+  const yMax = Math.ceil(Math.max(...revenue) / 200) * 200;
+  const ticks = Array.from({ length: yMax / 200 + 1 }, (_, i) => i * 200);
+
+  const channels = REVENUE_SERIES.map((s) => ({ label: s.label, value: s.values.slice(from).reduce((a, b) => a + b, 0) })).sort((a, b) => b.value - a.value);
+  const channelMax = channels[0].value;
+
+  const exportCsv = () => {
+    const csv = ["Month,Revenue,Enrollments,Rating,Refunds", ...months.map((m, i) => `${m},${revenue[i].toFixed(2)},${MONTHLY_ENROLLMENTS[from + i]},${MONTHLY_RATING[from + i]},${MONTHLY_REFUNDS[from + i]}`)].join("\n");
+    const url = URL.createObjectURL(new Blob([csv], { type: "text/csv" }));
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `thkee-report-${range}.csv`;
+    link.click();
+    URL.revokeObjectURL(url);
+  };
+
+  return (
+    <main className={pageShell}>
+      <div className={pageBody}>
+        {/* Header + the one filter row that scopes everything below */}
+        <PageHeader title="Reports" description="Your earnings, learners and best-selling courses at a glance.">
+            <div role="group" aria-label="Date range" className="flex rounded-lg border border-slate-200 bg-white p-0.5">
+              {(
+                [
+                  ["6m", "Last 6 months"],
+                  ["12m", "Last 12 months"],
+                ] as const
+              ).map(([key, label]) => (
+                <button
+                  key={key}
+                  type="button"
+                  aria-pressed={range === key}
+                  onClick={() => setRange(key)}
+                  className={`h-8 rounded-md px-3 text-13 transition ${range === key ? `bg-slate-100 text-slate-900 ${fontSemi}` : `text-slate-500 hover:text-slate-800 ${fontMedium}`}`}
+                >
+                  {label}
                 </button>
-              </div>
-            </section>
-            <section className="rounded-lg border border-slate-200 bg-white p-6">
-              <span className={`inline-flex h-7.5 items-center rounded-sm bg-emerald-500 px-2 text-xs leading-4.5 text-white ${fontMedium}`}>Monthly Payout</span>
-              <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
-                <h2 className={`text-xl leading-8 text-emerald-800 ${fontHeading}`}>Your Next Payout</h2>
-                <p className={`text-base leading-6 text-slate-700 ${fontRegular}`}>
-                  Due date: <span className={`text-slate-800 ${fontSemi}`}>3 July 2022</span>
+              ))}
+            </div>
+            <button type="button" onClick={exportCsv} className={buttonClass("secondary", "md")}>
+              <HIcon icon={Download04Icon} />
+              Export
+            </button>
+        </PageHeader>
+
+        {/* 1. Money: hero figure + trend, next to when it gets paid */}
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+          <section aria-label="Revenue" className="rounded-2xl border border-slate-200 bg-white p-5 md:p-6 lg:col-span-2">
+            <div className="flex flex-wrap items-start justify-between gap-4">
+              <div>
+                <p className={`text-13 text-slate-500 ${fontRegular}`}>Revenue · {range === "6m" ? "last 6 months" : "last 12 months"}</p>
+                <p className={`mt-1 text-5xl leading-none tracking-tight text-slate-900 ${fontHeading}`}>{usd(periodRevenue)}</p>
+                <p className={`mt-3 flex flex-wrap items-center gap-2 text-13 text-slate-500 ${fontRegular}`}>
+                  <span className={`text-slate-800 ${fontSemi}`}>{usd(thisMonth)}</span> in {MONTHS[last]}
+                  <Delta value={revenueDelta} />
+                  <span>vs last month</span>
                 </p>
               </div>
-              <div className="mt-4 grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
-                {PAYOUT_TILES.map((tile) => (
-                  <div key={tile.label} className="relative flex items-center gap-4 rounded-lg border border-slate-200 px-5 py-4.5">
-                    <span className="flex size-12 shrink-0 items-center justify-center rounded-lg" style={{ backgroundColor: tile.bg, color: tile.color }}>
-                      <svg viewBox="0 0 24 24" className="size-5" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                        {tile.icon}
-                      </svg>
-                    </span>
-                    <div className="min-w-0">
-                      <p className={`text-xl leading-7 text-slate-700 ${fontHeading}`}>{tile.value}</p>
-                      <p className={`mt-1 text-sm leading-5 text-slate-500 ${fontRegular}`}>{tile.label}</p>
-                    </div>
-                    <span className="absolute right-2.5 top-2.5 flex">
-                      <InfoTip text={tile.tip} />
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </section>
-          </>
-        ) : (
-          <>
-            <div className="flex justify-end">
-              <PeriodSelect value={period} onChange={setPeriod} />
+              <button type="button" onClick={() => openInstructorReports("revenue")} className={`inline-flex items-center gap-1 text-13 text-primary-700 transition hover:text-primary-800 ${fontSemi}`}>
+                Full revenue report
+                <HIcon icon={ArrowRight01Icon} size={14} />
+              </button>
             </div>
-            <section className="rounded-lg border border-slate-300 bg-white p-6">
-              {tab === "enrollments" ? (
-                <LineChart months={MONTHS} series={[{ key: "enrollments", label: "Enrollments", color: COLORS.promotional, values: ENROLLMENTS }]} yMax={750} ticks={[0, 250, 500, 750]} markers tickLabel={String} valueLabel={String} />
-              ) : (
-                <>
-                  <BarChart months={MONTHS} values={RATINGS} color={COLORS.promotional} yMax={5} ticks={[0, 1, 2, 3, 4, 5]} tickLabel={(t) => `${t} Star`} valueLabel={(v) => v.toFixed(1)} />
-                  <div className="mt-3 flex justify-center">
-                    <button type="button" onClick={openInstructorReviews} className={`text-base leading-6 text-secondary-600 transition hover:text-secondary-700 ${fontRegular}`}>
-                      Reviews Overview
-                    </button>
-                  </div>
-                </>
-              )}
-            </section>
-          </>
-        )}
+            <div className="mt-6">
+              <LineChart months={months} series={[{ key: "revenue", label: "Revenue", color: BRAND, values: revenue }]} yMax={yMax} ticks={ticks} height={240} tickLabel={usdShort} valueLabel={usd} />
+            </div>
+          </section>
+
+          {/* State the instructor waits on: the one tinted callout on the page */}
+          <section aria-label="Next payout" className="bg-payout-pattern relative flex flex-col overflow-hidden rounded-2xl bg-primary-900 p-5 text-white md:p-6">
+            <img src="/illustrations/digital-wallet-line.svg" alt="" aria-hidden="true" className="pointer-events-none absolute -right-8 -top-1 size-44 opacity-60" />
+
+            <div className="relative">
+              <span className={`inline-flex items-center gap-1.5 text-xs uppercase tracking-wider text-primary-400 ${fontSemi}`}>
+                Next payout
+                <InfoTip text={PAYOUT_TIP} />
+              </span>
+              <p className={`mt-3 text-4xl leading-none tracking-tight ${fontHeading}`}>$3,845.00</p>
+              <p className={`mt-2.5 flex items-center gap-1.5 text-13 text-primary-300 ${fontRegular}`}>
+                <HIcon icon={Calendar03Icon} size={14} />
+                Paid on 3 July 2022
+              </p>
+            </div>
+
+            {/* Where we are in this payout cycle */}
+            <div className="relative mt-5">
+              <div className={`flex items-center justify-between text-xs ${fontRegular}`}>
+                <span className="text-primary-300">Payout cycle</span>
+                <span className={`text-primary-200 ${fontMedium}`}>9 days to go</span>
+              </div>
+              <div className="mt-1.5 h-1.5 rounded-full bg-white/10" role="progressbar" aria-label="Payout cycle progress" aria-valuenow={70} aria-valuemin={0} aria-valuemax={100}>
+                <div className="h-full w-7/10 rounded-full bg-white" />
+              </div>
+            </div>
+
+            <dl className={`relative mt-5 flex flex-col divide-y divide-white/10 rounded-xl bg-white/5 px-4 text-13 ring-1 ring-inset ring-white/10 backdrop-blur-sm ${fontRegular}`}>
+              {[
+                ["Available now", "$3,845.00", "text-white"],
+                ["Sales this period", "43", "text-white"],
+                ["Refunds", "−$200.00", "text-primary-200"],
+              ].map(([k, v, tone]) => (
+                <div key={k} className="flex items-center justify-between py-2.5">
+                  <dt className="text-primary-300">{k}</dt>
+                  <dd className={`m-0 tabular-nums ${tone} ${fontMedium}`}>{v}</dd>
+                </div>
+              ))}
+            </dl>
+            <p className={`relative mt-auto pt-4 text-xs leading-relaxed text-primary-400 ${fontRegular}`}>Final amount can change with new sales or refunds before the payout date.</p>
+          </section>
+        </div>
+
+        {/* 2. Learners: are they coming, are they happy, are they leaving? */}
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+          <StatTile
+            icon={UserGroupIcon}
+            label="New students"
+            value={MONTHLY_ENROLLMENTS.slice(from).reduce((a, b) => a + b, 0).toLocaleString()}
+            delta={pctChange(MONTHLY_ENROLLMENTS[last], MONTHLY_ENROLLMENTS[last - 1])}
+            now={String(MONTHLY_ENROLLMENTS[last])}
+            before={String(MONTHLY_ENROLLMENTS[last - 1])}
+            unit="students"
+          />
+          <StatTile
+            icon={StarIcon}
+            label="Average rating"
+            value={(MONTHLY_RATING.slice(from).reduce((a, b) => a + b, 0) / span).toFixed(1)}
+            delta={pctChange(MONTHLY_RATING[last], MONTHLY_RATING[last - 1])}
+            now={MONTHLY_RATING[last].toFixed(1)}
+            before={MONTHLY_RATING[last - 1].toFixed(1)}
+            unit="/ 5"
+            action={{ label: "Reviews", onClick: openInstructorReviews }}
+          />
+          <StatTile
+            icon={ReturnRequestIcon}
+            label="Refunds"
+            value={MONTHLY_REFUNDS.slice(from).reduce((a, b) => a + b, 0).toString()}
+            delta={pctChange(MONTHLY_REFUNDS[last], MONTHLY_REFUNDS[last - 1])}
+            goodWhenUp={false}
+            now={String(MONTHLY_REFUNDS[last])}
+            before={String(MONTHLY_REFUNDS[last - 1])}
+            unit="refunds"
+          />
+        </div>
+
+        {/* 3. What drives it: channels (ranked bars, one hue) and courses */}
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+          <section aria-label="Revenue by channel" className="rounded-2xl border border-slate-200 bg-white p-5 md:p-6">
+            <h2 className={`m-0 text-base text-slate-900 ${fontSemi}`}>Where sales come from</h2>
+            <p className={`mt-0.5 text-13 text-slate-500 ${fontRegular}`}>Revenue by channel, same period</p>
+            <ul className="m-0 mt-5 flex list-none flex-col gap-4 p-0">
+              {channels.map((c) => {
+                const share = Math.round((c.value / periodRevenue) * 100);
+                return (
+                  <li key={c.label} className={`group text-13 ${fontRegular}`} title={`${c.label}: ${usd(c.value)} (${share}%)`}>
+                    <div className="flex items-baseline justify-between gap-2">
+                      <span className="text-slate-700">{c.label}</span>
+                      <span className="tabular-nums text-slate-500">
+                        <span className={`text-slate-900 ${fontMedium}`}>{usd(c.value)}</span> · {share}%
+                      </span>
+                    </div>
+                    <div className="mt-1.5 h-2 rounded-full bg-slate-100">
+                      <div className="h-full rounded-full bg-primary-700 transition-opacity group-hover:opacity-80" style={{ width: `${(c.value / channelMax) * 100}%` }} />
+                    </div>
+                  </li>
+                );
+              })}
+            </ul>
+          </section>
+
+          <section aria-label="Top courses" className="overflow-hidden rounded-2xl border border-slate-200 bg-white lg:col-span-2">
+            <div className="flex items-center justify-between gap-3 px-5 pt-5 md:px-6 md:pt-6">
+              <div>
+                <h2 className={`m-0 text-base text-slate-900 ${fontSemi}`}>Top courses</h2>
+                <p className={`mt-0.5 text-13 text-slate-500 ${fontRegular}`}>Ranked by revenue</p>
+              </div>
+            </div>
+            <div className="mt-4 overflow-x-auto">
+              <table className={`w-full min-w-xl text-13 ${fontRegular}`}>
+                <thead>
+                  <tr className="border-b border-slate-100 text-start text-xs text-slate-400">
+                    <th className={`px-5 py-2 text-start md:px-6 ${fontMedium}`}>Course</th>
+                    <th className={`px-3 py-2 text-end ${fontMedium}`}>Students</th>
+                    <th className={`px-3 py-2 text-end ${fontMedium}`}>Rating</th>
+                    <th className={`px-3 py-2 text-start ${fontMedium}`}>Completion</th>
+                    <th className={`px-5 py-2 text-end md:px-6 ${fontMedium}`}>Revenue</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {TOP_COURSES.map((c, i) => (
+                    <tr key={c.title} className="transition hover:bg-slate-25">
+                      <td className="px-5 py-3.5 md:px-6">
+                        <span className="flex items-center gap-3">
+                          <span className={`w-4 text-xs tabular-nums text-slate-400 ${fontSemi}`}>{i + 1}</span>
+                          <span className={`text-slate-800 ${fontMedium}`}>{c.title}</span>
+                        </span>
+                      </td>
+                      <td className="px-3 py-3.5 text-end tabular-nums text-slate-600">{c.students.toLocaleString()}</td>
+                      <td className="px-3 py-3.5 text-end tabular-nums">
+                        <span className={`inline-flex items-center gap-1 ${c.rating < 4 ? "text-red-700" : "text-slate-600"}`}>
+                          <HIcon icon={StarIcon} size={12} className="fill-current text-secondary-500" />
+                          {c.rating.toFixed(1)}
+                        </span>
+                      </td>
+                      <td className="px-3 py-3.5">
+                        <span className="flex items-center gap-2">
+                          <span className="h-1.5 w-20 rounded-full bg-primary-50">
+                            <span className="block h-full rounded-full bg-primary-700" style={{ width: `${c.completion}%` }} />
+                          </span>
+                          <span className="tabular-nums text-slate-500">{c.completion}%</span>
+                        </span>
+                      </td>
+                      <td className={`px-5 py-3.5 text-end tabular-nums text-slate-900 md:px-6 ${fontSemi}`}>{usd(c.revenue)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </section>
+        </div>
       </div>
     </main>
   );

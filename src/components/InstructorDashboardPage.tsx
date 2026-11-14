@@ -25,11 +25,11 @@ const navGroups: { heading?: string; items: NavItem[] }[] = [
   {
     heading: "Recorded courses",
     items: [
-      { label: "Course", icon: "/assets/a8978.svg" },
+      { label: "Courses", icon: "/assets/a8978.svg" },
       { label: "Assignments", icon: "/assets/dc8e4.svg", badge: uncheckedSubmissionCount },
       { label: "Q&A", icon: "/assets/1337a.svg", badge: unansweredQuestionCount },
       { label: "Reviews", icon: "/assets/d6bae.svg", badge: unrepliedReviewCount },
-      { label: "Report", icon: "/assets/9109d.svg" },
+      { label: "Reports", icon: "/assets/9109d.svg" },
     ],
   },
   {
@@ -56,7 +56,7 @@ const PAGE_GROUP: Record<string, string> = Object.fromEntries(navGroups.flatMap(
 function go(label: string) {
   if (label === "Messages") openMessages();
   else if (label === "Dashboard") openInstructorDashboard();
-  else if (label === "Course") openInstructorCourses();
+  else if (label === "Courses") openInstructorCourses();
   else if (label === "Assignments") openInstructorAssignments();
   else if (label === "Q&A") openInstructorQa();
   else if (label === "All Sessions") openInstructorSessions();
@@ -67,7 +67,7 @@ function go(label: string) {
   else if (label === "Announcements") openInstructorAnnouncements();
   else if (label === "Co-Instructor Requests") openCoInstructorRequests();
   else if (label === "Reviews") openInstructorReviews();
-  else if (label === "Report") openInstructorReports();
+  else if (label === "Reports") openInstructorReports();
 }
 
 function Svg({ d, className = "size-5" }: { d: string; className?: string }) {
@@ -486,7 +486,7 @@ function TopBar({ title, group, onMenu }: { title: string; group: string; onMenu
 export default function InstructorDashboardPage({ section, newCourse, submissionId, reportView, reportMonth, questionId, newQuestionCourse, announcementCourse, scheduleId, appsView, sessionSeries, sessionId, sessionCourse }: { newCourse?: boolean; section?: Section; announcementCourse?: string; scheduleId?: string; appsView?: "store" | "installed"; sessionSeries?: string; sessionId?: string; sessionCourse?: string; submissionId?: string; reportView?: "revenue"; reportMonth?: string; questionId?: string; newQuestionCourse?: string }) {
   const [collapsed, setCollapsed] = useState(() => load<boolean>(COLLAPSE_KEY, false));
   const [drawer, setDrawer] = useState(false);
-  const activeLabel = section === "courses" ? "Course" : section === "assignments" ? "Assignments" : section === "reports" ? "Report" : section === "reviews" ? "Reviews" : section === "qa" ? "Q&A" : section === "co-instructors" ? "Co-Instructor Requests" : section === "announcements" ? "Announcements" : section === "sessions" ? "All Sessions" : section === "schedule" ? "Schedule" : section === "availability" ? "Availability" : section === "apps" ? (appsView === "installed" ? "Installed Apps" : "App Store") : "Dashboard";
+  const activeLabel = section === "courses" ? "Courses" : section === "assignments" ? "Assignments" : section === "reports" ? "Reports" : section === "reviews" ? "Reviews" : section === "qa" ? "Q&A" : section === "co-instructors" ? "Co-Instructor Requests" : section === "announcements" ? "Announcements" : section === "sessions" ? "All Sessions" : section === "schedule" ? "Schedule" : section === "availability" ? "Availability" : section === "apps" ? (appsView === "installed" ? "Installed Apps" : "App Store") : "Dashboard";
 
   const toggle = () =>
     setCollapsed((c) => {

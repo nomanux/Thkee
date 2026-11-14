@@ -132,7 +132,7 @@ export function DatePicker({
         aria-describedby={describedBy}
         aria-label={ariaLabel ? `${ariaLabel}${value ? `: ${formatDate(value)}` : ""}` : undefined}
         onClick={() => (open ? close() : show())}
-        className={`field group flex h-9 items-center justify-between gap-2 text-left disabled:cursor-not-allowed disabled:bg-slate-50 disabled:text-slate-400 ${open ? "!border-primary-700/60 bg-white shadow-xs" : ""}`}
+        className={`field group flex h-9 items-center justify-between gap-2 text-left disabled:cursor-not-allowed disabled:bg-slate-50 disabled:text-slate-400 ${open ? "!border-primary-700/60 bg-white" : ""}`}
       >
         <span className={`min-w-0 truncate ${value ? "" : "text-slate-400"}`}>{value ? formatDate(value) : placeholder}</span>
         <HugeiconsIcon icon={Calendar03Icon} size={18} strokeWidth={1.8} aria-hidden="true" className={`shrink-0 transition-colors ${open ? "text-primary-700" : "text-slate-500 group-hover:text-slate-700"}`} />

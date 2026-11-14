@@ -4,14 +4,17 @@ import { fontBold, fontFor, fontHeading, fontMedium, fontRegular, fontSemi } fro
 import { useApp, type SearchParams } from "../store";
 import { CourseThumb } from "./Overlays";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { ArrowRight02Icon, BookOpen01Icon, ChartIncreaseIcon, Clock01Icon, Fire02Icon, SparklesIcon, StarIcon } from "@hugeicons/core-free-icons";
+import { ArrowRight02Icon, BookOpen01Icon, Briefcase01Icon, ChartIncreaseIcon, Clock01Icon, CloudIcon, CodeIcon, ComputerIcon, DatabaseIcon, Fire02Icon, LanguageSkillIcon, Megaphone01Icon, Mic01Icon, MoneyBag02Icon, PaintBoardIcon, PenTool03Icon, Plant02Icon, Rocket01Icon, Shield01Icon, SparklesIcon, StarIcon, Task01Icon, TeacherIcon, UserGroupIcon, Wifi01Icon } from "@hugeicons/core-free-icons";
 import { buttonClass } from "./Button"
 
-const PAGE_SIZE = 9;
+// Per-page options. Multiples of 12 fill the 1, 2 and 3 column grids with no gaps.
+const PAGE_SIZES = [12, 24, 48];
 const arabic = /[؀-ۿ]/;
 
 const languageOf = (c: Course) => (arabic.test(c.title) ? "Arabic" : "English");
-export const isBestseller = (c: Course) => c.students >= 2500;
+// Bestseller = the top 15% of the catalogue by enrolments, so the badge stays rare enough to mean something.
+const bestsellerFloor = courses.map((c) => c.students).sort((a, b) => b - a)[Math.max(0, Math.ceil(courses.length * 0.15) - 1)] ?? Infinity;
+export const isBestseller = (c: Course) => c.students >= bestsellerFloor;
 const formatOf = (c: Course) => (c.live ? "Live cohort" : "Recorded");
 const lengthBuckets = [
   { label: "0 – 2 hours", test: (h: number) => h < 2 },
@@ -22,6 +25,34 @@ const lengthBuckets = [
 ];
 const ratingSteps = [4.9, 4.8, 4.7, 4.5];
 const allTopics = [...new Set(Object.values(courseTags).flat())];
+
+// Icons for the "students also learn" links. Anything not listed falls back to a book.
+const TOPIC_ICONS: Record<string, typeof BookOpen01Icon> = {
+  Design: PaintBoardIcon,
+  "UI/UX Design": PenTool03Icon,
+  "Graphic Design": PaintBoardIcon,
+  "Personal & Professional Growth": Plant02Icon,
+  Leadership: UserGroupIcon,
+  Communication: Mic01Icon,
+  "Teaching & Training": TeacherIcon,
+  "Train the Trainer": TeacherIcon,
+  "Online Teaching": TeacherIcon,
+  "Information Technology": ComputerIcon,
+  Programming: CodeIcon,
+  "Cloud Computing": CloudIcon,
+  "Cyber security": Shield01Icon,
+  "Computer Networks & Protocols": Wifi01Icon,
+  "Data Science": DatabaseIcon,
+  "Wireless & Mobile Networks": Wifi01Icon,
+  Business: Briefcase01Icon,
+  Entrepreneurship: Rocket01Icon,
+  Marketing: Megaphone01Icon,
+  "Project Management": Task01Icon,
+  "Finance & Banking": MoneyBag02Icon,
+  Language: LanguageSkillIcon,
+  Arabic: LanguageSkillIcon,
+  English: LanguageSkillIcon,
+};
 
 type Filters = {
   price: string[];
@@ -87,7 +118,7 @@ function Price({ course, size = "text-lg" }: { course: Course; size?: string }) 
   if (course.price === 0) return <span className={`${size} text-primary-700 ${fontBold}`}>Free</span>;
   return (
     <span className="flex items-baseline gap-1.5">
-      {course.originalPrice && <span className={`text-13 text-slate-400 line-through ${fontRegular}`}>{course.originalPrice} SAR</span>}
+      {course.originalPrice && <span className={`text-13 text-slate-500 line-through ${fontRegular}`}>{course.originalPrice} SAR</span>}
       <span className={`${size} ${course.originalPrice ? "text-red-600" : "text-slate-900"} ${fontBold}`}>{course.price} SAR</span>
     </span>
   );
@@ -118,13 +149,30 @@ export function ResultCard({ course }: { course: Course }) {
         <span dir="auto" className={`line-clamp-2 min-h-12 text-left text-base leading-6 text-slate-800 transition-colors group-hover:text-primary-700 ${fontFor(course.title, fontSemi)}`}>
           {course.title}
         </span>
-        <div className="mt-auto flex items-center justify-between gap-2 pt-1">
-          <span className={`flex items-center gap-1.5 text-13 text-slate-500 ${fontRegular}`}>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" aria-hidden="true">
+        {/* The facts people compare before opening a course: length, size and level. */}
+        <div className={`flex flex-wrap items-center gap-x-3 gap-y-1 text-13 text-slate-500 ${fontRegular}`}>
+          <span className="flex items-center gap-1.5">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" aria-hidden="true">
               <circle cx="12" cy="12" r="9" />
               <path d="M12 7v5l3 2" />
             </svg>
             {course.duration ?? `${course.hours} hours`}
+          </span>
+          <span className="flex items-center gap-1.5">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <path d="M4 5.5A1.5 1.5 0 015.5 4H11v16H5.5A1.5 1.5 0 014 18.5zM13 4h5.5A1.5 1.5 0 0120 5.5v13a1.5 1.5 0 01-1.5 1.5H13z" />
+            </svg>
+            {course.lessons} lessons
+          </span>
+        </div>
+        <div className="mt-auto flex items-center justify-between gap-2 border-t border-slate-150 pt-3">
+          <span className={`flex items-center gap-1.5 rounded-md bg-slate-100 px-2 py-1 text-xs text-slate-700 ${fontMedium}`}>
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
+              <path d="M5 19v-4" />
+              <path d="M12 19v-9" className={course.level === "Beginner" ? "opacity-30" : ""} />
+              <path d="M19 19V5" className={course.level === "Advanced" ? "" : "opacity-30"} />
+            </svg>
+            {course.level}
           </span>
           <Price course={course} size="text-17" />
         </div>
@@ -259,7 +307,7 @@ function FeaturedCourse({ course }: { course: Course }) {
                 <>
                   <span className="flex items-baseline gap-2">
                     <span className={`text-3xl leading-8.5 text-white ${fontBold}`}>{course.price} SAR</span>
-                    {course.originalPrice && <span className={`text-sm text-white/40 line-through ${fontRegular}`}>{course.originalPrice} SAR</span>}
+                    {course.originalPrice && <span className={`text-sm text-white/55 line-through ${fontRegular}`}>{course.originalPrice} SAR</span>}
                   </span>
                   <span className={`text-xs text-white/55 ${fontRegular}`}>One-time payment · lifetime access</span>
                 </>
@@ -291,15 +339,45 @@ function Check({ checked }: { checked: boolean }) {
   );
 }
 
-// One filter group: a plain heading with how many are picked, folding open and shut. Groups are split by thin lines.
-function FilterSection({ title, children, defaultOpen = true, selected = 0 }: { title: string; children: ReactNode; defaultOpen?: boolean; selected?: number }) {
+// Small line icons for the filter headings.
+const FILTER_ICONS: Record<string, ReactNode> = {
+  star: <path d="M12 3.5l2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 16.9l-5.2 2.7 1-5.8-4.3-4.1 5.9-.9z" />,
+  clock: (
+    <>
+      <circle cx="12" cy="12" r="8.5" />
+      <path d="M12 7.5V12l3 2" />
+    </>
+  ),
+  layers: <path d="M12 4l8.5 4.5L12 13 3.5 8.5zM3.5 12.5L12 17l8.5-4.5M3.5 16.5L12 21l8.5-4.5" />,
+  globe: (
+    <>
+      <circle cx="12" cy="12" r="8.5" />
+      <path d="M3.5 12h17M12 3.5c2.5 2.6 3.6 5.4 3.6 8.5s-1.1 5.9-3.6 8.5c-2.5-2.6-3.6-5.4-3.6-8.5s1.1-5.9 3.6-8.5z" />
+    </>
+  ),
+  level: <path d="M5 19v-4M12 19V10M19 19V5" />,
+  tag: (
+    <>
+      <path d="M3.5 12.6V4.5a1 1 0 011-1h8.1l8 8a1 1 0 010 1.4l-7.1 7.1a1 1 0 01-1.4 0z" />
+      <circle cx="8.5" cy="8.5" r="1.3" />
+    </>
+  ),
+};
+
+// One filter group: a heading (with an optional icon) that folds open and shut. Groups are split by thin lines.
+function FilterSection({ title, children, defaultOpen = true, selected = 0, icon }: { title: string; children: ReactNode; defaultOpen?: boolean; selected?: number; icon?: keyof typeof FILTER_ICONS }) {
   const [open, setOpen] = useState(defaultOpen || selected > 0);
   return (
-    <div className="py-4 first:pt-1 last:pb-1">
-      <button type="button" aria-expanded={open} onClick={() => setOpen((o) => !o)} className="group flex w-full items-center gap-2 text-left">
+    <div className="py-3.5 first:pt-1 last:pb-1">
+      <button type="button" aria-expanded={open} onClick={() => setOpen((o) => !o)} className="group flex w-full items-center gap-2.5 text-left">
+        {icon && (
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" className="shrink-0 text-slate-500" aria-hidden="true">
+            {FILTER_ICONS[icon]}
+          </svg>
+        )}
         <span className={`flex-1 text-sm leading-5 text-slate-900 ${fontSemi}`}>{title}</span>
         {selected > 0 && <span className={`rounded-full bg-primary-700 px-1.5 py-px text-11 leading-4 text-white tabular-nums ${fontSemi}`}>{selected}</span>}
-        <span className="flex size-6 items-center justify-center rounded-md text-slate-400 transition group-hover:bg-slate-150 group-hover:text-slate-900">
+        <span className="flex size-6 items-center justify-center rounded-md text-slate-500 transition group-hover:bg-slate-150 group-hover:text-slate-900">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" className={`transition-transform duration-200 ${open ? "rotate-180" : ""}`} aria-hidden="true">
             <path d="M6 9l6 6 6-6" />
           </svg>
@@ -310,9 +388,11 @@ function FilterSection({ title, children, defaultOpen = true, selected = 0 }: { 
   );
 }
 
-// A row with a checkbox, label and a count on the right. Rows with no matching course are greyed out.
+// A row with a checkbox and label. Counts are left out to keep the panel calm.
 function Option({ label, count, checked, onToggle, prefix }: { label: string; count: number; checked: boolean; onToggle: () => void; prefix?: ReactNode }) {
   const disabled = count === 0 && !checked;
+  // Options that would lead to zero results are hidden instead of greyed out, so the panel only shows real choices.
+  if (disabled) return null;
   return (
     <button
       type="button"
@@ -327,7 +407,6 @@ function Option({ label, count, checked, onToggle, prefix }: { label: string; co
       </span>
       {prefix && <span className="mt-0.75 shrink-0">{prefix}</span>}
       <span className="min-w-0 flex-1">{label}</span>
-      <span className={`mt-px shrink-0 rounded-full px-1.5 text-xs leading-4.5 tabular-nums ${checked ? "bg-white text-primary-700" : "bg-slate-150 text-slate-500"} ${fontMedium}`}>{count}</span>
     </button>
   );
 }
@@ -336,7 +415,7 @@ function Option({ label, count, checked, onToggle, prefix }: { label: string; co
 function Chips({ options }: { options: { label: string; count: number; checked: boolean; onToggle: () => void }[] }) {
   return (
     <div className="flex flex-wrap gap-1.5">
-      {options.map((o) => {
+      {options.filter((o) => o.count > 0 || o.checked).map((o) => {
         const disabled = o.count === 0 && !o.checked;
         return (
           <button
@@ -353,7 +432,29 @@ function Chips({ options }: { options: { label: string; count: number; checked: 
               </svg>
             )}
             {o.label}
-            <span className={`text-xs tabular-nums ${o.checked ? "text-white/75" : "text-slate-400"}`}>{o.count}</span>
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+// One choice out of a few (e.g. All / Free / Paid), shown as a row of pills.
+function Segmented({ options, value, onChange, label }: { options: string[]; value: string; onChange: (v: string) => void; label: string }) {
+  return (
+    <div role="radiogroup" aria-label={label} className="flex flex-wrap gap-1.5">
+      {options.map((o) => {
+        const on = o === value;
+        return (
+          <button
+            key={o}
+            type="button"
+            role="radio"
+            aria-checked={on}
+            onClick={() => onChange(o)}
+            className={`h-8 min-w-14 rounded-full border px-3.5 text-13 transition ${on ? `border-primary-700 bg-primary-700 text-white ${fontSemi}` : `border-slate-200 bg-white text-slate-700 hover:border-slate-400 ${fontMedium}`}`}
+          >
+            {o}
           </button>
         );
       })}
@@ -386,8 +487,8 @@ export default function SearchPage({ params }: { params: SearchParams }) {
     format: params.live ? ["Live cohort"] : [],
   });
   const [sort, setSort] = useState("Most Popular");
-  const [topTab, setTopTab] = useState("Most Popular");
   const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(PAGE_SIZES[0]);
   const [drawer, setDrawer] = useState(false);
   const resultsRef = useRef<HTMLDivElement>(null);
 
@@ -402,7 +503,7 @@ export default function SearchPage({ params }: { params: SearchParams }) {
   const results = useMemo(() => scope.filter((c) => passAll(c)).sort(sorters[sort]), [scope, filters, sort]);
   const count = (key: keyof Filters, test: (c: Course) => boolean) => scope.filter((c) => passAll(c, key) && test(c)).length;
 
-  useEffect(() => setPage(1), [query, filters, sort]);
+  useEffect(() => setPage(1), [query, filters, sort, pageSize]);
   useEffect(() => {
     document.body.style.overflow = drawer ? "hidden" : "";
     return () => {
@@ -410,18 +511,14 @@ export default function SearchPage({ params }: { params: SearchParams }) {
     };
   }, [drawer]);
 
-  const pages = Math.max(1, Math.ceil(results.length / PAGE_SIZE));
-  const shown = results.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+  const pages = Math.max(1, Math.ceil(results.length / pageSize));
+  const shown = results.slice((page - 1) * pageSize, page * pageSize);
 
   const routeScope = useMemo(() => courses.filter((c) => matchesQuery(c, params.q ?? "") && passes.category(c, params.category ? [params.category] : []) && passes.sub(c, params.sub ? [params.sub] : []) && passes.format(c, params.live ? ["Live cohort"] : [])), [params]);
-  const carouselBase = routeScope.length >= 4 ? routeScope : courses;
-  const carousel = useMemo(() => {
-    const list = [...carouselBase];
-    if (topTab === "New") return list.sort(sorters.Newest);
-    if (topTab === "For Beginner") return list.filter((c) => c.level === "Beginner").sort(sorters["Most Popular"]);
-    return list.sort(sorters["Most Popular"]);
-  }, [carouselBase, topTab]);
-  const featured = [...carouselBase].sort((a, b) => Number(!!b.image) - Number(!!a.image) || b.students - a.students)[0];
+  // Popular courses outside this topic, shown under the results when the topic itself has only a few.
+  const suggestions = useMemo(() => courses.filter((c) => !routeScope.includes(c)).sort(sorters["Most Popular"]).slice(0, 8), [routeScope]);
+  // An editor's pick only makes sense when it really belongs to this topic and there are enough courses to pick from.
+  const featured = routeScope.length >= 4 ? [...routeScope].sort((a, b) => Number(!!b.image) - Number(!!a.image) || b.students - a.students)[0] : undefined;
 
   const currentSubs = categories.find((c) => c.name === params.category)?.subs.filter((sub) => sub !== params.sub) ?? [];
   const related = [...currentSubs, ...categories.map((c) => c.name).filter((n) => n !== params.category), ...allTopics].slice(0, 8);
@@ -442,7 +539,7 @@ export default function SearchPage({ params }: { params: SearchParams }) {
       key === "rating"
         ? filters.rating === null
           ? []
-          : [{ label: `${filters.rating}+ rating`, clear: () => setFilters((f) => ({ ...f, rating: null })) }]
+          : [{ label: `${filters.rating} & up`, clear: () => setFilters((f) => ({ ...f, rating: null })) }]
         : (filters[key] as string[]).map((v) => ({ label: v, clear: () => toggle(key as MultiKey, v) })),
     ),
     ...(query.trim() ? [{ label: `“${query.trim()}”`, clear: () => setQuery("") }] : []),
@@ -454,18 +551,6 @@ export default function SearchPage({ params }: { params: SearchParams }) {
 
   const sidebar = (
     <div className="flex flex-col gap-3">
-      <label className="field-box h-11 rounded-xl">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#64748b" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
-          <circle cx="11" cy="11" r="7" />
-          <path d="M20 20l-3.5-3.5" />
-        </svg>
-        <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search in these courses…" aria-label="Search within results" className={`min-w-0 flex-1 bg-transparent text-sm text-slate-900 outline-none placeholder:text-slate-400 ${fontRegular}`} />
-        {query && (
-          <button type="button" onClick={() => setQuery("")} aria-label="Clear search" className="text-slate-400 hover:text-slate-900">
-            ✕
-          </button>
-        )}
-      </label>
       <div className="rounded-2xl border border-slate-200 bg-white px-4 pb-2 pt-4 shadow-sm">
         <div className="flex items-center gap-2 border-b border-slate-150 pb-3">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0f172a" strokeWidth="1.8" strokeLinecap="round" aria-hidden="true">
@@ -473,15 +558,14 @@ export default function SearchPage({ params }: { params: SearchParams }) {
           </svg>
           <span className={`flex-1 text-17 leading-6 text-slate-900 ${fontSemi}`}>Filters</span>
           {activeChips.length > 0 && (
-            <button type="button" onClick={clearAll} className={`flex items-center gap-1 rounded-full px-2 py-1 text-xs text-slate-500 transition hover:bg-red-50 hover:text-red-600 ${fontMedium}`}>
+            <button type="button" onClick={clearAll} className={`text-13 text-primary-700 underline underline-offset-2 transition hover:text-primary-800 ${fontSemi}`}>
               Clear all
-              <span className={`rounded-full bg-slate-900 px-1.5 text-11 leading-4 text-white tabular-nums ${fontSemi}`}>{activeChips.length}</span>
             </button>
           )}
         </div>
         <div className="divide-y divide-slate-150">
-          <FilterSection title="Price" selected={filters.price.length}>
-            <Chips options={["Free", "Paid"].map((v) => ({ label: v, count: count("price", (c) => (c.price === 0 ? "Free" : "Paid") === v), checked: filters.price.includes(v), onToggle: () => toggle("price", v) }))} />
+          <FilterSection title="Price">
+            <Segmented label="Price" options={["All", "Free", "Paid"]} value={filters.price.length === 1 ? filters.price[0] : "All"} onChange={(v) => setFilters((f) => ({ ...f, price: v === "All" ? [] : [v] }))} />
           </FilterSection>
           <FilterSection title="Category" selected={filters.category.length}>
             <ShowMore>
@@ -499,7 +583,7 @@ export default function SearchPage({ params }: { params: SearchParams }) {
               </ShowMore>
             </FilterSection>
           )}
-          <FilterSection title="Rating" selected={filters.rating === null ? 0 : 1}>
+          <FilterSection title="Rating" icon="star" selected={filters.rating === null ? 0 : 1} defaultOpen={false}>
             {ratingSteps.map((r) => (
               <Option
                 key={r}
@@ -511,21 +595,21 @@ export default function SearchPage({ params }: { params: SearchParams }) {
               />
             ))}
           </FilterSection>
-          <FilterSection title="Format" selected={filters.format.length}>
+          <FilterSection title="Course format" icon="layers" selected={filters.format.length} defaultOpen={false}>
             <Chips options={["Recorded", "Live cohort"].map((v) => ({ label: v, count: count("format", (c) => formatOf(c) === v), checked: filters.format.includes(v), onToggle: () => toggle("format", v) }))} />
           </FilterSection>
-          <FilterSection title="Level" selected={filters.level.length}>
+          <FilterSection title="Level" icon="level" selected={filters.level.length} defaultOpen={false}>
             <Chips options={["Beginner", "Intermediate", "Advanced"].map((v) => ({ label: v, count: count("level", (c) => c.level === v), checked: filters.level.includes(v), onToggle: () => toggle("level", v) }))} />
           </FilterSection>
-          <FilterSection title="Course length" selected={filters.length.length} defaultOpen={false}>
+          <FilterSection title="Course duration" icon="clock" selected={filters.length.length} defaultOpen={false}>
             {lengthBuckets.map((b) => (
               <Option key={b.label} label={b.label} count={count("length", (c) => b.test(c.hours))} checked={filters.length.includes(b.label)} onToggle={() => toggle("length", b.label)} />
             ))}
           </FilterSection>
-          <FilterSection title="Language" selected={filters.language.length} defaultOpen={false}>
+          <FilterSection title="Language" icon="globe" selected={filters.language.length} defaultOpen={false}>
             <Chips options={["English", "Arabic"].map((v) => ({ label: v, count: count("language", (c) => languageOf(c) === v), checked: filters.language.includes(v), onToggle: () => toggle("language", v) }))} />
           </FilterSection>
-          <FilterSection title="Topics" selected={filters.topics.length} defaultOpen={false}>
+          <FilterSection title="Topics" icon="tag" selected={filters.topics.length} defaultOpen={false}>
             <div className="flex flex-wrap gap-1.5">
               {allTopics.map((t) => {
                 const on = filters.topics.includes(t);
@@ -544,7 +628,7 @@ export default function SearchPage({ params }: { params: SearchParams }) {
 
   return (
     <main className="w-full bg-white pt-14">
-      <section className="w-full border-b border-slate-200 bg-slate-25 px-4 pt-10 md:px-8">
+      <section className="w-full border-b border-slate-200 bg-slate-25 px-4 pb-8 pt-10 md:px-8">
         <div className="mx-auto flex max-w-310 flex-col gap-3">
           <nav aria-label="Breadcrumb" className={`flex items-center gap-2 text-13 text-slate-500 ${fontRegular}`}>
             <a href="#" className="hover:text-primary-700">
@@ -562,82 +646,33 @@ export default function SearchPage({ params }: { params: SearchParams }) {
                     {params.category}
                   </button>
                 ) : (
-                  <span className="text-slate-900">{params.category}</span>
+                  <span className="text-slate-800">{params.category}</span>
                 )}
               </>
             )}
             {(params.sub || params.q) && (
               <>
                 <span>/</span>
-                <span className="text-slate-900">{params.sub ?? "Search"}</span>
+                <span className="text-slate-800">{params.sub ?? "Search"}</span>
               </>
             )}
           </nav>
-          <h1 dir="auto" className={`m-0 text-left text-3xl leading-tight tracking-tight text-slate-800 md:text-4xl ${fontFor(heading, fontHeading, "font-bold")}`} style={{ fontVariationSettings: '"wdth" 100' }}>
+          <h1 dir="auto" className={`m-0 text-left text-3xl leading-tight tracking-tight text-slate-900 md:text-4xl ${fontFor(heading, fontHeading, "font-bold")}`} style={{ fontVariationSettings: '"wdth" 100' }}>
             {heading}
           </h1>
           <p className={`text-sm text-slate-600 ${fontRegular}`}>
-            {routeScope.length} {routeScope.length === 1 ? "course" : "courses"} taught by expert instructors — learn at your pace or join a live cohort.
+            {routeScope.length} {routeScope.length === 1 ? "course" : "courses"} taught by expert instructors. Learn at your own pace or join a live cohort.
           </p>
-          <div role="tablist" className="-mb-px mt-4 flex gap-1 overflow-x-auto">
-            {["Most Popular", "New", "For Beginner"].map((t) => (
-              <button key={t} type="button" role="tab" aria-selected={topTab === t} onClick={() => setTopTab(t)} className={`shrink-0 border-b-2 px-4 pb-3 text-sm transition ${fontMedium} ${topTab === t ? "border-secondary-500 text-slate-900" : "border-transparent text-slate-500 hover:text-slate-900"}`}>
-                {t}
-              </button>
-            ))}
-          </div>
         </div>
       </section>
 
       <div className="mx-auto flex max-w-310 flex-col gap-14 px-4 py-10 md:px-8 xl:px-0">
-        {routeScope.length < 4 && (
-          <p className={`-mb-8 rounded-xl bg-amber-50 px-4 py-3 text-sm text-amber-800 ${fontRegular}`}>Only a few courses match this search, so here are our most popular courses too.</p>
-        )}
-        <Carousel key={topTab} items={carousel} />
-
-        <section className="flex flex-col gap-5">
-          <h2 dir="auto" className={`m-0 text-left text-22 text-slate-800 md:text-2xl ${fontFor(topicName, fontHeading, "font-bold")}`}>
-            {topicName} students also learn
-          </h2>
-          <div className="grid grid-cols-2 gap-3 md:grid-cols-4 md:gap-4">
-            {related.map((r) => (
-              <button
-                key={r}
-                type="button"
-                onClick={() =>
-                  (currentSubs as readonly string[]).includes(r)
-                    ? openSearch({ category: params.category, sub: r })
-                    : categories.some((c) => c.name === r)
-                      ? openSearch({ category: r })
-                      : openSearch({ q: r })
-                }
-                className={`h-12 rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-800 transition hover:-translate-y-0.5 hover:border-primary-700 hover:text-primary-700 hover:shadow-xl ${fontMedium}`}
-              >
-                {r}
-              </button>
-            ))}
-          </div>
-        </section>
-
-        {featured && (
-          <section className="flex flex-col gap-5">
-            <h2 dir="auto" className={`m-0 text-left text-22 text-slate-800 md:text-2xl ${fontFor(topicName, fontHeading, "font-bold")}`}>
-              Featured {params.sub ?? params.category ?? ""} Course
-            </h2>
-            <FeaturedCourse course={featured} />
-          </section>
-        )}
-
-        <section ref={resultsRef} className="flex scroll-mt-24 flex-col gap-6">
-          <div className="flex flex-col gap-1.5">
-            <h2 className={`m-0 text-26 text-slate-800 md:text-3xl ${fontHeading}`}>All {params.sub ?? params.category ?? ""} Courses</h2>
-            <p className={`text-sm text-slate-600 ${fontRegular}`}>Narrow down with filters to find the course that fits your goals.</p>
-          </div>
+        <section ref={resultsRef} aria-label="Search results" className="flex scroll-mt-24 flex-col gap-6">
           <div className="grid grid-cols-1 gap-8 lg:grid-cols-aside-278 lg:gap-12">
             <aside className="hidden lg:block">{sidebar}</aside>
             <div className="flex min-w-0 flex-col gap-5">
               <div className="flex flex-wrap items-center justify-between gap-3">
-                <span className={`text-15 text-slate-900 ${fontSemi}`}>
+                <span className={`text-15 text-slate-800 ${fontSemi}`}>
                   {results.length} {results.length === 1 ? "course" : "courses"} found
                 </span>
                 <div className="flex items-center gap-2">
@@ -667,8 +702,8 @@ export default function SearchPage({ params }: { params: SearchParams }) {
                       <span className="sr-only">Remove filter</span>
                     </button>
                   ))}
-                  <button type="button" onClick={clearAll} className={`px-2 text-13 text-orange-600 underline underline-offset-2 ${fontMedium}`}>
-                    Clear all
+                  <button type="button" onClick={clearAll} className={`px-2 text-13 text-primary-700 underline underline-offset-2 hover:text-primary-800 ${fontSemi}`}>
+                    Clear filters
                   </button>
                 </div>
               )}
@@ -688,27 +723,105 @@ export default function SearchPage({ params }: { params: SearchParams }) {
                   </button>
                 </div>
               )}
-              {pages > 1 && (
-                <nav aria-label="Pagination" className="mt-2 flex items-center justify-center gap-2">
-                  {Array.from({ length: pages }, (_, i) => i + 1).map((p) => (
-                    <button
-                      key={p}
-                      type="button"
-                      aria-current={p === page ? "page" : undefined}
-                      onClick={() => {
-                        setPage(p);
-                        resultsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
-                      }}
-                      className={`size-10 rounded-xl text-sm transition ${fontSemi} ${p === page ? "bg-slate-900 text-white" : "border border-slate-200 text-slate-900 hover:border-primary-700"}`}
-                    >
-                      {p}
-                    </button>
-                  ))}
-                </nav>
+              {results.length > PAGE_SIZES[0] && (
+                <div className="mt-2 flex flex-col-reverse items-center justify-between gap-4 sm:flex-row">
+                  <label className={`flex items-center gap-2 text-sm text-slate-600 ${fontRegular}`}>
+                    Show
+                    <select value={pageSize} onChange={(e) => setPageSize(Number(e.target.value))} aria-label="Courses per page" className="field w-auto">
+                      {PAGE_SIZES.map((n) => (
+                        <option key={n} value={n}>
+                          {n}
+                        </option>
+                      ))}
+                    </select>
+                    per page
+                  </label>
+                  <span className={`text-sm text-slate-500 tabular-nums ${fontRegular}`}>
+                    {(page - 1) * pageSize + 1}–{Math.min(page * pageSize, results.length)} of {results.length} courses
+                  </span>
+                  {pages > 1 && (
+                    <nav aria-label="Pagination" className="flex items-center gap-2">
+                      {Array.from({ length: pages }, (_, i) => i + 1).map((p) => (
+                        <button
+                          key={p}
+                          type="button"
+                          aria-current={p === page ? "page" : undefined}
+                          onClick={() => {
+                            setPage(p);
+                            resultsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+                          }}
+                          className={`size-10 rounded-xl text-sm transition ${fontSemi} ${p === page ? "bg-slate-900 text-white" : "border border-slate-200 text-slate-900 hover:border-primary-700"}`}
+                        >
+                          {p}
+                        </button>
+                      ))}
+                    </nav>
+                  )}
+                </div>
               )}
             </div>
           </div>
         </section>
+
+        {featured && (
+          <section className="flex flex-col gap-5">
+            <h2 dir="auto" className={`m-0 text-left text-22 text-slate-900 md:text-2xl ${fontFor(topicName, fontHeading, "font-bold")}`}>
+              Editor’s pick in {topicName}
+            </h2>
+            <FeaturedCourse course={featured} />
+          </section>
+        )}
+
+        {routeScope.length < 4 && suggestions.length > 0 && (
+          <section className="flex flex-col gap-5 border-t border-slate-200 pt-12">
+            <div className="flex flex-col gap-1.5">
+              <h2 className={`m-0 text-left text-22 text-slate-900 md:text-2xl ${fontHeading}`}>You might also like</h2>
+              <p className={`text-sm text-slate-600 ${fontRegular}`}>Only a few courses match {topicName} right now, so here are some popular courses from other topics.</p>
+            </div>
+            <Carousel items={suggestions} />
+          </section>
+        )}
+
+        <section className="flex flex-col gap-5">
+          <h2 dir="auto" className={`m-0 text-left text-22 text-slate-900 md:text-2xl ${fontFor(topicName, fontHeading, "font-bold")}`}>
+            {topicName} students also learn
+          </h2>
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            {related.map((r) => {
+              const isCategory = categories.some((c) => c.name === r);
+              const parent = categories.find((c) => c.name === r);
+              const total = courses.filter((c) =>
+                isCategory
+                  ? c.category === r || (parent?.subs as readonly string[] | undefined)?.includes(c.category)
+                  : c.subcategory === r || c.category === r || (courseTags[c.id] ?? []).includes(r),
+              ).length;
+              return (
+                <button
+                  key={r}
+                  type="button"
+                  onClick={() =>
+                    (currentSubs as readonly string[]).includes(r)
+                      ? openSearch({ category: params.category, sub: r })
+                      : isCategory
+                        ? openSearch({ category: r })
+                        : openSearch({ q: r })
+                  }
+                  className="group flex items-center gap-3 rounded-xl border border-slate-200 bg-white p-3 text-left transition hover:border-primary-300 hover:bg-primary-50"
+                >
+                  <span className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-primary-100 text-primary-700 transition group-hover:bg-primary-700 group-hover:text-white">
+                    <HugeiconsIcon icon={TOPIC_ICONS[r] ?? BookOpen01Icon} size={20} strokeWidth={1.7} />
+                  </span>
+                  <span className="flex min-w-0 flex-1 flex-col gap-0.5">
+                    <span className={`line-clamp-2 text-sm leading-5 text-slate-800 transition group-hover:text-primary-800 ${fontSemi}`}>{r}</span>
+                    {total > 0 && <span className={`text-xs leading-4 text-slate-500 ${fontRegular}`}>{total} {total === 1 ? "course" : "courses"}</span>}
+                  </span>
+                  <HugeiconsIcon icon={ArrowRight02Icon} size={18} strokeWidth={1.8} className="shrink-0 text-slate-400 transition group-hover:translate-x-0.5 group-hover:text-primary-700" />
+                </button>
+              );
+            })}
+          </div>
+        </section>
+
       </div>
 
       {drawer && (
