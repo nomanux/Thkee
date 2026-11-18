@@ -58,7 +58,7 @@ import {
   AssignmentPanel,
   type AssignmentState,
 } from "./Assignment";
-import { ActionMenu, FilterSelect } from "./Menus";
+import { ActionMenu, FilterSelect, HoverPill } from "./Menus";
 import {
   ArticleReader,
   NoteBody,
@@ -286,7 +286,9 @@ function PathRail({
   onCertificate: () => void;
 }) {
   const [open, setOpen] = useState<number | null>(current.section);
+  const [hover, setHover] = useState<string | null>(null);
   useEffect(() => setOpen(current.section), [current.section]);
+  const hoverProps = (key: string) => ({ onPointerEnter: () => setHover(key), onFocus: () => setHover(key) });
 
   const chapterLessons = sections.map((_, si) => flat.filter((l) => l.section === si));
   const chapterDone = chapterLessons.map((items) => items.length > 0 && items.every((l) => done.includes(l.key)));
@@ -312,7 +314,7 @@ function PathRail({
         </div>
       </div>
 
-      <ol className="scrollbar-thin min-h-0 flex-1 overflow-y-auto px-4 py-4">
+      <ol className="scrollbar-thin min-h-0 flex-1 overflow-y-auto px-4 py-4" onPointerLeave={() => setHover(null)}>
         {sections.map((s, si) => {
           const items = chapterLessons[si];
           const finished = chapterDone[si];
@@ -330,11 +332,13 @@ function PathRail({
                 type="button"
                 onClick={() => setOpen(expanded ? null : si)}
                 aria-expanded={expanded}
-                className="group relative flex w-full items-start gap-3 rounded-xl px-1 py-1.5 text-left"
+                {...hoverProps(`chapter-${si}`)}
+                className="group relative flex w-full items-start gap-3 rounded-xl px-1 py-1.5 text-left outline-none"
               >
+                {hover === `chapter-${si}` && <HoverPill group="path-rail" className="rounded-xl bg-slate-900/4" />}
                 <span
                   aria-hidden="true"
-                  className={`mt-0.5 flex size-6 shrink-0 items-center justify-center rounded-full text-11 tabular-nums ${fontSemi} ${
+                  className={`relative mt-0.5 flex size-6 shrink-0 items-center justify-center rounded-full text-11 tabular-nums ${fontSemi} ${
                     finished
                       ? "bg-primary-700 text-white"
                       : isCurrent
@@ -350,7 +354,7 @@ function PathRail({
                     si + 1
                   )}
                 </span>
-                <span className="flex min-w-0 flex-1 flex-col gap-0.5">
+                <span className="relative flex min-w-0 flex-1 flex-col gap-0.5">
                   <span
                     dir="auto"
                     className={`text-start text-sm leading-snug transition-colors group-hover:text-primary-800 ${isCurrent ? `text-slate-900 ${fontSemi}` : `text-slate-700 ${fontMedium}`}`}
@@ -361,7 +365,7 @@ function PathRail({
                     {finished ? "Finished" : `${count}/${items.length} lessons`} · {minutesOf(items)}
                   </span>
                 </span>
-                <span className="mt-1 flex size-6 shrink-0 items-center justify-center rounded-md text-slate-500 transition group-hover:bg-slate-100">
+                <span className="relative mt-1 flex size-6 shrink-0 items-center justify-center rounded-md text-slate-500 transition group-hover:text-slate-900">
                   <Svg className={`size-4 transition-transform duration-300 ${expanded ? "rotate-180" : ""}`} stroke={2.2}>
                     <path d="M6 9l6 6 6-6" />
                   </Svg>
@@ -386,18 +390,20 @@ function PathRail({
                           type="button"
                           onClick={() => onOpen(l)}
                           aria-current={isNow ? "step" : undefined}
-                          className={`group/l flex w-full items-baseline gap-3 rounded-lg px-2.5 py-2 text-left transition ${isNow ? "bg-slate-100" : "hover:bg-slate-50"}`}
+                          {...hoverProps(l.key)}
+                          className={`group/l relative flex w-full items-baseline gap-3 rounded-lg px-2.5 py-2 text-left outline-none transition ${isNow ? "bg-slate-100" : ""}`}
                         >
+                          {hover === l.key && !isNow && <HoverPill group="path-rail" className="rounded-lg bg-slate-900/4" />}
                           <span
                             dir="auto"
-                            className={`min-w-0 flex-1 text-start text-13 leading-5 ${
+                            className={`relative min-w-0 flex-1 text-start text-13 leading-5 ${
                               isNow ? `text-slate-900 ${fontSemi}` : isDone ? `text-slate-500 ${fontRegular}` : `text-slate-800 group-hover/l:text-slate-900 ${fontRegular}`
                             }`}
                           >
                             {l.title}
                             {isNow && <span className={`ml-2 align-middle text-11 uppercase tracking-wider text-secondary-800 ${fontSemi}`}>{playing ? "Playing" : "Now"}</span>}
                           </span>
-                          <span className={`flex shrink-0 items-center gap-1 text-xs tabular-nums text-slate-500 ${fontRegular}`}>
+                          <span className={`relative flex shrink-0 items-center gap-1 text-xs tabular-nums text-slate-500 ${fontRegular}`}>
                             {l.kind !== "video" && <KindIcon kind={l.kind} className="size-3.5" />}
                             {l.kind === "quiz" ? `${QUIZ_LENGTH} Q` : l.kind === "assignment" ? "Task" : `${l.minutes}:00`}
                           </span>
@@ -412,17 +418,23 @@ function PathRail({
         })}
 
         <li className="relative">
-          <button type="button" onClick={onCertificate} className="group flex w-full items-start gap-3 rounded-xl px-1 py-1.5 text-left">
+          <button
+            type="button"
+            onClick={onCertificate}
+            {...hoverProps("certificate")}
+            className="group relative flex w-full items-start gap-3 rounded-xl px-1 py-1.5 text-left outline-none"
+          >
+            {hover === "certificate" && <HoverPill group="path-rail" className="rounded-xl bg-slate-900/4" />}
             <span
               aria-hidden="true"
-              className={`mt-0.5 flex size-6 shrink-0 items-center justify-center rounded-lg ${allDone ? "bg-secondary-500 text-slate-900" : "bg-slate-100 text-slate-500"}`}
+              className={`relative mt-0.5 flex size-6 shrink-0 items-center justify-center rounded-lg ${allDone ? "bg-secondary-500 text-slate-900" : "bg-slate-100 text-slate-500"}`}
             >
               <Svg className="size-3.5" stroke={2}>
                 <circle cx="12" cy="9" r="6" />
                 <path d="M8.5 14L7 21l5-3 5 3-1.5-7" />
               </Svg>
             </span>
-            <span className="flex min-w-0 flex-1 flex-col gap-0.5">
+            <span className="relative flex min-w-0 flex-1 flex-col gap-0.5">
               <span className={`text-sm text-slate-900 transition-colors group-hover:text-primary-800 ${fontSemi}`}>Certificate</span>
               <span className={`text-xs text-slate-500 ${fontRegular}`}>
                 {allDone ? "Ready to download" : `Unlocks after ${flat.length - done.length} more lessons`}

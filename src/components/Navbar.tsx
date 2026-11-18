@@ -18,6 +18,7 @@ import { categories, courses } from "../data";
 import { fontFor, fontMedium, fontRegular, fontSemi } from "../fonts";
 import { formatPrice, load, openAccount, openMessages, openMyLearning, openPurchaseHistory, scrollToId, useApp, type Lang } from "../store";
 import { buttonClass } from "./Button"
+import { HoverPill } from "./Menus";
 
 const imgLogo = "/assets/820a1.svg";
 const imgChevronDown = "/assets/edb9c.svg";
@@ -136,20 +137,21 @@ function SearchBox({ onDone, autoFocus = false, shortcut = false }: { onDone?: (
                 type="button"
                 role="option"
                 aria-selected={active === i + 1}
-                className={`${menuItem} ${active === i + 1 ? "bg-slate-100" : ""}`}
+                className={`${menuItem} relative hover:bg-transparent`}
                 onMouseEnter={() => setActive(i + 1)}
                 onClick={() => {
                   setOverlay({ type: "course", id: c.id });
                   finish();
                 }}
               >
-                <span className="min-w-0">
+                {active === i + 1 && <HoverPill group="nav-search" />}
+                <span className="relative min-w-0">
                   <span dir="auto" className={`block truncate text-left ${fontFor(c.title, fontMedium, "font-medium")}`}>{c.title}</span>
                   <span className={`block text-13 text-slate-500 ${fontRegular}`}>
                     {c.category} · {c.instructor}
                   </span>
                 </span>
-                <span className={`shrink-0 text-13 text-primary-700 ${fontSemi}`}>{formatPrice(c.price)}</span>
+                <span className={`relative shrink-0 text-13 text-primary-700 ${fontSemi}`}>{formatPrice(c.price)}</span>
               </button>
             ))
           ) : (
@@ -205,10 +207,11 @@ function ExploreMenu() {
                   onMouseEnter={() => setActive(i)}
                   onFocus={() => setActive(i)}
                   onClick={() => go({ category: cat.name })}
-                  className={`flex w-full items-center justify-between gap-3 rounded-xl px-4 py-3 text-left text-base leading-5.5 transition-colors ${fontMedium} ${i === active ? "bg-primary-200 text-primary-700" : "text-slate-900 hover:bg-slate-100"}`}
+                  className={`relative flex w-full items-center justify-between gap-3 rounded-xl px-4 py-3 text-left text-base leading-5.5 outline-none transition-colors ${fontMedium} ${i === active ? "text-primary-700" : "text-slate-900"}`}
                 >
-                  {cat.name}
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true" className="shrink-0">
+                  {i === active && <HoverPill group="nav-explore" className="rounded-xl bg-primary-200" />}
+                  <span className="relative">{cat.name}</span>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true" className="relative shrink-0">
                     <path d="M9 6l6 6-6 6" />
                   </svg>
                 </button>
@@ -256,6 +259,7 @@ function ExploreMenu() {
 function LanguageMenu() {
   const { lang, setLang, notify } = useApp();
   const [open, setOpen] = useState(false);
+  const [hover, setHover] = useState<string | null>(null);
   const ref = useDismiss(open, () => setOpen(false));
   return (
     <div ref={ref} className="relative hidden sm:block">
@@ -264,20 +268,23 @@ function LanguageMenu() {
         <span className={`text-sm leading-5 text-white ${fontMedium}`}>{lang}</span>
       </button>
       {open && (
-        <div className={`${menuPanel} right-0 w-45`}>
+        <div className={`${menuPanel} right-0 w-45`} onPointerLeave={() => setHover(null)}>
           {languages.map((l) => (
             <button
               key={l.code}
               type="button"
-              className={menuItem}
+              className={`${menuItem} relative outline-none hover:bg-transparent`}
+              onPointerEnter={() => setHover(l.code)}
+              onFocus={() => setHover(l.code)}
               onClick={() => {
                 setLang(l.code);
                 setOpen(false);
                 notify(l.code === "AR" ? "Language set to العربية (full translation coming soon)" : "Language set to English");
               }}
             >
-              {l.label}
-              {lang === l.code && <span className="text-primary-700">✓</span>}
+              {hover === l.code && <HoverPill group="nav-lang" />}
+              <span className="relative">{l.label}</span>
+              {lang === l.code && <span className="relative text-primary-700">✓</span>}
             </button>
           ))}
         </div>
@@ -320,6 +327,7 @@ function UserAvatar({ photo, initials, className }: { photo: string; initials: s
 function UserMenu() {
   const { user, logout, setOverlay, notify, cart } = useApp();
   const [open, setOpen] = useState(false);
+  const [hover, setHover] = useState<string | null>(null);
   const ref = useDismiss(open, () => setOpen(false));
   if (!user) return null;
   const initials = user.name
@@ -361,6 +369,7 @@ function UserMenu() {
       {open && (
         <div
           role="menu"
+          onPointerLeave={() => setHover(null)}
           className="pop-in absolute right-0 top-full mt-2.5 z-40 max-h-dvh-minus-72 w-71 overflow-y-auto rounded-2xl border border-slate-200 bg-white p-1.5 shadow-2xl scrollbar-thin"
         >
           <button
@@ -383,12 +392,17 @@ function UserMenu() {
                   key={item.label}
                   type="button"
                   role="menuitem"
+                  onPointerEnter={() => setHover(item.label)}
+                  onFocus={() => setHover(item.label)}
                   onClick={() => pick(item.onClick)}
-                  className={`group flex h-9.5 w-full items-center gap-3 rounded-xl px-2.5 text-left text-sm text-slate-700 transition-colors hover:bg-slate-100 hover:text-slate-900 ${fontMedium}`}
+                  className={`group relative flex h-9.5 w-full items-center gap-3 rounded-xl px-2.5 text-left text-sm text-slate-700 outline-none transition-colors hover:text-slate-900 ${fontMedium}`}
                 >
-                  <MenuIcon name={item.icon} />
-                  <span className="flex-1 truncate">{item.label}</span>
-                  {!!item.badge && <span className={`rounded-full bg-secondary-500 px-1.5 text-xs leading-4.5 text-slate-800 ${fontSemi}`}>{item.badge}</span>}
+                  {hover === item.label && <HoverPill group="nav-account" className="rounded-xl bg-slate-100" />}
+                  <span className="relative flex min-w-0 flex-1 items-center gap-3">
+                    <MenuIcon name={item.icon} />
+                    <span className="flex-1 truncate">{item.label}</span>
+                    {!!item.badge && <span className={`rounded-full bg-secondary-500 px-1.5 text-xs leading-4.5 text-slate-800 ${fontSemi}`}>{item.badge}</span>}
+                  </span>
                 </button>
               ))}
             </div>
@@ -397,11 +411,16 @@ function UserMenu() {
             <button
               type="button"
               role="menuitem"
+              onPointerEnter={() => setHover("logout")}
+              onFocus={() => setHover("logout")}
               onClick={() => pick(logout)}
-              className={`group flex h-9.5 w-full items-center gap-3 rounded-xl px-2.5 text-left text-sm text-slate-700 transition-colors hover:bg-red-50 hover:text-red-700 ${fontMedium}`}
+              className={`group relative flex h-9.5 w-full items-center gap-3 rounded-xl px-2.5 text-left text-sm text-slate-700 outline-none transition-colors hover:text-red-700 ${fontMedium}`}
             >
-              <MenuIcon name="logout" />
-              Log out
+              {hover === "logout" && <HoverPill group="nav-account" className="rounded-xl bg-red-50" />}
+              <span className="relative flex items-center gap-3">
+                <MenuIcon name="logout" />
+                Log out
+              </span>
             </button>
           </div>
         </div>

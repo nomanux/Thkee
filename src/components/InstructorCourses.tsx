@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, type ChangeEvent, type FormEvent } from "react";
+import { motion, useReducedMotion } from "motion/react";
 import PageHeader, { pageBody, pageShell } from "./PageHeader";
 import { categories } from "../data";
 import { fontBold, fontMedium, fontRegular, fontSemi } from "../fonts";
@@ -317,6 +318,7 @@ export default function InstructorCourses({ startNew }: { startNew?: boolean }) 
   }, [courses, stored, setCourses]);
   const [page, setPage] = useState(1);
   const [tab, setTab] = useState<Tab>("all");
+  const still = useReducedMotion();
   const [query, setQuery] = useState("");
   const [sort, setSort] = useState<SortKey>("updated");
   const [creating, setCreating] = useState(!!startNew);
@@ -435,15 +437,23 @@ export default function InstructorCourses({ startNew }: { startNew?: boolean }) 
                   {TABS.map((t) => {
                     const active = tab === t.key;
                     return (
-                      <button key={t.key} type="button" role="tab" aria-selected={active} onClick={() => pickTab(t.key)} className={`flex shrink-0 items-center gap-2 border-b-2 px-3 pb-3 pt-2 text-sm transition ${active ? `border-secondary-500 text-slate-900 ${fontSemi}` : `border-transparent text-slate-500 hover:text-slate-900 ${fontMedium}`}`}>
+                      <button key={t.key} type="button" role="tab" aria-selected={active} onClick={() => pickTab(t.key)} className={`relative flex shrink-0 items-center gap-2 px-3 pb-3.5 pt-2 text-sm transition-colors duration-200 ${active ? `text-slate-900 ${fontSemi}` : `text-slate-500 hover:text-slate-900 ${fontMedium}`}`}>
                         {t.label}
-                        <span className={`rounded-full px-2 py-0.5 text-11 leading-3.5 ${active ? "bg-secondary-100 text-secondary-800" : "bg-slate-150 text-slate-500"} ${fontSemi}`}>{counts[t.key]}</span>
+                        <span className={`rounded-full px-2 py-0.5 text-11 leading-3.5 transition-colors duration-200 ${active ? "bg-secondary-100 text-secondary-800" : "bg-slate-150 text-slate-500"} ${fontSemi}`}>{counts[t.key]}</span>
+                        {active && (
+                          <motion.span
+                            layoutId="course-tabs-underline"
+                            aria-hidden="true"
+                            className="absolute inset-x-0 bottom-0 h-0.5 rounded-full bg-secondary-500"
+                            transition={still ? { duration: 0 } : { type: "spring", stiffness: 500, damping: 40 }}
+                          />
+                        )}
                       </button>
                     );
                   })}
                 </div>
                 <div className="flex w-full items-center gap-2 pb-3 @3xl:w-auto">
-                  <label className="flex h-9 min-w-0 flex-1 items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 shadow-sm transition hover:border-slate-300 focus-within:border-primary-700/60 focus-within:ring-3 focus-within:ring-primary-700/12 @3xl:w-60 @3xl:flex-none">
+                  <label className="flex h-9 min-w-0 flex-1 items-center gap-2 rounded-xl border border-slate-300 bg-white px-3 transition hover:border-slate-400 focus-within:border-primary-700/60 focus-within:ring-3 focus-within:ring-primary-700/12 @3xl:w-60 @3xl:flex-none">
                     <Icon d={I.search} className="size-4 shrink-0 text-slate-400" />
                     <input
                       type="search"
@@ -459,7 +469,7 @@ export default function InstructorCourses({ startNew }: { startNew?: boolean }) 
                   </label>
                   <label className="relative">
                     <span className="sr-only">Sort by</span>
-                    <select value={sort} onChange={(e) => setSort(e.target.value as SortKey)} className={`h-9 appearance-none rounded-lg border border-slate-300 bg-white pl-3 pr-8 text-sm text-slate-900 outline-none transition hover:border-slate-400 hover:bg-slate-50 focus:border-primary-700/60 focus:ring-3 focus:ring-primary-700/12 ${fontMedium}`}>
+                    <select value={sort} onChange={(e) => setSort(e.target.value as SortKey)} className={`h-9 appearance-none rounded-xl border border-slate-300 bg-white pl-3 pr-8 text-sm text-slate-900 outline-none transition hover:border-slate-400 hover:bg-slate-50 focus:border-primary-700/60 focus:ring-3 focus:ring-primary-700/12 ${fontMedium}`}>
                       <option value="updated">Recently updated</option>
                       <option value="purchases">Most sales</option>
                       <option value="favorites">Most favourited</option>
@@ -498,7 +508,7 @@ export default function InstructorCourses({ startNew }: { startNew?: boolean }) 
                     </button>
                   </div>
                 ) : (
-                  <ul className="divide-y divide-slate-150">
+                  <ul key={tab} className="fade-up divide-y divide-slate-150">
                     {visible.map((course) => (
                       <li key={course.id} className="group grid grid-cols-main-auto items-center gap-x-4 gap-y-3 px-4 py-4 transition hover:bg-slate-25 @3xl:grid-cols-courses-table @3xl:px-5">
                         <div className="flex min-w-0 items-start gap-3 @md:items-center @md:gap-4">

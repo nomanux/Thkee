@@ -64,7 +64,7 @@ import {
 } from "./InstructorCourses";
 import { ConfirmDialog } from "./InstructorSessions";
 import { InfoTip } from "./InstructorReports";
-import { ActionMenu, type ActionItem } from "./Menus";
+import { ActionMenu, HoverPill, type ActionItem } from "./Menus";
 import { DateField, todayIso } from "./DatePicker";
 import CoursePagePreview, {
   type CoursePreviewData,
@@ -73,6 +73,7 @@ import CoursePagePreview, {
 import { NoteBody, NoteEditor } from "./Notes";
 import { Shell } from "./Overlays";
 import { buttonClass } from "./Button"
+import Radio from "./Radio";
 
 type Point = { id: string; text: string };
 type LectureKind = "Video" | "Quiz" | "Assignment" | "Article";
@@ -1811,16 +1812,17 @@ function TopicsField({
                 onMouseDown={(e) => e.preventDefault()}
                 onMouseEnter={() => setCursor(i)}
                 onClick={() => !blocked && toggle(topic)}
-                className={`flex h-9 shrink-0 items-center gap-2.5 rounded-lg px-2.5 text-left text-sm leading-5 transition-colors ${i === cursor && !blocked ? "bg-slate-100" : ""} ${blocked ? "cursor-not-allowed text-slate-300" : "text-slate-900"} ${fontRegular}`}
+                className={`relative flex h-9 shrink-0 items-center gap-2.5 rounded-lg px-2.5 text-left text-sm leading-5 transition-colors ${blocked ? "cursor-not-allowed text-slate-300" : "text-slate-900"} ${fontRegular}`}
               >
+                {i === cursor && !blocked && <HoverPill group="topic-cursor" />}
                 <span
-                  className={`flex size-4 shrink-0 items-center justify-center rounded-sm border transition ${on ? "border-primary-700 bg-primary-700 text-white" : "border-slate-300 bg-white"}`}
+                  className={`relative flex size-4 shrink-0 items-center justify-center rounded-sm border transition ${on ? "border-primary-700 bg-primary-700 text-white" : "border-slate-300 bg-white"}`}
                 >
                   {on && (
                     <Icon path="M5 12.5l4.5 4.5L19 7.5" className="size-3" />
                   )}
                 </span>
-                <span className="min-w-0 flex-1 truncate">
+                <span className="relative min-w-0 flex-1 truncate">
                   {topic === custom ? <>Add “{topic}”</> : topic}
                 </span>
               </button>
@@ -7045,13 +7047,7 @@ function SettingsSection({
                   }}
                   className={`flex items-start gap-3 rounded-xl border p-4 text-left transition ${on ? "border-primary-700 bg-primary-100" : "border-slate-200 bg-white hover:border-slate-300"}`}
                 >
-                  <span
-                    className={`mt-0.5 flex size-4 shrink-0 items-center justify-center rounded-full border-2 ${on ? "border-primary-700" : "border-slate-300"}`}
-                  >
-                    {on && (
-                      <span className="size-1.5 rounded-full bg-primary-700" />
-                    )}
-                  </span>
+                  <Radio checked={on} size="sm" className="mt-0.5" />
                   <span>
                     <span
                       className={`block text-sm leading-5 text-slate-900 ${fontMedium}`}

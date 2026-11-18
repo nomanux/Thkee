@@ -13,6 +13,7 @@ import InstructorReports from "./InstructorReports";
 import InstructorReviews, { unrepliedReviewCount } from "./InstructorReviews";
 import InstructorSchedule from "./InstructorSchedule";
 import InstructorSessions from "./InstructorSessions";
+import { useHoverHighlight } from "./Menus";
 
 const imgLogoLight = "/assets/4c1d1.svg";
 const COLLAPSE_KEY = "thkee.instructorNavCollapsed";
@@ -342,6 +343,7 @@ function CommandSearch() {
 function Menu({ trigger, label, children, width = "w-65" }: { trigger: ReactNode; label: string; children: (close: () => void) => ReactNode; width?: string }) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
+  const highlight = useHoverHighlight("bg-slate-50", "bg-red-50");
   const close = useMemo(() => () => setOpen(false), []);
   useOutside(ref, close);
   useEffect(() => {
@@ -356,7 +358,8 @@ function Menu({ trigger, label, children, width = "w-65" }: { trigger: ReactNode
         {trigger}
       </button>
       {open && (
-        <div role="menu" className={`pop-in absolute right-0 top-12 z-50 ${width} overflow-hidden rounded-xl border border-slate-200 bg-white shadow-2xl`}>
+        <div role="menu" {...highlight.props} className={`pop-in absolute right-0 top-12 z-50 isolate ${width} overflow-hidden rounded-xl border border-slate-200 bg-white shadow-2xl`}>
+          {highlight.pill}
           {children(close)}
         </div>
       )}
@@ -446,7 +449,7 @@ function TopBar({ title, group, onMenu }: { title: string; group: string; onMenu
           }
         >
           {(close) => {
-            const item = `flex w-full items-center gap-3 px-4 py-2.5 text-left text-sm text-slate-700 transition hover:bg-slate-25 ${fontMedium}`;
+            const item = `flex w-full items-center gap-3 px-4 py-2.5 text-left text-sm text-slate-700 outline-none ${fontMedium}`;
             return (
               <>
                 <div className="flex items-center gap-3 border-b border-slate-150 px-4 py-3">
@@ -467,7 +470,7 @@ function TopBar({ title, group, onMenu }: { title: string; group: string; onMenu
                   </button>
                 </div>
                 <div className="border-t border-slate-150 py-1">
-                  <button type="button" role="menuitem" className={`${item} text-red-700`} onClick={() => (close(), logout())}>
+                  <button type="button" role="menuitem" data-danger className={`${item} text-red-700`} onClick={() => (close(), logout())}>
                     <Svg d={D.logout} className="size-4.5" />
                     Log out
                   </button>

@@ -2,6 +2,7 @@ import { useState, type ReactNode } from "react";
 import { fontHeading, fontMedium, fontRegular, fontSemi } from "../fonts";
 import { useApp, useStoredState } from "../store";
 import { LaptopsArt, PresentingArt, RecordingArt } from "./InstructorArt";
+import Radio from "./Radio";
 
 const imgLogo = "/assets/9afd8.svg";
 const imgCheckboxOn = "/assets/70227.svg";
@@ -121,7 +122,7 @@ export default function InstructorOnboardingPage() {
                   return (
                     <label key={option} className={`flex h-9.25 cursor-pointer items-center gap-2 rounded-sm border px-2.5 text-sm text-slate-700 transition ${checked ? "border-slate-800 bg-secondary-50" : "border-slate-400 hover:bg-slate-25"} ${fontMedium}`}>
                       <input type="radio" name={`step-${step}`} checked={checked} onChange={() => setAnswers((a) => Object.assign([...a], { [step]: option }))} className="peer sr-only" />
-                      <span className={`flex size-4 shrink-0 items-center justify-center rounded-full border peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-primary-700 ${checked ? "border-slate-800 bg-slate-800" : "border-slate-300 bg-white"}`}>{checked && <span className="size-1.5 rounded-full bg-white" />}</span>
+                      <Radio checked={checked} size="sm" className="rounded-full peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-primary-700" />
                       {option}
                     </label>
                   );

@@ -36,6 +36,7 @@ import type { Course } from "../data"
 import { fontHeading, fontMedium, fontRegular, fontSemi } from "../fonts"
 import { CourseThumb } from "./Overlays"
 import { buttonClass } from "./Button"
+import { useHoverHighlight } from "./Menus"
 
 export const QUALITIES = ["Auto", "1080p", "720p", "480p", "360p"]
 export const RATES = [0.5, 0.75, 1, 1.25, 1.5, 1.75, 2]
@@ -280,7 +281,8 @@ export default function LessonPlayer({
 
   const volumeIcon = level === 0 ? VolumeMute02Icon : level < 0.5 ? VolumeLowIcon : VolumeHighIcon
 
-  const menuRow = "flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-start text-sm text-white transition hover:bg-white/10"
+  const menuRow = "flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-start text-sm text-white outline-none"
+  const settingsHighlight = useHoverHighlight("rounded-lg bg-white/10")
 
   return (
     <div
@@ -506,7 +508,11 @@ export default function LessonPlayer({
                   </CtrlButton>
 
                   {menu && (
-                    <div className="pop-in absolute bottom-full right-0 mb-3 w-64 overflow-hidden rounded-xl bg-slate-900/95 p-1.5 shadow-popover ring-1 ring-white/10 backdrop-blur-xl">
+                    <div
+                      {...settingsHighlight.props}
+                      className="pop-in absolute bottom-full right-0 isolate mb-3 w-64 overflow-hidden rounded-xl bg-slate-900/95 p-1.5 shadow-popover ring-1 ring-white/10 backdrop-blur-xl"
+                    >
+                      {settingsHighlight.pill}
                       {menu === "main" && (
                         <>
                           <button type="button" onClick={() => setMenu("quality")} className={menuRow}>

@@ -28,6 +28,7 @@ import { fontBold, fontFor, fontHeading, fontMedium, fontRegular, fontSemi } fro
 import { cardBrand, openLearning, orderTotals, useApp, type CardBrand } from "../store";
 import { CourseThumb } from "./Overlays";
 import { buttonClass } from "./Button"
+import Radio from "./Radio";
 
 const sar = (n: number) => `${Math.round(n).toLocaleString()} SAR`;
 const countries = ["Saudi Arabia", "United Arab Emirates", "Kuwait", "Qatar", "Bahrain", "Oman", "Egypt", "Jordan", "Pakistan", "Bangladesh", "United Kingdom", "United States"];
@@ -80,14 +81,6 @@ export function BrandBadge({ brand }: { brand: CardBrand }) {
   return (
     <span className="flex h-5 w-7.5 items-center rounded-sm bg-slate-200 px-1" aria-hidden="true">
       <span className="h-1.25 w-2.5 rounded-xs bg-slate-300" />
-    </span>
-  );
-}
-
-function Radio({ checked }: { checked: boolean }) {
-  return (
-    <span className={`flex size-5 shrink-0 items-center justify-center rounded-full border-2 transition-colors ${checked ? "border-primary-700" : "border-slate-300"}`}>
-      <span className={`size-2.5 rounded-full bg-primary-700 transition-transform duration-200 ${checked ? "scale-100" : "scale-0"}`} />
     </span>
   );
 }

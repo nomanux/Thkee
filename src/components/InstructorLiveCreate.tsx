@@ -10,6 +10,7 @@ import { ConfirmDialog, LIVE_COURSES, MultiSessionBadge, SingleSessionBadge } fr
 import { ActionMenu, FilterSelect } from "./Menus";
 import { NoteEditor } from "./Notes";
 import { buttonClass } from "./Button"
+import Radio from "./Radio";
 
 const imgLogo = "/assets/4c1d1.svg";
 const DRAFTS_KEY = "thkee.liveDrafts";
@@ -171,7 +172,9 @@ function StartFlow() {
                   {option.label}
                 </span>
                 <span className={`mt-2 block text-sm leading-6 text-slate-700 ${fontRegular}`}>{option.text}</span>
-                <span aria-hidden="true" className={`absolute right-5 top-5 flex size-6 items-center justify-center rounded-full peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-slate-800 ${selected ? "bg-slate-700" : "border border-slate-300 bg-white"}`}>{selected && <span className="size-2 rounded-full bg-white" />}</span>
+<span className="absolute right-5 top-5 rounded-full peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-primary-700">
+                  <Radio checked={selected} />
+                </span>
               </label>
             );
           })}

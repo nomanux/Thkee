@@ -4,6 +4,7 @@ import { fontFor, fontMedium, fontRegular, fontSemi } from "../fonts";
 import { formatPrice, openPurchaseHistory, refundAmount, useApp } from "../store";
 import { CourseThumb } from "./Overlays";
 import { buttonClass } from "./Button"
+import Radio from "./Radio";
 
 const reasons = ["The course isn't what I expected", "The content quality is poor", "The instructor is hard to understand", "I bought it by mistake", "I found a better course", "Other"];
 
@@ -22,7 +23,7 @@ export function RefundOption({ checked, onSelect, title, note }: { checked: bool
   return (
     <label className={`flex cursor-pointer items-start gap-3 p-4 transition ${checked ? "bg-secondary-50" : "bg-white hover:bg-slate-25"}`}>
       <input type="radio" name="refund-method" checked={checked} onChange={onSelect} className="peer sr-only" />
-      <span className={`mt-0.75 flex size-4 shrink-0 items-center justify-center rounded-full border peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-primary-700 ${checked ? "border-slate-800 bg-slate-800" : "border-slate-300 bg-white"}`}>{checked && <span className="size-1.5 rounded-full bg-white" />}</span>
+      <Radio checked={checked} size="sm" className="mt-0.75 rounded-full peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-primary-700" />
       <span className="flex flex-col gap-2 text-sm leading-5.5">
         <span className={`text-slate-800 ${fontMedium}`}>{title}</span>
         <span className={`text-slate-500 ${fontRegular}`}>{note}</span>

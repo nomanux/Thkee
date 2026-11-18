@@ -353,11 +353,11 @@ body {
 
 /* Shared form fields. Utilities on an element still override these, e.g. "field w-auto". */
 @layer components {
-  /* Standard field: 1px grey border, 8px radius, no resting shadow, brand-green focus ring. */
+  /* Standard field: 1px grey border, 12px radius (rounded-xl), no resting shadow, brand-green focus ring. */
   .field,
   .field-box {
     border: 1px solid var(--color-slate-300);
-    border-radius: 8px;
+    border-radius: 12px;
     background-color: #fff;
     padding-inline: 12px;
     box-shadow: none;
@@ -399,7 +399,7 @@ body {
     background-size: 18px;
   }
   textarea.field {
-    border-radius: 8px;
+    border-radius: 12px;
   }
   .field::placeholder,
   .field-box input::placeholder {
@@ -443,6 +443,14 @@ body {
   }
   .field-box input:-webkit-autofill {
     box-shadow: 0 0 0 1000px #fff inset;
+  }
+  /* Any other input (like the sign-in card's): delay Chrome's fill so the field's own background shows. */
+  input:-webkit-autofill,
+  input:-webkit-autofill:hover,
+  input:-webkit-autofill:focus {
+    -webkit-text-fill-color: currentColor;
+    caret-color: currentColor;
+    transition: background-color 9999s ease-out 0s;
   }
   .field[aria-invalid="true"],
   .field-box:has([aria-invalid="true"]) {

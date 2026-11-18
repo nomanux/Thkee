@@ -4,7 +4,7 @@ import { ArrowLeft01Icon, MessageMultiple01Icon, MoreVerticalIcon, PencilEdit02I
 import { courses } from "../data";
 import { fontFor, fontMedium, fontRegular, fontSemi } from "../fonts";
 import { useApp, useStoredState } from "../store";
-import { ActionMenu } from "./Menus";
+import { ActionMenu, useHoverHighlight } from "./Menus";
 import { NoteBody, NoteEditor } from "./Notes";
 import { Shell } from "./Overlays";
 import { buttonClass } from "./Button"
@@ -105,6 +105,7 @@ function ReportAbuseDialog({ onClose }: { onClose: () => void }) {
   const [open, setOpen] = useState(false);
   const [showError, setShowError] = useState(false);
   const [done, setDone] = useState(false);
+  const issueHighlight = useHoverHighlight("rounded-sm bg-slate-150");
   const footer = "flex items-center justify-end gap-4 border-t border-slate-200 px-6 py-4";
 
   if (done) {
@@ -146,7 +147,8 @@ function ReportAbuseDialog({ onClose }: { onClose: () => void }) {
               <Chevron open={open} className="size-4 text-slate-500" />
             </button>
             {open && (
-              <ul role="listbox" aria-labelledby="issue-type" className="pop-in absolute inset-x-0 top-full mt-1 z-20 flex flex-col gap-0.5 rounded-lg bg-white p-1 shadow-2xl">
+              <ul role="listbox" aria-labelledby="issue-type" {...issueHighlight.props} className="pop-in absolute inset-x-0 top-full mt-1 z-20 isolate flex flex-col gap-0.5 rounded-lg bg-white p-1 shadow-2xl">
+                {issueHighlight.pill}
                 {issueTypes.map((type) => (
                   <li key={type} role="presentation">
                     <button
@@ -157,7 +159,7 @@ function ReportAbuseDialog({ onClose }: { onClose: () => void }) {
                         setIssue(type);
                         setOpen(false);
                       }}
-                      className={`w-full rounded-sm px-3 py-2 text-left text-sm leading-5 text-slate-700 transition ${issue === type ? "bg-secondary-100" : "hover:bg-slate-150"} ${fontRegular}`}
+                      className={`w-full rounded-sm px-3 py-2 text-left text-sm leading-5 text-slate-700 outline-none transition ${issue === type ? "bg-secondary-100" : ""} ${fontRegular}`}
                     >
                       {type}
                     </button>
