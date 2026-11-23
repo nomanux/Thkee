@@ -408,7 +408,7 @@ export function ArticleReader({
             )}
             {/* A readable column that still uses the space: wider in focus view, when the side panel is hidden. */}
             {/* The article sits on the grey canvas as a white page, so the reading area stands apart from the rest of the screen. */}
-            <div className={`flex min-w-0 flex-1 ${expanded ? "max-w-4xl" : "max-w-3xl"} flex-col gap-6 rounded-2xl border border-slate-200 bg-white px-6 py-8 shadow-sm md:px-12 md:py-12 text-slate-700 ${fontRegular}`} style={{ fontSize: `${(17 * zoom) / 100}px`, lineHeight: 1.8 }}>
+            <div className={`flex min-w-0 flex-1 ${expanded ? "max-w-4xl" : "max-w-3xl"} flex-col gap-6 rounded-2xl border border-slate-200 bg-white px-6 py-8 shadow-sm md:px-12 md:py-12 text-slate-700 ${fontRegular}`} style={{ fontSize: `${(16 * zoom) / 100}px`, lineHeight: 1.8 }}>
               <header className="mb-2 flex flex-col gap-2 border-b border-slate-200 pb-6">
                 <span dir="auto" className={`text-start text-xs uppercase tracking-wider text-primary-700 ${fontSemi}`}>{lesson.sectionTitle.replace(/^\d+\.\s*/, "")}</span>
                 <h2 dir="auto" className={`m-0 text-start text-3xl leading-tight text-slate-900 ${fontSemi}`}>{lesson.title}</h2>
