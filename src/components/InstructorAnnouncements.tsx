@@ -1,6 +1,10 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ReactNode } from "react";
+import { motion, useReducedMotion } from "motion/react";
+import { HugeiconsIcon, type IconSvgElement } from "@hugeicons/react";
+import { Calendar03Icon, Mail01Icon, Megaphone01Icon, PlusSignIcon, Search01Icon, ViewIcon } from "@hugeicons/core-free-icons";
+import { buttonClass } from "./Button";
 import { fontMedium, fontRegular, fontSemi } from "../fonts";
-import { load, openInstructorAnnouncements, save, useApp } from "../store";
+import { load, save, useApp } from "../store";
 import { DatePicker } from "./DatePicker";
 import { Checkbox } from "./InstructorAssignments";
 import { Pagination } from "./InstructorCourses";
@@ -8,12 +12,11 @@ import { ActionMenu, FilterSelect } from "./Menus";
 import { NoteBody, NoteEditor } from "./Notes";
 import { Shell } from "./Overlays";
 
-const imgMegaphone = "/assets/48fdd.svg";
-const imgPencil = "/assets/5f49c.svg";
 const imgClose = "/assets/53e9a.svg";
 
 export type AnnouncementCourse = { id: string; title: string; image: string };
-export type Announcement = { id: string; title: string; preview: string; text: string; html?: string; published: string; stamp: string };
+// at: ISO time it goes out (scheduled if in the future). emailed: also sent to students' inboxes.
+export type Announcement = { id: string; title: string; preview: string; text: string; html?: string; published: string; stamp: string; at?: string; emailed?: boolean };
 type Store = { quota: number; items: Record<string, Announcement[]> };
 
 const COURSES: AnnouncementCourse[] = [
@@ -23,26 +26,10 @@ const COURSES: AnnouncementCourse[] = [
   { id: "python-programming", title: "Python Programming for Beginners", image: "/assets/courses/python-programming.jpg" },
   { id: "leadership", title: "Leadership Essentials", image: "/assets/courses/leadership-essentials.jpg" },
 ];
+// Enrolled students per course, for the "emailed to" and "seen by" numbers.
+const STUDENTS: Record<string, number> = { "responsive-design": 248, "adobe-xd": 96, "usability-testing": 132, "python-programming": 512, leadership: 74 };
 
-const seedAnnouncement = (course: string, i: number): Announcement => ({
-  id: `${course}-${i}`,
-  title: "Urgent assignment submissions",
-  preview: "Dear students, we already uploaded two videos about this.......",
-  text: "📣 Attention Students! Join us on 13 January to explore valuable insights on conquering urgent assignment challenges. Learn effective strategies for last-minute submissions, time management, stress reduction, and maintaining quality work under pressure. Don't miss out on enhancing your academic success!",
-  html: "📣 Attention Students! Join us on <b>13 January</b> to explore valuable insights on conquering urgent assignment challenges. Learn effective strategies for last-minute submissions, time management, stress reduction, and maintaining quality work under pressure. Don't miss out on enhancing your academic success!",
-  published: "Dec 24, 2023 to Dec 28, 2023",
-  stamp: "03:20 AM  15 July 2020",
-});
-const seedList = (course: string, count: number) => Array.from({ length: count }, (_, i) => seedAnnouncement(course, i));
-const SEED: Store = { quota: 4, items: { "responsive-design": seedList("responsive-design", 8), "usability-testing": seedList("usability-testing", 8), "python-programming": seedList("python-programming", 3) } };
-
-const STORE_KEY = "thkee.instructorAnnouncements";
-const COURSE_PAGE = 3;
-const DETAIL_PAGE = 6;
-const titleClass = "m-0 font-instrument-medium text-2xl font-medium leading-8 text-slate-900";
-const titleStyle = { fontVariationSettings: '"wdth" 100' };
-const yellowButton = `flex h-9 shrink-0 items-center rounded-lg bg-secondary-500 px-5 text-base leading-5 text-slate-800 transition hover:bg-secondary-600 ${fontMedium}`;
-
+const DAY = 24 * 60 * 60 * 1000;
 const formatDateTime = (date: Date) => {
   const day = date.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
   const time = date.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
@@ -50,26 +37,45 @@ const formatDateTime = (date: Date) => {
 };
 const pad = (n: number) => String(n).padStart(2, "0");
 const toDateInput = (d: Date) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
-const makePreview = (text: string) => (text.length > 60 ? `${text.slice(0, 60).trimEnd()}.......` : text);
+const makePreview = (text: string) => (text.length > 120 ? `${text.slice(0, 120).trimEnd()}…` : text);
+
+const seed = (id: string, daysFromNow: number, title: string, text: string, emailed = true): Announcement => {
+  const at = new Date(Date.now() + daysFromNow * DAY);
+  at.setHours(daysFromNow > 0 ? 19 : 10, 0, 0, 0);
+  return { id, title, text, preview: makePreview(text), published: formatDateTime(at), stamp: formatDateTime(at), at: at.toISOString(), emailed };
+};
+const SEED: Store = {
+  quota: 3,
+  items: {
+    "responsive-design": [
+      seed("rd-3", 3, "Live Q&A this Thursday", "Join me live on Thursday for a 45-minute Q&A on layout and breakpoints. Bring your questions from Section 3 and your current project."),
+      seed("rd-2", -2, "New lesson: fluid type with clamp()", "I've added a 12-minute lesson on fluid typography with CSS clamp(). It replaces the older media-query approach in Section 3, so watch it before you start Assignment 2."),
+      seed("rd-1", -9, "Assignment 2 deadline moved to Friday", "A few of you asked for more time, so the Assignment 2 deadline is now Friday at midnight. Use the extra days to test your layout on a real phone.", false),
+    ],
+    "usability-testing": [
+      seed("ut-2", -5, "Download the interview script template", "The interview script template is now in the Resources tab. Use it for your first three user interviews and adjust the questions to your product."),
+      seed("ut-1", -14, "Feedback on your first usability reports", "I've finished reviewing the first reports. The strongest ones clearly separated what users did from what they said. Check your comments in Assignments."),
+    ],
+    "python-programming": [
+      seed("py-2", 6, "Office hours moved to Sunday", "This week's office hours move from Saturday to Sunday at 7 PM. The link stays the same."),
+      seed("py-1", -1, "Section 4 exercises are updated", "The Section 4 exercises now include solutions and two extra practice problems on loops. Try them before looking at the answers."),
+    ],
+  },
+};
+
+const STORE_KEY = "thkee.instructorAnnouncements.v2";
+const FEED_PAGE = 8;
+const titleClass = "m-0 font-instrument-medium text-2xl font-medium leading-8 text-slate-900";
+const titleStyle = { fontVariationSettings: '"wdth" 100' };
+
+const isScheduled = (a: Announcement) => !!a.at && new Date(a.at).getTime() > Date.now();
+const shortDate = (iso: string) => new Date(iso).toLocaleDateString("en-US", { month: "short", day: "numeric" });
+const shortDateTime = (iso: string) => `${shortDate(iso)}, ${new Date(iso).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" })}`;
+// A stable "seen by" share for each published announcement (demo data).
+const seenShare = (id: string) => 0.45 + ([...id].reduce((sum, ch) => sum + ch.charCodeAt(0), 0) % 40) / 100;
 
 function GreenMegaphone() {
-  const mask = `url(${imgMegaphone}) center / contain no-repeat`;
-  return <span aria-hidden="true" className="mt-0.5 size-5.5 shrink-0 bg-emerald-600" style={{ mask, WebkitMask: mask }} />;
-}
-
-function EmptyAnnouncements() {
-  return (
-    <div className="flex flex-col items-center gap-5 px-6 py-6 text-center">
-      <svg viewBox="0 0 64 72" className="h-16 w-14 text-sky-400" fill="none" stroke="currentColor" strokeWidth="1" strokeLinejoin="round" strokeLinecap="round" aria-hidden="true">
-        <path d="M8 30l24-8 24 8-24 8-24-8zM8 30v28l24 10 24-10V30M32 38v30" />
-        <path d="M8 30L2 38l24 8 6-8M56 30l6 8-24 8-6-8" />
-        <path d="M32 30l12-4-12-4-12 4 12 4z" fill="currentColor" fillOpacity="0.25" />
-        <circle cx="46" cy="9" r="8" />
-        <path d="M24 56h.01M38 54h.01M30 60c1-2 3-2 4 0M32 14l-4-4M26 20l-3-3" />
-      </svg>
-      <p className={`text-sm leading-6 text-slate-600 ${fontRegular}`}>No Announcement.</p>
-    </div>
-  );
+  return <HugeiconsIcon icon={Megaphone01Icon} size={20} strokeWidth={1.8} aria-hidden="true" className="mt-0.5 shrink-0 text-primary-700" />;
 }
 
 function ModalHeader({ title, onClose }: { title: string; onClose: () => void }) {
@@ -105,11 +111,11 @@ function AnnouncementFields({ title, setTitle, initial, onBody }: { title: strin
 
 function ModalFooter({ onCancel, onPublish }: { onCancel: () => void; onPublish: () => void }) {
   return (
-    <div className="flex items-center justify-end gap-8 border-t border-slate-150 px-6 py-4">
-      <button type="button" onClick={onCancel} className={`text-base leading-6 text-slate-800 transition hover:text-slate-500 ${fontMedium}`}>
+    <div className="flex items-center justify-end gap-3 border-t border-slate-150 px-6 py-4">
+      <button type="button" onClick={onCancel} className={buttonClass("ghost", "lg")}>
         Cancel
       </button>
-      <button type="button" onClick={onPublish} className={`h-11 w-37.5 rounded-lg bg-secondary-500 text-base leading-5 text-slate-800 transition hover:bg-secondary-600 ${fontMedium}`}>
+      <button type="button" onClick={onPublish} className={buttonClass("primary", "lg")}>
         Publish
       </button>
     </div>
@@ -136,8 +142,8 @@ export function CreateModal({ fixedCourse, onClose, onPublish }: { fixedCourse?:
     if (!publishNow && scheduled.getTime() < Date.now()) return notify("Pick a publish time in the future");
     if (!title.trim()) return notify("Add a title first");
     if (!body.text && !body.html) return notify("Write a description first");
-    onPublish(courseId, { id: `a-${Date.now()}`, title: title.trim(), preview: makePreview(body.text), text: body.text, html: body.html, published: formatDateTime(scheduled), stamp: formatDateTime(scheduled) });
-    notify(sendEmail ? "Announcement published and emailed to students" : "Announcement published");
+    onPublish(courseId, { id: `a-${Date.now()}`, title: title.trim(), preview: makePreview(body.text), text: body.text, html: body.html, published: formatDateTime(scheduled), stamp: formatDateTime(scheduled), at: scheduled.toISOString(), emailed: sendEmail });
+    notify(publishNow ? (sendEmail ? "Announcement published and emailed to students" : "Announcement published") : `Announcement scheduled for ${notice}`);
   };
 
   return (
@@ -154,16 +160,6 @@ export function CreateModal({ fixedCourse, onClose, onPublish }: { fixedCourse?:
             </div>
           </div>
         )}
-        <div className="grid gap-6.5 sm:grid-cols-2">
-          <label className="flex h-10 cursor-pointer items-center gap-2.5 rounded-lg border border-slate-300 bg-slate-25 px-4">
-            <input type="radio" name="announcement-type" checked readOnly className="size-4 accent-slate-800" />
-            <span className={`text-sm leading-5 text-slate-800 ${fontMedium}`}>Educational announcement</span>
-          </label>
-          <label className="flex h-10 cursor-not-allowed items-center gap-2.5 rounded-lg border border-slate-150 px-4">
-            <input type="radio" name="announcement-type" disabled className="size-4" />
-            <span className={`text-sm leading-5 text-slate-500 ${fontRegular}`}>Promotional email(Upcoming)</span>
-          </label>
-        </div>
         <p className={`text-base leading-6 text-slate-800 ${fontMedium}`}>Announcement Details</p>
         <Checkbox checked={publishNow} onChange={() => setPublishNow(!publishNow)}>
           <span className={`text-sm leading-5 text-slate-700 ${fontRegular}`}>Publish Now</span>
@@ -182,7 +178,7 @@ export function CreateModal({ fixedCourse, onClose, onPublish }: { fixedCourse?:
             <input id="announcement-time" type="time" value={time} disabled={publishNow} onChange={(e) => setTime(e.target.value)} className={fieldInput} />
           </div>
         </div>
-        <p className={`flex items-center gap-2.5 rounded-lg bg-emerald-50 px-3 py-3.5 text-xs leading-4.5 text-emerald-600 ${fontRegular}`}>
+        <p className={`flex items-center gap-2.5 rounded-xl bg-primary-50 px-3 py-3 text-xs leading-4.5 text-primary-800 ${fontRegular}`}>
           <GreenMegaphone />
           <span>
             This announcement will be published at <span className={fontSemi}>{notice}</span>
@@ -248,251 +244,296 @@ export function DeleteModal({ announcement, onClose, onConfirm }: { announcement
   );
 }
 
-function CourseList({ store, onCreate, onShow }: { store: Store; onCreate: () => void; onShow: (courseId: string, announcementId: string) => void }) {
-  const [page, setPage] = useState(1);
-  const start = (page - 1) * COURSE_PAGE;
-  const shown = COURSES.slice(start, start + COURSE_PAGE);
+type Entry = Announcement & { course: AnnouncementCourse };
+type Tab = "all" | "published" | "scheduled";
 
+function Meta({ icon, children }: { icon: IconSvgElement; children: ReactNode }) {
   return (
-    <main className="flex flex-1 flex-col bg-white">
-      <div className="flex flex-wrap items-center gap-6 border-b border-slate-200 px-4 py-6 md:px-7">
-        <h1 className={`flex h-10.5 items-center ${titleClass}`} style={titleStyle}>
-          Announcements
-        </h1>
-        <button type="button" onClick={onCreate} className={yellowButton}>
-          Create announcement
-        </button>
-        <p className={`text-xs leading-4.5 text-slate-600 ${fontRegular}`}>
-          <span className={`text-slate-700 ${fontSemi}`}>
-            {store.quota} of {SEED.quota}
-          </span>{" "}
-          left this month
-        </p>
-      </div>
-      <div className="flex flex-1 flex-col gap-3.5 px-4 py-6 md:px-7">
-        {shown.map((course) => {
-          const items = (store.items[course.id] ?? []).slice(0, 2);
-          return (
-            <section key={course.id} className="rounded-lg border border-slate-200">
-              <div className="flex flex-wrap items-center gap-4 border-b border-slate-200 px-4 py-4">
-                <img src={course.image} alt="" className="h-10 w-12.5 shrink-0 rounded-sm object-cover" />
-                <h2 className={`min-w-0 flex-1 text-base leading-6 text-slate-900 ${fontSemi}`}>{course.title}</h2>
-                <button type="button" onClick={() => openInstructorAnnouncements(course.id)} className={`h-10.75 rounded-lg border border-secondary-500 px-4 text-base leading-5 text-slate-800 transition hover:bg-secondary-50 ${fontRegular}`}>
-                  See All
-                </button>
-              </div>
-              {items.length === 0 ? (
-                <EmptyAnnouncements />
-              ) : (
-                <ul className="divide-y divide-slate-150">
-                  {items.map((item) => (
-                    <li key={item.id} className="flex flex-wrap items-center gap-4 px-4 py-4">
-                      <GreenMegaphone />
-                      <div className="min-w-0 flex-1">
-                        <p className={`text-sm leading-6 text-slate-600 ${fontSemi}`}>{item.title}</p>
-                        <p className={`truncate text-sm leading-6 text-slate-500 ${fontRegular}`}>{item.preview}</p>
-                      </div>
-                      <button type="button" onClick={() => onShow(course.id, item.id)} className={`h-8.75 rounded-md bg-slate-150 px-3 text-sm leading-5 text-slate-800 transition hover:bg-slate-200 ${fontMedium}`}>
-                        Show Announcement
-                      </button>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </section>
-          );
-        })}
-      </div>
-      <Pagination page={page} pageCount={Math.ceil(COURSES.length / COURSE_PAGE)} start={start} shown={shown.length} total={COURSES.length} onPage={setPage} />
-    </main>
+    <span className="flex items-center gap-1.5">
+      <HugeiconsIcon icon={icon} size={14} strokeWidth={1.8} aria-hidden="true" className="text-slate-400" />
+      {children}
+    </span>
   );
 }
 
-function CourseDetail({ course, items, expanded, setExpanded, onCreate, onEdit, onDelete }: { course: AnnouncementCourse; items: Announcement[]; expanded: string | null; setExpanded: (id: string | null) => void; onCreate: () => void; onEdit: (item: Announcement) => void; onDelete: (item: Announcement) => void }) {
-  const [tab, setTab] = useState<"educational" | "promotional">("educational");
-  const [page, setPage] = useState(() => {
-    const index = items.findIndex((i) => i.id === expanded);
-    return index < 0 ? 1 : Math.floor(index / DETAIL_PAGE) + 1;
-  });
-  const list = tab === "educational" ? items : [];
-  const pageCount = Math.max(1, Math.ceil(list.length / DETAIL_PAGE));
-  const current = Math.min(page, pageCount);
-  const start = (current - 1) * DETAIL_PAGE;
-  const shown = list.slice(start, start + DETAIL_PAGE);
-
+function AnnouncementCard({ entry, open, onToggle, onEdit, onDelete, onPublishNow }: { entry: Entry; open: boolean; onToggle: () => void; onEdit: () => void; onDelete: () => void; onPublishNow: () => void }) {
+  const scheduled = isScheduled(entry);
+  const reach = STUDENTS[entry.course.id] ?? 0;
+  const seen = Math.round(reach * seenShare(entry.id));
   return (
-    <main className="flex flex-1 flex-col bg-slate-150">
-      <div className="flex flex-wrap items-center justify-between gap-4 bg-white px-4 py-3 md:px-7">
-        <h1 className={`max-w-120 ${titleClass}`} style={titleStyle}>
-          {course.title}
-        </h1>
-        <nav aria-label="Breadcrumb" className={`flex flex-wrap items-center gap-2 text-xs leading-4.5 text-slate-600 ${fontRegular}`}>
-          <button type="button" onClick={() => openInstructorAnnouncements()} className="text-slate-800 transition hover:underline">
-            Announcements
-          </button>
-          <svg viewBox="0 0 24 24" className="size-3 text-slate-400" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-            <path d="M9 6l6 6-6 6" />
-          </svg>
-          <span aria-current="page">{course.title}</span>
-        </nav>
-      </div>
-      <div className="flex flex-1 flex-col gap-3 px-4 pb-6 pt-6 md:px-7">
-        <div className="mb-1 flex flex-wrap items-center justify-between gap-4">
-          <div role="tablist" aria-label="Announcement type" className="flex">
-            {[
-              { key: "educational", label: "Educational announcements" },
-              { key: "promotional", label: "Promotional emails" },
-            ].map((t) => (
-              <button
-                key={t.key}
-                type="button"
-                role="tab"
-                aria-selected={tab === t.key}
-                onClick={() => {
-                  setTab(t.key as "educational" | "promotional");
-                  setPage(1);
-                }}
-                className={`border-b-2 px-6 pb-4 pt-1 text-sm leading-6 transition ${tab === t.key ? "border-secondary-500 text-slate-700" : "border-transparent text-slate-500 hover:text-slate-700"} ${fontSemi}`}
-              >
-                {t.label}
-              </button>
-            ))}
+    <article id={`announcement-${entry.id}`} className={`rounded-2xl border bg-white p-4 transition-colors md:p-5 ${open ? "border-primary-200" : "border-slate-200 hover:border-slate-300"}`}>
+      <div className="flex gap-4">
+        <img src={entry.course.image} alt="" className="hidden aspect-video w-24 shrink-0 self-start rounded-lg object-cover sm:block" />
+        <div className="min-w-0 flex-1">
+          <div className={`flex flex-wrap items-center gap-x-2 gap-y-1 text-xs leading-4.5 text-slate-500 ${fontRegular}`}>
+            <span className="min-w-0 truncate">{entry.course.title}</span>
+            <span
+              className={`inline-flex h-5.5 shrink-0 items-center rounded-full px-2 text-11 ring-1 ring-inset ${scheduled ? "bg-secondary-50 text-secondary-800 ring-secondary-200" : "bg-primary-50 text-primary-700 ring-primary-200"} ${fontSemi}`}
+            >
+              {scheduled ? "Scheduled" : "Published"}
+            </span>
           </div>
-          <button type="button" onClick={onCreate} className={yellowButton}>
-            Create announcement
+          <button type="button" aria-expanded={open} onClick={onToggle} className="mt-1 block w-full text-left">
+            <h3 className={`text-15 leading-5.5 text-slate-900 transition-colors hover:text-primary-800 ${fontSemi}`}>{entry.title}</h3>
+            {!open && <p className={`mt-1 line-clamp-2 text-sm leading-5.5 text-slate-600 ${fontRegular}`}>{entry.text}</p>}
           </button>
+          {open && <NoteBody note={{ text: entry.text, html: entry.html }} tone="text-slate-700" className="mt-1 !leading-6" />}
+          <div className={`mt-3 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs leading-4.5 text-slate-500 ${fontRegular}`}>
+            {entry.at && <Meta icon={Calendar03Icon}>{scheduled ? `Goes out ${shortDateTime(entry.at)}` : `Published ${shortDate(entry.at)}`}</Meta>}
+            {entry.emailed !== false && <Meta icon={Mail01Icon}>{scheduled ? `Will email ${reach} students` : `Emailed to ${reach} students`}</Meta>}
+            {!scheduled && reach > 0 && (
+              <Meta icon={ViewIcon}>
+                Seen by {seen} ({Math.round((seen / reach) * 100)}%)
+              </Meta>
+            )}
+            <button type="button" onClick={onToggle} className={`ml-auto text-primary-700 transition hover:text-primary-800 hover:underline ${fontMedium}`}>
+              {open ? "Show less" : "Read more"}
+            </button>
+          </div>
         </div>
-        {shown.length === 0 && (
-          <div className="rounded-lg bg-white">
-            <EmptyAnnouncements />
-          </div>
-        )}
-        {shown.map((item) => {
-          const open = expanded === item.id;
-          return (
-            <article key={item.id} className={`rounded-lg border bg-white px-6 py-4.5 ${open ? "border-slate-800" : "border-white"}`}>
-              <div className="flex items-start gap-4">
-                <GreenMegaphone />
-                <button type="button" aria-expanded={open} onClick={() => setExpanded(open ? null : item.id)} className="min-w-0 flex-1 text-left">
-                  <span className={`block text-sm leading-6 text-slate-800 ${open ? fontSemi : fontMedium}`}>{item.title}</span>
-                  {!open && <span className={`block truncate text-sm leading-7 text-slate-500 ${fontRegular}`}>{item.preview}</span>}
-                </button>
-                <ActionMenu
-                  label={`More actions for ${item.title}`}
-                  triggerClass="flex size-7.75 items-center justify-center rounded-md bg-slate-150 text-slate-800 transition hover:bg-slate-200"
-                  trigger={
-                    <svg viewBox="0 0 24 24" className="size-4" fill="currentColor" aria-hidden="true">
-                      <circle cx="5" cy="12" r="2" />
-                      <circle cx="12" cy="12" r="2" />
-                      <circle cx="19" cy="12" r="2" />
-                    </svg>
-                  }
-                  items={[
-                    { label: "Edit", icon: <img src={imgPencil} alt="" width={14} height={14} className="size-3.5" />, onClick: () => onEdit(item) },
-                    {
-                      label: "Delete",
-                      danger: true,
-                      icon: (
-                        <svg viewBox="0 0 24 24" className="size-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                          <path d="M4 7h16M9 7V4h6v3M6 7l1 14h10l1-14M10 11v6M14 11v6" />
-                        </svg>
-                      ),
-                      onClick: () => onDelete(item),
-                    },
-                  ]}
-                />
-                <button type="button" aria-label={open ? "Collapse announcement" : "Expand announcement"} onClick={() => setExpanded(open ? null : item.id)} className={`flex size-7.75 items-center justify-center transition ${open ? "text-slate-800" : "text-slate-400"}`}>
-                  <svg viewBox="0 0 24 24" className={`size-5 transition-transform ${open ? "rotate-180" : ""}`} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                    <path d="M6 9l6 6 6-6" />
-                  </svg>
-                </button>
-              </div>
-              {open && (
-                <div className="mt-3 md:pl-9.5 md:pr-37.5">
-                  <NoteBody note={{ text: item.text, html: item.html }} tone="text-slate-500" className="!leading-7" />
-                  <p className={`mt-5 flex items-center gap-3 text-xs leading-4.5 text-slate-800 ${fontRegular}`}>
-                    <svg viewBox="0 0 24 24" className="size-4 shrink-0 text-slate-400" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                      <rect x="3" y="5" width="18" height="16" rx="2" />
-                      <path d="M3 10h18M8 3v4M16 3v4" />
-                    </svg>
-                    <span className="italic font-synthesis-style">Published Time: {item.published}</span>
-                  </p>
-                </div>
-              )}
-            </article>
-          );
-        })}
+        <ActionMenu
+          label={`More actions for ${entry.title}`}
+          triggerClass="flex size-8 shrink-0 items-center justify-center rounded-lg text-slate-500 transition hover:bg-slate-100 hover:text-slate-900"
+          trigger={
+            <svg viewBox="0 0 24 24" className="size-4" fill="currentColor" aria-hidden="true">
+              <circle cx="12" cy="5" r="1.8" />
+              <circle cx="12" cy="12" r="1.8" />
+              <circle cx="12" cy="19" r="1.8" />
+            </svg>
+          }
+          items={[
+            ...(scheduled ? [{ label: "Publish now", onClick: onPublishNow }] : []),
+            { label: "Edit", onClick: onEdit },
+            { label: "Delete", danger: true, onClick: onDelete },
+          ]}
+        />
       </div>
-      <Pagination page={current} pageCount={pageCount} start={start} shown={shown.length} total={list.length} onPage={setPage} />
-    </main>
+    </article>
   );
 }
+
+function QuotaMeter({ left, total }: { left: number; total: number }) {
+  return (
+    <div className="flex flex-col gap-1.5" title="Announcements you can still post this month">
+      <span className={`text-xs leading-4 text-slate-500 ${fontRegular}`}>
+        <span className={`text-slate-900 ${fontSemi}`}>
+          {left} of {total}
+        </span>{" "}
+        left this month
+      </span>
+      <span className="flex gap-1" aria-hidden="true">
+        {Array.from({ length: total }, (_, i) => (
+          <span key={i} className={`h-1.5 w-7 rounded-full ${i < total - left ? "bg-slate-200" : "bg-primary-700"}`} />
+        ))}
+      </span>
+    </div>
+  );
+}
+
+const MONTHLY_LIMIT = 4;
 
 export default function InstructorAnnouncements({ courseId }: { courseId?: string }) {
   const { notify } = useApp();
+  const still = useReducedMotion();
   const [store, setStore] = useState<Store>(() => load(STORE_KEY, SEED));
+  const [tab, setTab] = useState<Tab>("all");
+  const [course, setCourse] = useState(courseId ?? "all");
+  const [query, setQuery] = useState("");
+  const [page, setPage] = useState(1);
   const [expanded, setExpanded] = useState<string | null>(null);
-  const [creating, setCreating] = useState(false);
-  const [editing, setEditing] = useState<Announcement | null>(null);
-  const [deleting, setDeleting] = useState<Announcement | null>(null);
+  const [creating, setCreating] = useState<AnnouncementCourse | true | null>(null);
+  const [editing, setEditing] = useState<Entry | null>(null);
+  const [deleting, setDeleting] = useState<Entry | null>(null);
 
   useEffect(() => save(STORE_KEY, store), [store]);
+  useEffect(() => setCourse(courseId ?? "all"), [courseId]);
 
-  const course = COURSES.find((c) => c.id === courseId);
-  const items = course ? store.items[course.id] ?? [] : [];
   const setItems = (id: string, next: (list: Announcement[]) => Announcement[]) => setStore((s) => ({ ...s, items: { ...s.items, [id]: next(s.items[id] ?? []) } }));
-  const startCreate = () => {
-    if (store.quota <= 0) return notify("You have used all your announcements for this month");
-    setCreating(true);
+  const startCreate = (fixed?: AnnouncementCourse) => {
+    if (store.quota <= 0) return notify("You've used all your announcements for this month");
+    setCreating(fixed ?? true);
   };
 
+  const all: Entry[] = COURSES.flatMap((c) => (store.items[c.id] ?? []).map((a) => ({ ...a, course: c }))).sort((a, b) => (b.at ?? "").localeCompare(a.at ?? ""));
+  const q = query.trim().toLowerCase();
+  const scoped = all.filter((e) => (course === "all" || e.course.id === course) && (!q || `${e.title} ${e.text}`.toLowerCase().includes(q)));
+  const counts = { all: scoped.length, published: scoped.filter((e) => !isScheduled(e)).length, scheduled: scoped.filter(isScheduled).length };
+  const list = scoped.filter((e) => tab === "all" || (tab === "scheduled" ? isScheduled(e) : !isScheduled(e)));
+  const pageCount = Math.max(1, Math.ceil(list.length / FEED_PAGE));
+  const current = Math.min(page, pageCount);
+  const start = (current - 1) * FEED_PAGE;
+  const shown = list.slice(start, start + FEED_PAGE);
+  // Courses students haven't heard from yet: a gentle nudge at the top of the feed.
+  const quiet = COURSES.filter((c) => !(store.items[c.id] ?? []).length && (course === "all" || c.id === course));
+
+  const tabs: { key: Tab; label: string }[] = [
+    { key: "all", label: "All" },
+    { key: "published", label: "Published" },
+    { key: "scheduled", label: "Scheduled" },
+  ];
+
   return (
-    <>
-      {course ? (
-        <CourseDetail key={course.id} course={course} items={items} expanded={expanded} setExpanded={setExpanded} onCreate={startCreate} onEdit={setEditing} onDelete={setDeleting} />
-      ) : (
-        <CourseList
-          store={store}
-          onCreate={startCreate}
-          onShow={(id, announcementId) => {
-            setExpanded(announcementId);
-            openInstructorAnnouncements(id);
-          }}
-        />
-      )}
+    <main className="flex flex-1 flex-col bg-white">
+      <div className="flex flex-wrap items-center justify-between gap-4 border-b border-slate-200 px-4 py-6 md:px-7">
+        <div className="min-w-0">
+          <h1 className={titleClass} style={titleStyle}>
+            Announcements
+          </h1>
+          <p className={`mt-1 text-sm leading-5 text-slate-500 ${fontRegular}`}>Share updates with the students of a course. They see them in the course and can get them by email.</p>
+        </div>
+        <div className="flex items-center gap-5">
+          <QuotaMeter left={store.quota} total={MONTHLY_LIMIT} />
+          <button type="button" onClick={() => startCreate(COURSES.find((c) => c.id === course))} disabled={store.quota <= 0} className={buttonClass("primary", "lg")}>
+            <HugeiconsIcon icon={PlusSignIcon} size={18} strokeWidth={2} aria-hidden="true" />
+            New announcement
+          </button>
+        </div>
+      </div>
+
+      <div className="flex flex-1 flex-col gap-4 px-4 py-6 md:px-7">
+        <div className="flex flex-wrap items-end justify-between gap-3 border-b border-slate-200">
+          <div role="tablist" aria-label="Announcement status" className="-mb-px flex gap-1 overflow-x-auto">
+            {tabs.map((t) => {
+              const active = tab === t.key;
+              return (
+                <button
+                  key={t.key}
+                  type="button"
+                  role="tab"
+                  aria-selected={active}
+                  onClick={() => {
+                    setTab(t.key);
+                    setPage(1);
+                  }}
+                  className={`relative flex shrink-0 items-center gap-2 px-3 pb-3.5 pt-2 text-sm transition-colors ${active ? `text-slate-900 ${fontSemi}` : `text-slate-500 hover:text-slate-900 ${fontMedium}`}`}
+                >
+                  {t.label}
+                  <span className={`rounded-full px-2 py-0.5 text-11 leading-3.5 tabular-nums ${active ? "bg-primary-100 text-primary-700" : "bg-slate-100 text-slate-500"} ${fontSemi}`}>{counts[t.key]}</span>
+                  {active && (
+                    <motion.span
+                      layoutId="announcement-tabs"
+                      aria-hidden="true"
+                      className="absolute inset-x-0 bottom-0 h-0.5 rounded-full bg-primary-700"
+                      transition={still ? { duration: 0 } : { type: "spring", stiffness: 500, damping: 40 }}
+                    />
+                  )}
+                </button>
+              );
+            })}
+          </div>
+          <div className="flex w-full flex-wrap items-center gap-2 pb-3 md:w-auto">
+            <label className="field-box min-w-0 flex-1 md:w-56 md:flex-none">
+              <HugeiconsIcon icon={Search01Icon} size={16} strokeWidth={1.8} aria-hidden="true" className="shrink-0 text-slate-400" />
+              <input
+                value={query}
+                onChange={(e) => {
+                  setQuery(e.target.value);
+                  setPage(1);
+                }}
+                placeholder="Search announcements"
+                aria-label="Search announcements"
+                className={`min-w-0 flex-1 bg-transparent text-base text-slate-900 outline-none placeholder:text-slate-400 md:text-sm ${fontRegular}`}
+              />
+            </label>
+            <FilterSelect
+              large
+              alignRight
+              label="Course"
+              value={course}
+              onChange={(next) => {
+                setCourse(next);
+                setPage(1);
+              }}
+              options={[{ value: "all", label: "All courses" }, ...COURSES.map((c) => ({ value: c.id, label: c.title }))]}
+            />
+          </div>
+        </div>
+
+        {quiet.length > 0 && tab !== "scheduled" && !q && (
+          <section aria-labelledby="quiet-courses" className="rounded-2xl bg-primary-50 p-4 ring-1 ring-inset ring-primary-200">
+            <div className="flex items-start gap-3">
+              <GreenMegaphone />
+              <div className="min-w-0">
+                <h2 id="quiet-courses" className={`text-sm leading-5 text-slate-900 ${fontSemi}`}>
+                  {quiet.length === 1 ? "This course has no announcements yet" : "These courses have no announcements yet"}
+                </h2>
+                <p className={`text-13 leading-5 text-slate-600 ${fontRegular}`}>Their students haven't heard from you. A short welcome message helps them get started.</p>
+              </div>
+            </div>
+            <ul className="mt-3 flex flex-col gap-2 sm:pl-8">
+              {quiet.map((c) => (
+                <li key={c.id} className="flex items-center gap-3 rounded-xl bg-white p-2 pr-3 ring-1 ring-primary-100">
+                  <img src={c.image} alt="" className="aspect-video w-14 shrink-0 rounded-md object-cover" />
+                  <span className={`min-w-0 flex-1 truncate text-sm leading-5 text-slate-900 ${fontMedium}`}>{c.title}</span>
+                  <button type="button" onClick={() => startCreate(c)} className={buttonClass("soft", "md")}>
+                    Write announcement
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
+
+        <div key={`${tab}-${course}`} className="fade-up flex flex-col gap-3">
+          {shown.map((entry) => (
+            <AnnouncementCard
+              key={entry.id}
+              entry={entry}
+              open={expanded === entry.id}
+              onToggle={() => setExpanded(expanded === entry.id ? null : entry.id)}
+              onEdit={() => setEditing(entry)}
+              onDelete={() => setDeleting(entry)}
+              onPublishNow={() => {
+                const now = new Date();
+                setItems(entry.course.id, (items) => items.map((a) => (a.id === entry.id ? { ...a, at: now.toISOString(), published: formatDateTime(now), stamp: formatDateTime(now) } : a)));
+                notify("Announcement published");
+              }}
+            />
+          ))}
+          {shown.length === 0 && (
+            <div className="flex flex-col items-center gap-1 rounded-2xl border border-dashed border-slate-200 px-6 py-14 text-center">
+              <p className={`text-15 text-slate-900 ${fontSemi}`}>{q ? "No announcements match your search" : tab === "scheduled" ? "Nothing scheduled" : "No announcements yet"}</p>
+              <p className={`text-sm text-slate-500 ${fontRegular}`}>{q ? "Try different words or another course." : "Post an update and your students will see it in the course."}</p>
+            </div>
+          )}
+        </div>
+      </div>
+      {list.length > FEED_PAGE && <Pagination page={current} pageCount={pageCount} start={start} shown={shown.length} total={list.length} onPage={setPage} />}
+
       {creating && (
         <CreateModal
-          fixedCourse={course}
-          onClose={() => setCreating(false)}
+          fixedCourse={creating === true ? undefined : creating}
+          onClose={() => setCreating(null)}
           onPublish={(id, announcement) => {
             setStore((s) => ({ quota: s.quota - 1, items: { ...s.items, [id]: [announcement, ...(s.items[id] ?? [])] } }));
             setExpanded(announcement.id);
-            setCreating(false);
+            setTab("all");
+            setCreating(null);
           }}
         />
       )}
-      {editing && course && (
+      {editing && (
         <EditModal
-          course={course}
+          course={editing.course}
           announcement={editing}
           onClose={() => setEditing(null)}
           onSave={(next) => {
-            setItems(course.id, (list) => list.map((i) => (i.id === next.id ? next : i)));
+            setItems(editing.course.id, (items) => items.map((i) => (i.id === next.id ? { ...i, ...next } : i)));
             setEditing(null);
           }}
         />
       )}
-      {deleting && course && (
+      {deleting && (
         <DeleteModal
           announcement={deleting}
           onClose={() => setDeleting(null)}
           onConfirm={() => {
-            setItems(course.id, (list) => list.filter((i) => i.id !== deleting.id));
+            setItems(deleting.course.id, (items) => items.filter((i) => i.id !== deleting.id));
             setDeleting(null);
             notify("Announcement deleted");
           }}
         />
       )}
-    </>
+    </main>
   );
 }

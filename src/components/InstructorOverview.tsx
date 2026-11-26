@@ -589,11 +589,11 @@ function BalanceCard({ now }: { now: number }) {
 
 function TodoCard() {
   const tasks = [
-    { count: uncheckedSubmissionCount(), label: (n: number) => `${plural(n, "assignment")} to grade`, hint: "Students are waiting on feedback", path: P.doc, tone: "#7c3aed", bg: "#ede9fe", open: () => openInstructorAssignments() },
-    { count: unansweredQuestionCount(), label: (n: number) => `unanswered ${plural(n, "question")}`, hint: "Reply in Q&A", path: P.question, tone: "#0284c7", bg: "#e0f2fe", open: () => openInstructorQa() },
-    { count: unrepliedReviewCount(), label: (n: number) => `${plural(n, "review")} to reply to`, hint: "Thank students or follow up", path: P.star, tone: "#c98003", bg: "#fff3d6", open: openInstructorReviews },
-    { count: pendingCoRequestCount(), label: (n: number) => `co-instructor ${plural(n, "request")}`, hint: "Accept or decline", path: P.user, tone: "#059669", bg: "#d1fae5", open: openCoInstructorRequests },
-    { count: rejectedCourseCount(), label: (n: number) => `rejected ${plural(n, "course")}`, hint: "Update and resubmit", path: P.warning, tone: "#dc2626", bg: "#fee2e2", open: () => openInstructorCourses() },
+    { count: uncheckedSubmissionCount(), label: (n: number) => `${plural(n, "assignment")} to grade`, hint: "Students are waiting on feedback", path: P.doc, open: () => openInstructorAssignments() },
+    { count: unansweredQuestionCount(), label: (n: number) => `unanswered ${plural(n, "question")}`, hint: "Reply in Q&A", path: P.question, open: () => openInstructorQa() },
+    { count: unrepliedReviewCount(), label: (n: number) => `${plural(n, "review")} to reply to`, hint: "Thank students or follow up", path: P.star, open: openInstructorReviews },
+    { count: pendingCoRequestCount(), label: (n: number) => `co-instructor ${plural(n, "request")}`, hint: "Accept or decline", path: P.user, open: openCoInstructorRequests },
+    { count: rejectedCourseCount(), label: (n: number) => `rejected ${plural(n, "course")}`, hint: "Update and resubmit", path: P.warning, open: () => openInstructorCourses() },
   ].filter((t) => t.count > 0);
   const total = tasks.reduce((s, t) => s + t.count, 0);
 
@@ -603,7 +603,7 @@ function TodoCard() {
         <h2 id="dash-todo" className={cardTitle}>
           To do
         </h2>
-        {total > 0 && <span className={`rounded-full bg-red-100 px-2 py-0.5 text-xs leading-4 text-red-700 ${fontSemi}`}>{total}</span>}
+        {total > 0 && <span className={`rounded-full bg-slate-100 px-2 py-0.5 text-xs leading-4 text-slate-700 ${fontSemi}`}>{total}</span>}
       </div>
       {tasks.length === 0 ? (
         <div className="flex flex-col items-center gap-2 py-8 text-center">
@@ -617,7 +617,7 @@ function TodoCard() {
           {tasks.map((task) => (
             <li key={task.hint}>
               <button type="button" onClick={task.open} className="group flex w-full items-center gap-3 rounded-xl p-2 text-left transition hover:bg-slate-25">
-                <span className="flex size-9 shrink-0 items-center justify-center rounded-xl" style={{ backgroundColor: task.bg, color: task.tone }}>
+                <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-slate-100 text-slate-600">
                   <Icon path={task.path} className="size-4.5" />
                 </span>
                 <span className="min-w-0 flex-1">
@@ -636,12 +636,12 @@ function TodoCard() {
   );
 }
 
-const ACTIVITY_STYLE: Record<(typeof ACTIVITY)[number]["kind"], { path: string; tone: string; bg: string }> = {
-  enroll: { path: P.user, tone: "#059669", bg: "#d1fae5" },
-  review: { path: P.star, tone: "#c98003", bg: "#fff3d6" },
-  question: { path: P.question, tone: "#0284c7", bg: "#e0f2fe" },
-  assignment: { path: P.doc, tone: "#7c3aed", bg: "#ede9fe" },
-  complete: { path: P.award, tone: "#0f172a", bg: "#e2e8f0" },
+const ACTIVITY_STYLE: Record<(typeof ACTIVITY)[number]["kind"], { path: string }> = {
+  enroll: { path: P.user },
+  review: { path: P.star },
+  question: { path: P.question },
+  assignment: { path: P.doc },
+  complete: { path: P.award },
 };
 
 function ActivityCard() {
@@ -656,7 +656,7 @@ function ActivityCard() {
           const s = ACTIVITY_STYLE[a.kind];
           return (
             <li key={a.who + a.kind} className="relative flex gap-3">
-              <span className="relative flex size-8 shrink-0 items-center justify-center rounded-full ring-4 ring-white" style={{ backgroundColor: s.bg, color: s.tone }}>
+              <span className="relative flex size-8 shrink-0 items-center justify-center rounded-full bg-slate-100 text-slate-600 ring-4 ring-white">
                 <Icon path={s.path} className="size-4" />
               </span>
               <div className="min-w-0 flex-1">

@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode, type RefObject } from "react";
 import { fontBold, fontMedium, fontRegular, fontSemi } from "../fonts";
-import { load, openAccount, openCoInstructorRequests, openInstructorAnnouncements, openInstructorApps, openInstructorAssignments, openInstructorAvailability, openInstructorCourses, openInstructorDashboard, openInstructorQa, openInstructorReports, openInstructorReviews, openInstructorSchedule, openInstructorSessions, openMessages, openMyLearning, useApp } from "../store";
+import { load, openAccount, openCoInstructorRequests, openInstructorAnnouncements, openInstructorApps, openInstructorAssignments, openInstructorAvailability, openInstructorCourses, openInstructorMessages, openInstructorDashboard, openInstructorQa, openInstructorReports, openInstructorReviews, openInstructorSchedule, openInstructorSessions, openMyLearning, useApp } from "../store";
 import InstructorAnnouncements from "./InstructorAnnouncements";
 import InstructorApps from "./InstructorApps";
 import InstructorAssignments, { uncheckedSubmissionCount } from "./InstructorAssignments";
@@ -13,12 +13,13 @@ import InstructorReports from "./InstructorReports";
 import InstructorReviews, { unrepliedReviewCount } from "./InstructorReviews";
 import InstructorSchedule from "./InstructorSchedule";
 import InstructorSessions from "./InstructorSessions";
+import MessagesPage, { unreadStudentThreads } from "./MessagesPage";
 import { useHoverHighlight } from "./Menus";
 
 const imgLogoLight = "/assets/4c1d1.svg";
 const COLLAPSE_KEY = "thkee.instructorNavCollapsed";
 
-type Section = "courses" | "assignments" | "reports" | "reviews" | "qa" | "co-instructors" | "announcements" | "availability" | "apps" | "sessions" | "schedule";
+type Section = "courses" | "assignments" | "reports" | "reviews" | "qa" | "co-instructors" | "announcements" | "availability" | "apps" | "sessions" | "schedule" | "messages";
 type NavItem = { label: string; icon: string; children?: string[]; badge?: () => number };
 
 const navGroups: { heading?: string; items: NavItem[] }[] = [
@@ -45,7 +46,7 @@ const navGroups: { heading?: string; items: NavItem[] }[] = [
   {
     heading: "Communication",
     items: [
-      { label: "Messages", icon: "/assets/817aa.svg" },
+      { label: "Messages", icon: "/assets/817aa.svg", badge: unreadStudentThreads },
       { label: "Announcements", icon: "/assets/48fdd.svg" },
       { label: "Co-Instructor Requests", icon: "/assets/78c79.svg", badge: pendingCoRequestCount },
     ],
@@ -55,7 +56,7 @@ const navGroups: { heading?: string; items: NavItem[] }[] = [
 const PAGE_GROUP: Record<string, string> = Object.fromEntries(navGroups.flatMap((g) => g.items.flatMap((i) => [[i.label, g.heading ?? ""], ...(i.children ?? []).map((c) => [c, g.heading ?? ""])])));
 
 function go(label: string) {
-  if (label === "Messages") openMessages();
+  if (label === "Messages") openInstructorMessages();
   else if (label === "Dashboard") openInstructorDashboard();
   else if (label === "Courses") openInstructorCourses();
   else if (label === "Assignments") openInstructorAssignments();
@@ -489,7 +490,7 @@ function TopBar({ title, group, onMenu }: { title: string; group: string; onMenu
 export default function InstructorDashboardPage({ section, newCourse, submissionId, reportView, reportMonth, questionId, newQuestionCourse, announcementCourse, scheduleId, appsView, sessionSeries, sessionId, sessionCourse }: { newCourse?: boolean; section?: Section; announcementCourse?: string; scheduleId?: string; appsView?: "store" | "installed"; sessionSeries?: string; sessionId?: string; sessionCourse?: string; submissionId?: string; reportView?: "revenue"; reportMonth?: string; questionId?: string; newQuestionCourse?: string }) {
   const [collapsed, setCollapsed] = useState(() => load<boolean>(COLLAPSE_KEY, false));
   const [drawer, setDrawer] = useState(false);
-  const activeLabel = section === "courses" ? "Courses" : section === "assignments" ? "Assignments" : section === "reports" ? "Reports" : section === "reviews" ? "Reviews" : section === "qa" ? "Q&A" : section === "co-instructors" ? "Co-Instructor Requests" : section === "announcements" ? "Announcements" : section === "sessions" ? "All Sessions" : section === "schedule" ? "Schedule" : section === "availability" ? "Availability" : section === "apps" ? (appsView === "installed" ? "Installed Apps" : "App Store") : "Dashboard";
+  const activeLabel = section === "courses" ? "Courses" : section === "assignments" ? "Assignments" : section === "reports" ? "Reports" : section === "reviews" ? "Reviews" : section === "qa" ? "Q&A" : section === "co-instructors" ? "Co-Instructor Requests" : section === "messages" ? "Messages" : section === "announcements" ? "Announcements" : section === "sessions" ? "All Sessions" : section === "schedule" ? "Schedule" : section === "availability" ? "Availability" : section === "apps" ? (appsView === "installed" ? "Installed Apps" : "App Store") : "Dashboard";
 
   const toggle = () =>
     setCollapsed((c) => {
@@ -529,8 +530,13 @@ export default function InstructorDashboardPage({ section, newCourse, submission
       <div className="flex min-w-0 flex-1 flex-col">
         <TopBar title={activeLabel} group={PAGE_GROUP[activeLabel] ?? ""} onMenu={() => setDrawer(true)} />
         {/* Content sits in a rounded light panel inside the dark frame. overflow-clip keeps sticky elements inside pages working. */}
-        <div className="flex min-h-dvh-minus-64 flex-1 flex-col overflow-clip bg-primary-50 md:mb-2 md:mr-2 md:rounded-2xl md:ring-1 md:ring-white/5">
-        {section === "courses" ? <InstructorCourses startNew={newCourse} /> : section === "assignments" ? <InstructorAssignments submissionId={submissionId} /> : section === "reports" ? <InstructorReports view={reportView} month={reportMonth} /> : section === "reviews" ? <InstructorReviews /> : section === "qa" ? <InstructorQa questionId={questionId} newQuestionCourse={newQuestionCourse} /> : section === "co-instructors" ? <InstructorCoRequests /> : section === "announcements" ? <InstructorAnnouncements courseId={announcementCourse} /> : section === "availability" ? <InstructorAvailability scheduleId={scheduleId} /> : section === "apps" ? <InstructorApps view={appsView ?? "store"} /> : section === "sessions" ? <InstructorSessions seriesId={sessionSeries} sessionId={sessionId} courseId={sessionCourse} /> : section === "schedule" ? <InstructorSchedule /> : <InstructorOverview />}
+        <div className="flex min-h-dvh-minus-64 flex-1 flex-col overflow-clip bg-primary-50 md:mr-2 md:rounded-2xl md:ring-1 md:ring-white/5">
+        {section === "courses" ? <InstructorCourses startNew={newCourse} /> : section === "assignments" ? <InstructorAssignments submissionId={submissionId} /> : section === "reports" ? <InstructorReports view={reportView} month={reportMonth} /> : section === "reviews" ? <InstructorReviews /> : section === "qa" ? <InstructorQa questionId={questionId} newQuestionCourse={newQuestionCourse} /> : section === "co-instructors" ? <InstructorCoRequests /> : section === "messages" ? <MessagesPage instructor /> : section === "announcements" ? <InstructorAnnouncements courseId={announcementCourse} /> : section === "availability" ? <InstructorAvailability scheduleId={scheduleId} /> : section === "apps" ? <InstructorApps view={appsView ?? "store"} /> : section === "sessions" ? <InstructorSessions seriesId={sessionSeries} sessionId={sessionId} courseId={sessionCourse} /> : section === "schedule" ? <InstructorSchedule /> : <InstructorOverview />}
+        </div>
+        {/* Sticky bottom frame: pins the panel's rounded bottom edge to the viewport while the page scrolls underneath. */}
+        <div aria-hidden="true" className="pointer-events-none sticky bottom-0 z-30 hidden h-2 shrink-0 bg-gray-900 md:block">
+          <span className="corner-fill-bl absolute bottom-full left-0 size-4" />
+          <span className="corner-fill-br absolute bottom-full right-2 size-4" />
         </div>
       </div>
     </div>

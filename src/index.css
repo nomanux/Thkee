@@ -107,6 +107,18 @@
 }
 
 /* Layout helpers that need calc() or several properties. */
+/* Inverse rounded corners: dark outside a 16px curve, used to keep the instructor panel's bottom corners rounded while the page scrolls. */
+@utility corner-fill-bl {
+  background: radial-gradient(circle at 100% 0, transparent calc(1rem - 0.5px), var(--color-gray-900) 1rem);
+}
+@utility corner-fill-br {
+  background: radial-gradient(circle at 0 0, transparent calc(1rem - 0.5px), var(--color-gray-900) 1rem);
+}
+/* Schedule calendar grid fills the rest of the viewport below the page header. */
+@utility h-calendar {
+  height: calc(100dvh - 20rem);
+  min-height: 32rem;
+}
 @utility h-panel {
   height: calc(100dvh - 112px);
 }
@@ -128,6 +140,15 @@
 }
 @utility scrollbar-thin {
   scrollbar-width: thin;
+}
+/* Thin, rounded, no track; only shows while the area is hovered or in use (like macOS or Slack). */
+@utility scrollbar-soft {
+  scrollbar-width: thin;
+  scrollbar-color: transparent transparent;
+  &:hover,
+  &:focus-within {
+    scrollbar-color: var(--color-slate-300) transparent;
+  }
 }
 @utility bg-video-cover {
   background-image: radial-gradient(120% 90% at 30% 20%, #1f6b5a 0%, #0f2f2a 45%, #0b1220 100%);
@@ -310,6 +331,12 @@ body {
 .drawer-in { animation: drawer-in 0.3s cubic-bezier(0.2, 0.8, 0.2, 1); }
 .toast-in { animation: toast-in 0.25s ease-out; }
 .pop-in { animation: pop-in 0.18s ease-out; }
+/* Bottom sheet: slides up on phones, pops in as a dialog from the sm breakpoint. */
+@keyframes sheet-in { from { transform: translateY(100%); } }
+.sheet-in { animation: sheet-in 0.3s cubic-bezier(0.2, 0.8, 0.2, 1); }
+@media (min-width: 40rem) {
+  .sheet-in { animation: modal-in 0.25s cubic-bezier(0.2, 0.8, 0.2, 1); }
+}
 
 @keyframes hero-drift { 50% { transform: translate(50px, 36px); } }
 @keyframes hero-twinkle {
@@ -333,7 +360,7 @@ body {
 .hero-rise { animation: hero-rise 0.8s ease-out both; }
 
 @media (prefers-reduced-motion: reduce) {
-  .neon-badge, .neon-btn, .overlay-fade, .modal-in, .drawer-in, .toast-in, .pop-in,
+  .neon-badge, .neon-btn, .overlay-fade, .modal-in, .drawer-in, .toast-in, .pop-in, .sheet-in,
   .hero-drift, .hero-twinkle, .hero-shimmer, .hero-pulse, .hero-marquee, .hero-rise, .fade-up { animation: none; }
 }
 
@@ -593,7 +620,7 @@ body {
   grid-template-columns: auto 1fr auto;
 }
 @utility grid-cols-co-requests {
-  grid-template-columns: 254fr 269fr 156fr 170fr 230fr;
+  grid-template-columns: minmax(0, 1.2fr) minmax(0, 1.5fr) 7rem 7rem 14rem;
 }
 @utility grid-cols-content {
   grid-template-columns: max-content;
@@ -663,6 +690,12 @@ body {
 }
 @utility h-dvh-minus-120 {
   height: calc(100dvh - 120px);
+}
+@utility h-dvh-minus-64 {
+  height: calc(100dvh - 64px);
+}
+@utility h-dvh-minus-72 {
+  height: calc(100dvh - 72px);
 }
 @utility h-dvh-minus-56 {
   height: calc(100dvh - 56px);

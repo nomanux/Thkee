@@ -13,7 +13,7 @@ export type Overlay =
   | null;
 type Toast = { id: number; message: string };
 export type SearchParams = { q?: string; category?: string; sub?: string; live?: boolean };
-export type Route = { page: "home" } | { page: "not-found" } | { page: "login" } | { page: "cart" } | { page: "checkout" } | { page: "my-learning"; tab?: string } | { page: "purchase-history" } | { page: "refund"; orderId: string; courseId: string } | { page: "account"; section: string } | { page: "messages" } | { page: "components" } | { page: "teach" } | { page: "instructor-start" } | { page: "instructor"; newCourse?: boolean; section?: "courses" | "assignments" | "reports" | "reviews" | "qa" | "co-instructors" | "announcements" | "availability" | "apps" | "sessions" | "schedule"; announcementCourse?: string; scheduleId?: string; appsView?: "store" | "installed"; sessionSeries?: string; sessionId?: string; sessionCourse?: string; submissionId?: string; reportView?: "revenue"; reportMonth?: string; questionId?: string; newQuestionCourse?: string } | { page: "live-create"; draftId?: string; section?: string } | { page: "course-editor"; id: string; section?: string } | { page: "learn"; id: string } | { page: "course"; id: string } | ({ page: "search" } & SearchParams);
+export type Route = { page: "home" } | { page: "not-found" } | { page: "login" } | { page: "cart" } | { page: "checkout" } | { page: "my-learning"; tab?: string } | { page: "purchase-history" } | { page: "refund"; orderId: string; courseId: string } | { page: "account"; section: string } | { page: "messages" } | { page: "components" } | { page: "teach" } | { page: "instructor-start" } | { page: "instructor"; newCourse?: boolean; section?: "courses" | "assignments" | "reports" | "reviews" | "qa" | "co-instructors" | "announcements" | "availability" | "apps" | "sessions" | "schedule" | "messages"; announcementCourse?: string; scheduleId?: string; appsView?: "store" | "installed"; sessionSeries?: string; sessionId?: string; sessionCourse?: string; submissionId?: string; reportView?: "revenue"; reportMonth?: string; questionId?: string; newQuestionCourse?: string } | { page: "live-create"; draftId?: string; section?: string } | { page: "course-editor"; id: string; section?: string } | { page: "learn"; id: string } | { page: "course"; id: string } | ({ page: "search" } & SearchParams);
 
 function parseRoute(): Route {
   // Typing /component or /components goes to the hash route the rest of the app uses.
@@ -49,6 +49,7 @@ function parseRoute(): Route {
   if (hash.startsWith("#/instructor/availability")) return { page: "instructor", section: "availability", scheduleId: decodeURIComponent(hash.slice("#/instructor/availability/".length)) || undefined };
   if (hash.startsWith("#/instructor/announcements")) return { page: "instructor", section: "announcements", announcementCourse: decodeURIComponent(hash.slice("#/instructor/announcements/".length)) || undefined };
   if (hash.startsWith("#/instructor/co-instructors")) return { page: "instructor", section: "co-instructors" };
+  if (hash.startsWith("#/instructor/messages")) return { page: "instructor", section: "messages" };
   if (hash.startsWith("#/instructor/reviews")) return { page: "instructor", section: "reviews" };
   if (hash.startsWith("#/instructor/reports/revenue")) return { page: "instructor", section: "reports", reportView: "revenue", reportMonth: decodeURIComponent(hash.slice("#/instructor/reports/revenue/".length)) || undefined };
   if (hash.startsWith("#/instructor/reports")) return { page: "instructor", section: "reports" };
@@ -469,6 +470,10 @@ export function openInstructorAvailability(scheduleId?: string) {
 
 export function openInstructorAnnouncements(courseId?: string) {
   window.location.hash = courseId ? `#/instructor/announcements/${encodeURIComponent(courseId)}` : "#/instructor/announcements";
+}
+
+export function openInstructorMessages() {
+  window.location.hash = "#/instructor/messages";
 }
 
 export function openCoInstructorRequests() {

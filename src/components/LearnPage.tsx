@@ -266,6 +266,40 @@ const kindLabel: Record<Lesson["kind"], string> = {
   assignment: "Assignment",
 };
 
+// A chapter stop: its number inside a ring that fills as its lessons are finished, a green check when all are done.
+function ChapterRing({ number, progress, finished, current }: { number: number; progress: number; finished: boolean; current: boolean }) {
+  const r = 10.5;
+  const length = 2 * Math.PI * r;
+  if (finished)
+    return (
+      <span aria-hidden="true" className="relative mt-0.5 flex size-6 shrink-0 items-center justify-center rounded-full bg-primary-700 text-white">
+        <Svg className="size-3.5" stroke={3}>
+          <path d="M5 12l5 5 9-10" />
+        </Svg>
+      </span>
+    );
+  return (
+    <span aria-hidden="true" className="relative mt-0.5 flex size-6 shrink-0 items-center justify-center rounded-full bg-white">
+      <svg viewBox="0 0 24 24" className="absolute inset-0 size-6 -rotate-90">
+        <circle cx="12" cy="12" r={r} fill="none" strokeWidth="2.5" className={current ? "stroke-primary-200" : "stroke-slate-200"} />
+        {progress > 0 && (
+          <circle
+            cx="12"
+            cy="12"
+            r={r}
+            fill="none"
+            strokeWidth="2.5"
+            strokeLinecap="round"
+            strokeDasharray={`${progress * length} ${length}`}
+            className="stroke-primary-700 transition-all duration-700 ease-out"
+          />
+        )}
+      </svg>
+      <span className={`relative text-11 tabular-nums ${current ? "text-primary-700" : "text-slate-500"} ${fontSemi}`}>{number}</span>
+    </span>
+  );
+}
+
 // The course outline as a path: one stop per chapter, the current chapter opened with its lessons,
 // and the certificate as the last stop. Replaces the classic "Course content" checklist.
 function PathRail({
@@ -323,11 +357,10 @@ function PathRail({
           const count = items.filter((l) => done.includes(l.key)).length;
           return (
             <li key={si} className="relative pb-2">
-              {/* Connector to the next stop: solid once this chapter is finished, dashed while it is still ahead. */}
-              <span
-                aria-hidden="true"
-                className={`absolute bottom-0 left-3.5 top-9 border-l-2 ${finished ? "border-primary-700" : "border-dashed border-slate-300"}`}
-              />
+              {/* Connector to the next stop: a grey track that fills with green as the chapter's lessons are finished. */}
+              <span aria-hidden="true" className="absolute bottom-0 left-3.5 top-9 w-0.5 overflow-hidden rounded-full bg-slate-200">
+                <span className="block w-full rounded-full bg-primary-700 transition-all duration-700 ease-out" style={{ height: `${items.length ? (count / items.length) * 100 : 0}%` }} />
+              </span>
               <button
                 type="button"
                 onClick={() => setOpen(expanded ? null : si)}
@@ -336,24 +369,7 @@ function PathRail({
                 className="group relative flex w-full items-start gap-3 rounded-xl px-1 py-1.5 text-left outline-none"
               >
                 {hover === `chapter-${si}` && <HoverPill group="path-rail" className="rounded-xl bg-slate-900/4" />}
-                <span
-                  aria-hidden="true"
-                  className={`relative mt-0.5 flex size-6 shrink-0 items-center justify-center rounded-full text-11 tabular-nums ${fontSemi} ${
-                    finished
-                      ? "bg-primary-700 text-white"
-                      : isCurrent
-                        ? "bg-white text-primary-700 ring-2 ring-primary-700"
-                        : "bg-white text-slate-500 ring-1 ring-slate-300"
-                  }`}
-                >
-                  {finished ? (
-                    <Svg className="size-3.5" stroke={3}>
-                      <path d="M5 12l5 5 9-10" />
-                    </Svg>
-                  ) : (
-                    si + 1
-                  )}
-                </span>
+                <ChapterRing number={si + 1} progress={items.length ? count / items.length : 0} finished={finished} current={isCurrent} />
                 <span className="relative flex min-w-0 flex-1 flex-col gap-0.5">
                   <span
                     dir="auto"
@@ -380,18 +396,28 @@ function PathRail({
                     const isNow = l.key === current.key;
                     return (
                       <li key={l.key} className="relative">
-                        <span
-                          aria-hidden="true"
-                          className={`absolute -left-5.5 top-3.5 size-2.5 rounded-full ${
-                            isDone ? "bg-primary-700" : isNow ? "bg-secondary-500 ring-4 ring-secondary-100" : "bg-white ring-2 ring-slate-300"
-                          }`}
-                        />
+                        {isDone ? (
+                          <span aria-hidden="true" className="absolute -left-6 top-3 z-1 flex size-3.5 items-center justify-center rounded-full bg-primary-700 text-white">
+                            <Svg className="size-2.5" stroke={3.5}>
+                              <path d="M5 12l5 5 9-10" />
+                            </Svg>
+                          </span>
+                        ) : isNow ? (
+                          <span aria-hidden="true" className="absolute -left-6 top-3 z-1 flex size-3.5 items-center justify-center">
+                            <span className="absolute inset-0 animate-ping rounded-full bg-primary-700/30 motion-reduce:animate-none" />
+                            <span className="relative flex size-3.5 items-center justify-center rounded-full bg-white ring-2 ring-primary-700">
+                              <span className="size-1.5 rounded-full bg-primary-700" />
+                            </span>
+                          </span>
+                        ) : (
+                          <span aria-hidden="true" className="absolute -left-5.5 top-3.5 z-1 size-2.5 rounded-full bg-white ring-2 ring-slate-300" />
+                        )}
                         <button
                           type="button"
                           onClick={() => onOpen(l)}
                           aria-current={isNow ? "step" : undefined}
                           {...hoverProps(l.key)}
-                          className={`group/l relative flex w-full items-baseline gap-3 rounded-lg px-2.5 py-2 text-left outline-none transition ${isNow ? "bg-slate-100" : ""}`}
+                          className={`group/l relative flex w-full items-baseline gap-3 rounded-lg px-2.5 py-2 text-left outline-none transition ${isNow ? "bg-primary-50" : ""}`}
                         >
                           {hover === l.key && !isNow && <HoverPill group="path-rail" className="rounded-lg bg-slate-900/4" />}
                           <span
@@ -401,7 +427,7 @@ function PathRail({
                             }`}
                           >
                             {l.title}
-                            {isNow && <span className={`ml-2 align-middle text-11 uppercase tracking-wider text-secondary-800 ${fontSemi}`}>{playing ? "Playing" : "Now"}</span>}
+                            {isNow && <span className={`ml-2 align-middle text-11 uppercase tracking-wider text-primary-700 ${fontSemi}`}>{playing ? "Playing" : "Now"}</span>}
                           </span>
                           <span className={`relative flex shrink-0 items-center gap-1 text-xs tabular-nums text-slate-500 ${fontRegular}`}>
                             {l.kind !== "video" && <KindIcon kind={l.kind} className="size-3.5" />}

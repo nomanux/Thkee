@@ -4,8 +4,9 @@ import { uploadFile } from "../api";
 import { shrinkImage } from "../imageShrink";
 import { fontMedium, fontRegular, fontSemi } from "../fonts";
 import { HugeiconsIcon, type IconSvgElement } from "@hugeicons/react";
-import { ArrowUpDownIcon, Image01Icon, LeftToRightListBulletIcon, NoteAddIcon, LeftToRightListNumberIcon, Link01Icon, SourceCodeIcon, TextBoldIcon, TextItalicIcon, TextUnderlineIcon } from "@hugeicons/core-free-icons";
+import { ArrowUpDownIcon, Attachment01Icon, File01Icon, Image01Icon, LeftToRightListBulletIcon, NoteAddIcon, LeftToRightListNumberIcon, Link01Icon, SourceCodeIcon, TextBoldIcon, TextItalicIcon, TextUnderlineIcon } from "@hugeicons/core-free-icons";
 import { buttonClass, type ButtonSize, type ButtonVariant } from "./Button"
+import { useHoverHighlight } from "./Menus";
 
 export type Note = {
   id: number;
@@ -116,7 +117,8 @@ function sanitizeNote(html: string) {
       const href = el.getAttribute("href") ?? "";
       const src = el.getAttribute("src") ?? "";
       [...el.attributes].forEach((a) => el.removeAttribute(a.name));
-      if (el.tagName === "A" && /^https?:\/\//i.test(href)) {
+      // External https links, plus files uploaded to this site (/thkee-api/uploads/...).
+      if (el.tagName === "A" && (/^https?:\/\//i.test(href) || /^\/(?!\/)[\w\-./]+$/.test(href))) {
         el.setAttribute("href", href);
         el.setAttribute("target", "_blank");
         el.setAttribute("rel", "noopener noreferrer");
@@ -601,6 +603,9 @@ export function NoteEditor({
   extras,
   imageOnly,
   sideAction,
+  sendInside,
+  attachMenu,
+  plain,
   submitOnEnter,
   hideActions,
   clearOnSave,
@@ -630,6 +635,12 @@ export function NoteEditor({
   imageOnly?: boolean;
   // Puts the save button beside the box instead of below it.
   sideAction?: boolean;
+  // A round send button inside the box, at the end of the toolbar (chat style). Hides the action row.
+  sendInside?: boolean;
+  // One attach button (like WhatsApp) that opens Photo, Document and Link instead of separate buttons.
+  attachMenu?: boolean;
+  // No bold, italic or list buttons (chat style).
+  plain?: boolean;
   // Enter saves, Shift+Enter adds a new line.
   submitOnEnter?: boolean;
   hideActions?: boolean;
@@ -742,6 +753,46 @@ export function NoteEditor({
         reader.readAsDataURL(small);
       })
       .catch(() => setError("Image upload failed. Please try again."));
+  };
+
+  const docRef = useRef<HTMLInputElement>(null);
+  const attachButton = useRef<HTMLButtonElement>(null);
+  const attachPanel = useRef<HTMLDivElement | null>(null);
+  const [attach, setAttach] = useState<{ left: number; bottom: number } | null>(null);
+  const attachHighlight = useHoverHighlight();
+  useEffect(() => {
+    if (!attach) return;
+    const close = (e: Event) => {
+      if (!attachPanel.current?.contains(e.target as Node) && !attachButton.current?.contains(e.target as Node)) setAttach(null);
+    };
+    const esc = (e: KeyboardEvent) => e.key === "Escape" && setAttach(null);
+    document.addEventListener("mousedown", close);
+    document.addEventListener("keydown", esc);
+    return () => {
+      document.removeEventListener("mousedown", close);
+      document.removeEventListener("keydown", esc);
+    };
+  }, [attach]);
+  const toggleAttach = () => {
+    if (attach) return setAttach(null);
+    rememberCursor();
+    const r = attachButton.current?.getBoundingClientRect();
+    if (r) setAttach({ left: r.left, bottom: window.innerHeight - r.top + 8 });
+  };
+
+  const pickDocument = (file?: File) => {
+    if (docRef.current) docRef.current.value = "";
+    if (!file) return;
+    if (file.size > 25 * 1024 * 1024) return setError("Files can be up to 25 MB.");
+    setError("");
+    const size = file.size < 1024 * 1024 ? `${Math.max(1, Math.round(file.size / 1024))} KB` : `${(file.size / 1024 / 1024).toFixed(1)} MB`;
+    const name = escapeHtml(file.name);
+    uploadFile(file)
+      .catch(() => null)
+      .then((url) => {
+        restoreCursor();
+        run("insertHTML", url ? `<a href="${escapeHtml(url)}">${name}</a> (${size})&nbsp;` : `<b>${name}</b> (${size})&nbsp;`);
+      });
   };
 
   const addLink = () => {
@@ -884,7 +935,21 @@ export function NoteEditor({
         {!page && (
         <div className={`flex flex-wrap items-center gap-0.5 ${page ? "" : modern ? "sticky bottom-0 z-1 border-t border-slate-100 bg-white/95 px-2 py-1.5 backdrop-blur-sm" : toolbarTop ? "sticky top-0 z-1 border-b border-slate-200 bg-slate-50 px-1.5 py-1" : ""}`}>
           {toolbarEnd && <span className="order-last ml-auto flex">{toolbarEnd}</span>}
-          {editorTools.filter((tool) => !(hideUnderline && tool.command === "underline")).map((tool) => (
+          {sendInside && (
+            <button
+              type="button"
+              onClick={save}
+              disabled={empty && !allowEmpty}
+              aria-label={saveLabel}
+              title={saveLabel}
+              className="order-last ml-auto flex size-9 items-center justify-center rounded-full bg-primary-700 text-white transition hover:bg-primary-800 disabled:bg-slate-100 disabled:text-slate-400"
+            >
+              <svg viewBox="0 0 24 24" className="size-4.5" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <path d="M12 19V5M6 11l6-6 6 6" />
+              </svg>
+            </button>
+          )}
+          {!plain && editorTools.filter((tool) => !(hideUnderline && tool.command === "underline")).map((tool) => (
             <Fragment key={tool.command}>
             {/* Modern toolbar: a thin divider separates text styles from lists. */}
             {modern && tool.command === "insertUnorderedList" && <span aria-hidden="true" className="mx-1 h-5 w-px bg-slate-200" />}
@@ -893,7 +958,68 @@ export function NoteEditor({
             </button>
             </Fragment>
           ))}
-          {(extras || imageOnly) && !linkOnly && (
+          {attachMenu && (
+            <>
+              <button
+                ref={attachButton}
+                type="button"
+                aria-label="Attach"
+                title="Attach"
+                aria-haspopup="menu"
+                aria-expanded={!!attach}
+                onMouseDown={(e) => e.preventDefault()}
+                onClick={toggleAttach}
+                className={toolCls(!!attach || linkOpen)}
+              >
+                <HugeiconsIcon icon={Attachment01Icon} size={18} strokeWidth={1.8} aria-hidden="true" />
+              </button>
+              <input ref={fileRef} type="file" accept="image/png,image/jpeg,image/gif,image/webp" hidden onChange={(e) => pickImage(e.target.files?.[0])} />
+              <input ref={docRef} type="file" accept=".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.csv,.txt,.zip" hidden onChange={(e) => pickDocument(e.target.files?.[0])} />
+              {attach &&
+                createPortal(
+                  <div
+                    {...attachHighlight.props}
+                    ref={(el) => {
+                      attachPanel.current = el;
+                      attachHighlight.props.ref(el);
+                    }}
+                    role="menu"
+                    aria-label="Attach"
+                    onMouseDown={(e) => e.preventDefault()}
+                    style={{ left: attach.left, bottom: attach.bottom }}
+                    className="pop-in fixed z-1000 isolate flex w-64 flex-col gap-0.5 rounded-xl border border-slate-200 bg-white p-1.5 shadow-popover"
+                  >
+                    {attachHighlight.pill}
+                    {[
+                      { label: "Photo", hint: "PNG, JPG or GIF", icon: Image01Icon, act: () => fileRef.current?.click() },
+                      { label: "Document", hint: "PDF, Word, slides, up to 25 MB", icon: File01Icon, act: () => docRef.current?.click() },
+                      { label: "Link", hint: "Share a web page", icon: Link01Icon, act: () => setLinkOpen(true) },
+                    ].map((item) => (
+                      <button
+                        key={item.label}
+                        type="button"
+                        role="menuitem"
+                        onClick={() => {
+                          setAttach(null);
+                          item.act();
+                        }}
+                        className="flex w-full items-center gap-3 rounded-lg px-2.5 py-2 text-left outline-none"
+                      >
+                        <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-slate-100 text-slate-700">
+                          <HugeiconsIcon icon={item.icon} size={18} strokeWidth={1.8} aria-hidden="true" />
+                        </span>
+                        <span className="flex min-w-0 flex-col">
+                          <span className={`text-sm leading-5 text-slate-900 ${fontMedium}`}>{item.label}</span>
+                          <span className={`text-xs leading-4 text-slate-500 ${fontRegular}`}>{item.hint}</span>
+                        </span>
+                      </button>
+                    ))}
+                  </div>,
+                  document.body,
+                )}
+            </>
+          )}
+          {(extras || imageOnly) && !linkOnly && !attachMenu && (
             <>
               <button
                 type="button"
@@ -937,7 +1063,7 @@ export function NoteEditor({
         </div>
         )}
       </div>
-      {!hideActions && (
+      {!hideActions && !sendInside && (
         <div className="flex items-center justify-end gap-3">
           {onCancel && (
             <button type="button" onClick={onCancel} className={buttonClass("ghost", saveSize)}>

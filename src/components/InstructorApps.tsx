@@ -1,13 +1,13 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { fontMedium, fontRegular, fontSemi } from "../fonts";
 import { load, openInstructorApps, save, useApp } from "../store";
 import { Toggle } from "./InstructorAvailability";
-import { ActionMenu, FilterSelect } from "./Menus";
+import { ActionMenu } from "./Menus";
+import Radio from "./Radio";
 import { Shell } from "./Overlays";
-import { buttonClass } from "./Button"
+import { buttonClass } from "./Button";
 
 const imgClose = "/assets/53e9a.svg";
-const imgPlusSmall = "/assets/51771.svg";
 
 type AppId = "google" | "outlook" | "apple";
 type Connection = { email: string; calendars: { name: string; on: boolean }[] };
@@ -48,7 +48,6 @@ const newConnection = (id: AppId): Connection => ({ email: appById(id).email, ca
 
 const STORE_KEY = "thkee.instructorApps";
 const SEED: AppsState = { connections: { google: newConnection("google") }, addTo: null };
-const titleClass = "m-0 flex h-10.5 items-center font-instrument-medium text-2xl font-medium leading-8 text-slate-900";
 const titleStyle = { fontVariationSettings: '"wdth" 100' };
 
 function AppLogo({ app, size = "size-8" }: { app: AppId; size?: string }) {
@@ -98,7 +97,7 @@ function UnlinkIcon() {
 function AppDialog({ dialog, onClose, onConfirm }: { dialog: DialogState; onClose: () => void; onConfirm: () => void }) {
   const app = appById(dialog.app);
   const connecting = dialog.kind === "connect";
-  const title = connecting ? "Connect to the Apps" : `Disconnect ${app.name}?`;
+  const title = connecting ? `Connect ${app.name}` : `Disconnect ${app.name}?`;
   return (
     <Shell title={title} onClose={onClose} hideHeader width="max-w-119" radius="sm:rounded-xl">
       <div className="flex items-center justify-between gap-4 border-b border-slate-200 px-5 py-4">
@@ -116,12 +115,12 @@ function AppDialog({ dialog, onClose, onConfirm }: { dialog: DialogState; onClos
           </div>
         </div>
         {connecting ? (
-          <p className={`flex items-start gap-3 rounded-md bg-emerald-50 px-3 py-2.5 text-xs leading-4.5 text-emerald-700 ${fontMedium}`}>
-            <svg viewBox="0 0 24 24" className="mt-0.5 size-4 shrink-0" fill="#047857" aria-hidden="true">
+          <p className={`flex items-start gap-3 rounded-xl bg-primary-50 px-3 py-2.5 text-xs leading-4.5 text-primary-800 ${fontMedium}`}>
+            <svg viewBox="0 0 24 24" className="mt-0.5 size-4 shrink-0" fill="#0d5c4b" aria-hidden="true">
               <circle cx="12" cy="12" r="11" />
               <path d="M7 12.5l3.2 3.2L17 9" fill="none" stroke="#fff" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
-            If you connect your {app.short} calendar to this, you will receive all updates automatically.
+            Your live sessions will be added to your {app.short} calendar, and busy times there will block new bookings.
           </p>
         ) : (
           <p className={`flex items-start gap-3 rounded-md bg-red-50 px-3 py-2.5 text-xs leading-4.5 text-red-700 ${fontMedium}`}>
@@ -133,215 +132,331 @@ function AppDialog({ dialog, onClose, onConfirm }: { dialog: DialogState; onClos
           </p>
         )}
       </div>
-      <div className="flex items-center justify-end gap-6 border-t border-slate-200 px-5 py-5">
-        <button type="button" onClick={onClose} className={`text-base leading-6 text-slate-800 transition hover:text-slate-500 ${fontMedium}`}>
-          {connecting ? "Cancel" : "Not Now"}
+      <div className="flex items-center justify-end gap-3 border-t border-slate-200 px-5 py-4">
+        <button type="button" onClick={onClose} className={buttonClass("ghost", "md")}>
+          {connecting ? "Cancel" : "Keep connected"}
         </button>
-        <button type="button" onClick={onConfirm} className={`h-9 rounded-lg px-4 text-base leading-5 transition ${connecting ? "bg-secondary-500 text-slate-800 hover:bg-secondary-600" : "bg-red-600 text-white hover:bg-red-700"} ${fontMedium}`}>
-          {connecting ? "Connect Now" : "Disconnect Now"}
+        <button type="button" onClick={onConfirm} className={buttonClass(connecting ? "primary" : "danger", "md")}>
+          {connecting ? `Connect ${app.short}` : "Disconnect"}
         </button>
       </div>
     </Shell>
   );
 }
 
+const BENEFITS = ["Adds your live sessions to this calendar", "Blocks booking times when you're busy"];
+
+type SoonId = "zoom" | "meet" | "teams";
+const SOON: { id: SoonId; name: string; description: string }[] = [
+  { id: "zoom", name: "Zoom", description: "Create a Zoom link for every live session automatically." },
+  { id: "meet", name: "Google Meet", description: "Host live sessions on Google Meet without copying links." },
+  { id: "teams", name: "Microsoft Teams", description: "Run your sessions in Teams with one click." },
+];
+const NOTIFY_KEY = "thkee.instructorApps.notify";
+
+function SoonLogo({ app }: { app: SoonId }) {
+  if (app === "zoom")
+    return (
+      <svg viewBox="0 0 32 32" className="size-8 shrink-0" aria-hidden="true">
+        <rect width="32" height="32" rx="8" fill="#2d8cff" />
+        <rect x="6" y="11" width="13" height="10" rx="2.5" fill="#fff" />
+        <path d="M20 14.5l6-3.5v10l-6-3.5z" fill="#fff" />
+      </svg>
+    );
+  if (app === "meet")
+    return (
+      <svg viewBox="0 0 32 32" className="size-8 shrink-0" aria-hidden="true">
+        <rect width="32" height="32" rx="8" fill="#fff" stroke="#e2e8f0" />
+        <rect x="6" y="10" width="14" height="12" rx="2" fill="#00ac47" />
+        <path d="M20 14l6-4v12l-6-4z" fill="#ffba00" />
+        <rect x="6" y="10" width="5" height="12" rx="2" fill="#2684fc" />
+      </svg>
+    );
+  return (
+    <svg viewBox="0 0 32 32" className="size-8 shrink-0" aria-hidden="true">
+      <rect width="32" height="32" rx="8" fill="#5059c9" />
+      <path d="M10 11h12v3h-4.5v9h-3v-9H10z" fill="#fff" />
+    </svg>
+  );
+}
+
 function AppStore({ state, onDialog }: { state: AppsState; onDialog: (dialog: DialogState) => void }) {
-  const scroller = useRef<HTMLDivElement>(null);
-  const [edges, setEdges] = useState({ start: true, end: false });
-  const measure = () => {
-    const el = scroller.current;
-    if (el) setEdges({ start: el.scrollLeft <= 1, end: el.scrollLeft + el.clientWidth >= el.scrollWidth - 1 });
-  };
-  useEffect(() => {
-    measure();
-    window.addEventListener("resize", measure);
-    return () => window.removeEventListener("resize", measure);
-  }, []);
-  const move = (direction: number) => scroller.current?.scrollBy({ left: direction * 415, behavior: "smooth" });
-  const arrow = (on: boolean) => `flex size-9 items-center justify-center rounded-md text-slate-700 transition disabled:cursor-not-allowed disabled:opacity-40 ${on ? "bg-slate-150 hover:bg-slate-200" : "hover:bg-slate-25"}`;
+  const { notify } = useApp();
+  const [notifyMe, setNotifyMe] = useState<SoonId[]>(() => load(NOTIFY_KEY, []));
+  useEffect(() => save(NOTIFY_KEY, notifyMe), [notifyMe]);
+  const connectedCount = APPS.filter((a) => state.connections[a.id]).length;
+  const sectionTitle = `text-base leading-6 text-slate-900 ${fontSemi}`;
+  const sectionText = `mt-0.5 text-sm leading-5 text-slate-500 ${fontRegular}`;
 
   return (
     <main className="flex flex-1 flex-col bg-white">
-      <div className="border-b border-slate-200 px-4 py-6 md:px-7">
-        <h1 className={titleClass} style={titleStyle}>
-          App Store
-        </h1>
+      <div className="flex flex-wrap items-center justify-between gap-4 border-b border-slate-200 px-4 py-6 md:px-7">
+        <div className="min-w-0">
+          <h1 className="m-0 font-instrument-medium text-2xl font-medium leading-8 text-slate-900" style={titleStyle}>
+            App Store
+          </h1>
+          <p className={`mt-1 text-sm leading-5 text-slate-500 ${fontRegular}`}>Connect the tools you already use, so your live sessions and bookings stay in sync.</p>
+        </div>
+        <button type="button" onClick={() => openInstructorApps("installed")} className={buttonClass("secondary", "md")}>
+          Installed apps
+          <span className={`rounded-full bg-primary-100 px-2 py-0.5 text-11 leading-3.5 text-primary-700 ${fontSemi}`}>{connectedCount}</span>
+        </button>
       </div>
-      <div className="flex flex-1 flex-col px-4 py-6 md:px-7">
-        <section className="flex-1 overflow-hidden rounded-xl border border-slate-200 p-6">
-          <div className="flex items-start justify-between gap-4">
-            <div>
-              <h2 className={`text-lg leading-7 text-slate-800 ${fontSemi}`}>All calendar apps</h2>
-              <p className={`mt-1 text-sm leading-5 text-slate-500 ${fontRegular}`}>Supercharge your workflow & connect the tool you use everyday.</p>
-            </div>
-            <div className="flex shrink-0 gap-2.5">
-              <button type="button" aria-label="Previous apps" disabled={edges.start} onClick={() => move(-1)} className={arrow(!edges.start)}>
-                <svg viewBox="0 0 24 24" className="size-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                  <path d="M15 6l-6 6 6 6" />
-                </svg>
-              </button>
-              <button type="button" aria-label="Next apps" disabled={edges.end} onClick={() => move(1)} className={arrow(!edges.end)}>
-                <svg viewBox="0 0 24 24" className="size-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                  <path d="M9 6l6 6-6 6" />
-                </svg>
-              </button>
-            </div>
-          </div>
-          <div ref={scroller} onScroll={measure} className="mt-6 flex gap-8 overflow-x-auto scrollbar-none">
+
+      <div className="flex flex-1 flex-col gap-8 px-4 py-6 md:px-7">
+        <section aria-labelledby="calendar-apps">
+          <h2 id="calendar-apps" className={sectionTitle}>
+            Calendars
+          </h2>
+          <p className={sectionText}>Add sessions to your calendar and avoid double bookings.</p>
+          <ul className="mt-4 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
             {APPS.map((app) => {
-              const connected = Boolean(state.connections[app.id]);
+              const connection = state.connections[app.id];
               return (
-                <article key={app.id} className="flex w-95.5 max-w-full shrink-0 flex-col rounded-xl border border-slate-200 p-6">
-                  <div className="flex items-center gap-5 pl-1">
-                    <AppLogo app={app.id} />
-                    <h3 className={`text-base leading-6 text-slate-800 ${fontSemi}`}>{app.name}</h3>
+                <li key={app.id} className={`flex flex-col rounded-2xl border p-5 transition-colors ${connection ? "border-primary-200 bg-primary-50" : "border-slate-200 bg-white hover:border-slate-300"}`}>
+                  <div className="flex items-start gap-3">
+                    <span className="flex size-12 shrink-0 items-center justify-center rounded-xl bg-white ring-1 ring-slate-200">
+                      <AppLogo app={app.id} />
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      <h3 className={`text-15 leading-5.5 text-slate-900 ${fontSemi}`}>{app.name}</h3>
+                      {connection ? (
+                        <p className={`mt-0.5 flex items-center gap-1.5 text-xs leading-4.5 text-primary-700 ${fontMedium}`}>
+                          <span aria-hidden="true" className="size-1.5 rounded-full bg-primary-700" />
+                          <span className="truncate">Connected · {connection.email}</span>
+                        </p>
+                      ) : (
+                        <p className={`mt-0.5 text-xs leading-4.5 text-slate-500 ${fontRegular}`}>Not connected</p>
+                      )}
+                    </div>
+                    {connection && (
+                      <ActionMenu
+                        label={`More actions for ${app.name}`}
+                        triggerClass="flex size-8 shrink-0 items-center justify-center rounded-lg text-slate-500 transition hover:bg-white hover:text-slate-900"
+                        trigger={
+                          <svg viewBox="0 0 24 24" className="size-4" fill="currentColor" aria-hidden="true">
+                            <circle cx="12" cy="5" r="1.8" />
+                            <circle cx="12" cy="12" r="1.8" />
+                            <circle cx="12" cy="19" r="1.8" />
+                          </svg>
+                        }
+                        items={[{ label: "Disconnect", danger: true, icon: <UnlinkIcon />, onClick: () => onDialog({ kind: "disconnect", app: app.id, addToOnly: false }) }]}
+                      />
+                    )}
                   </div>
-                  <p className={`mt-5 min-h-18 flex-1 text-sm leading-6 text-slate-600 ${fontRegular}`}>{app.description}</p>
-                  <button type="button" onClick={() => onDialog(connected ? { kind: "disconnect", app: app.id, addToOnly: false } : { kind: "connect", app: app.id, forAddTo: false })} className={`mt-3 h-10.75 w-full rounded-lg text-base leading-5 transition ${connected ? "bg-slate-150 text-red-600 hover:bg-slate-200" : "bg-slate-800 text-white hover:bg-slate-900"} ${fontMedium}`}>
-                    {connected ? "Disconnect" : "Connect"}
-                  </button>
-                </article>
+                  <p className={`mt-4 text-sm leading-5.5 text-slate-600 ${fontRegular}`}>{app.description}</p>
+                  <ul className="mt-3 flex flex-1 flex-col gap-1.5">
+                    {BENEFITS.map((benefit) => (
+                      <li key={benefit} className={`flex items-start gap-2 text-13 leading-5 text-slate-600 ${fontRegular}`}>
+                        <svg viewBox="0 0 24 24" className="mt-0.5 size-4 shrink-0 text-primary-700" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                          <path d="M5 12.5l4.5 4.5L19 7.5" />
+                        </svg>
+                        {benefit}
+                      </li>
+                    ))}
+                  </ul>
+                  {connection ? (
+                    <button type="button" onClick={() => openInstructorApps("installed")} className={`${buttonClass("secondary", "md")} mt-5 w-full`}>
+                      Manage
+                    </button>
+                  ) : (
+                    <button type="button" onClick={() => onDialog({ kind: "connect", app: app.id, forAddTo: false })} className={`${buttonClass("primary", "md")} mt-5 w-full`}>
+                      Connect
+                    </button>
+                  )}
+                </li>
               );
             })}
-          </div>
+          </ul>
+        </section>
+
+        <section aria-labelledby="meeting-apps">
+          <h2 id="meeting-apps" className={`flex items-center gap-2 ${sectionTitle}`}>
+            Video meetings
+            <span className={`rounded-full bg-slate-100 px-2 py-0.5 text-11 leading-3.5 text-slate-600 ${fontSemi}`}>Coming soon</span>
+          </h2>
+          <p className={sectionText}>Host live sessions in the meeting tool you prefer.</p>
+          <ul className="mt-4 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+            {SOON.map((app) => {
+              const on = notifyMe.includes(app.id);
+              return (
+                <li key={app.id} className="flex items-center gap-3 rounded-2xl border border-dashed border-slate-200 p-4">
+                  <SoonLogo app={app.id} />
+                  <div className="min-w-0 flex-1">
+                    <p className={`text-sm leading-5 text-slate-900 ${fontSemi}`}>{app.name}</p>
+                    <p className={`text-xs leading-4.5 text-slate-500 ${fontRegular}`}>{app.description}</p>
+                  </div>
+                  <button
+                    type="button"
+                    aria-pressed={on}
+                    onClick={() => {
+                      setNotifyMe((list) => (on ? list.filter((id) => id !== app.id) : [...list, app.id]));
+                      if (!on) notify(`We'll let you know when ${app.name} is ready`);
+                    }}
+                    className={buttonClass(on ? "soft" : "ghost", "md")}
+                  >
+                    {on ? "We'll notify you" : "Notify me"}
+                  </button>
+                </li>
+              );
+            })}
+          </ul>
         </section>
       </div>
     </main>
   );
 }
 
-const addTrigger = (
-  <>
-    <svg viewBox="0 0 24 24" className="size-4.5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
-      <path d="M12 5v14M5 12h14" />
-    </svg>
-    Add
-  </>
+const dotsIcon = (
+  <svg viewBox="0 0 24 24" className="size-4" fill="currentColor" aria-hidden="true">
+    <circle cx="12" cy="5" r="1.8" />
+    <circle cx="12" cy="12" r="1.8" />
+    <circle cx="12" cy="19" r="1.8" />
+  </svg>
+);
+const plusIcon = (
+  <svg viewBox="0 0 24 24" className="size-4" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" aria-hidden="true">
+    <path d="M12 5v14M5 12h14" />
+  </svg>
 );
 
+/* One settings block: what it does on the left, the controls on the right (stacked on small screens). */
+function SettingBlock({ id, title, text, children }: { id: string; title: string; text: string; children: ReactNode }) {
+  return (
+    <section aria-labelledby={id} className="grid gap-4 border-b border-slate-200 py-8 first:pt-0 last:border-b-0 lg:grid-cols-3 lg:gap-10">
+      <div>
+        <h2 id={id} className={`text-base leading-6 text-slate-900 ${fontSemi}`}>
+          {title}
+        </h2>
+        <p className={`mt-1 text-sm leading-5.5 text-slate-500 ${fontRegular}`}>{text}</p>
+      </div>
+      <div className="flex min-w-0 flex-col gap-3 lg:col-span-2">{children}</div>
+    </section>
+  );
+}
+
 function InstalledApps({ state, setState, onDialog }: { state: AppsState; setState: (next: AppsState) => void; onDialog: (dialog: DialogState) => void }) {
-  const { notify } = useApp();
   const connected = APPS.filter((a) => state.connections[a.id]);
   const notConnected = APPS.filter((a) => !state.connections[a.id]);
-  const addTriggerClass = `flex h-8.75 items-center gap-2 rounded-lg border border-slate-300 px-3 text-sm leading-5 text-slate-700 transition hover:bg-slate-25 ${fontMedium}`;
-  const emailOptions = [...new Set([...(state.addTo ? [state.addTo.email] : []), ...connected.map((a) => state.connections[a.id]!.email)])];
-  const sectionTitle = `text-sm leading-5 text-slate-900 ${fontSemi}`;
-  const sectionText = `mt-1 text-xs leading-4.5 text-slate-500 ${fontRegular}`;
+  const connectItems = notConnected.map((a) => ({ label: a.name, icon: <AppLogo app={a.id} size="size-4.5" />, onClick: () => onDialog({ kind: "connect", app: a.id, forAddTo: false }) }));
 
-  const toggleCalendar = (id: AppId, name: string) => {
+  const setCalendars = (id: AppId, on: (name: string, current: boolean) => boolean) => {
     const connection = state.connections[id]!;
-    setState({ ...state, connections: { ...state.connections, [id]: { ...connection, calendars: connection.calendars.map((c) => (c.name === name ? { ...c, on: !c.on } : c)) } } });
+    setState({ ...state, connections: { ...state.connections, [id]: { ...connection, calendars: connection.calendars.map((c) => ({ ...c, on: on(c.name, c.on) })) } } });
   };
+
+  const choice = (checked: boolean, onSelect: () => void, body: ReactNode, key: string) => (
+    <button
+      key={key}
+      type="button"
+      role="radio"
+      aria-checked={checked}
+      onClick={onSelect}
+      className={`flex w-full items-center gap-3 rounded-xl border px-4 py-3 text-left transition ${checked ? "border-primary-700 bg-primary-50 ring-1 ring-primary-700" : "border-slate-200 bg-white hover:border-slate-300"}`}
+    >
+      <Radio checked={checked} />
+      {body}
+    </button>
+  );
+
+  const connectRow = notConnected.length > 0 && (
+    <ActionMenu
+      alignLeft
+      label="Connect another calendar"
+      triggerClass={`flex h-12 w-full items-center justify-center gap-2 rounded-xl border border-dashed border-slate-300 text-sm leading-5 text-slate-600 transition hover:border-primary-300 hover:bg-primary-50 hover:text-primary-700 ${fontMedium}`}
+      trigger={
+        <>
+          {plusIcon}
+          Connect {connected.length ? "another" : "a"} calendar
+        </>
+      }
+      items={connectItems}
+    />
+  );
 
   return (
     <main className="flex flex-1 flex-col bg-white">
       <div className="flex flex-wrap items-center justify-between gap-4 border-b border-slate-200 px-4 py-6 md:px-7">
-        <h1 className={titleClass} style={titleStyle}>
-          Installed Apps
-        </h1>
-        <button type="button" onClick={() => openInstructorApps("store")} className={`${buttonClass("yellow", "md")}`}>
-          <img src={imgPlusSmall} alt="" width={18} height={18} className="size-4.5" />
-          Connect apps
+        <div className="min-w-0">
+          <h1 className="m-0 font-instrument-medium text-2xl font-medium leading-8 text-slate-900" style={titleStyle}>
+            Installed Apps
+          </h1>
+          <p className={`mt-1 text-sm leading-5 text-slate-500 ${fontRegular}`}>Choose where new bookings go and which calendars block your free time.</p>
+        </div>
+        <button type="button" onClick={() => openInstructorApps("store")} className={buttonClass("secondary", "md")}>
+          {plusIcon}
+          Browse App Store
         </button>
       </div>
-      <div className="flex flex-1 flex-col px-4 py-6 md:px-7">
-        <section className="flex flex-1 flex-col gap-5 rounded-xl border border-slate-200 p-6">
-          <div>
-            <h2 className={`text-lg leading-7 text-slate-800 ${fontSemi}`}>All connected apps</h2>
-            <p className={`mt-1 text-sm leading-5 text-slate-500 ${fontRegular}`}>Supercharge your workflow & connect the tool you use everyday.</p>
-          </div>
 
-          <div className="rounded-xl border border-slate-200">
-            <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-150 px-6 py-4">
-              <div>
-                <h3 className={sectionTitle}>Add to calendar</h3>
-                <p className={sectionText}>Select where new events should be added when you're booked.</p>
-              </div>
-              {state.addTo ? (
-                <div className="flex flex-wrap items-center gap-4">
-                  <p className={`flex items-center gap-2.5 text-xs leading-4.5 text-slate-400 ${fontRegular}`}>
-                    <span aria-hidden="true" className="size-2 rounded-full bg-emerald-500" />
-                    <span>
-                      Connected with <span className="text-slate-700">{state.addTo.email}</span>
-                    </span>
-                  </p>
-                  <button type="button" onClick={() => onDialog({ kind: "disconnect", app: state.addTo!.app, addToOnly: true })} className={`flex h-8 items-center gap-2 rounded-lg border border-red-300 px-3 text-sm leading-5 text-red-600 transition hover:bg-red-50 ${fontSemi}`}>
-                    <UnlinkIcon />
-                    Disconnect
-                  </button>
-                </div>
-              ) : (
-                <ActionMenu label="Add a calendar for new events" trigger={addTrigger} triggerClass={addTriggerClass} items={APPS.map((a) => ({ label: a.name, onClick: () => onDialog({ kind: "connect", app: a.id, forAddTo: true }) }))} />
-              )}
-            </div>
-            <div className="flex flex-col gap-2 px-6 py-5">
-              <p className={`text-sm leading-5 text-slate-800 ${fontRegular}`}>Add events to</p>
-              <div className={`[&_ul]:w-full ${state.addTo ? "" : "pointer-events-none"}`}>
-                <FilterSelect
-                  plain
-                  label="Add events to"
-                  value={state.addTo?.email ?? ""}
-                  onChange={(email) => state.addTo && setState({ ...state, addTo: { ...state.addTo, email } })}
-                  options={state.addTo ? emailOptions.map((email) => ({ value: email, label: email })) : [{ value: "", label: "" }]}
-                />
-              </div>
-            </div>
-          </div>
-
-          <div className="rounded-xl border border-slate-200">
-            <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-150 px-6 py-4">
-              <div>
-                <h3 className={sectionTitle}>Check for conflicts</h3>
-                <p className={sectionText}>Choose the calendar that will be used to detect conflicts and prevent overlapping bookings.</p>
-              </div>
-              {notConnected.length > 0 ? (
-                <ActionMenu label="Add a calendar to check for conflicts" trigger={addTrigger} triggerClass={addTriggerClass} items={notConnected.map((a) => ({ label: a.name, onClick: () => onDialog({ kind: "connect", app: a.id, forAddTo: false }) }))} />
-              ) : (
-                <button type="button" onClick={() => notify("All calendar apps are already connected")} className={addTriggerClass}>
-                  {addTrigger}
-                </button>
-              )}
-            </div>
-            <div className="flex flex-col gap-4 p-4 md:px-6">
-              {connected.length === 0 && <p className={`py-6 text-center text-sm leading-6 text-slate-500 ${fontRegular}`}>No calendars connected yet.</p>}
+      <div className="flex w-full max-w-6xl flex-col px-4 py-8 md:px-7">
+        <SettingBlock id="add-to-calendar" title="Add new bookings to" text="When a student books a live session, we create the event in this calendar.">
+          {connected.length === 0 ? (
+            <p className={`rounded-xl bg-slate-50 px-4 py-3 text-sm leading-5 text-slate-500 ${fontRegular}`}>Connect a calendar first, then pick where new bookings should go.</p>
+          ) : (
+            <div role="radiogroup" aria-labelledby="add-to-calendar" className="flex flex-col gap-2">
               {connected.map((app) => {
-                const connection = state.connections[app.id]!;
-                return (
-                  <article key={app.id} className="rounded-xl border border-slate-200">
-                    <div className="flex items-center gap-5 border-b border-slate-150 px-6 py-4">
-                      <AppLogo app={app.id} />
-                      <div className="min-w-0 flex-1">
-                        <p className={`text-sm leading-5.5 text-slate-800 ${fontSemi}`}>{app.name}</p>
-                        <p className={`truncate text-xs leading-4.5 text-slate-500 ${fontRegular}`}>{connection.email}</p>
-                      </div>
-                      <ActionMenu
-                        label={`More actions for ${app.name}`}
-                        triggerClass="flex size-8 shrink-0 items-center justify-center rounded-full text-slate-600 transition hover:bg-slate-150"
-                        trigger={
-                          <svg viewBox="0 0 24 24" className="size-5" fill="currentColor" aria-hidden="true">
-                            <circle cx="12" cy="5" r="1.7" />
-                            <circle cx="12" cy="12" r="1.7" />
-                            <circle cx="12" cy="19" r="1.7" />
-                          </svg>
-                        }
-                        items={[{ label: "Disconnect", danger: true, icon: <UnlinkIcon />, onClick: () => onDialog({ kind: "disconnect", app: app.id, addToOnly: false }) }]}
-                      />
-                    </div>
-                    <div className="flex flex-col gap-4 px-6 py-5">
-                      <p className={`text-xs leading-4.5 text-slate-400 ${fontRegular}`}>Toggle the calendars to check for conflicts to prevent double bookings</p>
-                      {connection.calendars.map((calendar) => (
-                        <div key={calendar.name} className="flex items-center gap-2.5">
-                          <Toggle on={calendar.on} label={`Check ${calendar.name} for conflicts`} onChange={() => toggleCalendar(app.id, calendar.name)} />
-                          <span className={`text-sm leading-5 text-slate-700 ${fontRegular}`}>{calendar.name}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </article>
+                const email = state.connections[app.id]!.email;
+                const checked = state.addTo?.app === app.id;
+                return choice(
+                  checked,
+                  () => setState({ ...state, addTo: { app: app.id, email } }),
+                  <>
+                    <AppLogo app={app.id} size="size-6" />
+                    <span className="flex min-w-0 flex-1 flex-col">
+                      <span className={`text-sm leading-5 text-slate-900 ${checked ? fontSemi : fontMedium}`}>{app.name}</span>
+                      <span className={`truncate text-xs leading-4.5 text-slate-500 ${fontRegular}`}>{email}</span>
+                    </span>
+                  </>,
+                  app.id,
                 );
               })}
+              {choice(!state.addTo, () => setState({ ...state, addTo: null }), <span className={`flex-1 text-sm leading-5 text-slate-700 ${!state.addTo ? fontSemi : fontMedium}`}>Don't add bookings to a calendar</span>, "none")}
             </div>
-          </div>
-        </section>
+          )}
+        </SettingBlock>
+
+        <SettingBlock id="check-conflicts" title="Check for conflicts" text="Busy times in the calendars you turn on are blocked, so students can't book over them.">
+          {connected.map((app) => {
+            const connection = state.connections[app.id]!;
+            const onCount = connection.calendars.filter((c) => c.on).length;
+            const allOn = onCount === connection.calendars.length;
+            return (
+              <article key={app.id} className="overflow-hidden rounded-xl border border-slate-200">
+                <header className="flex items-center gap-3 border-b border-slate-200 bg-slate-50 px-4 py-3">
+                  <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-white ring-1 ring-slate-200">
+                    <AppLogo app={app.id} size="size-5.5" />
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <p className={`text-sm leading-5 text-slate-900 ${fontSemi}`}>{app.name}</p>
+                    <p className={`truncate text-xs leading-4.5 text-slate-500 ${fontRegular}`}>{connection.email}</p>
+                  </div>
+                  <span className={`hidden rounded-full bg-primary-100 px-2 py-0.5 text-11 leading-4 text-primary-700 sm:inline ${fontSemi}`}>
+                    {onCount} of {connection.calendars.length} on
+                  </span>
+                  <ActionMenu
+                    label={`More actions for ${app.name}`}
+                    triggerClass="flex size-8 shrink-0 items-center justify-center rounded-lg text-slate-500 transition hover:bg-white hover:text-slate-900"
+                    trigger={dotsIcon}
+                    items={[
+                      { label: allOn ? "Turn all off" : "Turn all on", onClick: () => setCalendars(app.id, () => !allOn) },
+                      { label: "Disconnect", danger: true, icon: <UnlinkIcon />, onClick: () => onDialog({ kind: "disconnect", app: app.id, addToOnly: false }) },
+                    ]}
+                  />
+                </header>
+                <ul className="grid divide-y divide-slate-100 sm:grid-cols-2 sm:divide-y-0">
+                  {connection.calendars.map((calendar) => (
+                    <li key={calendar.name} className="flex items-center justify-between gap-3 px-4 py-3 sm:border-b sm:border-slate-100 sm:odd:border-r">
+                      <span className={`min-w-0 truncate text-sm leading-5 ${calendar.on ? "text-slate-800" : "text-slate-400"} ${fontRegular}`}>{calendar.name}</span>
+                      <Toggle on={calendar.on} label={`Check ${calendar.name} for conflicts`} onChange={() => setCalendars(app.id, (name, on) => (name === calendar.name ? !on : on))} />
+                    </li>
+                  ))}
+                </ul>
+              </article>
+            );
+          })}
+          {connectRow}
+        </SettingBlock>
       </div>
     </main>
   );
